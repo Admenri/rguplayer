@@ -6,15 +6,16 @@
 #include "base/debug/debugwriter.h"
 #include "base/exceptions/exception.h"
 #include "gpu/gles2/gles_context.h"
+#include "renderer/quad_draw.h"
 
 #undef main
 
-static inline const char* glGetStringInt(gpu::GLES2CommandContext* glcontext,
-                                         GLenum name) {
+static inline const char* glGetStringInt(
+    std::shared_ptr<gpu::GLES2CommandContext> glcontext, GLenum name) {
   return (const char*)glcontext->glGetString(name);
 }
 
-static void printGLInfo(gpu::GLES2CommandContext* glcontext) {
+static void printGLInfo(std::shared_ptr<gpu::GLES2CommandContext> glcontext) {
   base::Debug() << "* GLES:" << std::boolalpha << glcontext->IsGLES();
   base::Debug() << "* OpenGL Info: Renderer   :"
                 << glGetStringInt(glcontext, GL_RENDERER);
@@ -42,7 +43,8 @@ int main() {
 
   glCtx = SDL_GL_CreateContext(win);
 
-  auto* glcontext = new gpu::GLES2CommandContext();
+  std::shared_ptr<gpu::GLES2CommandContext> glcontext =
+      std::make_shared<gpu::GLES2CommandContext>();
   try {
     glcontext->InitContext();
   } catch (const base::Exception& e) {
@@ -50,6 +52,9 @@ int main() {
   }
 
   printGLInfo(glcontext);
+
+  renderer::QuadDrawable quad(glcontext);
+  quad.Draw();
 
   SDL_Event e;
   while (true) {
