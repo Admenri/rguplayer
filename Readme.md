@@ -14,4 +14,8 @@ RGU Player is a general-purpose game engine driven by Ruby scripts, based on the
 
 If you encounter any issues while using RGU Player, please report them on our [GitHub repository](https://github.com/Admenri/rguplayer).
 
+## Donate
+
+[Afdian](https://afdian.net/a/rguplayer)
+
 © 2023 Admenri
