@@ -1,4 +1,4 @@
-﻿# RGU Player
+﻿# ![Logo](app/resources/rgu_favicon_64.png) RGU Player Core
 
 ## Project Overview
 

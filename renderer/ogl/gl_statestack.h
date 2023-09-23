@@ -14,8 +14,11 @@ template <typename T>
 class GLState {
  public:
   GLState(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
-      : context_weak_ptr_(gl_context) {}
+      : context_(gl_context) {}
   virtual ~GLState() {}
+
+  GLState(const GLState&) = delete;
+  GLState& operator=(const GLState&) = delete;
 
   void Set(const T& value) {
     current_ = value;
@@ -37,14 +40,12 @@ class GLState {
  protected:
   virtual void OnApplyProperty(const T& value) = 0;
 
-  std::shared_ptr<gpu::GLES2CommandContext> GetContext() {
-    return context_weak_ptr_;
-  }
+  std::shared_ptr<gpu::GLES2CommandContext> GetContext() { return context_; }
 
  private:
   void ApplyTop();
 
-  std::shared_ptr<gpu::GLES2CommandContext> context_weak_ptr_;
+  std::shared_ptr<gpu::GLES2CommandContext> context_;
 
   T current_;
   std::stack<T> stack_;
@@ -52,7 +53,8 @@ class GLState {
 
 class GLViewport : public GLState<base::Rect> {
  public:
-  ~GLViewport() override = default;
+  GLViewport(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+      : GLState(gl_context) {}
 
  protected:
   void OnApplyProperty(const base::Rect& value) override;
@@ -60,7 +62,8 @@ class GLViewport : public GLState<base::Rect> {
 
 class GLScissorRegion : public GLState<base::Rect> {
  public:
-  ~GLScissorRegion() override = default;
+  GLScissorRegion(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+      : GLState(gl_context) {}
 
  protected:
   void OnApplyProperty(const base::Rect& value) override;
@@ -68,7 +71,8 @@ class GLScissorRegion : public GLState<base::Rect> {
 
 class GLScissorTest : public GLState<bool> {
  public:
-  ~GLScissorTest() override = default;
+  GLScissorTest(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+      : GLState(gl_context) {}
 
  protected:
   void OnApplyProperty(const bool& value) override;
@@ -76,7 +80,8 @@ class GLScissorTest : public GLState<bool> {
 
 class GLBlendMode : public GLState<BlendMode> {
  public:
-  ~GLBlendMode() override = default;
+  GLBlendMode(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+      : GLState(gl_context) {}
 
  protected:
   void OnApplyProperty(const BlendMode& value) override;
@@ -84,7 +89,8 @@ class GLBlendMode : public GLState<BlendMode> {
 
 class GLProgram : public GLState<GLuint> {
  public:
-  ~GLProgram() override = default;
+  GLProgram(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+      : GLState(gl_context) {}
 
  protected:
   void OnApplyProperty(const GLuint& value) override;

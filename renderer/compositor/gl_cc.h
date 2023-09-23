@@ -8,7 +8,6 @@
 #include "gpu/gles2/gles_context.h"
 #include "renderer/buffer_wrapper/gl_vertex.h"
 #include "renderer/ogl/gl_frame_buffer_texture.h"
-#include "renderer/ogl/gl_shader_manager.h"
 #include "renderer/ogl/gl_statestack.h"
 #include "renderer/quad_draw.h"
 
@@ -21,6 +20,8 @@ class GLCC {
 
   GLCC(const GLCC&) = delete;
   GLCC& operator=(const GLCC&) = delete;
+
+  std::shared_ptr<gpu::GLES2CommandContext> GetContext() { return context_; }
 
   std::shared_ptr<QuadIndicesBuffer> GetQuadIndicesBuffer() {
     return quad_indices_buffer_;

@@ -1,14 +1,28 @@
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+
 #include <iostream>
 
-#include "SDL.h"
-#include "SDL_image.h"
-#include "SDL_ttf.h"
-#include "base/debug/debugwriter.h"
+#include "base/bind/callback.h"
+#include "base/buildflags/compiler_specific.h"
+#include "base/debug/logging.h"
 #include "base/exceptions/exception.h"
+#include "base/memory/weak_ptr.h"
 #include "gpu/gles2/gles_context.h"
 #include "renderer/quad_draw.h"
+#include "ui/widget/widget.h"
 
 #undef main
+
+class TestClass : public base::RefCountedThreadSafe<TestClass> {
+ public:
+  void TestMethod() { base::Debug() << info_; }
+
+  friend class base::RefCountedThreadSafe<TestClass>;
+  std::string info_;
+  base::WeakPtrFactory<TestClass> weak_ptr_{this};
+};
 
 static inline const char* glGetStringInt(
     std::shared_ptr<gpu::GLES2CommandContext> glcontext, GLenum name) {
@@ -33,15 +47,19 @@ int main() {
   TTF_Init();
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 
-  SDL_Window* win = SDL_CreateWindow(
-      "Pic display", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 544, 416,
-      SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_RESIZABLE);
+  std::unique_ptr<ui::Widget> win = std::make_unique<ui::Widget>();
+  ui::Widget::InitParams params;
+
+  params.size = base::Vec2i(800, 600);
+
+  win->Init(std::move(params));
+
   SDL_GLContext glCtx;
 
   /* Setup GL context */
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-  glCtx = SDL_GL_CreateContext(win);
+  glCtx = SDL_GL_CreateContext(win->AsSDLWindow());
 
   std::shared_ptr<gpu::GLES2CommandContext> glcontext =
       std::make_shared<gpu::GLES2CommandContext>();
@@ -51,10 +69,14 @@ int main() {
     base::Debug() << e.GetErrorMessage();
   }
 
-  printGLInfo(glcontext);
+  auto cb = base::BindOnce(printGLInfo);
+  std::move(cb).Run(glcontext);
 
-  renderer::QuadDrawable quad(glcontext);
-  quad.Draw();
+  scoped_refptr<TestClass> klass = base::MakeRefCounted<TestClass>();
+  auto kcb =
+      base::BindOnce(&TestClass::TestMethod, klass->weak_ptr_.GetWeakPtr());
+  klass->info_ = "Test refptr string.";
+  std::move(kcb).Run();
 
   SDL_Event e;
   while (true) {
@@ -65,7 +87,7 @@ int main() {
   }
 
   SDL_GL_DeleteContext(glCtx);
-  SDL_DestroyWindow(win);
+  win.reset();
 
   IMG_Quit();
   TTF_Quit();

@@ -62,6 +62,27 @@ class Vec2 {
   float x, y;
 };
 
+class Vec2i {
+ public:
+  Vec2i() : x(0), y(0) {}
+  Vec2i(int ix, int iy) : x(ix), y(iy) {}
+  virtual ~Vec2i() = default;
+
+  Vec2i(const Vec2i&) = default;
+  Vec2i& operator=(const Vec2i&) = default;
+
+  bool operator==(const Vec2i& other) { return other.x == x && other.y == y; }
+  Vec2i operator+(const Vec2i& value) {
+    return Vec2i(x + value.x, y + value.y);
+  }
+  Vec2i operator-(const Vec2i& value) {
+    return Vec2i(x - value.x, y - value.y);
+  }
+
+ public:
+  int x, y;
+};
+
 class Vec3 {
  public:
   Vec3() : x(0.f), y(0.f), z(0.f) {}
@@ -87,6 +108,31 @@ class Vec3 {
   float x, y, z;
 };
 
+class Vec3i {
+ public:
+  Vec3i() : x(0.f), y(0.f), z(0.f) {}
+  Vec3i(int ix, int iy, int iz) : x(ix), y(iy), z(iz) {}
+  virtual ~Vec3i() = default;
+
+  Vec3i(const Vec3i&) = default;
+  Vec3i& operator=(const Vec3i&) = default;
+
+  bool operator==(const Vec3i& other) {
+    return other.x == x && other.y == y && other.z == z;
+  }
+
+  Vec3i operator+(const Vec3i& value) {
+    return Vec3i(x + value.x, y + value.y, z + value.z);
+  }
+
+  Vec3i operator-(const Vec3i& value) {
+    return Vec3i(x - value.x, y - value.y, z - value.z);
+  }
+
+ public:
+  int x, y, z;
+};
+
 class Vec4 {
  public:
   Vec4() : x(0.f), y(0.f), z(0.f), w(0.f) {}
@@ -110,6 +156,31 @@ class Vec4 {
 
  public:
   float x, y, z, w;
+};
+
+class Vec4i {
+ public:
+  Vec4i() : x(0.f), y(0.f), z(0.f), w(0.f) {}
+  Vec4i(int ix, int iy, int iz, int iw) : x(ix), y(iy), z(iz), w(iw) {}
+  virtual ~Vec4i() = default;
+
+  Vec4i(const Vec4i&) = default;
+  Vec4i& operator=(const Vec4i&) = default;
+
+  bool operator==(const Vec4i& other) {
+    return other.x == x && other.y == y && other.z == z && other.w == w;
+  }
+
+  Vec4i operator+(const Vec4i& value) {
+    return Vec4i(x + value.x, y + value.y, z + value.z, w + value.w);
+  }
+
+  Vec4i operator-(const Vec4i& value) {
+    return Vec4i(x - value.x, y - value.y, z - value.z, w - value.w);
+  }
+
+ public:
+  int x, y, z, w;
 };
 
 class Mat3 {

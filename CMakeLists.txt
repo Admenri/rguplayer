@@ -1,6 +1,8 @@
 #  Main build file of rgu project
 cmake_minimum_required(VERSION 3.18.0)
 
+set(CMAKE_CXX_STANDARD 17)
+
 project(rgu)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 set(SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
@@ -57,4 +59,7 @@ find_package(SDL2_image REQUIRED)
 add_subdirectory(base)
 add_subdirectory(gpu)
 add_subdirectory(renderer)
+add_subdirectory(ui)
+add_subdirectory(content)
+
 add_subdirectory(app)

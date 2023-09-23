@@ -47,7 +47,7 @@ void QuadIndicesBuffer::Unbind() {
 QuadDrawable::QuadDrawable(std::shared_ptr<QuadIndicesBuffer> indices_buffer,
                            std::shared_ptr<gpu::GLES2CommandContext> context)
     : context_(context),
-      vertex_data_(std::make_unique<GLVertexData<CommonVertex>>()),
+      vertex_data_(std::make_unique<GLVertexData<CommonVertex>>(context_)),
       indices_buffer_(indices_buffer) {
   vertex_data_->Bind();
   vertex_data_->UpdateVertex(nullptr, 4);
