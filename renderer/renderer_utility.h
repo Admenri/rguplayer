@@ -11,6 +11,6 @@ enum class BlendMode {
   Substraction,
 };
 
-}
+}  // namespace renderer
 
 #endif  // RENDERER_RENDERER_UTILITY_H_

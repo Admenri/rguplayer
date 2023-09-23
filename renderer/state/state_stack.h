@@ -1,11 +1,15 @@
-#ifndef RENDERER_OGL_GL_STATESTACK_H_
-#define RENDERER_OGL_GL_STATESTACK_H_
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-#include <memory>
+#ifndef RENDERER_STATE_STATE_STACK_H_
+#define RENDERER_STATE_STATE_STACK_H_
+
 #include <stack>
 
 #include "base/math/math.h"
-#include "gpu/gles2/gles_context.h"
+#include "base/memory/ref_counted.h"
+#include "gpu/gl_forward.h"
 #include "renderer/renderer_utility.h"
 
 namespace renderer {
@@ -13,7 +17,7 @@ namespace renderer {
 template <typename T>
 class GLState {
  public:
-  GLState(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+  GLState(scoped_refptr<gpu::GLES2CommandContext> gl_context)
       : context_(gl_context) {}
   virtual ~GLState() {}
 
@@ -40,12 +44,12 @@ class GLState {
  protected:
   virtual void OnApplyProperty(const T& value) = 0;
 
-  std::shared_ptr<gpu::GLES2CommandContext> GetContext() { return context_; }
+  scoped_refptr<gpu::GLES2CommandContext> GetContext() { return context_; }
 
  private:
   void ApplyTop();
 
-  std::shared_ptr<gpu::GLES2CommandContext> context_;
+  scoped_refptr<gpu::GLES2CommandContext> context_;
 
   T current_;
   std::stack<T> stack_;
@@ -53,7 +57,7 @@ class GLState {
 
 class GLViewport : public GLState<base::Rect> {
  public:
-  GLViewport(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+  GLViewport(scoped_refptr<gpu::GLES2CommandContext> gl_context)
       : GLState(gl_context) {}
 
  protected:
@@ -62,7 +66,7 @@ class GLViewport : public GLState<base::Rect> {
 
 class GLScissorRegion : public GLState<base::Rect> {
  public:
-  GLScissorRegion(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+  GLScissorRegion(scoped_refptr<gpu::GLES2CommandContext> gl_context)
       : GLState(gl_context) {}
 
  protected:
@@ -71,7 +75,7 @@ class GLScissorRegion : public GLState<base::Rect> {
 
 class GLScissorTest : public GLState<bool> {
  public:
-  GLScissorTest(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+  GLScissorTest(scoped_refptr<gpu::GLES2CommandContext> gl_context)
       : GLState(gl_context) {}
 
  protected:
@@ -80,22 +84,13 @@ class GLScissorTest : public GLState<bool> {
 
 class GLBlendMode : public GLState<BlendMode> {
  public:
-  GLBlendMode(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
+  GLBlendMode(scoped_refptr<gpu::GLES2CommandContext> gl_context)
       : GLState(gl_context) {}
 
  protected:
   void OnApplyProperty(const BlendMode& value) override;
 };
 
-class GLProgram : public GLState<GLuint> {
- public:
-  GLProgram(std::shared_ptr<gpu::GLES2CommandContext> gl_context)
-      : GLState(gl_context) {}
-
- protected:
-  void OnApplyProperty(const GLuint& value) override;
-};
-
 }  // namespace renderer
 
-#endif  // GL_STATESTACK_H_
+#endif  // RENDERER_STATE_STATE_STACK_H_

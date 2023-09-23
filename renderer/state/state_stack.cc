@@ -1,4 +1,8 @@
-#include "renderer/ogl/gl_statestack.h"
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "renderer/state/state_stack.h"
 
 namespace renderer {
 
@@ -41,10 +45,6 @@ void GLBlendMode::OnApplyProperty(const BlendMode& value) {
       break;
     }
   }
-}
-
-void GLProgram::OnApplyProperty(const GLuint& value) {
-  GetContext()->glUseProgram(value);
 }
 
 }  // namespace renderer

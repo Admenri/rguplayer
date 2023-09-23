@@ -9,8 +9,8 @@ set(PYTHON_EXECUTABLE python)
 
 # Export header file import
 execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/build_gles2_command_buffer.py --header
-  WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2
+  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --header
+  WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/context
   RESULT_VARIABLE PYTHON_SCRIPT_RESULT
   OUTPUT_QUIET
 )
@@ -21,8 +21,8 @@ endif()
 
 # Export body file import
 execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/build_gles2_command_buffer.py --body
-  WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2
+  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --body
+  WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/context
   RESULT_VARIABLE PYTHON_SCRIPT_RESULT
   OUTPUT_QUIET
 )
@@ -35,13 +35,13 @@ endif()
 # Generate shader embed
 #--------------------------------------------------------------------------------
 
-file(GLOB shader_files "${SRC_ROOT}/gpu/shader/*")
+file(GLOB shader_files "${SRC_ROOT}/gpu/gles2/shader/shader_source/*")
 foreach(shader_file ${shader_files})
   get_filename_component(file_extension ${shader_file} EXT)
-  if (file_extension STREQUAL ".h" OR file_extension STREQUAL ".vert" OR file_extension STREQUAL ".frag")
+  if (file_extension STREQUAL ".vert" OR file_extension STREQUAL ".frag")
     execute_process(
       COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/buildtools/build_file_binary.py ${shader_file}
-      WORKING_DIRECTORY ${SRC_ROOT}/gpu/shader
+      WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/shader/shader_source
       RESULT_VARIABLE SHADER_GENERATE_RESULT
       OUTPUT_QUIET
     )
@@ -57,8 +57,11 @@ endforeach()
 #--------------------------------------------------------------------------------
 
 set(GPU_SRC
-  gles2/gles_context.cc
-  gles2/gles_context.h
+  gles2/context/gles_context.cc
+  gles2/context/gles_context.h
+  gles2/shader/shader_manager.cc
+  gles2/shader/shader_manager.h
+  gl_forward.h
 )
 
 add_library(core_gpu ${GPU_SRC})

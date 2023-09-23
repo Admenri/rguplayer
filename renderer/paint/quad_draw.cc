@@ -1,6 +1,8 @@
-#include "renderer/quad_draw.h"
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-#include "base/debug/debugwriter.h"
+#include "renderer/paint/quad_draw.h"
 
 namespace renderer {
 
@@ -23,7 +25,8 @@ static const GLbyte kQuadIndices[] = {
 };
 
 QuadIndicesBuffer::QuadIndicesBuffer(
-    std::shared_ptr<gpu::GLES2CommandContext> context) {
+    scoped_refptr<gpu::GLES2CommandContext> context)
+    : context_(context) {
   context_->glGenBuffers(1, &indices_buffer_);
 
   Bind();
@@ -44,11 +47,11 @@ void QuadIndicesBuffer::Unbind() {
   context_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-QuadDrawable::QuadDrawable(std::shared_ptr<QuadIndicesBuffer> indices_buffer,
-                           std::shared_ptr<gpu::GLES2CommandContext> context)
+QuadDrawable::QuadDrawable(scoped_refptr<QuadIndicesBuffer> indices_buffer,
+                           scoped_refptr<gpu::GLES2CommandContext> context)
     : context_(context),
-      vertex_data_(std::make_unique<GLVertexData<CommonVertex>>(context_)),
-      indices_buffer_(indices_buffer) {
+      indices_buffer_(indices_buffer),
+      vertex_data_(std::make_unique<GLVertexData<CommonVertex>>(context)) {
   vertex_data_->Bind();
   vertex_data_->UpdateVertex(nullptr, 4);
   vertex_data_->Unbind();

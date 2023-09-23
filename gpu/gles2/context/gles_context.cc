@@ -1,4 +1,8 @@
-#include "gpu/gles2/gles_context.h"
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "gpu/gles2/context/gles_context.h"
 
 #include "SDL_video.h"
 #include "base/debug/debugwriter.h"
@@ -12,7 +16,7 @@ GLES2CommandContext::~GLES2CommandContext() {}
 
 void GLES2CommandContext::InitContext() {
   // Import defination from autogen file
-#include "gles2_command_buffer_autogen.cc"
+#include "gpu/gles2/context/gles2_command_buffer_autogen.cc"
 
   // Check for GL version
   std::string gl_version(

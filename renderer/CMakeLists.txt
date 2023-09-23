@@ -6,18 +6,16 @@ cmake_minimum_required(VERSION 3.18.0)
 #--------------------------------------------------------------------------------
 
 set(RENDERER_SRC
-  buffer_wrapper/gl_vertex.cc
-  buffer_wrapper/gl_vertex.h
-  compositor/gl_cc.cc
-  compositor/gl_cc.h
-  ogl/gl_frame_buffer_texture.cc
-  ogl/gl_frame_buffer_texture.h
-  ogl/gl_shader_manager.cc
-  ogl/gl_shader_manager.h
-  ogl/gl_statestack.cc
-  ogl/gl_statestack.h
-  quad_draw.cc
-  quad_draw.h
+  buffer/vertex_buffer.cc
+  buffer/vertex_buffer.h
+  compositor/renderer_cc.cc
+  compositor/renderer_cc.h
+  paint/frame_buffer_canvas.cc
+  paint/frame_buffer_canvas.h
+  paint/quad_draw.cc
+  paint/quad_draw.h
+  state/state_stack.cc
+  state/state_stack.h
   renderer_utility.h
 )
 

@@ -1,4 +1,8 @@
-#include "renderer/ogl/gl_shader_manager.h"
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "gpu/gles2/shader/shader_manager.h"
 
 #include <vector>
 
@@ -7,7 +11,7 @@
 
 namespace {
 
-static void PrintShaderLog(std::shared_ptr<gpu::GLES2CommandContext> context,
+static void PrintShaderLog(scoped_refptr<gpu::GLES2CommandContext> context,
                            GLuint shader) {
   GLint logLength;
   context->glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
@@ -19,7 +23,7 @@ static void PrintShaderLog(std::shared_ptr<gpu::GLES2CommandContext> context,
   base::Debug() << "[Core] Shader log:\n" << log;
 }
 
-static void PrintProgramLog(std::shared_ptr<gpu::GLES2CommandContext> context,
+static void PrintProgramLog(scoped_refptr<gpu::GLES2CommandContext> context,
                             GLuint program) {
   GLint logLength;
   context->glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
@@ -33,38 +37,41 @@ static void PrintProgramLog(std::shared_ptr<gpu::GLES2CommandContext> context,
 
 }  // namespace
 
-namespace renderer {
+namespace gpu {
 
 namespace shader {
 
-#include "gpu/shader/drawable.frag.xxd"
-#include "gpu/shader/drawable.vert.xxd"
+#include "gpu/gles2/shader/shader_source/drawable.frag.xxd"
+#include "gpu/gles2/shader/shader_source/drawable.vert.xxd"
+
+static inline std::string FromRawData(const uint8_t* raw_data,
+                                      const uint32_t data_size) {
+  return std::string(reinterpret_cast<const char*>(raw_data), data_size);
+}
 
 }  // namespace shader
 
-GLShaderManager::GLShaderManager(std::shared_ptr<GLCC> context) : cc_(context) {
+ShaderManager::ShaderManager(scoped_refptr<gpu::GLES2CommandContext> context)
+    : context_(context) {
   vertex_shader_ = GetContext()->glCreateShader(GL_VERTEX_SHADER);
   frag_shader_ = GetContext()->glCreateShader(GL_FRAGMENT_SHADER);
   program_ = GetContext()->glCreateProgram();
 }
 
-GLShaderManager::~GLShaderManager() {
+ShaderManager::~ShaderManager() {
   GetContext()->glDeleteProgram(program_);
   GetContext()->glDeleteShader(vertex_shader_);
   GetContext()->glDeleteShader(frag_shader_);
 }
 
-void GLShaderManager::Bind() {
-  if (cc_->Program().Current() == program_) return;
-  cc_->Program().Set(program_);
-}
+void ShaderManager::Bind() { GetContext()->glUseProgram(program_); }
 
-void GLShaderManager::Unbind() { cc_->Program().Set(0); }
+void ShaderManager::Unbind() { GetContext()->glUseProgram(0); }
 
-GLuint GLShaderManager::GetProgram() { return program_; }
+GLuint ShaderManager::GetProgram() { return program_; }
 
-void GLShaderManager::Setup(const std::string& vertex_shader,
-                            const std::string& frag_shader) {
+void ShaderManager::Setup(const std::string& vertex_shader,
+                          const std::string& frag_shader) {
   CompileShader(vertex_shader_, vertex_shader);
   CompileShader(frag_shader_, frag_shader);
 
@@ -82,8 +89,8 @@ void GLShaderManager::Setup(const std::string& vertex_shader,
   }
 }
 
-void GLShaderManager::CompileShader(GLuint gl_shader,
-                                    const std::string& shader_source) {
+void ShaderManager::CompileShader(GLuint gl_shader,
+                                  const std::string& shader_source) {
   /*
     Vertex shader:
       0. Version Defines
@@ -112,12 +119,12 @@ void GLShaderManager::CompileShader(GLuint gl_shader,
   }
 }
 
-GLShaderBase::GLShaderBase(std::shared_ptr<GLCC> context)
-    : GLShaderManager(context), viewp_matrix_location_(0) {}
+ShaderBase::ShaderBase(scoped_refptr<gpu::GLES2CommandContext> context)
+    : ShaderManager(context), viewp_matrix_location_(0) {}
 
-void GLShaderBase::Setup(const std::string& vertex_shader,
-                         const std::string& frag_shader) {
-  GLShaderManager::Setup(vertex_shader, frag_shader);
+void ShaderBase::Setup(const std::string& vertex_shader,
+                       const std::string& frag_shader) {
+  ShaderManager::Setup(vertex_shader, frag_shader);
 
   GetContext()->glBindAttribLocation(GetProgram(), ShaderLocation::Position,
                                      "position");
@@ -130,13 +137,33 @@ void GLShaderBase::Setup(const std::string& vertex_shader,
       GetContext()->glGetUniformLocation(GetProgram(), "viewpMat");
 }
 
-void GLShaderBase::SetViewportMatrix(uint32_t w, uint32_t h) {
-  const float a = 2.f / w;
-  const float b = 2.f / h;
+void ShaderBase::SetViewportMatrix(const base::Vec2i& size) {
+  const float a = 2.f / size.x;
+  const float b = 2.f / size.y;
   const float c = -2.f;
   GLfloat mat[16] = {a, 0, 0, 0, 0, b, 0, 0, 0, 0, c, 0, -1, -1, -1, 1};
 
   GetContext()->glUniformMatrix4fv(viewp_matrix_location_, 1, GL_FALSE, mat);
 }
 
-}  // namespace renderer
+SimpleShader::SimpleShader(scoped_refptr<gpu::GLES2CommandContext> context)
+    : ShaderBase(context) {
+  ShaderBase::Setup(
+      shader::FromRawData(shader::drawable_vert, shader::drawable_vert_len),
+      shader::FromRawData(shader::drawable_frag, shader::drawable_frag_len));
+
+  tex_size_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "texSize");
+  trans_offset_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "transOffset");
+}
+
+void SimpleShader::SetTextureSize(const base::Vec2& tex_size) {
+  GetContext()->glUniform2f(tex_size_location_, tex_size.x, tex_size.y);
+}
+
+void SimpleShader::SetTransOffset(const base::Vec2& offset) {
+  GetContext()->glUniform2f(trans_offset_location_, offset.x, offset.y);
+}
+
+}  // namespace gpu

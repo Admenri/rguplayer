@@ -2,6 +2,8 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
+#undef main
+
 #include <iostream>
 
 #include "base/bind/callback.h"
@@ -9,27 +11,15 @@
 #include "base/debug/logging.h"
 #include "base/exceptions/exception.h"
 #include "base/memory/weak_ptr.h"
-#include "gpu/gles2/gles_context.h"
-#include "renderer/quad_draw.h"
+#include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
 
-#undef main
-
-class TestClass : public base::RefCountedThreadSafe<TestClass> {
- public:
-  void TestMethod() { base::Debug() << info_; }
-
-  friend class base::RefCountedThreadSafe<TestClass>;
-  std::string info_;
-  base::WeakPtrFactory<TestClass> weak_ptr_{this};
-};
-
 static inline const char* glGetStringInt(
-    std::shared_ptr<gpu::GLES2CommandContext> glcontext, GLenum name) {
+    scoped_refptr<gpu::GLES2CommandContext> glcontext, GLenum name) {
   return (const char*)glcontext->glGetString(name);
 }
 
-static void printGLInfo(std::shared_ptr<gpu::GLES2CommandContext> glcontext) {
+static void printGLInfo(scoped_refptr<gpu::GLES2CommandContext> glcontext) {
   base::Debug() << "* GLES:" << std::boolalpha << glcontext->IsGLES();
   base::Debug() << "* OpenGL Info: Renderer   :"
                 << glGetStringInt(glcontext, GL_RENDERER);
@@ -61,22 +51,16 @@ int main() {
 
   glCtx = SDL_GL_CreateContext(win->AsSDLWindow());
 
-  std::shared_ptr<gpu::GLES2CommandContext> glcontext =
-      std::make_shared<gpu::GLES2CommandContext>();
+  std::unique_ptr<renderer::CCLayer> glcontext;
+
   try {
-    glcontext->InitContext();
+    glcontext = std::make_unique<renderer::CCLayer>(glCtx);
   } catch (const base::Exception& e) {
     base::Debug() << e.GetErrorMessage();
   }
 
   auto cb = base::BindOnce(printGLInfo);
-  std::move(cb).Run(glcontext);
-
-  scoped_refptr<TestClass> klass = base::MakeRefCounted<TestClass>();
-  auto kcb =
-      base::BindOnce(&TestClass::TestMethod, klass->weak_ptr_.GetWeakPtr());
-  klass->info_ = "Test refptr string.";
-  std::move(kcb).Run();
+  std::move(cb).Run(glcontext->GetContext());
 
   SDL_Event e;
   while (true) {

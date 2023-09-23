@@ -19,7 +19,7 @@ if args.header:
   converted_functions = []
   converted_functions.append(autogen_comments)
   for function in functions:
-    converted_functions.append("_PFN" + function.upper() + "PROC " + function + ";\n\n")
+    converted_functions.append("_PFN" + function.upper() + "PROC " + function + " = nullptr;\n\n")
   with open("gles2_command_buffer_header_autogen.h", "w") as file:
     file.writelines(converted_functions)
 

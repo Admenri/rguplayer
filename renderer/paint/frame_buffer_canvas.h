@@ -1,0 +1,35 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef RENDERER_PAINT_FRAME_BUFFER_CANVAS_H_
+#define RENDERER_PAINT_FRAME_BUFFER_CANVAS_H_
+
+#include <memory>
+
+#include "gpu/gl_forward.h"
+
+namespace renderer {
+
+class FrameBufferTexture {
+ public:
+  FrameBufferTexture(scoped_refptr<gpu::GLES2CommandContext> context);
+  virtual ~FrameBufferTexture();
+
+  FrameBufferTexture(const FrameBufferTexture&) = delete;
+  FrameBufferTexture& operator=(const FrameBufferTexture&) = delete;
+
+  GLuint GetTexture() { return texture_; }
+
+  void Bind();
+  void Unbind();
+
+ private:
+  scoped_refptr<gpu::GLES2CommandContext> context_;
+  GLuint texture_;
+  GLuint frame_buffer_;
+};
+
+}  // namespace renderer
+
+#endif  // RENDERER_PAINT_FRAME_BUFFER_CANVAS_H_
