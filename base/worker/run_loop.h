@@ -53,8 +53,7 @@ class ReleaseHelper {
   friend class SequencedTaskRunner;
 };
 
-class SequencedTaskRunner
-    : public base::RefCounted<SequencedTaskRunner> {
+class SequencedTaskRunner : public base::RefCounted<SequencedTaskRunner> {
  public:
   SequencedTaskRunner() = default;
   virtual ~SequencedTaskRunner() = default;
@@ -110,6 +109,7 @@ class RunLoop {
   scoped_refptr<SequencedTaskRunner> task_runner();
 
   void Run();
+  void QuitWhenIdle();
 
  private:
   scoped_refptr<SequencedTaskRunner> internal_runner_;

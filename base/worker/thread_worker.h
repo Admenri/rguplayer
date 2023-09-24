@@ -8,6 +8,7 @@
 #include <atomic>
 
 #include "base/memory/atomic_flag.h"
+#include "base/memory/weak_ptr.h"
 #include "base/thread/platform_thread.h"
 #include "base/worker/run_loop.h"
 
@@ -33,13 +34,16 @@ class ThreadWorker : public base::PlatformThread::Delegate {
 
  private:
   int DoThreadWork() override;
+  void QuitHelper();
+
   std::unique_ptr<base::PlatformThread> platform_thread_;
+
   std::string name_;
   base::AtomicFlag booted_thread_;
 
-  scoped_refptr<SequencedTaskRunner> task_runner_;
-  OnceClosure quit_closure_;
   std::unique_ptr<RunLoop> run_loop_;
+
+  base::WeakPtrFactory<ThreadWorker> weak_ptr_factory_{this};
 };
 
 }  // namespace base

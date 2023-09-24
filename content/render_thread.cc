@@ -26,6 +26,7 @@ RenderThreadManager::~RenderThreadManager() {
       base::BindOnce(&RenderThreadManager::QuitThread,
                      weak_ptr_factory_.GetWeakPtr(), std::move(renderer_cc_)));
 
+  render_worker_.reset();
   g_render_thread = nullptr;
 }
 

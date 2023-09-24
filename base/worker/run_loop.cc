@@ -102,8 +102,10 @@ scoped_refptr<SequencedTaskRunner> RunLoop::task_runner() {
   return internal_runner_;
 }
 
-void RunLoop::Run() {
-  if (internal_runner_) static_cast<RunnerImpl*>(internal_runner_.get())->Run();
+void RunLoop::Run() { static_cast<RunnerImpl*>(internal_runner_.get())->Run(); }
+
+void RunLoop::QuitWhenIdle() {
+  static_cast<RunnerImpl*>(internal_runner_.get())->require_quit_ = true;
 }
 
 }  // namespace base

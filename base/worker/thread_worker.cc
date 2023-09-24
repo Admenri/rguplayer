@@ -10,20 +10,20 @@ namespace base {
 
 ThreadWorker::ThreadWorker(const std::string& name) : name_(name) {}
 
-ThreadWorker::~ThreadWorker() { Stop(); }
+ThreadWorker::~ThreadWorker() {
+  Stop();
+
+  // Detach thread
+  platform_thread_.reset();
+}
 
 void ThreadWorker::Start(RunLoop::MessagePumpType type) {
-  run_loop_ = std::make_unique<base::RunLoop>(type);
-  quit_closure_ = run_loop_->QuitClosure();
-  task_runner_ = run_loop_->task_runner();
-
   platform_thread_ = PlatformThread::Create(this, name_);
 }
 
 void ThreadWorker::Stop() {
-  if (quit_closure_) {
-    std::move(*platform_thread_).Detach();
-  }
+  run_loop_->task_runner()->PostTask(base::BindOnce(
+      &ThreadWorker::QuitHelper, weak_ptr_factory_.GetWeakPtr()));
 }
 
 void ThreadWorker::WaitUntilStart() {
@@ -35,22 +35,27 @@ void ThreadWorker::WaitUntilStart() {
 }
 
 scoped_refptr<SequencedTaskRunner> ThreadWorker::task_runner() {
-  return task_runner_;
+  if (!run_loop_) return nullptr;
+  return run_loop_->task_runner();
 }
 
 PlatformThreadHandle ThreadWorker::GetThreadID() {
   return platform_thread_->GetHandle();
 }
 
-bool ThreadWorker::IsRunning() { return !!task_runner_.get(); }
+bool ThreadWorker::IsRunning() { return !!task_runner().get(); }
 
 int ThreadWorker::DoThreadWork() {
-  std::unique_ptr<RunLoop> scoped_run_loop = std::move(run_loop_);
+  run_loop_ = std::make_unique<RunLoop>();
 
   booted_thread_.Set();
-  scoped_run_loop->Run();
+  run_loop_->Run();
+
+  run_loop_.reset();
 
   return 0;
 }
+
+void ThreadWorker::QuitHelper() {}
 
 }  // namespace base

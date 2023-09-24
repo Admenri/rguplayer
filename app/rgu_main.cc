@@ -28,7 +28,8 @@ static inline const char* glGetStringInt(
   return (const char*)glcontext->glGetString(name);
 }
 
-static void printGLInfo(content::RenderThreadManager* render_thread) {
+static void printGLInfo(content::RenderThreadManager* render_thread,
+                        SDL_Window* win) {
   scoped_refptr<gpu::GLES2CommandContext> glcontext =
       render_thread->GetCC().GetContext();
 
@@ -42,6 +43,11 @@ static void printGLInfo(content::RenderThreadManager* render_thread) {
   base::Debug() << "* SDL Info: Main Version :" << SDL_COMPILEDVERSION;
   base::Debug() << "            TTF Version  :" << SDL_TTF_COMPILEDVERSION;
   base::Debug() << "            IMG Version  :" << SDL_IMAGE_COMPILEDVERSION;
+
+  glcontext->glClearColor(1, 1, 1, 1);
+  glcontext->glClear(GL_COLOR_BUFFER_BIT);
+
+  SDL_GL_SwapWindow(win);
 }
 
 int main() {
@@ -59,9 +65,8 @@ int main() {
   std::unique_ptr<content::RenderThreadManager> render_thread =
       std::make_unique<content::RenderThreadManager>(win->AsSDLWindow());
 
-  if (render_thread->task_runner())
-    render_thread->task_runner()->PostTask(
-        base::BindOnce(printGLInfo, render_thread.get()));
+  render_thread->task_runner()->PostTask(
+      base::BindOnce(printGLInfo, render_thread.get(), win->AsSDLWindow()));
 
   base::RunLoop loop;
   base::RunLoop::RegisterUnhandledEventFilter(
