@@ -61,5 +61,6 @@ add_subdirectory(gpu)
 add_subdirectory(renderer)
 add_subdirectory(ui)
 add_subdirectory(content)
+add_subdirectory(modules)
 
 add_subdirectory(app)

@@ -10,7 +10,7 @@ namespace base {
 
 class Exception {
  public:
-  enum Type { OpenGLError, SDLError };
+  enum Type { RGSSError, OpenGLError, SDLError };
 
   Exception(Type type, const char *format, ...) : type_(type) {
     va_list ap;

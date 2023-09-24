@@ -7,6 +7,7 @@
 
 #include <memory>
 
+#include "base/math/math.h"
 #include "gpu/gl_forward.h"
 
 namespace renderer {
@@ -21,8 +22,16 @@ class FrameBufferTexture {
 
   GLuint GetTexture() { return texture_; }
 
+  void BindTexture();
+  void UnbindTexture();
+
   void Bind();
   void Unbind();
+  void Clear();
+
+  void Alloc(const base::Vec2i& size);
+  void BufferData(const base::Vec2i& size, const void* data, GLenum format);
+  void BufferData(const base::Vec4i& bounds, const void* data, GLenum format);
 
  private:
   scoped_refptr<gpu::GLES2CommandContext> context_;

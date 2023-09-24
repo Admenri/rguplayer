@@ -23,12 +23,42 @@ FrameBufferTexture::~FrameBufferTexture() {
   context_->glDeleteTextures(1, &texture_);
 }
 
+void FrameBufferTexture::BindTexture() {
+  context_->glBindTexture(GL_TEXTURE_2D, texture_);
+}
+
+void FrameBufferTexture::UnbindTexture() {
+  context_->glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void FrameBufferTexture::Bind() {
   context_->glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
 }
 
 void FrameBufferTexture::Unbind() {
   context_->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void FrameBufferTexture::Clear() {
+  context_->glClearColor(0.f, 0.f, 0.f, 0.f);
+  context_->glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void FrameBufferTexture::Alloc(const base::Vec2i& size) {
+  context_->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, 0);
+}
+
+void FrameBufferTexture::BufferData(const base::Vec2i& size, const void* data,
+                                    GLenum format) {
+  context_->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, format,
+                         GL_UNSIGNED_BYTE, data);
+}
+
+void FrameBufferTexture::BufferData(const base::Vec4i& bounds, const void* data,
+                                    GLenum format) {
+  context_->glTexSubImage2D(GL_TEXTURE_2D, 0, bounds.x, bounds.y, bounds.z,
+                            bounds.w, format, GL_UNSIGNED_BYTE, data);
 }
 
 }  // namespace renderer

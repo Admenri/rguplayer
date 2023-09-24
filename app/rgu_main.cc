@@ -13,6 +13,7 @@
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
 #include "base/worker/thread_worker.h"
+#include "content/render_thread.h"
 #include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
 
@@ -27,7 +28,10 @@ static inline const char* glGetStringInt(
   return (const char*)glcontext->glGetString(name);
 }
 
-static void printGLInfo(scoped_refptr<gpu::GLES2CommandContext> glcontext) {
+static void printGLInfo(content::RenderThreadManager* render_thread) {
+  scoped_refptr<gpu::GLES2CommandContext> glcontext =
+      render_thread->GetCC().GetContext();
+
   base::Debug() << "* GLES:" << std::boolalpha << glcontext->IsGLES();
   base::Debug() << "* OpenGL Info: Renderer   :"
                 << glGetStringInt(glcontext, GL_RENDERER);
@@ -52,30 +56,12 @@ int main() {
 
   win->Init(std::move(params));
 
-  std::unique_ptr<base::ThreadWorker> test_worker =
-      std::make_unique<base::ThreadWorker>("TestThread");
-  test_worker->Start(base::RunLoop::MessagePumpType::IO);
+  std::unique_ptr<content::RenderThreadManager> render_thread =
+      std::make_unique<content::RenderThreadManager>(win->AsSDLWindow());
 
-  SDL_GLContext glCtx;
-
-  /* Setup GL context */
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-  glCtx = SDL_GL_CreateContext(win->AsSDLWindow());
-
-  std::unique_ptr<renderer::CCLayer> glcontext;
-
-  try {
-    glcontext = std::make_unique<renderer::CCLayer>(glCtx);
-  } catch (const base::Exception& e) {
-    base::Debug() << e.GetErrorMessage();
-  }
-
-  auto cb = base::BindOnce(printGLInfo);
-  std::move(cb).Run(glcontext->GetContext());
-
-  test_worker->task_runner()->PostTask(base::BindOnce([]() { base::Debug() << "[Test] Thread worker task.";
-  }));
+  if (render_thread->task_runner())
+    render_thread->task_runner()->PostTask(
+        base::BindOnce(printGLInfo, render_thread.get()));
 
   base::RunLoop loop;
   base::RunLoop::RegisterUnhandledEventFilter(
@@ -84,11 +70,7 @@ int main() {
 
   loop.Run();
 
-  test_worker.reset();
-
-  base::Debug() << "[Test] Quit";
-
-  SDL_GL_DeleteContext(glCtx);
+  render_thread.reset();
 
   IMG_Quit();
   TTF_Quit();

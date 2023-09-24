@@ -39,6 +39,8 @@ class CCLayer {
 
   base::WeakPtr<CCLayer> AsWeakPtr() { return weak_ptr_factory_.GetWeakPtr(); }
 
+  SDL_GLContext GetSDLGLCtx() { return gl_sdl_ctx_; }
+
  private:
   // GL FUNCTION Context for current cc layer
   scoped_refptr<gpu::GLES2CommandContext> context_;

@@ -5,6 +5,9 @@
 #ifndef BASE_WORKER_THREAD_WORKER_H_
 #define BASE_WORKER_THREAD_WORKER_H_
 
+#include <atomic>
+
+#include "base/memory/atomic_flag.h"
 #include "base/thread/platform_thread.h"
 #include "base/worker/run_loop.h"
 
@@ -21,6 +24,8 @@ class ThreadWorker : public base::PlatformThread::Delegate {
   void Start(RunLoop::MessagePumpType type);
   void Stop();
 
+  void WaitUntilStart();
+
   scoped_refptr<SequencedTaskRunner> task_runner();
 
   PlatformThreadHandle GetThreadID();
@@ -30,6 +35,7 @@ class ThreadWorker : public base::PlatformThread::Delegate {
   int DoThreadWork() override;
   std::unique_ptr<base::PlatformThread> platform_thread_;
   std::string name_;
+  base::AtomicFlag booted_thread_;
 
   scoped_refptr<SequencedTaskRunner> task_runner_;
   OnceClosure quit_closure_;

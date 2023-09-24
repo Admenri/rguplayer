@@ -25,6 +25,8 @@ class RunnerImpl : public SequencedTaskRunner {
   RunnerImpl& operator=(const RunnerImpl&) = delete;
 
   void PostTask(base::OnceClosure task) override {
+    if (task.is_null()) return;
+
     queue_mutex_.lock();
     task_sequenced_list_.emplace(std::move(task));
     queue_mutex_.unlock();
@@ -100,6 +102,8 @@ scoped_refptr<SequencedTaskRunner> RunLoop::task_runner() {
   return internal_runner_;
 }
 
-void RunLoop::Run() { static_cast<RunnerImpl*>(internal_runner_.get())->Run(); }
+void RunLoop::Run() {
+  if (internal_runner_) static_cast<RunnerImpl*>(internal_runner_.get())->Run();
+}
 
 }  // namespace base

@@ -10,6 +10,7 @@
 #include <string>
 
 #include "base/math/math.h"
+#include "base/memory/weak_ptr.h"
 
 union SDL_Event;
 struct SDL_Window;
@@ -68,11 +69,14 @@ class Widget {
   bool IsFullscreen();
 
   SDL_Window* AsSDLWindow() { return window_; }
+  base::WeakPtr<Widget> AsWeakPtr() { return weak_ptr_factory_.GetWeakPtr(); }
 
  private:
   static void UIEventDispatcher(const SDL_Event& sdl_event);
   SDL_Window* window_;
   std::unique_ptr<WidgetDelegate> delegate_;
+
+  base::WeakPtrFactory<Widget> weak_ptr_factory_{this};
 };
 
 }  // namespace ui

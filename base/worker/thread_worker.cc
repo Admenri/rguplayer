@@ -4,6 +4,8 @@
 
 #include "base/worker/thread_worker.h"
 
+#include <SDL_timer.h>
+
 namespace base {
 
 ThreadWorker::ThreadWorker(const std::string& name) : name_(name) {}
@@ -24,6 +26,14 @@ void ThreadWorker::Stop() {
   }
 }
 
+void ThreadWorker::WaitUntilStart() {
+  if (booted_thread_.IsSet()) return;
+
+  while (!booted_thread_.IsSet()) {
+    SDL_Delay(1);
+  }
+}
+
 scoped_refptr<SequencedTaskRunner> ThreadWorker::task_runner() {
   return task_runner_;
 }
@@ -36,6 +46,8 @@ bool ThreadWorker::IsRunning() { return !!task_runner_.get(); }
 
 int ThreadWorker::DoThreadWork() {
   std::unique_ptr<RunLoop> scoped_run_loop = std::move(run_loop_);
+
+  booted_thread_.Set();
   scoped_run_loop->Run();
 
   return 0;
