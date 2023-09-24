@@ -11,8 +11,16 @@
 #include "base/debug/logging.h"
 #include "base/exceptions/exception.h"
 #include "base/memory/weak_ptr.h"
+#include "base/worker/run_loop.h"
+#include "base/worker/thread_worker.h"
 #include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
+
+void SysEvent(base::OnceClosure quit_closure, const SDL_Event& sdl_event) {
+  if (sdl_event.type == SDL_QUIT) {
+    std::move(quit_closure).Run();
+  }
+}
 
 static inline const char* glGetStringInt(
     scoped_refptr<gpu::GLES2CommandContext> glcontext, GLenum name) {
@@ -37,12 +45,16 @@ int main() {
   TTF_Init();
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 
-  std::unique_ptr<ui::Widget> win = std::make_unique<ui::Widget>();
+  ui::Widget* win = new ui::Widget();
   ui::Widget::InitParams params;
 
   params.size = base::Vec2i(800, 600);
 
   win->Init(std::move(params));
+
+  std::unique_ptr<base::ThreadWorker> test_worker =
+      std::make_unique<base::ThreadWorker>("TestThread");
+  test_worker->Start(base::RunLoop::MessagePumpType::IO);
 
   SDL_GLContext glCtx;
 
@@ -62,16 +74,17 @@ int main() {
   auto cb = base::BindOnce(printGLInfo);
   std::move(cb).Run(glcontext->GetContext());
 
-  SDL_Event e;
-  while (true) {
-    SDL_PollEvent(&e);
-    if (e.type == SDL_QUIT) break;
+  test_worker->task_runner()->PostTask(base::BindOnce([]() { base::Debug() << "[Test] Thread worker task.";
+  }));
 
-    SDL_Delay(10);
-  }
+  base::RunLoop loop;
+  base::RunLoop::RegisterUnhandledEventFilter(
+      SDL_QUIT,
+      base::BindRepeating(SysEvent, base::Passed(loop.QuitClosure())));
+
+  loop.Run();
 
   SDL_GL_DeleteContext(glCtx);
-  win.reset();
 
   IMG_Quit();
   TTF_Quit();

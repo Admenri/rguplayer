@@ -5,14 +5,23 @@
 #ifndef UI_WIDGET_WIDGET_H_
 #define UI_WIDGET_WIDGET_H_
 
+#include <memory>
 #include <optional>
 #include <string>
 
 #include "base/math/math.h"
 
+union SDL_Event;
 struct SDL_Window;
 
 namespace ui {
+
+class WidgetDelegate {
+ public:
+  virtual ~WidgetDelegate() = default;
+
+  virtual void OnWidgetDestroying() {}
+};
 
 class Widget {
  public:
@@ -40,6 +49,7 @@ class Widget {
     base::Vec2i size;
 
     bool activitable = true;
+    std::unique_ptr<WidgetDelegate> delegate;
 
     WindowPlacement window_state = WindowPlacement::Show;
   };
@@ -60,7 +70,9 @@ class Widget {
   SDL_Window* AsSDLWindow() { return window_; }
 
  private:
+  static void UIEventDispatcher(const SDL_Event& sdl_event);
   SDL_Window* window_;
+  std::unique_ptr<WidgetDelegate> delegate_;
 };
 
 }  // namespace ui

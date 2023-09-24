@@ -4,14 +4,44 @@
 
 #include "ui/widget/widget.h"
 
+#include <SDL_events.h>
 #include <SDL_video.h>
+
+#include <mutex>
 
 #include "base/debug/debugwriter.h"
 #include "base/exceptions/exception.h"
+#include "base/worker/run_loop.h"
 
 namespace ui {
 
-Widget::Widget() : window_(nullptr) {}
+const char kNativeWidgetKey[] = "UIBase::WidgetRawPtr";
+
+void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
+  switch (sdl_event.type) {
+    case SDL_WINDOWEVENT: {
+      SDL_Window* sdl_window = SDL_GetWindowFromID(sdl_event.window.windowID);
+      Widget* widget =
+          static_cast<Widget*>(SDL_GetWindowData(sdl_window, kNativeWidgetKey));
+      if (!widget) return;
+
+      switch (sdl_event.window.event) {
+        case SDL_WINDOWEVENT_CLOSE: {
+          widget->Close();
+          break;
+        }
+      }
+
+      break;
+    }
+  }
+}
+
+Widget::Widget() : window_(nullptr) {
+  static std::once_flag g_init_callback;
+  std::call_once(g_init_callback, base::RunLoop::RegisterUnhandledEventFilter,
+                 SDL_WINDOWEVENT, base::BindRepeating(UIEventDispatcher));
+}
 
 Widget::~Widget() { Close(); }
 
@@ -40,10 +70,20 @@ void Widget::Init(InitParams params) {
                              params.position.value_or(centered_pos).x,
                              params.position.value_or(centered_pos).y,
                              params.size.x, params.size.y, window_flags);
+  SDL_SetWindowData(window_, kNativeWidgetKey, this);
+
+  delegate_ = std::move(params.delegate);
 }
 
 void Widget::Close() {
-  if (window_) SDL_DestroyWindow(window_);
+  if (window_) {
+    if (delegate_) delegate_->OnWidgetDestroying();
+
+    SDL_DestroyWindow(window_);
+    window_ = nullptr;
+
+    delete this;
+  }
 }
 
 void Widget::SetFullscreen(bool fullscreen) {
