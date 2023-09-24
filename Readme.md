@@ -1,4 +1,6 @@
 ﻿# ![Logo](app/resources/rgu_favicon_64.png) RGU Player Core
+![GitHub](https://img.shields.io/github/license/Admenri/rguplayer)
+[![CodeFactor](https://www.codefactor.io/repository/github/Admenri/rguplayer/badge)](https://www.codefactor.io/repository/github/Admenri/rguplayer)
 
 ## Project Overview
 
