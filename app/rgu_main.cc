@@ -84,6 +84,10 @@ int main() {
 
   loop.Run();
 
+  test_worker.reset();
+
+  base::Debug() << "[Test] Quit";
+
   SDL_GL_DeleteContext(glCtx);
 
   IMG_Quit();

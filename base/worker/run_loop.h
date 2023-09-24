@@ -54,7 +54,7 @@ class ReleaseHelper {
 };
 
 class SequencedTaskRunner
-    : public base::RefCountedThreadSafe<SequencedTaskRunner> {
+    : public base::RefCounted<SequencedTaskRunner> {
  public:
   SequencedTaskRunner() = default;
   virtual ~SequencedTaskRunner() = default;

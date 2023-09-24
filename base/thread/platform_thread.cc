@@ -19,7 +19,9 @@ int SDLCALL ThreadWorkProcess(void* userdata) {
 
 }  // namespace
 
-PlatformThread::~PlatformThread() { SDL_DetachThread(sdl_thread_); }
+PlatformThread::~PlatformThread() {
+  if (sdl_thread_) SDL_DetachThread(sdl_thread_);
+}
 
 std::unique_ptr<PlatformThread> PlatformThread::Create(
     Delegate* delegate, const std::string& threading_name) {
@@ -43,7 +45,10 @@ int PlatformThread::Join() {
   return status;
 }
 
-void PlatformThread::Detach() && { SDL_DetachThread(sdl_thread_); }
+void PlatformThread::Detach() && {
+  SDL_DetachThread(sdl_thread_);
+  sdl_thread_ = nullptr;
+}
 
 PlatformThread::PlatformThread(Delegate* delegate,
                                const std::string& threading_name) {

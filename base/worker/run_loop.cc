@@ -4,6 +4,8 @@
 
 #include "base/worker/run_loop.h"
 
+#include <SDL_timer.h>
+
 #include <mutex>
 #include <queue>
 
@@ -33,8 +35,6 @@ class RunnerImpl : public SequencedTaskRunner {
   }
 
   void Run() {
-    AddRef();
-
     SDL_Event sdl_event;
 
     for (;;) {
@@ -46,15 +46,19 @@ class RunnerImpl : public SequencedTaskRunner {
       if (!task_sequenced_list_.empty()) {
         std::move(task_sequenced_list_.front()).Run();
         task_sequenced_list_.pop();
+        continue;
       }
 
       if (SDL_PollEvent(&sdl_event)) {
-        if (!g_event_dispatcher[sdl_event.type].is_null())
+        if (!g_event_dispatcher[sdl_event.type].is_null()) {
           g_event_dispatcher[sdl_event.type].Run(sdl_event);
+        }
+        continue;
       }
-    }
 
-    Release();
+      // Thread::YieldCurrent
+      SDL_Delay(1);
+    }
   }
 
  private:

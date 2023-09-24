@@ -20,7 +20,6 @@ class ThreadWorker : public base::PlatformThread::Delegate {
 
   void Start(RunLoop::MessagePumpType type);
   void Stop();
-  void StopSoon();
 
   scoped_refptr<SequencedTaskRunner> task_runner();
 
@@ -30,8 +29,11 @@ class ThreadWorker : public base::PlatformThread::Delegate {
  private:
   int DoThreadWork() override;
   std::unique_ptr<base::PlatformThread> platform_thread_;
-  std::unique_ptr<base::RunLoop> run_loop_;
   std::string name_;
+
+  scoped_refptr<SequencedTaskRunner> task_runner_;
+  OnceClosure quit_closure_;
+  std::unique_ptr<RunLoop> run_loop_;
 };
 
 }  // namespace base
