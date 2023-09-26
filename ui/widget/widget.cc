@@ -39,7 +39,7 @@ void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
 
 Widget::Widget() : window_(nullptr) {
   static std::once_flag g_init_callback;
-  std::call_once(g_init_callback, base::RunLoop::RegisterUnhandledEventFilter,
+  std::call_once(g_init_callback, base::RunLoop::BindEventDispatcher,
                  SDL_WINDOWEVENT, base::BindRepeating(UIEventDispatcher));
 }
 

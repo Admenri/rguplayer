@@ -6,7 +6,7 @@
 #define CONTENT_RENDER_THREAD_H_
 
 #include "base/memory/weak_ptr.h"
-#include "base/worker/thread_worker.h"
+#include "base/worker/run_loop.h"
 #include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
 
@@ -20,20 +20,30 @@ class RenderThreadManager {
   RenderThreadManager(const RenderThreadManager&) = delete;
   RenderThreadManager& operator=(const RenderThreadManager&) = delete;
 
+  static void CreateThread(SDL_Window* sdl_window);
+  static int RequireStopThread();
+
   static RenderThreadManager* GetInstance();
 
   scoped_refptr<base::SequencedTaskRunner> task_runner() {
-    return render_worker_->task_runner();
+    if (!render_loop_) return nullptr;
+    return render_loop_->task_runner();
   }
 
   renderer::CCLayer& GetCC() { return *renderer_cc_; }
 
  private:
-  void InitThread(SDL_Window* sdl_window);
-  void QuitThread(std::unique_ptr<renderer::CCLayer> cc);
+  void InitThread();
+  void QuitThread();
+  void QuitHelper() { render_loop_->QuitWhenIdle(); }
 
+  static int ThreadFunc(void* userdata);
+
+  SDL_Window* sdl_window_;
   std::unique_ptr<renderer::CCLayer> renderer_cc_;
-  std::unique_ptr<base::ThreadWorker> render_worker_;
+  std::unique_ptr<base::RunLoop> render_loop_;
+
+  base::AtomicFlag sync_start_flag_;
 
   base::WeakPtrFactory<RenderThreadManager> weak_ptr_factory_{this};
 };

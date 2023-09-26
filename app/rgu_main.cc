@@ -12,7 +12,6 @@
 #include "base/exceptions/exception.h"
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
-#include "base/worker/thread_worker.h"
 #include "content/render_thread.h"
 #include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
@@ -57,28 +56,27 @@ int main() {
 
   ui::Widget* win = new ui::Widget();
   ui::Widget::InitParams params;
-
   params.size = base::Vec2i(800, 600);
-
   win->Init(std::move(params));
 
-  std::unique_ptr<content::RenderThreadManager> render_thread =
-      std::make_unique<content::RenderThreadManager>(win->AsSDLWindow());
+  content::RenderThreadManager::CreateThread(win->AsSDLWindow());
 
-  render_thread->task_runner()->PostTask(
-      base::BindOnce(printGLInfo, render_thread.get(), win->AsSDLWindow()));
+  content::RenderThreadManager::GetInstance()->task_runner()->PostTask(
+      base::BindOnce(printGLInfo, content::RenderThreadManager::GetInstance(),
+                     win->AsSDLWindow()));
 
   base::RunLoop loop;
-  base::RunLoop::RegisterUnhandledEventFilter(
+  base::RunLoop::BindEventDispatcher(
       SDL_QUIT,
       base::BindRepeating(SysEvent, base::Passed(loop.QuitClosure())));
 
   loop.Run();
 
-  render_thread.reset();
+  content::RenderThreadManager::RequireStopThread();
 
   IMG_Quit();
   TTF_Quit();
   SDL_Quit();
+
   return 0;
 }

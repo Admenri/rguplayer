@@ -37,13 +37,9 @@ set(BASE_SRC
   memory/scoped_refptr.h
   memory/weak_ptr.cc
   memory/weak_ptr.h
-  thread/platform_thread.cc
-  thread/platform_thread.h
   thread/thread_checker.h
   worker/run_loop.cc
   worker/run_loop.h
-  worker/thread_worker.cc
-  worker/thread_worker.h
   template_util.h
 )
 

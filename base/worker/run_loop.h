@@ -7,7 +7,10 @@
 
 #include <SDL_events.h>
 
+#include <queue>
+
 #include "base/bind/callback.h"
+#include "base/memory/lock.h"
 #include "base/memory/ref_counted.h"
 
 namespace base {
@@ -90,29 +93,39 @@ class SequencedTaskRunner : public base::RefCounted<SequencedTaskRunner> {
 
 class RunLoop {
  public:
-  static void RegisterUnhandledEventFilter(
+  static void BindEventDispatcher(
       Uint32 event_type,
       base::RepeatingCallback<void(const SDL_Event&)> callback);
 
   enum class MessagePumpType {
     UI = 0,
-    Default = UI,
     IO,
   };
 
   RunLoop();
   explicit RunLoop(MessagePumpType type);
+
   RunLoop(const RunLoop&) = delete;
   RunLoop& operator=(const RunLoop&) = delete;
 
-  base::OnceClosure QuitClosure();
   scoped_refptr<SequencedTaskRunner> task_runner();
 
   void Run();
+  base::OnceClosure QuitClosure();
   void QuitWhenIdle();
 
  private:
+  friend class RunnerImpl;
+  void InitInternal(MessagePumpType type);
+  void RequireQuit();
+  void LockAddTask(base::OnceClosure task_closure);
   scoped_refptr<SequencedTaskRunner> internal_runner_;
+
+  base::AtomicFlag quit_flag_;
+  base::Lock queue_lock_;
+  std::queue<base::OnceClosure> closure_task_list_;
+
+  base::WeakPtrFactory<RunLoop> weak_ptr_factory_{this};
 };
 
 }  // namespace base

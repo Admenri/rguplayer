@@ -4,46 +4,84 @@
 
 #include "content/render_thread.h"
 
+#include <SDL_thread.h>
+#include <SDL_timer.h>
+
 namespace content {
 
+namespace {
+
+const char kRendererThreadName[] = "RGU.Renderer.Thread";
+
 RenderThreadManager* g_render_thread = nullptr;
+SDL_Thread* g_render_thread_sdl = nullptr;
 
-RenderThreadManager::RenderThreadManager(SDL_Window* sdl_window) {
-  render_worker_ = std::make_unique<base::ThreadWorker>("RGU.Graphics.Thread");
-  render_worker_->Start(base::RunLoop::MessagePumpType::IO);
+}  // namespace
 
-  render_worker_->WaitUntilStart();
-
-  render_worker_->task_runner()->PostTask(
-      base::BindOnce(&RenderThreadManager::InitThread,
-                     weak_ptr_factory_.GetWeakPtr(), sdl_window));
-
+RenderThreadManager::RenderThreadManager(SDL_Window* sdl_window)
+    : sdl_window_(sdl_window) {
   g_render_thread = this;
 }
 
 RenderThreadManager::~RenderThreadManager() {
-  render_worker_->task_runner()->PostTask(
-      base::BindOnce(&RenderThreadManager::QuitThread,
-                     weak_ptr_factory_.GetWeakPtr(), std::move(renderer_cc_)));
+  QuitThread();
 
-  render_worker_.reset();
   g_render_thread = nullptr;
+}
+
+void RenderThreadManager::CreateThread(SDL_Window* sdl_window) {
+  if (!g_render_thread_sdl) {
+    auto render_obj = new RenderThreadManager(sdl_window);
+    g_render_thread_sdl = SDL_CreateThread(RenderThreadManager::ThreadFunc,
+                                           kRendererThreadName, render_obj);
+
+    while (!render_obj->sync_start_flag_.IsSet()) {
+      SDL_Delay(1);
+    }
+  }
+}
+
+int RenderThreadManager::RequireStopThread() {
+  int status = 0;
+  if (g_render_thread) {
+    g_render_thread->task_runner()->PostTask(base::BindOnce(
+        &RenderThreadManager::QuitHelper, base::Unretained(g_render_thread)));
+
+    SDL_WaitThread(g_render_thread_sdl, &status);
+  }
+  return status;
 }
 
 RenderThreadManager* RenderThreadManager::GetInstance() {
   return g_render_thread;
 }
 
-void RenderThreadManager::InitThread(SDL_Window* sdl_window) {
+void RenderThreadManager::InitThread() {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-  SDL_GLContext glctx = SDL_GL_CreateContext(sdl_window);
+  SDL_GLContext glctx = SDL_GL_CreateContext(sdl_window_);
   renderer_cc_ = std::make_unique<renderer::CCLayer>(glctx);
 }
 
-void RenderThreadManager::QuitThread(std::unique_ptr<renderer::CCLayer> cc) {
-  SDL_GLContext glctx = cc->GetSDLGLCtx();
+void RenderThreadManager::QuitThread() {
+  SDL_GLContext glctx = renderer_cc_->GetSDLGLCtx();
   SDL_GL_DeleteContext(glctx);
+}
+
+int RenderThreadManager::ThreadFunc(void* userdata) {
+  std::unique_ptr<RenderThreadManager> renderer_manager(
+      static_cast<RenderThreadManager*>(userdata));
+  renderer_manager->InitThread();
+
+  renderer_manager->render_loop_ = std::make_unique<base::RunLoop>();
+  renderer_manager->sync_start_flag_.Set();
+
+  renderer_manager->render_loop_->Run();
+
+  // Release
+  renderer_manager.reset();
+
+  return 0;
 }
 
 }  // namespace content
