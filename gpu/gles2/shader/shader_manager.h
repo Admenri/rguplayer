@@ -11,7 +11,7 @@
 
 namespace gpu {
 
-enum ShaderLocation : GLuint {
+enum ShaderLocation : GLenum {
   Position = 0,
   TexCoord,
   Color,

@@ -103,11 +103,10 @@ void ShaderManager::CompileShader(GLuint gl_shader,
 
   // Setup shader source
   shader_srcs.push_back(reinterpret_cast<const GLchar*>(shader_source.c_str()));
-  shader_sizes.push_back(static_cast<GLint>(shader_source.size()));
+  shader_sizes.push_back(shader_source.size());
 
   // Setup shader program
-  GetContext()->glShaderSource(gl_shader,
-                               static_cast<GLsizei>(shader_srcs.size()),
+  GetContext()->glShaderSource(gl_shader, shader_srcs.size(),
                                shader_srcs.data(), shader_sizes.data());
 
   GetContext()->glCompileShader(gl_shader);

@@ -59,6 +59,7 @@ find_package(SDL2_image REQUIRED)
 add_subdirectory(base)
 add_subdirectory(gpu)
 add_subdirectory(renderer)
+add_subdirectory(ui)
 add_subdirectory(content)
 add_subdirectory(modules)
 

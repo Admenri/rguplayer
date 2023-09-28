@@ -15,12 +15,13 @@
 #include "renderer/paint/frame_buffer_canvas.h"
 #include "renderer/paint/quad_draw.h"
 #include "renderer/state/state_stack.h"
+#include "ui/widget/widget.h"
 
 namespace renderer {
 
 class CCLayer {
  public:
-  CCLayer(SDL_Window* window, const SDL_GLContext& gl_ctx);
+  CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx);
   virtual ~CCLayer() = default;
 
   CCLayer(const CCLayer&) = delete;
@@ -40,7 +41,7 @@ class CCLayer {
   base::WeakPtr<CCLayer> AsWeakPtr() { return weak_ptr_factory_.GetWeakPtr(); }
 
   SDL_GLContext GetSDLGLCtx() { return gl_sdl_ctx_; }
-  SDL_Window* GetWindow() { return window_; }
+  base::WeakPtr<ui::Widget> GetWindow() { return window_; }
 
  private:
   // GL FUNCTION Context for current cc layer
@@ -53,7 +54,7 @@ class CCLayer {
   SDL_GLContext gl_sdl_ctx_;
 
   // Current bind window
-  SDL_Window* window_;
+  base::WeakPtr<ui::Widget> window_;
 
   // Stack style state storage
   struct {
