@@ -12,6 +12,7 @@
 #include "base/exceptions/exception.h"
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
+#include "base/worker/thread_worker.h"
 #include "content/render_thread.h"
 #include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
@@ -27,10 +28,11 @@ static inline const char* glGetStringInt(
   return (const char*)glcontext->glGetString(name);
 }
 
-static void printGLInfo(content::RenderThreadManager* render_thread,
-                        SDL_Window* win) {
+static void printGLInfo() {
+  auto this_context = content::RendererThread::GetCCForRenderer();
   scoped_refptr<gpu::GLES2CommandContext> glcontext =
-      render_thread->GetCC().GetContext();
+      this_context->GetContext();
+  SDL_Window* win = this_context->GetWindow()->AsSDLWindow();
 
   base::Debug() << "* GLES:" << std::boolalpha << glcontext->IsGLES();
   base::Debug() << "* OpenGL Info: Renderer   :"
@@ -59,11 +61,11 @@ int main() {
   params.size = base::Vec2i(800, 600);
   win->Init(std::move(params));
 
-  content::RenderThreadManager::CreateThread(win->AsSDLWindow());
+  scoped_refptr<content::RendererThread> worker =
+      base::MakeRefCounted<content::RendererThread>();
+  worker->InitContextAsync(win);
 
-  content::RenderThreadManager::GetInstance()->task_runner()->PostTask(
-      base::BindOnce(printGLInfo, content::RenderThreadManager::GetInstance(),
-                     win->AsSDLWindow()));
+  worker->GetRenderThreadRunner()->PostTask(base::BindOnce(printGLInfo));
 
   base::RunLoop loop;
   base::RunLoop::BindEventDispatcher(
@@ -72,7 +74,7 @@ int main() {
 
   loop.Run();
 
-  content::RenderThreadManager::RequireStopThread();
+  worker.reset();
 
   IMG_Quit();
   TTF_Quit();

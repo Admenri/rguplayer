@@ -40,6 +40,8 @@ set(BASE_SRC
   thread/thread_checker.h
   worker/run_loop.cc
   worker/run_loop.h
+  worker/thread_worker.cc
+  worker/thread_worker.h
   template_util.h
 )
 

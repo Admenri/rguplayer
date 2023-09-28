@@ -6,7 +6,8 @@
 
 namespace modules {
 
-Bitmap::Bitmap(int width, int height) {
+Bitmap::Bitmap(base::WeakPtr<renderer::CCLayer> cc, int width, int height)
+    : cc_(cc) {
   InitCanvas();
 
   frame_canvas_->Bind();
@@ -14,7 +15,8 @@ Bitmap::Bitmap(int width, int height) {
   frame_canvas_->Clear();
 }
 
-Bitmap::Bitmap(const std::string& filename) {
+Bitmap::Bitmap(base::WeakPtr<renderer::CCLayer> cc, const std::string& filename)
+    : cc_(cc) {
   InitCanvas();
 
   SDL_Surface* img_surface = IMG_Load(filename.c_str());
@@ -39,8 +41,8 @@ void Bitmap::Bind() { frame_canvas_->BindTexture(); }
 void Bitmap::Unbind() { frame_canvas_->UnbindTexture(); }
 
 void Bitmap::InitCanvas() {
-  frame_canvas_ = std::make_unique<renderer::FrameBufferTexture>(
-      content::RenderThreadManager::GetInstance()->GetCC().GetContext());
+  frame_canvas_ =
+      std::make_unique<renderer::FrameBufferTexture>(cc_->GetContext());
 }
 
 void Bitmap::OnObjectDisposed() {}

@@ -111,6 +111,7 @@ class RunLoop {
   scoped_refptr<SequencedTaskRunner> task_runner();
 
   void Run();
+  bool DoLoop();
   base::OnceClosure QuitClosure();
   void QuitWhenIdle();
 

@@ -184,13 +184,6 @@
 namespace base {
 namespace logging {
 
-// Gets the current vlog level for the given file (usually taken from
-// __FILE__). Note that |N| is the size *with* the null terminator.
-template <size_t N>
-int GetVlogLevel(const char (&file)[N]) {
-  return ::base::logging::LOG_INFO;
-}
-
 typedef int LogSeverity;
 const LogSeverity LOG_VERBOSE = -1;  // This is level 1 verbosity
 // Note: the log severities are used to index into the array of names,
@@ -200,6 +193,13 @@ const LogSeverity LOG_WARNING = 1;
 const LogSeverity LOG_ERROR = 2;
 const LogSeverity LOG_FATAL = 3;
 const LogSeverity LOG_NUM_SEVERITIES = 4;
+
+// Gets the current vlog level for the given file (usually taken from
+// __FILE__). Note that |N| is the size *with* the null terminator.
+template <size_t N>
+int GetVlogLevel(const char (&file)[N]) {
+  return ::base::logging::LOG_INFO;
+}
 
 // Gets the current log level.
 inline int GetMinLogLevel() { return ::base::logging::LOG_INFO; }

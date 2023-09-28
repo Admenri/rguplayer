@@ -4,10 +4,10 @@
 
 #include "base/worker/run_loop.h"
 
-#include <SDL_timer.h>
-
+#include <chrono>
 #include <mutex>
 #include <queue>
+#include <thread>
 
 namespace base {
 
@@ -57,27 +57,33 @@ void RunLoop::Run() {
   for (;;) {
     if (quit_flag_.IsSet()) return;
 
-    {
-      base::AutoLock queue_lock_mutex(queue_lock_);
-      if (!closure_task_list_.empty() &&
-          !closure_task_list_.front().is_null()) {
-        std::move(closure_task_list_.front()).Run();
-        closure_task_list_.pop();
-        continue;
-      }
+    // Run once
+    if (!DoLoop()) {
+      // No work for sleep thread
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-
-    SDL_Event sdl_event;
-    if (SDL_PollEvent(&sdl_event)) {
-      if (!g_event_dispatcher[sdl_event.type].is_null()) {
-        g_event_dispatcher[sdl_event.type].Run(sdl_event);
-        continue;
-      }
-    }
-
-    // No work for sleep thread
-    SDL_Delay(1);
   }
+}
+
+bool RunLoop::DoLoop() {
+  {
+    base::AutoLock queue_lock_mutex(queue_lock_);
+    if (!closure_task_list_.empty() && !closure_task_list_.front().is_null()) {
+      std::move(closure_task_list_.front()).Run();
+      closure_task_list_.pop();
+      return true;
+    }
+  }
+
+  SDL_Event sdl_event;
+  if (SDL_PollEvent(&sdl_event)) {
+    if (!g_event_dispatcher[sdl_event.type].is_null()) {
+      g_event_dispatcher[sdl_event.type].Run(sdl_event);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void RunLoop::QuitWhenIdle() { RequireQuit(); }

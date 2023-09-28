@@ -8,14 +8,15 @@
 
 #include "base/math/math.h"
 #include "modules/disposable.h"
+#include "renderer/compositor/renderer_cc.h"
 #include "renderer/paint/frame_buffer_canvas.h"
 
 namespace modules {
 
 class Bitmap : public Disposable {
  public:
-  Bitmap(int width, int height);
-  Bitmap(const std::string& filename);
+  Bitmap(base::WeakPtr<renderer::CCLayer> cc, int width, int height);
+  Bitmap(base::WeakPtr<renderer::CCLayer> cc, const std::string& filename);
 
   Bitmap(const Bitmap&) = delete;
   Bitmap& operator=(const Bitmap&) = delete;
@@ -31,6 +32,8 @@ class Bitmap : public Disposable {
   void InitCanvas();
   void OnObjectDisposed() override;
   void EnsureSurfaceFormat(SDL_Surface*& surface);
+
+  base::WeakPtr<renderer::CCLayer> cc_;
 
   std::unique_ptr<renderer::FrameBufferTexture> frame_canvas_;
 };

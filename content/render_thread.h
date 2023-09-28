@@ -5,47 +5,49 @@
 #ifndef CONTENT_RENDER_THREAD_H_
 #define CONTENT_RENDER_THREAD_H_
 
+#include <thread>
+
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
+#include "base/worker/thread_worker.h"
 #include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
 
 namespace content {
 
-class RenderThreadManager {
+class RendererThread : public base::RefCountedThreadSafe<RendererThread> {
  public:
-  RenderThreadManager(SDL_Window* sdl_window);
-  virtual ~RenderThreadManager();
+  RendererThread();
+  virtual ~RendererThread();
 
-  RenderThreadManager(const RenderThreadManager&) = delete;
-  RenderThreadManager& operator=(const RenderThreadManager&) = delete;
+  RendererThread(const RendererThread&) = delete;
+  RendererThread& operator=(const RendererThread&) = delete;
 
-  static void CreateThread(SDL_Window* sdl_window);
-  static int RequireStopThread();
+  // Init gl context and graphics device
+  void InitContextAsync(ui::Widget* render_canvas);
 
-  static RenderThreadManager* GetInstance();
+  // Only valid after initialize
+  // Maybe nullptr
+  renderer::CCLayer* GetCC() { return renderer_cc_.get(); }
 
-  scoped_refptr<base::SequencedTaskRunner> task_runner() {
-    if (!render_loop_) return nullptr;
-    return render_loop_->task_runner();
-  }
+  // Get render thread task runner
+  scoped_refptr<base::SequencedTaskRunner> GetRenderThreadRunner();
 
-  renderer::CCLayer& GetCC() { return *renderer_cc_; }
+  // Get cc for current render thread
+  static renderer::CCLayer* GetCCForRenderer();
 
  private:
+  friend class base::RefCountedThreadSafe<RendererThread>;
   void InitThread();
   void QuitThread();
-  void QuitHelper() { render_loop_->QuitWhenIdle(); }
 
-  static int ThreadFunc(void* userdata);
-
-  SDL_Window* sdl_window_;
+  base::WeakPtr<ui::Widget> render_widget_;
   std::unique_ptr<renderer::CCLayer> renderer_cc_;
-  std::unique_ptr<base::RunLoop> render_loop_;
 
-  base::AtomicFlag sync_start_flag_;
+  std::unique_ptr<base::ThreadWorker> thread_;
+  SDL_GLContext gl_context_ = nullptr;
 
-  base::WeakPtrFactory<RenderThreadManager> weak_ptr_factory_{this};
+  base::WeakPtrFactory<RendererThread> weak_ptr_factory_{this};
 };
 
 }  // namespace content
