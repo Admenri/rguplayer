@@ -110,7 +110,7 @@ class Vec3 {
 
 class Vec3i {
  public:
-  Vec3i() : x(0.f), y(0.f), z(0.f) {}
+  Vec3i() : x(0), y(0), z(0) {}
   Vec3i(int ix, int iy, int iz) : x(ix), y(iy), z(iz) {}
   virtual ~Vec3i() = default;
 
@@ -160,7 +160,7 @@ class Vec4 {
 
 class Vec4i {
  public:
-  Vec4i() : x(0.f), y(0.f), z(0.f), w(0.f) {}
+  Vec4i() : x(0), y(0), z(0), w(0) {}
   Vec4i(int ix, int iy, int iz, int iw) : x(ix), y(iy), z(iz), w(iw) {}
   virtual ~Vec4i() = default;
 

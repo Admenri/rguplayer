@@ -6,7 +6,7 @@
 
 namespace renderer {
 
-CCLayer::CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx)
+CCLayer::CCLayer(SDL_Window* window, const SDL_GLContext& gl_ctx)
     : gl_sdl_ctx_(gl_ctx), window_(window) {
   context_ = base::MakeRefCounted<gpu::GLES2CommandContext>();
   context_->InitContext();

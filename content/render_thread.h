@@ -7,11 +7,11 @@
 
 #include <thread>
 
+#include "base/exceptions/exception.h"
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
 #include "base/worker/thread_worker.h"
 #include "renderer/compositor/renderer_cc.h"
-#include "ui/widget/widget.h"
 
 namespace content {
 
@@ -24,7 +24,7 @@ class RendererThread : public base::RefCountedThreadSafe<RendererThread> {
   RendererThread& operator=(const RendererThread&) = delete;
 
   // Init gl context and graphics device
-  void InitContextAsync(ui::Widget* render_canvas);
+  void InitContextAsync(SDL_Window* render_canvas);
 
   // Only valid after initialize
   // Maybe nullptr
@@ -41,7 +41,7 @@ class RendererThread : public base::RefCountedThreadSafe<RendererThread> {
   void InitThread();
   void QuitThread();
 
-  base::WeakPtr<ui::Widget> render_widget_;
+  SDL_Window* render_widget_;
   std::unique_ptr<renderer::CCLayer> renderer_cc_;
 
   std::unique_ptr<base::ThreadWorker> thread_;

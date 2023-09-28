@@ -20,7 +20,7 @@ struct CommonVertex {
 
 struct GLVertexAttribute {
   gpu::ShaderLocation location;
-  size_t size;
+  int size;
   GLenum type;
   const GLvoid* offset;
 };

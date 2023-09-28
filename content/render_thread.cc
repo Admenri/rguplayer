@@ -12,9 +12,9 @@ namespace {
 
 std::unordered_map<std::thread::id, renderer::CCLayer*> g_thread_context;
 
-}
+}  // namespace
 
-RendererThread::RendererThread() {
+RendererThread::RendererThread() : render_widget_(nullptr) {
   thread_.reset(new base::ThreadWorker());
   thread_->Start(base::RunLoop::MessagePumpType::IO);
 
@@ -26,8 +26,8 @@ RendererThread::~RendererThread() {
       &RendererThread::QuitThread, weak_ptr_factory_.GetWeakPtr()));
 }
 
-void RendererThread::InitContextAsync(ui::Widget* render_canvas) {
-  render_widget_ = render_canvas->AsWeakPtr();
+void RendererThread::InitContextAsync(SDL_Window* render_canvas) {
+  render_widget_ = render_canvas;
 
   thread_->task_runner()->PostTask(base::BindOnce(
       &RendererThread::InitThread, weak_ptr_factory_.GetWeakPtr()));
@@ -50,9 +50,13 @@ renderer::CCLayer* RendererThread::GetCCForRenderer() {
 void RendererThread::InitThread() {
   AddRef();
 
-  gl_context_ = SDL_GL_CreateContext(render_widget_->AsSDLWindow());
+  gl_context_ = SDL_GL_CreateContext(render_widget_);
 
-  renderer_cc_.reset(new renderer::CCLayer(render_widget_, gl_context_));
+  try {
+    renderer_cc_.reset(new renderer::CCLayer(render_widget_, gl_context_));
+  } catch (const base::Exception& e) {
+    base::Debug() << "[Core] Error: " << e.GetErrorMessage();
+  }
 
   g_thread_context.insert(
       std::make_pair(std::this_thread::get_id(), renderer_cc_.get()));
