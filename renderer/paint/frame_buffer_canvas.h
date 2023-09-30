@@ -22,21 +22,25 @@ class FrameBufferTexture {
 
   GLuint GetTexture() { return texture_; }
 
+  void BindFrame();
+  void UnbindFrame();
+
   void BindTexture();
   void UnbindTexture();
 
-  void Bind();
-  void Unbind();
   void Clear();
 
   void Alloc(const base::Vec2i& size);
   void BufferData(const base::Vec2i& size, const void* data, GLenum format);
   void BufferData(const base::Vec4i& bounds, const void* data, GLenum format);
 
+  base::Vec2i& GetSize() { return size_; }
+
  private:
   scoped_refptr<gpu::GLES2CommandContext> context_;
   GLuint texture_;
   GLuint frame_buffer_;
+  base::Vec2i size_;
 };
 
 }  // namespace renderer

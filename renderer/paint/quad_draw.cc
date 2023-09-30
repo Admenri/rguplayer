@@ -31,7 +31,7 @@ QuadIndicesBuffer::QuadIndicesBuffer(
 
   Bind();
   context_->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(kQuadIndices),
-                         kQuadIndices, GL_STATIC_DRAW);
+                         kQuadIndices, GL_DYNAMIC_DRAW);
   Unbind();
 }
 
@@ -52,9 +52,7 @@ QuadDrawable::QuadDrawable(scoped_refptr<QuadIndicesBuffer> indices_buffer,
     : context_(context),
       indices_buffer_(indices_buffer),
       vertex_data_(std::make_unique<GLVertexData<CommonVertex>>(context)) {
-  vertex_data_->Bind();
   vertex_data_->UpdateVertex(nullptr, 4);
-  vertex_data_->Unbind();
 }
 
 void QuadDrawable::SetPosition(const base::RectF& rect) {
@@ -63,6 +61,7 @@ void QuadDrawable::SetPosition(const base::RectF& rect) {
   vertex_[i++].position = base::Vec2(rect.x + rect.width, rect.y);
   vertex_[i++].position = base::Vec2(rect.x + rect.width, rect.y + rect.height);
   vertex_[i++].position = base::Vec2(rect.x, rect.y + rect.height);
+  need_update_ = true;
 }
 
 void QuadDrawable::SetTexcoord(const base::RectF& rect) {
@@ -71,10 +70,12 @@ void QuadDrawable::SetTexcoord(const base::RectF& rect) {
   vertex_[i++].texcoord = base::Vec2(rect.x + rect.width, rect.y);
   vertex_[i++].texcoord = base::Vec2(rect.x + rect.width, rect.y + rect.height);
   vertex_[i++].texcoord = base::Vec2(rect.x, rect.y + rect.height);
+  need_update_ = true;
 }
 
 void QuadDrawable::SetColor(const base::Vec4& color) {
   for (size_t i = 0; i < 4; i++) vertex_[i].color = color;
+  need_update_ = true;
 }
 
 void QuadDrawable::Draw() {
@@ -86,9 +87,7 @@ void QuadDrawable::Draw() {
 
   indices_buffer_->Bind();
   vertex_data_->Bind();
-  context_->glDrawElements(GL_TRIANGLES,
-                           sizeof(kQuadIndices) / sizeof(kQuadIndices[0]),
-                           GL_UNSIGNED_BYTE, kQuadIndices);
+  context_->glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr);
   vertex_data_->Unbind();
   indices_buffer_->Unbind();
 }

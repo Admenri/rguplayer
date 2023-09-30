@@ -63,13 +63,16 @@ class Widget {
 
   void Init(InitParams params);
 
-  void Close();
-
   void SetFullscreen(bool fullscreen);
   bool IsFullscreen();
 
   SDL_Window* AsSDLWindow() { return window_; }
   base::WeakPtr<Widget> AsWeakPtr() { return weak_ptr_factory_.GetWeakPtr(); }
+
+  base::Vec2i GetPosition();
+  base::Vec2i GetSize();
+
+  static Widget* FromWindowID(uint32_t window_id);
 
  private:
   static void UIEventDispatcher(const SDL_Event& sdl_event);

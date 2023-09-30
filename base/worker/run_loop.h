@@ -88,6 +88,7 @@ class SequencedTaskRunner : public base::RefCounted<SequencedTaskRunner> {
   bool DeleteOrReleaseSoonInternal(void (*deleter)(const void*),
                                    const void* object) {
     PostTask(base::BindOnce(deleter, object));
+    return !!object;
   }
 };
 

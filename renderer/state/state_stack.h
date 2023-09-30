@@ -55,6 +55,13 @@ class GLState {
   std::stack<T> stack_;
 };
 
+template <typename T>
+inline void GLState<T>::ApplyTop() {
+  T& top = stack_.top();
+  current_ = top;
+  OnApplyProperty(top);
+}
+
 class GLViewport : public GLState<base::Rect> {
  public:
   GLViewport(scoped_refptr<gpu::GLES2CommandContext> gl_context)

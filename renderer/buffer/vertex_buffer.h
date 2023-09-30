@@ -20,7 +20,7 @@ struct CommonVertex {
 
 struct GLVertexAttribute {
   gpu::ShaderLocation location;
-  size_t size;
+  GLint size;
   GLenum type;
   const GLvoid* offset;
 };
@@ -79,19 +79,21 @@ inline void GLVertexData<VertexT>::Bind() {
 
 template <typename VertexT>
 inline void GLVertexData<VertexT>::Unbind() {
-  context_->glBindBuffer(GL_ARRAY_BUFFER, 0);
-
   for (size_t i = 0; i < VertexAttributeTraits<CommonVertex>::attr_size; i++) {
     context_->glDisableVertexAttribArray(
         VertexAttributeTraits<CommonVertex>::attr[i].location);
   }
+
+  context_->glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 template <typename VertexT>
 inline void GLVertexData<VertexT>::UpdateVertex(const VertexT* raw_data,
                                                 size_t size) {
+  context_->glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
   context_->glBufferData(GL_ARRAY_BUFFER, size * sizeof(VertexT), raw_data,
                          GL_DYNAMIC_DRAW);
+  context_->glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 }  // namespace renderer

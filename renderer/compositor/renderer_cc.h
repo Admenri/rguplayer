@@ -38,6 +38,10 @@ class CCLayer {
   GLScissorTest& ScissorTest() { return *states.scissor_test_; }
   GLBlendMode& BlendMode() { return *states.blend_mode_; }
 
+  gpu::SimpleShader& SimpleShader() { return *shaders.simple_shader; }
+
+  int GetTextureMaxSize() { return texture_max_size_; }
+
   base::WeakPtr<CCLayer> AsWeakPtr() { return weak_ptr_factory_.GetWeakPtr(); }
 
   SDL_GLContext GetSDLGLCtx() { return gl_sdl_ctx_; }
@@ -68,6 +72,8 @@ class CCLayer {
   struct {
     std::unique_ptr<gpu::SimpleShader> simple_shader;
   } shaders;
+
+  GLint texture_max_size_;
 
   base::WeakPtrFactory<CCLayer> weak_ptr_factory_{this};
 };

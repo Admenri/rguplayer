@@ -78,6 +78,15 @@ void ShaderManager::Setup(const std::string& vertex_shader,
   GetContext()->glAttachShader(program_, vertex_shader_);
   GetContext()->glAttachShader(program_, frag_shader_);
 
+  // Bind attribute
+  GetContext()->glBindAttribLocation(GetProgram(), ShaderLocation::Position,
+                                     "position");
+  GetContext()->glBindAttribLocation(GetProgram(), ShaderLocation::TexCoord,
+                                     "texCoord");
+  GetContext()->glBindAttribLocation(GetProgram(), ShaderLocation::Color,
+                                     "color");
+
+  // Before link bind
   GetContext()->glLinkProgram(program_);
 
   GLint success;
@@ -103,10 +112,11 @@ void ShaderManager::CompileShader(GLuint gl_shader,
 
   // Setup shader source
   shader_srcs.push_back(reinterpret_cast<const GLchar*>(shader_source.c_str()));
-  shader_sizes.push_back(shader_source.size());
+  shader_sizes.push_back(static_cast<GLint>(shader_source.size()));
 
   // Setup shader program
-  GetContext()->glShaderSource(gl_shader, shader_srcs.size(),
+  GetContext()->glShaderSource(gl_shader,
+                               static_cast<GLsizei>(shader_srcs.size()),
                                shader_srcs.data(), shader_sizes.data());
 
   GetContext()->glCompileShader(gl_shader);
@@ -125,13 +135,6 @@ ShaderBase::ShaderBase(scoped_refptr<gpu::GLES2CommandContext> context)
 void ShaderBase::Setup(const std::string& vertex_shader,
                        const std::string& frag_shader) {
   ShaderManager::Setup(vertex_shader, frag_shader);
-
-  GetContext()->glBindAttribLocation(GetProgram(), ShaderLocation::Position,
-                                     "position");
-  GetContext()->glBindAttribLocation(GetProgram(), ShaderLocation::TexCoord,
-                                     "texCoord");
-  GetContext()->glBindAttribLocation(GetProgram(), ShaderLocation::Color,
-                                     "color");
 
   viewp_matrix_location_ =
       GetContext()->glGetUniformLocation(GetProgram(), "viewpMat");
@@ -156,14 +159,24 @@ SimpleShader::SimpleShader(scoped_refptr<gpu::GLES2CommandContext> context)
       GetContext()->glGetUniformLocation(GetProgram(), "texSize");
   trans_offset_location_ =
       GetContext()->glGetUniformLocation(GetProgram(), "transOffset");
+  texture_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "texture");
 }
 
 void SimpleShader::SetTextureSize(const base::Vec2& tex_size) {
-  GetContext()->glUniform2f(tex_size_location_, tex_size.x, tex_size.y);
+  GetContext()->glUniform2f(tex_size_location_, 1.f / tex_size.x,
+                            1.f / tex_size.y);
 }
 
 void SimpleShader::SetTransOffset(const base::Vec2& offset) {
   GetContext()->glUniform2f(trans_offset_location_, offset.x, offset.y);
+}
+
+void SimpleShader::SetTexture(GLuint tex) {
+  GetContext()->glActiveTexture(GL_TEXTURE1);
+  GetContext()->glBindTexture(GL_TEXTURE_2D, tex);
+  GetContext()->glUniform1i(texture_location_, GL_TEXTURE1);
+  GetContext()->glActiveTexture(GL_TEXTURE0);
 }
 
 }  // namespace gpu

@@ -11,7 +11,7 @@
 
 namespace gpu {
 
-enum ShaderLocation : GLenum {
+enum ShaderLocation : GLuint {
   Position = 0,
   TexCoord,
   Color,
@@ -64,10 +64,13 @@ class SimpleShader : public ShaderBase {
 
   void SetTextureSize(const base::Vec2& tex_size);
   void SetTransOffset(const base::Vec2& offset);
+  void SetTexture(GLuint tex);
 
  private:
   GLint tex_size_location_;
   GLint trans_offset_location_;
+
+  GLint texture_location_;
 };
 
 }  // namespace gpu

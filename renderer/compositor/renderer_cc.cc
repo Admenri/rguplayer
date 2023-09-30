@@ -7,7 +7,7 @@
 namespace renderer {
 
 CCLayer::CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx)
-    : gl_sdl_ctx_(gl_ctx), window_(window) {
+    : gl_sdl_ctx_(gl_ctx), window_(window), texture_max_size_(0) {
   context_ = base::MakeRefCounted<gpu::GLES2CommandContext>();
   context_->InitContext();
 
@@ -18,7 +18,11 @@ CCLayer::CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx)
   states.scissor_test_ = std::make_unique<GLScissorTest>(context_);
   states.blend_mode_ = std::make_unique<GLBlendMode>(context_);
 
+  context_->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texture_max_size_);
+
   shaders.simple_shader = std::make_unique<gpu::SimpleShader>(context_);
+
+  Viewport().Push(base::Rect(base::Vec2i(), window->GetSize()));
 }
 
 }  // namespace renderer

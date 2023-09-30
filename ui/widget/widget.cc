@@ -15,38 +15,21 @@
 
 namespace ui {
 
-const char kNativeWidgetKey[] = "UIBase::WidgetRawPtr";
+const char kNativeWidgetKey[] = "UIBase::Widget";
 
-void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
-  switch (sdl_event.type) {
-    case SDL_WINDOWEVENT: {
-      SDL_Window* sdl_window = SDL_GetWindowFromID(sdl_event.window.windowID);
-      Widget* widget =
-          static_cast<Widget*>(SDL_GetWindowData(sdl_window, kNativeWidgetKey));
-      if (!widget) return;
-
-      switch (sdl_event.window.event) {
-        case SDL_WINDOWEVENT_CLOSE: {
-          widget->Close();
-          break;
-        }
-      }
-
-      break;
-    }
-  }
+Widget* Widget::FromWindowID(uint32_t window_id) {
+  SDL_Window* sdl_window = SDL_GetWindowFromID(window_id);
+  return static_cast<Widget*>(SDL_GetWindowData(sdl_window, kNativeWidgetKey));
 }
 
-Widget::Widget() : window_(nullptr) {
-  static std::once_flag g_init_callback;
-  std::call_once(g_init_callback, base::RunLoop::BindEventDispatcher,
-                 SDL_WINDOWEVENT, base::BindRepeating(UIEventDispatcher));
-}
+Widget::Widget() : window_(nullptr) {}
 
-Widget::~Widget() { Close(); }
+Widget::~Widget() {
+  if (window_) SDL_DestroyWindow(window_);
+}
 
 void Widget::Init(InitParams params) {
-  uint32_t window_flags = SDL_WINDOW_OPENGL;
+  uint32_t window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
 
   if (params.fullscreen) window_flags |= SDL_WINDOW_FULLSCREEN;
   if (params.activitable)
@@ -75,23 +58,24 @@ void Widget::Init(InitParams params) {
   delegate_ = std::move(params.delegate);
 }
 
-void Widget::Close() {
-  if (window_) {
-    if (delegate_) delegate_->OnWidgetDestroying();
-
-    SDL_DestroyWindow(window_);
-    window_ = nullptr;
-
-    delete this;
-  }
-}
-
 void Widget::SetFullscreen(bool fullscreen) {
   SDL_SetWindowFullscreen(window_, fullscreen ? 0 : SDL_WINDOW_FULLSCREEN);
 }
 
 bool Widget::IsFullscreen() {
   return SDL_GetWindowFlags(window_) & SDL_WINDOW_FULLSCREEN;
+}
+
+base::Vec2i Widget::GetPosition() {
+  base::Vec2i pos;
+  SDL_GetWindowPosition(window_, &pos.x, &pos.y);
+  return pos;
+}
+
+base::Vec2i Widget::GetSize() {
+  base::Vec2i size;
+  SDL_GetWindowSize(window_, &size.x, &size.y);
+  return size;
 }
 
 }  // namespace ui

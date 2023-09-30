@@ -12,7 +12,7 @@ namespace {
 
 std::unordered_map<std::thread::id, renderer::CCLayer*> g_thread_context;
 
-}
+}  // namespace
 
 RendererThread::RendererThread() {
   thread_.reset(new base::ThreadWorker());
@@ -49,6 +49,8 @@ renderer::CCLayer* RendererThread::GetCCForRenderer() {
 
 void RendererThread::InitThread() {
   AddRef();
+
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
   gl_context_ = SDL_GL_CreateContext(render_widget_->AsSDLWindow());
 

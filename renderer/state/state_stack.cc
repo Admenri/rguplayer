@@ -6,13 +6,6 @@
 
 namespace renderer {
 
-template <typename T>
-inline void GLState<T>::ApplyTop() {
-  T& top = stack_.top();
-  current_ = top;
-  OnApplyProperty(top);
-}
-
 void GLViewport::OnApplyProperty(const base::Rect& value) {
   GetContext()->glViewport(value.x, value.y, value.width, value.height);
 }
