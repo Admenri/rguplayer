@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <string>
+#include <variant>
 
 #include "base/bind/callback.h"
 #include "base/math/math.h"
@@ -28,28 +29,24 @@ class Bitmap : public Disposable {
   Bitmap(Bitmap&&) = default;
 
   base::Vec2i GetSize();
-  base::Vec4i GetRect();
+  base::Rect GetRect();
   void Clear();
 
-  SDL_Surface* SaveSurface();
-
-  // Called from RenderThread
-  GLuint GetTexture() { return texture_->GetTextureRaw(); }
+  /* Called from render thread */
+  scoped_refptr<renderer::GLTexture> GetGLTexture() { return texture_; }
 
  protected:
   void OnObjectDisposed() override;
 
  private:
-  void InitBufferWH(int width, int height);
-  void InitBufferPath(const std::string& filename);
-  void SaveSurfaceInternal(SDL_Surface* tmp_surf, base::OnceClosure complete);
-
   void EnsureSurfaceFormat(SDL_Surface*& surface);
+  void InitTextureFrameBuffer(
+      std::variant<base::Vec2i, SDL_Surface*> init_data);
+  void ClearInternal();
 
   scoped_refptr<content::RendererThread> worker_;
   scoped_refptr<renderer::GLTexture> texture_;
-
-  SDL_PixelFormat* format_ = nullptr;
+  std::unique_ptr<renderer::GLFrameBuffer> frame_buffer_;
 
   base::WeakPtrFactory<Bitmap> weak_ptr_factory_{this};
 };

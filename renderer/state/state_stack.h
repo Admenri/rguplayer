@@ -16,18 +16,18 @@ template <typename T>
 class GLState {
  public:
   GLState(scoped_refptr<gpu::GLES2CommandContext> gl_context)
-      : context_(gl_context) {}
+      : context_(gl_context), current_(T()) {}
   virtual ~GLState() {}
 
   GLState(const GLState&) = delete;
   GLState& operator=(const GLState&) = delete;
 
-  void Set(const T& value) {
+  void Set(T value) {
     current_ = value;
-    OnApplyProperty(value);
+    OnApplyProperty(current_);
   }
 
-  T& Current() { return current_; }
+  T Current() { return current_; }
 
  protected:
   virtual void OnApplyProperty(const T& value) = 0;

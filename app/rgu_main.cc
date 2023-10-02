@@ -19,23 +19,6 @@
 #include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
 
-const char* vertexShaderSource =
-    "attribute vec3 aPos;\n"
-    "attribute vec2 aTex;\n"
-    "varying vec2 texcoord;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   texcoord = aTex;"
-    "}\0";
-const char* fragmentShaderSource =
-    "uniform sampler2D texture;\n"
-    "varying vec2 texcoord;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_FragColor = texture2D(texture, texcoord);\n"
-    "}\n\0";
-
 void SysEvent(base::OnceClosure quit_closure, const SDL_Event& sdl_event) {
   if (sdl_event.type == SDL_QUIT) {
     std::move(quit_closure).Run();
@@ -57,43 +40,58 @@ int main() {
       new content::RendererThread();
   render_thread->InitContextAsync(win.get());
 
-  render_thread->GetRenderThreadRunner()->PostTask(base::BindOnce([]() {
-    auto* cc = content::RendererThread::GetCCForRenderer();
-    auto ctx = cc->GetContext();
+  std::unique_ptr<modules::Bitmap> bmp(
+      new modules::Bitmap(render_thread, "example.png"));
 
-    ctx->glClearColor(0, 1, 0, 1);
-    ctx->glClear(GL_COLOR_BUFFER_BIT);
+  render_thread->GetRenderThreadRunner()->PostTask(base::BindOnce(
+      [](modules::Bitmap* bmp) {
+        auto* cc = content::RendererThread::GetCCForRenderer();
+        auto ctx = cc->GetContext();
 
-    auto& shader = cc->DrawableShader();
-    renderer::QuadDrawable quad(cc->GetQuadIndicesBuffer(), cc->GetContext());
+        base::Debug() << "[APP] OpenGL Info: Renderer   :"
+                      << ctx->glGetString(GL_RENDERER);
+        base::Debug() << "                   Version    :"
+                      << ctx->glGetString(GL_VERSION);
+        base::Debug() << "                   SL Version :"
+                      << ctx->glGetString(GL_SHADING_LANGUAGE_VERSION);
+        base::Debug() << "                   Max Texture Size:"
+                      << cc->GetTextureMaxSize() << "x"
+                      << cc->GetTextureMaxSize();
+        base::Debug() << "[APP] SDL Info: Main Version :"
+                      << SDL_COMPILEDVERSION;
+        base::Debug() << "                TTF Version  :"
+                      << SDL_TTF_COMPILEDVERSION;
+        base::Debug() << "                IMG Version  :"
+                      << SDL_IMAGE_COMPILEDVERSION;
 
-    scoped_refptr<renderer::GLTexture> tex = new renderer::GLTexture(ctx);
+        ctx->glClearColor(0, 1, 0, 1);
+        ctx->glClear(GL_COLOR_BUFFER_BIT);
 
-    auto img = IMG_Load("example.png");
-    auto size = base::Vec2i(img->w, img->h);
+        auto shader = cc->DrawableShader();
+        renderer::QuadDrawable quad(cc->GetQuadIndicesBuffer(),
+                                    cc->GetContext());
 
-    base::TransformMatrix transform;
-    transform.SetPosition(base::Vec2i(800 / 2, 600 / 2));
-    transform.SetOrigin(base::Vec2i(img->w / 2, img->h / 2));
-    transform.SetRotation(45);
+        base::TransformMatrix transform;
+        transform.SetPosition(
+            base::Vec2i(cc->Viewport()->Current().width / 2,
+                        cc->Viewport()->Current().height / 2));
+        transform.SetOrigin(
+            base::Vec2i(bmp->GetSize().x / 2, bmp->GetSize().y / 2));
+        transform.SetRotation(45);
 
-    tex->Bind();
-    tex->SetTextureFilter(GL_NEAREST);
-    tex->SetSize(size);
-    tex->BufferData(img->pixels, GL_RGBA);
+        shader->Bind();
+        shader->SetViewportMatrix(cc->Viewport()->Current().Size());
+        shader->SetTransformMatrix(transform.GetMatrixDataUnsafe());
+        shader->SetTexture(bmp->GetGLTexture()->GetTextureRaw());
+        shader->SetTextureSize(bmp->GetSize());
 
-    shader.Bind();
-    shader.SetViewportMatrix(cc->Viewport().Current().Size());
-    shader.SetTransformMatrix(transform.GetMatrixDataUnsafe());
-    shader.SetTexture(tex->GetTextureRaw());
-    shader.SetTextureSize(size);
+        quad.SetPosition(base::RectF(base::Vec2(), bmp->GetSize()));
+        quad.SetTexcoord(base::RectF(base::Vec2(), bmp->GetSize()));
+        quad.Draw();
 
-    quad.SetPosition(base::RectF(base::Vec2(), size));
-    quad.SetTexcoord(base::RectF(base::Vec2(), size));
-    quad.Draw();
-
-    SDL_GL_SwapWindow(cc->GetWindow()->AsSDLWindow());
-  }));
+        SDL_GL_SwapWindow(cc->GetWindow()->AsSDLWindow());
+      },
+      bmp.get()));
 
   base::RunLoop loop;
   base::RunLoop::BindEventDispatcher(
@@ -102,6 +100,7 @@ int main() {
 
   loop.Run();
 
+  bmp.reset();
   render_thread.reset();
   win.reset();
 

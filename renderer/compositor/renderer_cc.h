@@ -33,13 +33,15 @@ class CCLayer {
     return quad_indices_buffer_;
   }
 
-  GLFrameBufferTarget& FrameBuffer() { return *states.frame_buffer_; }
-  GLViewport& Viewport() { return *states.viewport_; }
-  GLScissorRegion& ScissorRegion() { return *states.scissor_region_; }
-  GLScissorTest& ScissorTest() { return *states.scissor_test_; }
-  GLBlendMode& BlendMode() { return *states.blend_mode_; }
+  GLFrameBufferTarget* FrameBuffer() { return states.frame_buffer_.get(); }
+  GLViewport* Viewport() { return states.viewport_.get(); }
+  GLScissorRegion* ScissorRegion() { return states.scissor_region_.get(); }
+  GLScissorTest* ScissorTest() { return states.scissor_test_.get(); }
+  GLBlendMode* BlendMode() { return states.blend_mode_.get(); }
 
-  gpu::DrawableShader& DrawableShader() { return *shaders.drawable_shader; }
+  gpu::DrawableShader* DrawableShader() {
+    return shaders.drawable_shader.get();
+  }
 
   int GetTextureMaxSize() { return texture_max_size_; }
 

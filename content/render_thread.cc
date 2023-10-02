@@ -55,10 +55,6 @@ void RendererThread::InitThread() {
 
   g_thread_context.insert(
       std::make_pair(std::this_thread::get_id(), renderer_cc_.get()));
-
-  renderer_cc_->GetContext()->glClearColor(1, 1, 1, 1);
-  renderer_cc_->GetContext()->glClear(GL_COLOR_BUFFER_BIT);
-  SDL_GL_SwapWindow(render_widget_->AsSDLWindow());
 }
 
 void RendererThread::QuitThread() {
