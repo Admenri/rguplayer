@@ -33,12 +33,13 @@ class CCLayer {
     return quad_indices_buffer_;
   }
 
+  GLFrameBufferTarget& FrameBuffer() { return *states.frame_buffer_; }
   GLViewport& Viewport() { return *states.viewport_; }
   GLScissorRegion& ScissorRegion() { return *states.scissor_region_; }
   GLScissorTest& ScissorTest() { return *states.scissor_test_; }
   GLBlendMode& BlendMode() { return *states.blend_mode_; }
 
-  gpu::SimpleShader& SimpleShader() { return *shaders.simple_shader; }
+  gpu::DrawableShader& DrawableShader() { return *shaders.drawable_shader; }
 
   int GetTextureMaxSize() { return texture_max_size_; }
 
@@ -62,6 +63,7 @@ class CCLayer {
 
   // Stack style state storage
   struct {
+    std::unique_ptr<GLFrameBufferTarget> frame_buffer_;
     std::unique_ptr<GLViewport> viewport_;
     std::unique_ptr<GLScissorRegion> scissor_region_;
     std::unique_ptr<GLScissorTest> scissor_test_;
@@ -70,7 +72,7 @@ class CCLayer {
 
   // Shader object
   struct {
-    std::unique_ptr<gpu::SimpleShader> simple_shader;
+    std::unique_ptr<gpu::DrawableShader> drawable_shader;
   } shaders;
 
   GLint texture_max_size_;

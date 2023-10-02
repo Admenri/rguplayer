@@ -31,11 +31,18 @@ class GLES2CommandContext
   // Import from autogen header part
 #include "gpu/gles2/context/gles2_command_buffer_header_autogen.h"
 
+// FrameBufferObject EXT
+#include "gpu/gles2/context/gles2_command_buffer_header_autogen_ext_fbo.h"
+
  private:
   friend class base::RefCountedThreadSafe<GLES2CommandContext>;
   void* GetProc(const std::string& proc_name);
 
-  bool is_gles_;
+  void ParseExtensionsCore(std::vector<std::string>& out);
+  void ParseExtensionsCompat(std::vector<std::string>& out);
+
+  bool is_gles_ = false;
+  std::string suffix_;
 };
 
 }  // namespace gpu

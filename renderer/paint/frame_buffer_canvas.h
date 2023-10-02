@@ -8,39 +8,64 @@
 #include <memory>
 
 #include "base/math/math.h"
+#include "base/memory/ref_counted.h"
 #include "gpu/gl_forward.h"
 
 namespace renderer {
 
-class FrameBufferTexture {
+class GLTexture : public base::RefCountedThreadSafe<GLTexture> {
  public:
-  FrameBufferTexture(scoped_refptr<gpu::GLES2CommandContext> context);
-  virtual ~FrameBufferTexture();
+  GLTexture(scoped_refptr<gpu::GLES2CommandContext> context);
+  virtual ~GLTexture();
 
-  FrameBufferTexture(const FrameBufferTexture&) = delete;
-  FrameBufferTexture& operator=(const FrameBufferTexture&) = delete;
+  GLTexture(const GLTexture&) = delete;
+  GLTexture& operator=(const GLTexture&) = delete;
 
-  GLuint GetTexture() { return texture_; }
+  void SetSize(const base::Vec2i& size) { size_ = size; }
+  base::Vec2i GetSize() { return size_; }
 
-  void BindFrame();
-  void UnbindFrame();
-
-  void BindTexture();
-  void UnbindTexture();
-
-  void Clear();
-
-  void Alloc(const base::Vec2i& size);
-  void BufferData(const base::Vec2i& size, const void* data, GLenum format);
+  void AllocEmpty();
+  void BufferData(const void* data, GLenum format);
   void BufferData(const base::Vec4i& bounds, const void* data, GLenum format);
 
-  base::Vec2i& GetSize() { return size_; }
+  void Activate(uint16_t tex_unit);
+  GLuint GetTextureRaw() { return texture_; }
+  void Bind();
+  void Unbind();
+
+  void SetTextureWrap(GLint mode);
+  void SetTextureFilter(GLint mode);
 
  private:
   scoped_refptr<gpu::GLES2CommandContext> context_;
-  GLuint texture_;
-  GLuint frame_buffer_;
   base::Vec2i size_;
+  GLuint texture_;
+};
+
+class GLFrameBuffer {
+ public:
+  GLFrameBuffer(scoped_refptr<gpu::GLES2CommandContext> context);
+  virtual ~GLFrameBuffer();
+
+  GLFrameBuffer(const GLFrameBuffer&) = delete;
+  GLFrameBuffer& operator=(const GLFrameBuffer&) = delete;
+
+  void SetRenderTarget(scoped_refptr<GLTexture> target);
+  scoped_refptr<GLTexture> GetRenderTarget() { return texture_; }
+
+  void ReadPixels(const base::Vec4i& bounds, GLenum format, GLenum data_type,
+                  void* pixels);
+
+  void Bind();
+  void Unbind();
+
+  void Clear();
+  void Clear(const base::Vec4& color);
+
+ private:
+  scoped_refptr<gpu::GLES2CommandContext> context_;
+  scoped_refptr<GLTexture> texture_;
+  GLuint frame_buffer_;
 };
 
 }  // namespace renderer

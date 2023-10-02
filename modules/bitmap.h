@@ -27,11 +27,14 @@ class Bitmap : public Disposable {
 
   Bitmap(Bitmap&&) = default;
 
-  base::Vec2i& GetSize();
+  base::Vec2i GetSize();
+  base::Vec4i GetRect();
   void Clear();
 
+  SDL_Surface* SaveSurface();
+
   // Called from RenderThread
-  GLuint GetTexture() { return frame_canvas_buffer_->GetTexture(); }
+  GLuint GetTexture() { return texture_->GetTextureRaw(); }
 
  protected:
   void OnObjectDisposed() override;
@@ -39,11 +42,14 @@ class Bitmap : public Disposable {
  private:
   void InitBufferWH(int width, int height);
   void InitBufferPath(const std::string& filename);
+  void SaveSurfaceInternal(SDL_Surface* tmp_surf, base::OnceClosure complete);
 
   void EnsureSurfaceFormat(SDL_Surface*& surface);
 
   scoped_refptr<content::RendererThread> worker_;
-  std::unique_ptr<renderer::FrameBufferTexture> frame_canvas_buffer_;
+  scoped_refptr<renderer::GLTexture> texture_;
+
+  SDL_PixelFormat* format_ = nullptr;
 
   base::WeakPtrFactory<Bitmap> weak_ptr_factory_{this};
 };

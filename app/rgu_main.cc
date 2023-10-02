@@ -10,6 +10,7 @@
 #include "base/buildflags/compiler_specific.h"
 #include "base/debug/logging.h"
 #include "base/exceptions/exception.h"
+#include "base/math/transform.h"
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
 #include "base/worker/thread_worker.h"
@@ -18,40 +19,27 @@
 #include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
 
+const char* vertexShaderSource =
+    "attribute vec3 aPos;\n"
+    "attribute vec2 aTex;\n"
+    "varying vec2 texcoord;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   texcoord = aTex;"
+    "}\0";
+const char* fragmentShaderSource =
+    "uniform sampler2D texture;\n"
+    "varying vec2 texcoord;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_FragColor = texture2D(texture, texcoord);\n"
+    "}\n\0";
+
 void SysEvent(base::OnceClosure quit_closure, const SDL_Event& sdl_event) {
   if (sdl_event.type == SDL_QUIT) {
     std::move(quit_closure).Run();
   }
-}
-
-static inline const char* glGetStringInt(
-    scoped_refptr<gpu::GLES2CommandContext> glcontext, GLenum name) {
-  return (const char*)glcontext->glGetString(name);
-}
-
-static void printGLInfo(base::OnceClosure complete) {
-  auto this_context = content::RendererThread::GetCCForRenderer();
-  scoped_refptr<gpu::GLES2CommandContext> glcontext =
-      this_context->GetContext();
-  SDL_Window* win = this_context->GetWindow()->AsSDLWindow();
-
-  base::Debug() << "* GLES:" << std::boolalpha << glcontext->IsGLES();
-  base::Debug() << "* OpenGL Info: Renderer   :"
-                << glGetStringInt(glcontext, GL_RENDERER);
-  base::Debug() << "               Version    :"
-                << glGetStringInt(glcontext, GL_VERSION);
-  base::Debug() << "               SL Version :"
-                << glGetStringInt(glcontext, GL_SHADING_LANGUAGE_VERSION);
-  base::Debug() << "* SDL Info: Main Version :" << SDL_COMPILEDVERSION;
-  base::Debug() << "            TTF Version  :" << SDL_TTF_COMPILEDVERSION;
-  base::Debug() << "            IMG Version  :" << SDL_IMAGE_COMPILEDVERSION;
-
-  glcontext->glClearColor(1, 1, 1, 1);
-  glcontext->glClear(GL_COLOR_BUFFER_BIT);
-
-  SDL_GL_SwapWindow(win);
-
-  std::move(complete).Run();
 }
 
 int main() {
@@ -62,51 +50,50 @@ int main() {
   std::unique_ptr<ui::Widget> win(new ui::Widget());
   ui::Widget::InitParams params;
   params.size = base::Vec2i(800, 600);
+  params.title = "RGU Widget";
   win->Init(std::move(params));
 
-  scoped_refptr<content::RendererThread> worker =
-      base::MakeRefCounted<content::RendererThread>();
-  worker->InitContextAsync(win.get());
+  scoped_refptr<content::RendererThread> render_thread =
+      new content::RendererThread();
+  render_thread->InitContextAsync(win.get());
 
-  std::unique_ptr<modules::Bitmap> bmp(
-      new modules::Bitmap(worker, "example.png"));
+  render_thread->GetRenderThreadRunner()->PostTask(base::BindOnce([]() {
+    auto* cc = content::RendererThread::GetCCForRenderer();
+    auto ctx = cc->GetContext();
 
-  base::RunLoop wait_loop;
-  worker->GetRenderThreadRunner()->PostTask(
-      base::BindOnce(printGLInfo, wait_loop.QuitClosure()));
-  wait_loop.Run();
+    ctx->glClearColor(0, 1, 0, 1);
+    ctx->glClear(GL_COLOR_BUFFER_BIT);
 
-  worker->GetRenderThreadRunner()->PostTask(base::BindOnce(
-      [](modules::Bitmap* bmp) {
-        auto this_context = content::RendererThread::GetCCForRenderer();
-        SDL_Window* win = this_context->GetWindow()->AsSDLWindow();
-        scoped_refptr<gpu::GLES2CommandContext> glcontext =
-            this_context->GetContext();
+    auto& shader = cc->DrawableShader();
+    renderer::QuadDrawable quad(cc->GetQuadIndicesBuffer(), cc->GetContext());
 
-        glcontext->glClearColor(1, 0, 1, 1);
-        glcontext->glClear(GL_COLOR_BUFFER_BIT);
+    scoped_refptr<renderer::GLTexture> tex = new renderer::GLTexture(ctx);
 
-        renderer::QuadDrawable quad(this_context->GetQuadIndicesBuffer(),
-                                    this_context->GetContext());
+    auto img = IMG_Load("example.png");
+    auto size = base::Vec2i(img->w, img->h);
 
-        auto& shader = this_context->SimpleShader();
+    base::TransformMatrix transform;
+    transform.SetPosition(base::Vec2i(800 / 2, 600 / 2));
+    transform.SetOrigin(base::Vec2i(img->w / 2, img->h / 2));
+    transform.SetRotation(45);
 
-        base::Debug() << "BitmapW: " << bmp->GetSize().x << bmp->GetSize().y;
+    tex->Bind();
+    tex->SetTextureFilter(GL_NEAREST);
+    tex->SetSize(size);
+    tex->BufferData(img->pixels, GL_RGBA);
 
-        shader.Bind();
-        shader.SetTexture(bmp->GetTexture());
-        shader.SetTextureSize(bmp->GetSize());
+    shader.Bind();
+    shader.SetViewportMatrix(cc->Viewport().Current().Size());
+    shader.SetTransformMatrix(transform.GetMatrixDataUnsafe());
+    shader.SetTexture(tex->GetTextureRaw());
+    shader.SetTextureSize(size);
 
-        shader.SetTransOffset(base::Vec2i(100, 10));
-        shader.SetViewportMatrix(base::Vec2i(800, 600));
+    quad.SetPosition(base::RectF(base::Vec2(), size));
+    quad.SetTexcoord(base::RectF(base::Vec2(), size));
+    quad.Draw();
 
-        quad.SetPosition(base::RectF(base::Vec2i(), bmp->GetSize()));
-        quad.SetTexcoord(base::RectF(base::Vec2i(), bmp->GetSize()));
-        quad.Draw();
-
-        SDL_GL_SwapWindow(win);
-      },
-      bmp.get()));
+    SDL_GL_SwapWindow(cc->GetWindow()->AsSDLWindow());
+  }));
 
   base::RunLoop loop;
   base::RunLoop::BindEventDispatcher(
@@ -115,9 +102,7 @@ int main() {
 
   loop.Run();
 
-  bmp.reset();
-
-  worker.reset();
+  render_thread.reset();
   win.reset();
 
   IMG_Quit();

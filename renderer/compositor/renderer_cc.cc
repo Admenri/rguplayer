@@ -13,6 +13,7 @@ CCLayer::CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx)
 
   quad_indices_buffer_ = base::MakeRefCounted<QuadIndicesBuffer>(context_);
 
+  states.frame_buffer_ = std::make_unique<GLFrameBufferTarget>(context_);
   states.viewport_ = std::make_unique<GLViewport>(context_);
   states.scissor_region_ = std::make_unique<GLScissorRegion>(context_);
   states.scissor_test_ = std::make_unique<GLScissorTest>(context_);
@@ -20,9 +21,9 @@ CCLayer::CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx)
 
   context_->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texture_max_size_);
 
-  shaders.simple_shader = std::make_unique<gpu::SimpleShader>(context_);
+  shaders.drawable_shader = std::make_unique<gpu::DrawableShader>(context_);
 
-  Viewport().Push(base::Rect(base::Vec2i(), window->GetSize()));
+  Viewport().Set(base::Rect(base::Vec2i(), window->GetSize()));
 }
 
 }  // namespace renderer

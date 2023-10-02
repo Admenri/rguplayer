@@ -48,22 +48,28 @@ renderer::CCLayer* RendererThread::GetCCForRenderer() {
 }
 
 void RendererThread::InitThread() {
-  AddRef();
-
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
   gl_context_ = SDL_GL_CreateContext(render_widget_->AsSDLWindow());
-
   renderer_cc_.reset(new renderer::CCLayer(render_widget_, gl_context_));
 
   g_thread_context.insert(
       std::make_pair(std::this_thread::get_id(), renderer_cc_.get()));
+
+  renderer_cc_->GetContext()->glClearColor(1, 1, 1, 1);
+  renderer_cc_->GetContext()->glClear(GL_COLOR_BUFFER_BIT);
+  SDL_GL_SwapWindow(render_widget_->AsSDLWindow());
 }
 
 void RendererThread::QuitThread() {
+  renderer_cc_.reset();
+
   SDL_GL_DeleteContext(gl_context_);
 
-  Release();
+  auto iter = g_thread_context.find(std::this_thread::get_id());
+  if (iter != g_thread_context.end()) {
+    g_thread_context.erase(iter);
+  }
 }
 
 }  // namespace content

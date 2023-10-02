@@ -24,6 +24,7 @@ set(BASE_SRC
   exceptions/exception.h
   math/math.cc
   math/math.h
+  math/transform.h
   memory/atomic_flag.cc
   memory/atomic_flag.h
   memory/atomic_ref_count.h

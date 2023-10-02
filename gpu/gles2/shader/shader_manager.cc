@@ -140,6 +140,13 @@ void ShaderBase::Setup(const std::string& vertex_shader,
       GetContext()->glGetUniformLocation(GetProgram(), "viewpMat");
 }
 
+void ShaderBase::SetTexture(GLint location, GLuint tex, uint16_t unit) {
+  GetContext()->glActiveTexture(GL_TEXTURE0 + unit);
+  GetContext()->glBindTexture(GL_TEXTURE_2D, tex);
+  GetContext()->glUniform1i(location, unit);
+  GetContext()->glActiveTexture(GL_TEXTURE0);
+}
+
 void ShaderBase::SetViewportMatrix(const base::Vec2i& size) {
   const float a = 2.f / size.x;
   const float b = 2.f / size.y;
@@ -149,7 +156,7 @@ void ShaderBase::SetViewportMatrix(const base::Vec2i& size) {
   GetContext()->glUniformMatrix4fv(viewp_matrix_location_, 1, GL_FALSE, mat);
 }
 
-SimpleShader::SimpleShader(scoped_refptr<gpu::GLES2CommandContext> context)
+DrawableShader::DrawableShader(scoped_refptr<gpu::GLES2CommandContext> context)
     : ShaderBase(context) {
   ShaderBase::Setup(
       shader::FromRawData(shader::drawable_vert, shader::drawable_vert_len),
@@ -157,26 +164,24 @@ SimpleShader::SimpleShader(scoped_refptr<gpu::GLES2CommandContext> context)
 
   tex_size_location_ =
       GetContext()->glGetUniformLocation(GetProgram(), "texSize");
-  trans_offset_location_ =
-      GetContext()->glGetUniformLocation(GetProgram(), "transOffset");
+  transform_matrix_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "transformMat");
   texture_location_ =
-      GetContext()->glGetUniformLocation(GetProgram(), "texture");
+      GetContext()->glGetUniformLocation(GetProgram(), "bitmap_texture");
 }
 
-void SimpleShader::SetTextureSize(const base::Vec2& tex_size) {
+void DrawableShader::SetTextureSize(const base::Vec2& tex_size) {
   GetContext()->glUniform2f(tex_size_location_, 1.f / tex_size.x,
                             1.f / tex_size.y);
 }
 
-void SimpleShader::SetTransOffset(const base::Vec2& offset) {
-  GetContext()->glUniform2f(trans_offset_location_, offset.x, offset.y);
+void DrawableShader::SetTransformMatrix(const float* transform) {
+  GetContext()->glUniformMatrix4fv(transform_matrix_location_, 1, GL_FALSE,
+                                   transform);
 }
 
-void SimpleShader::SetTexture(GLuint tex) {
-  GetContext()->glActiveTexture(GL_TEXTURE1);
-  GetContext()->glBindTexture(GL_TEXTURE_2D, tex);
-  GetContext()->glUniform1i(texture_location_, GL_TEXTURE1);
-  GetContext()->glActiveTexture(GL_TEXTURE0);
+void DrawableShader::SetTexture(GLuint tex) {
+  ShaderBase::SetTexture(texture_location_, tex, 0);
 }
 
 }  // namespace gpu

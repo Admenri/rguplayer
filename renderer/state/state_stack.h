@@ -5,8 +5,6 @@
 #ifndef RENDERER_STATE_STATE_STACK_H_
 #define RENDERER_STATE_STATE_STACK_H_
 
-#include <stack>
-
 #include "base/math/math.h"
 #include "base/memory/ref_counted.h"
 #include "gpu/gl_forward.h"
@@ -29,16 +27,6 @@ class GLState {
     OnApplyProperty(value);
   }
 
-  void Push(const T& value) {
-    stack_.push(value);
-    ApplyTop();
-  }
-
-  void Pop() {
-    stack_.pop();
-    ApplyTop();
-  }
-
   T& Current() { return current_; }
 
  protected:
@@ -47,20 +35,19 @@ class GLState {
   scoped_refptr<gpu::GLES2CommandContext> GetContext() { return context_; }
 
  private:
-  void ApplyTop();
-
   scoped_refptr<gpu::GLES2CommandContext> context_;
 
   T current_;
-  std::stack<T> stack_;
 };
 
-template <typename T>
-inline void GLState<T>::ApplyTop() {
-  T& top = stack_.top();
-  current_ = top;
-  OnApplyProperty(top);
-}
+class GLFrameBufferTarget : public GLState<GLuint> {
+ public:
+  GLFrameBufferTarget(scoped_refptr<gpu::GLES2CommandContext> gl_context)
+      : GLState(gl_context) {}
+
+ protected:
+  void OnApplyProperty(const GLuint& value) override;
+};
 
 class GLViewport : public GLState<base::Rect> {
  public:

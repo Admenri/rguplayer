@@ -9,7 +9,7 @@ set(PYTHON_EXECUTABLE python)
 
 # Export header file import
 execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --header
+  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --file=gles2_commands.txt --header --output=gles2_command_buffer_header_autogen.h
   WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/context
   RESULT_VARIABLE PYTHON_SCRIPT_RESULT
   OUTPUT_QUIET
@@ -21,7 +21,29 @@ endif()
 
 # Export body file import
 execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --body
+  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --file=gles2_commands.txt --body --output=gles2_command_buffer_autogen.cc
+  WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/context
+  RESULT_VARIABLE PYTHON_SCRIPT_RESULT
+  OUTPUT_QUIET
+)
+
+##############################EXT###################################
+
+# Export header file import
+execute_process(
+  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --file=gles2_ext_commands_fbo.txt --header --output=gles2_command_buffer_header_autogen_ext_fbo.h
+  WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/context
+  RESULT_VARIABLE PYTHON_SCRIPT_RESULT
+  OUTPUT_QUIET
+)
+
+if(NOT PYTHON_SCRIPT_RESULT EQUAL 0)
+  message(FATAL_ERROR "Failed to generate gles2 header: ${PYTHON_SCRIPT_RESULT}")
+endif()
+
+# Export body file import
+execute_process(
+  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --file=gles2_ext_commands_fbo.txt --body --output=gles2_command_buffer_autogen_ext_fbo.cc
   WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/context
   RESULT_VARIABLE PYTHON_SCRIPT_RESULT
   OUTPUT_QUIET

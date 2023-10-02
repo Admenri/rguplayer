@@ -54,21 +54,23 @@ class ShaderBase : public ShaderManager {
   void Setup(const std::string& vertex_shader,
              const std::string& frag_shader) override;
 
+  void SetTexture(GLint location, GLuint tex, uint16_t unit);
+
  private:
   GLint viewp_matrix_location_;
 };
 
-class SimpleShader : public ShaderBase {
+class DrawableShader : public ShaderBase {
  public:
-  SimpleShader(scoped_refptr<gpu::GLES2CommandContext> context);
+  DrawableShader(scoped_refptr<gpu::GLES2CommandContext> context);
 
   void SetTextureSize(const base::Vec2& tex_size);
-  void SetTransOffset(const base::Vec2& offset);
+  void SetTransformMatrix(const float* transform);
   void SetTexture(GLuint tex);
 
  private:
   GLint tex_size_location_;
-  GLint trans_offset_location_;
+  GLint transform_matrix_location_;
 
   GLint texture_location_;
 };

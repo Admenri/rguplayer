@@ -4,6 +4,8 @@
 
 #include "renderer/paint/quad_draw.h"
 
+#include <algorithm>
+
 namespace renderer {
 
 /*
@@ -73,8 +75,8 @@ void QuadDrawable::SetTexcoord(const base::RectF& rect) {
   need_update_ = true;
 }
 
-void QuadDrawable::SetColor(const base::Vec4& color) {
-  for (size_t i = 0; i < 4; i++) vertex_[i].color = color;
+void QuadDrawable::SetColor(int index, const base::Vec4& color) {
+  vertex_[std::clamp(index, 0, 3)].color = color;
   need_update_ = true;
 }
 

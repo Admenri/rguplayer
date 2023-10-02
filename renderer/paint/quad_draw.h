@@ -39,7 +39,7 @@ class QuadDrawable {
 
   void SetPosition(const base::RectF& rect);
   void SetTexcoord(const base::RectF& rect);
-  void SetColor(const base::Vec4& color);
+  void SetColor(int index, const base::Vec4& color);
 
   void Draw();
 

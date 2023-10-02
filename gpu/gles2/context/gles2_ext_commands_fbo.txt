@@ -1,0 +1,4 @@
+glGenFramebuffers
+glDeleteFramebuffers
+glBindFramebuffer
+glFramebufferTexture2D
