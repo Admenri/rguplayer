@@ -16,6 +16,8 @@ namespace {
 base::RepeatingCallback<void(const SDL_Event&)>
     g_event_dispatcher[SDL_LASTEVENT];
 
+std::thread::id g_ui_thread_id;
+
 }  // namespace
 
 class RunnerImpl : public SequencedTaskRunner {
@@ -34,6 +36,10 @@ class RunnerImpl : public SequencedTaskRunner {
   base::WeakPtr<RunLoop> runner_;
 };
 
+bool RunLoop::IsInUIThread() {
+  return std::this_thread::get_id() == g_ui_thread_id;
+}
+
 void RunLoop::BindEventDispatcher(
     Uint32 event_type,
     base::RepeatingCallback<void(const SDL_Event&)> callback) {
@@ -41,9 +47,15 @@ void RunLoop::BindEventDispatcher(
   g_event_dispatcher[event_type] = callback;
 }
 
-RunLoop::RunLoop() { InitInternal(MessagePumpType::UI); }
+RunLoop::RunLoop() {
+  InitInternal(IsInUIThread() ? MessagePumpType::IO : MessagePumpType::UI);
+}
 
-RunLoop::RunLoop(MessagePumpType type) { InitInternal(type); }
+RunLoop::RunLoop(MessagePumpType type) {
+  if (type == MessagePumpType::UI) g_ui_thread_id = std::this_thread::get_id();
+
+  InitInternal(type);
+}
 
 base::OnceClosure RunLoop::QuitClosure() {
   return base::BindOnce(&RunLoop::RequireQuit, weak_ptr_factory_.GetWeakPtr());
@@ -66,13 +78,12 @@ void RunLoop::Run() {
 }
 
 bool RunLoop::DoLoop() {
-  {
+  if (!closure_task_list_.empty()) {
+    std::move(closure_task_list_.front()).Run();
+
     base::AutoLock queue_lock_mutex(queue_lock_);
-    if (!closure_task_list_.empty() && !closure_task_list_.front().is_null()) {
-      std::move(closure_task_list_.front()).Run();
-      closure_task_list_.pop();
-      return true;
-    }
+    closure_task_list_.pop_front();
+    return true;
   }
 
   SDL_Event sdl_event;
@@ -96,8 +107,10 @@ void RunLoop::InitInternal(MessagePumpType type) {
 void RunLoop::RequireQuit() { quit_flag_.Set(); }
 
 void RunLoop::LockAddTask(base::OnceClosure task_closure) {
-  base::AutoLock mutex_lock(queue_lock_);
-  closure_task_list_.push(std::move(task_closure));
+  if (task_closure) {
+    base::AutoLock mutex_lock(queue_lock_);
+    closure_task_list_.push_back(std::move(task_closure));
+  }
 }
 
 }  // namespace base

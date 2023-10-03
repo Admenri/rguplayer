@@ -97,6 +97,7 @@ class RunLoop {
   static void BindEventDispatcher(
       Uint32 event_type,
       base::RepeatingCallback<void(const SDL_Event&)> callback);
+  static bool IsInUIThread();
 
   enum class MessagePumpType {
     UI = 0,
@@ -125,7 +126,7 @@ class RunLoop {
 
   base::AtomicFlag quit_flag_;
   base::Lock queue_lock_;
-  std::queue<base::OnceClosure> closure_task_list_;
+  std::list<base::OnceClosure> closure_task_list_;
 
   base::WeakPtrFactory<RunLoop> weak_ptr_factory_{this};
 };

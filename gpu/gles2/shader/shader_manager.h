@@ -60,6 +60,21 @@ class ShaderBase : public ShaderManager {
   GLint viewp_matrix_location_;
 };
 
+class BaseShader : public ShaderBase {
+ public:
+  BaseShader(scoped_refptr<gpu::GLES2CommandContext> context);
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetTexture(GLuint tex);
+
+ private:
+  GLint tex_size_location_;
+  GLint trans_offset_location_;
+
+  GLint texture_location_;
+};
+
 class DrawableShader : public ShaderBase {
  public:
   DrawableShader(scoped_refptr<gpu::GLES2CommandContext> context);

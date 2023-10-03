@@ -41,7 +41,8 @@ namespace gpu {
 
 namespace shader {
 
-#include "gpu/gles2/shader/shader_source/drawable.frag.xxd"
+#include "gpu/gles2/shader/shader_source/base.frag.xxd"
+#include "gpu/gles2/shader/shader_source/base.vert.xxd"
 #include "gpu/gles2/shader/shader_source/drawable.vert.xxd"
 
 static inline std::string FromRawData(const uint8_t* raw_data,
@@ -160,7 +161,7 @@ DrawableShader::DrawableShader(scoped_refptr<gpu::GLES2CommandContext> context)
     : ShaderBase(context) {
   ShaderBase::Setup(
       shader::FromRawData(shader::drawable_vert, shader::drawable_vert_len),
-      shader::FromRawData(shader::drawable_frag, shader::drawable_frag_len));
+      shader::FromRawData(shader::base_frag, shader::base_frag_len));
 
   tex_size_location_ =
       GetContext()->glGetUniformLocation(GetProgram(), "texSize");
@@ -181,6 +182,33 @@ void DrawableShader::SetTransformMatrix(const float* transform) {
 }
 
 void DrawableShader::SetTexture(GLuint tex) {
+  ShaderBase::SetTexture(texture_location_, tex, 0);
+}
+
+BaseShader::BaseShader(scoped_refptr<gpu::GLES2CommandContext> context)
+    : ShaderBase(context) {
+  ShaderBase::Setup(
+      shader::FromRawData(shader::base_vert, shader::base_vert_len),
+      shader::FromRawData(shader::base_frag, shader::base_frag_len));
+
+  tex_size_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "texSize");
+  trans_offset_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "transOffset");
+  texture_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "bitmap_texture");
+}
+
+void BaseShader::SetTextureSize(const base::Vec2& tex_size) {
+  GetContext()->glUniform2f(tex_size_location_, 1.f / tex_size.x,
+                            1.f / tex_size.y);
+}
+
+void BaseShader::SetTransOffset(const base::Vec2& offset) {
+  GetContext()->glUniform2f(trans_offset_location_, offset.x, offset.y);
+}
+
+void BaseShader::SetTexture(GLuint tex) {
   ShaderBase::SetTexture(texture_location_, tex, 0);
 }
 

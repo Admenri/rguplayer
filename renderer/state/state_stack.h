@@ -5,6 +5,8 @@
 #ifndef RENDERER_STATE_STATE_STACK_H_
 #define RENDERER_STATE_STATE_STACK_H_
 
+#include <stack>
+
 #include "base/math/math.h"
 #include "base/memory/ref_counted.h"
 #include "gpu/gl_forward.h"
@@ -27,6 +29,17 @@ class GLState {
     OnApplyProperty(current_);
   }
 
+  void Push(const T& value) {
+    stack_.push(value);
+    Set(value);
+  }
+
+  void Pop() {
+    if (stack_.empty()) return;
+    stack_.pop();
+    Set(stack_.top());
+  }
+
   T Current() { return current_; }
 
  protected:
@@ -37,16 +50,8 @@ class GLState {
  private:
   scoped_refptr<gpu::GLES2CommandContext> context_;
 
+  std::stack<T> stack_;
   T current_;
-};
-
-class GLFrameBufferTarget : public GLState<GLuint> {
- public:
-  GLFrameBufferTarget(scoped_refptr<gpu::GLES2CommandContext> gl_context)
-      : GLState(gl_context) {}
-
- protected:
-  void OnApplyProperty(const GLuint& value) override;
 };
 
 class GLViewport : public GLState<base::Rect> {
@@ -70,6 +75,15 @@ class GLScissorRegion : public GLState<base::Rect> {
 class GLScissorTest : public GLState<bool> {
  public:
   GLScissorTest(scoped_refptr<gpu::GLES2CommandContext> gl_context)
+      : GLState(gl_context) {}
+
+ protected:
+  void OnApplyProperty(const bool& value) override;
+};
+
+class GLBlend : public GLState<bool> {
+ public:
+  GLBlend(scoped_refptr<gpu::GLES2CommandContext> gl_context)
       : GLState(gl_context) {}
 
  protected:

@@ -40,8 +40,8 @@ void GLBlendMode::OnApplyProperty(const BlendMode& value) {
   }
 }
 
-void GLFrameBufferTarget::OnApplyProperty(const GLuint& value) {
-  GetContext()->glBindFramebuffer(GL_FRAMEBUFFER, value);
+void GLBlend::OnApplyProperty(const bool& value) {
+  value ? GetContext()->glEnable(GL_BLEND) : GetContext()->glDisable(GL_BLEND);
 }
 
 }  // namespace renderer

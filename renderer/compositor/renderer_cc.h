@@ -21,6 +21,21 @@ namespace renderer {
 
 class CCLayer {
  public:
+  // Stack style state storage
+  struct CCStates {
+    std::unique_ptr<GLViewport> viewport;
+    std::unique_ptr<GLScissorRegion> scissor_region;
+    std::unique_ptr<GLScissorTest> scissor_test;
+    std::unique_ptr<GLBlend> blend;
+    std::unique_ptr<GLBlendMode> blend_mode;
+  };
+
+  // Shader object
+  struct CCShaders {
+    std::unique_ptr<gpu::BaseShader> base_shader;
+    std::unique_ptr<gpu::DrawableShader> drawable_shader;
+  };
+
   CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx);
   virtual ~CCLayer() = default;
 
@@ -33,15 +48,8 @@ class CCLayer {
     return quad_indices_buffer_;
   }
 
-  GLFrameBufferTarget* FrameBuffer() { return states.frame_buffer_.get(); }
-  GLViewport* Viewport() { return states.viewport_.get(); }
-  GLScissorRegion* ScissorRegion() { return states.scissor_region_.get(); }
-  GLScissorTest* ScissorTest() { return states.scissor_test_.get(); }
-  GLBlendMode* BlendMode() { return states.blend_mode_.get(); }
-
-  gpu::DrawableShader* DrawableShader() {
-    return shaders.drawable_shader.get();
-  }
+  CCStates* States() { return &states_; }
+  CCShaders* Shaders() { return &shaders_; }
 
   int GetTextureMaxSize() { return texture_max_size_; }
 
@@ -59,24 +67,12 @@ class CCLayer {
 
   // Current thread gl context handle
   SDL_GLContext gl_sdl_ctx_;
-
   // Current bind window
   base::WeakPtr<ui::Widget> window_;
 
-  // Stack style state storage
-  struct {
-    std::unique_ptr<GLFrameBufferTarget> frame_buffer_;
-    std::unique_ptr<GLViewport> viewport_;
-    std::unique_ptr<GLScissorRegion> scissor_region_;
-    std::unique_ptr<GLScissorTest> scissor_test_;
-    std::unique_ptr<GLBlendMode> blend_mode_;
-  } states;
-
-  // Shader object
-  struct {
-    std::unique_ptr<gpu::DrawableShader> drawable_shader;
-  } shaders;
-
+  // GL info storages
+  CCStates states_;
+  CCShaders shaders_;
   GLint texture_max_size_;
 
   base::WeakPtrFactory<CCLayer> weak_ptr_factory_{this};

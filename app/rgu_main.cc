@@ -41,7 +41,14 @@ int main() {
   render_thread->InitContextAsync(win.get());
 
   std::unique_ptr<modules::Bitmap> bmp(
-      new modules::Bitmap(render_thread, "example.png"));
+      new modules::Bitmap(render_thread, "D:\\Desktop\\rgu\\app\\example.png"));
+
+  bmp->ClearRect(base::Rect(10, 10, 100, 100));
+
+  bmp->SetPixel(5, 5, base::Vec4i(0, 0, 255, 255));
+
+  auto* surf = bmp->GetSurface();
+  IMG_SavePNG(surf, "example.png");
 
   render_thread->GetRenderThreadRunner()->PostTask(base::BindOnce(
       [](modules::Bitmap* bmp) {
@@ -67,20 +74,20 @@ int main() {
         ctx->glClearColor(0, 1, 0, 1);
         ctx->glClear(GL_COLOR_BUFFER_BIT);
 
-        auto shader = cc->DrawableShader();
+        auto* shader = cc->Shaders()->drawable_shader.get();
         renderer::QuadDrawable quad(cc->GetQuadIndicesBuffer(),
                                     cc->GetContext());
 
         base::TransformMatrix transform;
         transform.SetPosition(
-            base::Vec2i(cc->Viewport()->Current().width / 2,
-                        cc->Viewport()->Current().height / 2));
+            base::Vec2i(cc->States()->viewport->Current().width / 2,
+                        cc->States()->viewport->Current().height / 2));
         transform.SetOrigin(
             base::Vec2i(bmp->GetSize().x / 2, bmp->GetSize().y / 2));
         transform.SetRotation(45);
 
         shader->Bind();
-        shader->SetViewportMatrix(cc->Viewport()->Current().Size());
+        shader->SetViewportMatrix(cc->States()->viewport->Current().Size());
         shader->SetTransformMatrix(transform.GetMatrixDataUnsafe());
         shader->SetTexture(bmp->GetGLTexture()->GetTextureRaw());
         shader->SetTextureSize(bmp->GetSize());

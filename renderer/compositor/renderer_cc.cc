@@ -15,20 +15,26 @@ CCLayer::CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx)
   quad_indices_buffer_ = base::MakeRefCounted<QuadIndicesBuffer>(context_);
 
   /* Init renderer state */
-  states.frame_buffer_ = std::make_unique<GLFrameBufferTarget>(context_);
-  states.viewport_ = std::make_unique<GLViewport>(context_);
-  states.scissor_region_ = std::make_unique<GLScissorRegion>(context_);
-  states.scissor_test_ = std::make_unique<GLScissorTest>(context_);
-  states.blend_mode_ = std::make_unique<GLBlendMode>(context_);
+  states_.viewport = std::make_unique<GLViewport>(context_);
+  states_.scissor_region = std::make_unique<GLScissorRegion>(context_);
+  states_.scissor_test = std::make_unique<GLScissorTest>(context_);
+  states_.blend = std::make_unique<GLBlend>(context_);
+  states_.blend_mode = std::make_unique<GLBlendMode>(context_);
 
   /* Init caps */
   context_->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texture_max_size_);
 
   /* Init shaders */
-  shaders.drawable_shader = std::make_unique<gpu::DrawableShader>(context_);
+  shaders_.base_shader = std::make_unique<gpu::BaseShader>(context_);
+  shaders_.drawable_shader = std::make_unique<gpu::DrawableShader>(context_);
 
   /* Init viewport and clear */
-  Viewport()->Set(base::Rect(base::Vec2i(), window->GetSize()));
+  States()->viewport->Push(base::Rect(base::Vec2i(), window->GetSize()));
+  States()->blend->Push(true);
+  States()->blend_mode->Push(renderer::BlendMode::Normal);
+  States()->scissor_test->Push(false);
+  States()->scissor_region->Push(base::Rect());
+
   GetContext()->glClearColor(0, 0, 0, 0);
   GetContext()->glClear(GL_COLOR_BUFFER_BIT);
   SDL_GL_SwapWindow(window->AsSDLWindow());
