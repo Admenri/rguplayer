@@ -69,12 +69,15 @@ class Bitmap : public Disposable {
   void ClearInternal(const std::optional<base::Rect>& rect);
   void GetSurfaceInternal(base::OnceClosure complete_closure);
   void SetPixelInternal(const base::Vec2i& pos, const base::Vec4i& color);
+  void StretchBltInternal(const base::Rect& dst_rect, Bitmap* src_bitmap,
+                          const base::Rect& src_rect, int opacity);
 
   scoped_refptr<content::RendererThread> worker_;
   scoped_refptr<renderer::GLTexture> texture_;
   std::unique_ptr<renderer::GLFrameBuffer> frame_buffer_;
 
   SDL_Surface* read_pixel_buffer_ = nullptr;
+  base::Vec2i size_;
 
   std::unique_ptr<SDL_PixelFormat, decltype(&SDL_FreeFormat)> pixel_format_;
 

@@ -44,6 +44,7 @@ namespace shader {
 #include "gpu/gles2/shader/shader_source/base.frag.xxd"
 #include "gpu/gles2/shader/shader_source/base.vert.xxd"
 #include "gpu/gles2/shader/shader_source/drawable.vert.xxd"
+#include "gpu/gles2/shader/shader_source/textureblt.frag.xxd"
 
 static inline std::string FromRawData(const uint8_t* raw_data,
                                       const uint32_t data_size) {
@@ -168,7 +169,7 @@ DrawableShader::DrawableShader(scoped_refptr<gpu::GLES2CommandContext> context)
   transform_matrix_location_ =
       GetContext()->glGetUniformLocation(GetProgram(), "transformMat");
   texture_location_ =
-      GetContext()->glGetUniformLocation(GetProgram(), "bitmap_texture");
+      GetContext()->glGetUniformLocation(GetProgram(), "texture");
 }
 
 void DrawableShader::SetTextureSize(const base::Vec2& tex_size) {
@@ -182,7 +183,7 @@ void DrawableShader::SetTransformMatrix(const float* transform) {
 }
 
 void DrawableShader::SetTexture(GLuint tex) {
-  ShaderBase::SetTexture(texture_location_, tex, 0);
+  ShaderBase::SetTexture(texture_location_, tex, 1);
 }
 
 BaseShader::BaseShader(scoped_refptr<gpu::GLES2CommandContext> context)
@@ -196,7 +197,7 @@ BaseShader::BaseShader(scoped_refptr<gpu::GLES2CommandContext> context)
   trans_offset_location_ =
       GetContext()->glGetUniformLocation(GetProgram(), "transOffset");
   texture_location_ =
-      GetContext()->glGetUniformLocation(GetProgram(), "bitmap_texture");
+      GetContext()->glGetUniformLocation(GetProgram(), "texture");
 }
 
 void BaseShader::SetTextureSize(const base::Vec2& tex_size) {
@@ -209,7 +210,55 @@ void BaseShader::SetTransOffset(const base::Vec2& offset) {
 }
 
 void BaseShader::SetTexture(GLuint tex) {
-  ShaderBase::SetTexture(texture_location_, tex, 0);
+  ShaderBase::SetTexture(texture_location_, tex, 1);
+}
+
+BltShader::BltShader(scoped_refptr<gpu::GLES2CommandContext> context)
+    : ShaderBase(context) {
+  ShaderBase::Setup(
+      shader::FromRawData(shader::base_vert, shader::base_vert_len),
+      shader::FromRawData(shader::textureblt_frag,
+                          shader::textureblt_frag_len));
+
+  tex_size_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "texSize");
+  trans_offset_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "transOffset");
+
+  src_texture_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "src_texture");
+  dst_texture_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "dst_texture");
+
+  sub_rect_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "subRect");
+  opacity_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "opacity");
+}
+
+void BltShader::SetTexture(GLuint tex) {
+  ShaderBase::SetTexture(src_texture_location_, tex, 1);
+}
+
+void BltShader::SetTextureSize(const base::Vec2& tex_size) {
+  GetContext()->glUniform2f(tex_size_location_, 1.f / tex_size.x,
+                            1.f / tex_size.y);
+}
+
+void BltShader::SetTransOffset(const base::Vec2& offset) {
+  GetContext()->glUniform2f(trans_offset_location_, offset.x, offset.y);
+}
+
+void BltShader::SetDstTexture(GLuint tex) {
+  ShaderBase::SetTexture(dst_texture_location_, tex, 2);
+}
+
+void BltShader::SetOpacity(float opacity) {
+  GetContext()->glUniform1f(opacity_location_, opacity);
+}
+
+void BltShader::SetSubRect(const base::Vec4& rect) {
+  GetContext()->glUniform4f(sub_rect_location_, rect.x, rect.y, rect.z, rect.w);
 }
 
 }  // namespace gpu

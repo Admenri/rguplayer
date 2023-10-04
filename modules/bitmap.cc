@@ -10,6 +10,12 @@ Bitmap::Bitmap(scoped_refptr<content::RendererThread> worker, int width,
                int height)
     : worker_(worker),
       pixel_format_(SDL_AllocFormat(SDL_PIXELFORMAT_ABGR8888), SDL_FreeFormat) {
+  width = std::clamp(width, 1, worker->GetCC()->GetTextureMaxSize());
+  height = std::clamp(height, 1, worker->GetCC()->GetTextureMaxSize());
+
+  size_.x = width;
+  size_.y = height;
+
   worker_->GetRenderThreadRunner()->PostTask(base::BindOnce(
       &Bitmap::InitTextureFrameBuffer, weak_ptr_factory_.GetWeakPtr(),
       base::Vec2i(width, height)));
@@ -21,40 +27,91 @@ Bitmap::Bitmap(scoped_refptr<content::RendererThread> worker,
       pixel_format_(SDL_AllocFormat(SDL_PIXELFORMAT_ABGR8888), SDL_FreeFormat) {
   SDL_Surface* surf = IMG_Load(filename.c_str());
 
+  if (!surf) {
+    base::Debug() << "[Core] Cannot load image:" << filename;
+    throw base::Exception(base::Exception::RGSSError,
+                          "Failed to load image: %s", filename.c_str());
+  }
+
+  size_.x = surf->w;
+  size_.y = surf->h;
+
   worker_->GetRenderThreadRunner()->PostTask(base::BindOnce(
       &Bitmap::InitTextureFrameBuffer, weak_ptr_factory_.GetWeakPtr(), surf));
 }
 
 Bitmap::~Bitmap() { Dispose(); }
 
-base::Vec2i Bitmap::GetSize() { return texture_->GetSize(); }
+base::Vec2i Bitmap::GetSize() {
+  CheckedForDispose();
+
+  return size_;
+}
 
 base::Rect Bitmap::GetRect() {
-  return base::Rect(base::Vec2i(), texture_->GetSize());
+  CheckedForDispose();
+
+  return base::Rect(base::Vec2i(), size_);
 }
 
 void Bitmap::Blt(int x, int y, Bitmap* src_bitmap, const base::Rect& src_rect,
-                 int opacity) {}
+                 int opacity) {
+  CheckedForDispose();
+
+  if (src_rect.width <= 0 || src_rect.height <= 0) return;
+
+  base::Rect rect(src_rect);
+
+  if (src_rect.x + src_rect.width > src_bitmap->GetSize().x)
+    rect.width = src_bitmap->GetSize().x - rect.x;
+  if (src_rect.y + src_rect.height > src_bitmap->GetSize().y)
+    rect.height = src_bitmap->GetSize().y - rect.y;
+
+  StretchBlt(base::Rect(x, y, rect.width, rect.height), src_bitmap, src_rect,
+             opacity);
+}
 
 void Bitmap::StretchBlt(const base::Rect& dst_rect, Bitmap* src_bitmap,
-                        const base::Rect& src_rect, int opacity) {}
+                        const base::Rect& src_rect, int opacity) {
+  CheckedForDispose();
 
-void Bitmap::FillRect(const base::Rect& rect, const base::Vec4i& color) {}
+  if (src_rect.width <= 0 || src_rect.height <= 0) return;
+  if (dst_rect.width <= 0 || dst_rect.height <= 0) return;
+
+  opacity = std::clamp(opacity, 0, 255);
+  if (!opacity) return;
+
+  worker_->GetRenderThreadRunner()->PostTask(base::BindOnce(
+      &Bitmap::StretchBltInternal, weak_ptr_factory_.GetWeakPtr(), dst_rect,
+      src_bitmap, src_rect, opacity));
+}
+
+void Bitmap::FillRect(const base::Rect& rect, const base::Vec4i& color) {
+  CheckedForDispose();
+}
 
 void Bitmap::GradientFillRect(const base::Rect& rect, const base::Vec4i& color1,
-                              const base::Vec4i& color2, bool vertical) {}
+                              const base::Vec4i& color2, bool vertical) {
+  CheckedForDispose();
+}
 
 void Bitmap::Clear() {
+  CheckedForDispose();
+
   worker_->GetRenderThreadRunner()->PostTask(base::BindOnce(
       &Bitmap::ClearInternal, weak_ptr_factory_.GetWeakPtr(), std::nullopt));
 }
 
 void Bitmap::ClearRect(const base::Rect& rect) {
+  CheckedForDispose();
+
   worker_->GetRenderThreadRunner()->PostTask(base::BindOnce(
       &Bitmap::ClearInternal, weak_ptr_factory_.GetWeakPtr(), rect));
 }
 
 base::Vec4i Bitmap::GetPixel(int x, int y) {
+  CheckedForDispose();
+
   GetSurface();
 
   size_t offset =
@@ -69,6 +126,8 @@ base::Vec4i Bitmap::GetPixel(int x, int y) {
 }
 
 void Bitmap::SetPixel(int x, int y, const base::Vec4i& color) {
+  CheckedForDispose();
+
   base::Vec4i pixel(color);
 
   pixel.x = std::clamp(pixel.x, 0, 255);
@@ -89,13 +148,15 @@ void Bitmap::SetPixel(int x, int y, const base::Vec4i& color) {
                      base::Vec2i(x, y), color));
 }
 
-void Bitmap::HueChange(int hue) {}
+void Bitmap::HueChange(int hue) { CheckedForDispose(); }
 
-void Bitmap::Blur() {}
+void Bitmap::Blur() { CheckedForDispose(); }
 
-void Bitmap::RadialBlur(int angle, int division) {}
+void Bitmap::RadialBlur(int angle, int division) { CheckedForDispose(); }
 
 SDL_Surface* Bitmap::GetSurface() {
+  CheckedForDispose();
+
   if (!read_pixel_buffer_) {
     base::RunLoop sync_loop;
     worker_->GetRenderThreadRunner()->PostTask(base::BindOnce(
@@ -223,6 +284,57 @@ void Bitmap::SetPixelInternal(const base::Vec2i& pos,
   texture_->BufferData(base::Vec4i(pos.x, pos.y, 1, 1), &pixel, GL_RGBA);
 
   texture_->Unbind();
+
+  NeedUpdate();
+}
+
+void Bitmap::StretchBltInternal(const base::Rect& dst_rect, Bitmap* src_bitmap,
+                                const base::Rect& src_rect, int opacity) {
+  auto* cc = content::RendererThread::GetCCForRenderer();
+
+  auto dst_size = base::Vec2i(dst_rect.width, dst_rect.height);
+
+  cc->ResizeReusedTextureIfNeed(dst_size);
+  renderer::GLFrameBuffer::BltBegin(cc, cc->ReusedFrameBuffer(), dst_size);
+  renderer::GLFrameBuffer::BltSource(cc, texture_);
+  renderer::GLFrameBuffer::BltEnd(
+      cc, cc->ReusedFrameBuffer(), dst_rect,
+      base::Rect(0, 0, dst_rect.width, dst_rect.height));
+
+  base::Vec4 bltSubRect(
+      (float)src_rect.x / src_bitmap->GetSize().x,
+      (float)src_rect.y / src_bitmap->GetSize().y,
+      ((float)src_bitmap->GetSize().x / src_rect.width) *
+          ((float)dst_rect.width / cc->ReusedTexture()->GetSize().x),
+      ((float)src_bitmap->GetSize().y / src_rect.height) *
+          ((float)dst_rect.height / cc->ReusedTexture()->GetSize().y));
+
+  cc->States()->blend->Push(false);
+
+  frame_buffer_->Bind();
+  cc->States()->viewport->Push(GetRect());
+
+  auto* shader = cc->Shaders()->blt_shader.get();
+  shader->Bind();
+  shader->SetViewportMatrix(GetSize());
+
+  shader->SetTexture(src_bitmap->GetGLTexture()->GetTextureRaw());
+  shader->SetTextureSize(src_bitmap->GetSize());
+
+  shader->SetDstTexture(cc->ReusedTexture()->GetTextureRaw());
+  shader->SetSubRect(bltSubRect);
+  shader->SetTransOffset(base::Vec2());
+  shader->SetOpacity(opacity / 255.0f);
+
+  auto* quad = cc->GetQuad();
+  quad->SetPosition(dst_rect);
+  quad->SetTexcoord(src_rect);
+  quad->Draw();
+
+  cc->States()->viewport->Pop();
+  frame_buffer_->Unbind();
+
+  cc->States()->blend->Pop();
 
   NeedUpdate();
 }

@@ -10,8 +10,11 @@
 #include "base/math/math.h"
 #include "base/memory/ref_counted.h"
 #include "gpu/gl_forward.h"
+#include "renderer/compositor/renderer_cc.h"
 
 namespace renderer {
+
+class CCLayer;
 
 class GLTexture : public base::RefCountedThreadSafe<GLTexture> {
  public:
@@ -61,6 +64,12 @@ class GLFrameBuffer {
 
   void Clear();
   void Clear(const base::Vec4& color);
+
+  static void BltBegin(CCLayer* cc, GLFrameBuffer* target,
+                       const base::Vec2i& size);
+  static void BltSource(CCLayer* cc, scoped_refptr<GLTexture> target);
+  static void BltEnd(CCLayer* cc, GLFrameBuffer* target,
+                     const base::Rect& src_rect, const base::Rect& dst_rect);
 
  private:
   scoped_refptr<gpu::GLES2CommandContext> context_;

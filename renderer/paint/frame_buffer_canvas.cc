@@ -82,4 +82,40 @@ void GLFrameBuffer::Clear(const base::Vec4& color) {
   context_->glClear(GL_COLOR_BUFFER_BIT);
 }
 
+void GLFrameBuffer::BltBegin(CCLayer* cc, GLFrameBuffer* target,
+                             const base::Vec2i& size) {
+  auto* shader = cc->Shaders()->base_shader.get();
+
+  cc->States()->viewport->Push(base::Rect(base::Vec2i(), size));
+  cc->States()->blend->Push(false);
+
+  if (target) target->Bind();
+
+  shader->Bind();
+  shader->SetViewportMatrix(size);
+  shader->SetTransOffset(base::Vec2i());
+}
+
+void GLFrameBuffer::BltSource(CCLayer* cc, scoped_refptr<GLTexture> target) {
+  auto* shader = cc->Shaders()->base_shader.get();
+
+  shader->SetTexture(target->GetTextureRaw());
+  shader->SetTextureSize(target->GetSize());
+}
+
+void GLFrameBuffer::BltEnd(CCLayer* cc, GLFrameBuffer* target,
+                           const base::Rect& src_rect,
+                           const base::Rect& dst_rect) {
+  auto* quad = cc->GetQuad();
+
+  quad->SetPosition(dst_rect);
+  quad->SetTexcoord(src_rect);
+  quad->Draw();
+
+  cc->States()->blend->Pop();
+  cc->States()->viewport->Pop();
+
+  if (target) target->Unbind();
+}
+
 }  // namespace renderer

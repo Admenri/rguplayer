@@ -75,6 +75,27 @@ class BaseShader : public ShaderBase {
   GLint texture_location_;
 };
 
+class BltShader : public ShaderBase {
+ public:
+  BltShader(scoped_refptr<gpu::GLES2CommandContext> context);
+
+  void SetTexture(GLuint tex);
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetDstTexture(GLuint tex);
+  void SetOpacity(float opacity);
+  void SetSubRect(const base::Vec4& rect);
+
+ private:
+  GLint tex_size_location_;
+  GLint trans_offset_location_;
+
+  GLint src_texture_location_;
+  GLint dst_texture_location_;
+  GLint sub_rect_location_;
+  GLint opacity_location_;
+};
+
 class DrawableShader : public ShaderBase {
  public:
   DrawableShader(scoped_refptr<gpu::GLES2CommandContext> context);

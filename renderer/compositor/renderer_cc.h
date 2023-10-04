@@ -19,6 +19,9 @@
 
 namespace renderer {
 
+class GLTexture;
+class GLFrameBuffer;
+
 class CCLayer {
  public:
   // Stack style state storage
@@ -34,6 +37,7 @@ class CCLayer {
   struct CCShaders {
     std::unique_ptr<gpu::BaseShader> base_shader;
     std::unique_ptr<gpu::DrawableShader> drawable_shader;
+    std::unique_ptr<gpu::BltShader> blt_shader;
   };
 
   CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx);
@@ -48,6 +52,8 @@ class CCLayer {
     return quad_indices_buffer_;
   }
 
+  QuadDrawable* GetQuad() { return quad_.get(); }
+
   CCStates* States() { return &states_; }
   CCShaders* Shaders() { return &shaders_; }
 
@@ -58,12 +64,23 @@ class CCLayer {
   SDL_GLContext GetSDLGLCtx() { return gl_sdl_ctx_; }
   base::WeakPtr<ui::Widget> GetWindow() { return window_; }
 
+  void ResizeReusedTextureIfNeed(const base::Vec2i& size);
+  scoped_refptr<renderer::GLTexture> ReusedTexture() { return reuse_texture_; }
+  renderer::GLFrameBuffer* ReusedFrameBuffer() {
+    return reuse_frame_buffer_.get();
+  }
+
  private:
   // GL FUNCTION Context for current cc layer
   scoped_refptr<gpu::GLES2CommandContext> context_;
 
   // Quad index buffer object for current cc layer
   scoped_refptr<QuadIndicesBuffer> quad_indices_buffer_;
+  std::unique_ptr<QuadDrawable> quad_;
+
+  // Global reuse texture
+  scoped_refptr<renderer::GLTexture> reuse_texture_;
+  std::unique_ptr<renderer::GLFrameBuffer> reuse_frame_buffer_;
 
   // Current thread gl context handle
   SDL_GLContext gl_sdl_ctx_;

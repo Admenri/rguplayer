@@ -162,122 +162,6 @@ class Vec4 {
   float x, y, z, w;
 };
 
-class Mat3 {
- public:
-  Mat3() {
-    for (int i = 0; i < 9; i++) {
-      data[i] = 0.f;
-    }
-  }
-  Mat3(float d[9]) {
-    for (int i = 0; i < 9; i++) {
-      data[i] = d[i];
-    }
-  }
-
-  Mat3(const Mat3&) = default;
-  Mat3& operator=(const Mat3&) = default;
-
-  bool operator==(const Mat3& other) {
-    for (int i = 0; i < 9; i++) {
-      if (other.data[i] != data[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  Mat3 operator+(const Mat3& value) {
-    float result[9];
-    for (int i = 0; i < 9; i++) {
-      result[i] = data[i] + value.data[i];
-    }
-    return Mat3(result);
-  }
-
-  Mat3 operator-(const Mat3& value) {
-    float result[9];
-    for (int i = 0; i < 9; i++) {
-      result[i] = data[i] - value.data[i];
-    }
-    return Mat3(result);
-  }
-
-  Mat3 operator*(const Mat3& value) {
-    float result[9];
-    for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        result[i * 3 + j] = 0.f;
-        for (int k = 0; k < 3; k++) {
-          result[i * 3 + j] += data[i * 3 + k] * value.data[k * 3 + j];
-        }
-      }
-    }
-    return Mat3(result);
-  }
-
- public:
-  float data[9];
-};
-
-class Mat4 {
- public:
-  Mat4() {
-    for (int i = 0; i < 16; i++) {
-      data[i] = 0.f;
-    }
-  }
-  Mat4(float d[16]) {
-    for (int i = 0; i < 16; i++) {
-      data[i] = d[i];
-    }
-  }
-
-  Mat4(const Mat4&) = default;
-  Mat4& operator=(const Mat4&) = default;
-
-  bool operator==(const Mat4& other) {
-    for (int i = 0; i < 16; i++) {
-      if (other.data[i] != data[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  Mat4 operator+(const Mat4& value) {
-    float result[16];
-    for (int i = 0; i < 16; i++) {
-      result[i] = data[i] + value.data[i];
-    }
-    return Mat4(result);
-  }
-
-  Mat4 operator-(const Mat4& value) {
-    float result[16];
-    for (int i = 0; i < 16; i++) {
-      result[i] = data[i] - value.data[i];
-    }
-    return Mat4(result);
-  }
-
-  Mat4 operator*(const Mat4& value) {
-    float result[16];
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        result[i * 4 + j] = 0.f;
-        for (int k = 0; k < 4; k++) {
-          result[i * 4 + j] += data[i * 4 + k] * value.data[k * 4 + j];
-        }
-      }
-    }
-    return Mat4(result);
-  }
-
- public:
-  float data[16];
-};
-
 class Rect {
  public:
   Rect() : x(0), y(0), width(0), height(0) {}
@@ -305,6 +189,11 @@ class RectF {
       : x(ix), y(iy), width(iw), height(ih) {}
   RectF(Vec2 pos, Vec2 size)
       : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+  RectF(const Rect& ir)
+      : x(static_cast<float>(ir.x)),
+        y(static_cast<float>(ir.y)),
+        width(static_cast<float>(ir.width)),
+        height(static_cast<float>(ir.height)) {}
 
   RectF(const RectF&) = default;
   RectF& operator=(const RectF&) = default;

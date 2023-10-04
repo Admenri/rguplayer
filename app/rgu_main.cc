@@ -43,12 +43,22 @@ int main() {
   std::unique_ptr<modules::Bitmap> bmp(
       new modules::Bitmap(render_thread, "D:\\Desktop\\rgu\\app\\example.png"));
 
-  bmp->ClearRect(base::Rect(10, 10, 100, 100));
+  std::unique_ptr<modules::Bitmap> bmp2(
+      new modules::Bitmap(render_thread, "D:\\Desktop\\rgu\\app\\aaa.jpg"));
 
-  bmp->SetPixel(5, 5, base::Vec4i(0, 0, 255, 255));
+  auto i = SDL_GetTicks();
+  {
+    bmp->ClearRect(base::Rect(10, 10, 100, 100));
 
-  auto* surf = bmp->GetSurface();
-  IMG_SavePNG(surf, "example.png");
+    bmp->SetPixel(5, 5, base::Vec4i(0, 0, 255, 255));
+
+    auto* surf = bmp->GetSurface();
+    IMG_SavePNG(surf, "example.png");
+
+    bmp->StretchBlt(base::Rect(100, 100, 256, 256), bmp2.get(), bmp2->GetRect(),
+                    125);
+  }
+  base::Debug() << "Time Ticks:" << SDL_GetTicks() - i;
 
   render_thread->GetRenderThreadRunner()->PostTask(base::BindOnce(
       [](modules::Bitmap* bmp) {
@@ -79,12 +89,12 @@ int main() {
                                     cc->GetContext());
 
         base::TransformMatrix transform;
-        transform.SetPosition(
+        /*transform.SetPosition(
             base::Vec2i(cc->States()->viewport->Current().width / 2,
                         cc->States()->viewport->Current().height / 2));
         transform.SetOrigin(
             base::Vec2i(bmp->GetSize().x / 2, bmp->GetSize().y / 2));
-        transform.SetRotation(45);
+        transform.SetRotation(45);*/
 
         shader->Bind();
         shader->SetViewportMatrix(cc->States()->viewport->Current().Size());
