@@ -1,3 +1,7 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #ifndef MODULES_BITMAP_H_
 #define MODULES_BITMAP_H_
 
@@ -12,6 +16,7 @@
 #include "base/math/math.h"
 #include "content/render_thread.h"
 #include "modules/disposable.h"
+#include "modules/utility.h"
 #include "renderer/compositor/renderer_cc.h"
 #include "renderer/paint/frame_buffer_canvas.h"
 
@@ -37,16 +42,16 @@ class Bitmap : public Disposable {
   void StretchBlt(const base::Rect& dst_rect, Bitmap* src_bitmap,
                   const base::Rect& src_rect, int opacity = 255);
 
-  void FillRect(const base::Rect& rect, const base::Vec4i& color);
+  void FillRect(const base::Rect& rect, const Color& color);
 
-  void GradientFillRect(const base::Rect& rect, const base::Vec4i& color1,
-                        const base::Vec4i& color2, bool vertical = false);
+  void GradientFillRect(const base::Rect& rect, const Color& color1,
+                        const Color& color2, bool vertical = false);
 
   void Clear();
   void ClearRect(const base::Rect& rect);
 
-  base::Vec4i GetPixel(int x, int y);
-  void SetPixel(int x, int y, const base::Vec4i& color);
+  Color GetPixel(int x, int y);
+  void SetPixel(int x, int y, const Color& color);
 
   void HueChange(int hue);
 
@@ -68,9 +73,13 @@ class Bitmap : public Disposable {
       std::variant<base::Vec2i, SDL_Surface*> init_data);
   void ClearInternal(const std::optional<base::Rect>& rect);
   void GetSurfaceInternal(base::OnceClosure complete_closure);
-  void SetPixelInternal(const base::Vec2i& pos, const base::Vec4i& color);
+  void SetPixelInternal(const base::Vec2i& pos, const Color& color);
   void StretchBltInternal(const base::Rect& dst_rect, Bitmap* src_bitmap,
                           const base::Rect& src_rect, int opacity);
+  void FillRectInternal(const base::Rect& rect, const base::Vec4& color);
+  void GradientFillRectInternal(const base::Rect& rect,
+                                const base::Vec4& color1,
+                                const base::Vec4& color2, bool vertical);
 
   scoped_refptr<content::RendererThread> worker_;
   scoped_refptr<renderer::GLTexture> texture_;

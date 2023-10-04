@@ -50,13 +50,17 @@ int main() {
   {
     bmp->ClearRect(base::Rect(10, 10, 100, 100));
 
-    bmp->SetPixel(5, 5, base::Vec4i(0, 0, 255, 255));
+    bmp->SetPixel(5, 5, modules::Color(0, 0, 255, 255));
 
     auto* surf = bmp->GetSurface();
     IMG_SavePNG(surf, "example.png");
 
     bmp->StretchBlt(base::Rect(100, 100, 256, 256), bmp2.get(), bmp2->GetRect(),
                     125);
+
+    bmp->GradientFillRect(base::Rect(200, 200, 200, 50),
+                          modules::Color(0, 0, 255, 0),
+                          modules::Color(0, 0, 255, 255));
   }
   base::Debug() << "Time Ticks:" << SDL_GetTicks() - i;
 

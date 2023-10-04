@@ -9,6 +9,8 @@ set(MODULES_SRC
   bitmap.cc
   bitmap.h
   disposable.h
+  utility.cc
+  utility.h
 )
 
 add_library(core_modules ${MODULES_SRC})

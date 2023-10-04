@@ -111,6 +111,16 @@ class DrawableShader : public ShaderBase {
   GLint texture_location_;
 };
 
+class ColorShader : public ShaderBase {
+ public:
+  ColorShader(scoped_refptr<gpu::GLES2CommandContext> context);
+
+  void SetTransOffset(const base::Vec2& offset);
+
+ private:
+  GLint trans_offset_location_;
+};
+
 }  // namespace gpu
 
 #endif  // GPU_GLES2_SHADER_SHADER_MANAGER_H_

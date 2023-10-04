@@ -43,6 +43,8 @@ namespace shader {
 
 #include "gpu/gles2/shader/shader_source/base.frag.xxd"
 #include "gpu/gles2/shader/shader_source/base.vert.xxd"
+#include "gpu/gles2/shader/shader_source/color.frag.xxd"
+#include "gpu/gles2/shader/shader_source/color.vert.xxd"
 #include "gpu/gles2/shader/shader_source/drawable.vert.xxd"
 #include "gpu/gles2/shader/shader_source/textureblt.frag.xxd"
 
@@ -259,6 +261,20 @@ void BltShader::SetOpacity(float opacity) {
 
 void BltShader::SetSubRect(const base::Vec4& rect) {
   GetContext()->glUniform4f(sub_rect_location_, rect.x, rect.y, rect.z, rect.w);
+}
+
+ColorShader::ColorShader(scoped_refptr<gpu::GLES2CommandContext> context)
+    : ShaderBase(context) {
+  ShaderBase::Setup(
+      shader::FromRawData(shader::color_vert, shader::color_vert_len),
+      shader::FromRawData(shader::color_frag, shader::color_frag_len));
+
+  trans_offset_location_ =
+      GetContext()->glGetUniformLocation(GetProgram(), "transOffset");
+}
+
+void ColorShader::SetTransOffset(const base::Vec2& offset) {
+  GetContext()->glUniform2f(trans_offset_location_, offset.x, offset.y);
 }
 
 }  // namespace gpu

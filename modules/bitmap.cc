@@ -1,3 +1,7 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "modules/bitmap.h"
 
 #include <SDL_image.h>
@@ -86,13 +90,27 @@ void Bitmap::StretchBlt(const base::Rect& dst_rect, Bitmap* src_bitmap,
       src_bitmap, src_rect, opacity));
 }
 
-void Bitmap::FillRect(const base::Rect& rect, const base::Vec4i& color) {
+void Bitmap::FillRect(const base::Rect& rect, const Color& color) {
   CheckedForDispose();
+
+  if (rect.width <= 0 || rect.height <= 0) return;
+
+  worker_->GetRenderThreadRunner()->PostTask(
+      base::BindOnce(&Bitmap::FillRectInternal, weak_ptr_factory_.GetWeakPtr(),
+                     rect, color.ToFloatColor()));
 }
 
-void Bitmap::GradientFillRect(const base::Rect& rect, const base::Vec4i& color1,
-                              const base::Vec4i& color2, bool vertical) {
+void Bitmap::GradientFillRect(const base::Rect& rect, const Color& color1,
+                              const Color& color2, bool vertical) {
   CheckedForDispose();
+
+  if (rect.width <= 0 || rect.height <= 0) return;
+
+  if (color1.GetAlpha() == 0 && color2.GetAlpha() == 0) return;
+
+  worker_->GetRenderThreadRunner()->PostTask(base::BindOnce(
+      &Bitmap::GradientFillRectInternal, weak_ptr_factory_.GetWeakPtr(), rect,
+      color1.ToFloatColor(), color2.ToFloatColor(), vertical));
 }
 
 void Bitmap::Clear() {
@@ -109,7 +127,7 @@ void Bitmap::ClearRect(const base::Rect& rect) {
       &Bitmap::ClearInternal, weak_ptr_factory_.GetWeakPtr(), rect));
 }
 
-base::Vec4i Bitmap::GetPixel(int x, int y) {
+Color Bitmap::GetPixel(int x, int y) {
   CheckedForDispose();
 
   GetSurface();
@@ -119,28 +137,22 @@ base::Vec4i Bitmap::GetPixel(int x, int y) {
   uint8_t* bytes = (uint8_t*)read_pixel_buffer_->pixels + offset;
   uint32_t pixel = *((uint32_t*)bytes);
 
-  return base::Vec4i((pixel >> pixel_format_->Rshift) & 0xFF,
-                     (pixel >> pixel_format_->Gshift) & 0xFF,
-                     (pixel >> pixel_format_->Bshift) & 0xFF,
-                     (pixel >> pixel_format_->Ashift) & 0xFF);
+  return Color((pixel >> pixel_format_->Rshift) & 0xFF,
+               (pixel >> pixel_format_->Gshift) & 0xFF,
+               (pixel >> pixel_format_->Bshift) & 0xFF,
+               (pixel >> pixel_format_->Ashift) & 0xFF);
 }
 
-void Bitmap::SetPixel(int x, int y, const base::Vec4i& color) {
+void Bitmap::SetPixel(int x, int y, const Color& color) {
   CheckedForDispose();
-
-  base::Vec4i pixel(color);
-
-  pixel.x = std::clamp(pixel.x, 0, 255);
-  pixel.y = std::clamp(pixel.y, 0, 255);
-  pixel.z = std::clamp(pixel.z, 0, 255);
-  pixel.w = std::clamp(pixel.w, 0, 255);
 
   if (read_pixel_buffer_) {
     size_t offset =
         x * pixel_format_->BytesPerPixel + y * read_pixel_buffer_->pitch;
     uint8_t* bytes = (uint8_t*)read_pixel_buffer_->pixels + offset;
     *((uint32_t*)bytes) =
-        SDL_MapRGBA(pixel_format_.get(), color.x, color.y, color.z, color.w);
+        SDL_MapRGBA(pixel_format_.get(), color.GetRed(), color.GetGreen(),
+                    color.GetBlue(), color.GetAlpha());
   }
 
   worker_->GetRenderThreadRunner()->PostTask(
@@ -275,12 +287,12 @@ void Bitmap::GetSurfaceInternal(base::OnceClosure complete_closure) {
   std::move(complete_closure).Run();
 }
 
-void Bitmap::SetPixelInternal(const base::Vec2i& pos,
-                              const base::Vec4i& color) {
+void Bitmap::SetPixelInternal(const base::Vec2i& pos, const Color& color) {
   texture_->Bind();
 
   uint32_t pixel =
-      SDL_MapRGBA(pixel_format_.get(), color.x, color.y, color.z, color.w);
+      SDL_MapRGBA(pixel_format_.get(), color.GetRed(), color.GetGreen(),
+                  color.GetBlue(), color.GetAlpha());
   texture_->BufferData(base::Vec4i(pos.x, pos.y, 1, 1), &pixel, GL_RGBA);
 
   texture_->Unbind();
@@ -335,6 +347,71 @@ void Bitmap::StretchBltInternal(const base::Rect& dst_rect, Bitmap* src_bitmap,
   frame_buffer_->Unbind();
 
   cc->States()->blend->Pop();
+
+  NeedUpdate();
+}
+
+void Bitmap::FillRectInternal(const base::Rect& rect, const base::Vec4& color) {
+  auto* cc = content::RendererThread::GetCCForRenderer();
+
+  base::Rect calc_rect(rect);
+  if (calc_rect.width < 0) {
+    calc_rect.width = -calc_rect.width;
+    calc_rect.x -= calc_rect.width;
+  }
+
+  if (calc_rect.height < 0) {
+    calc_rect.height = -calc_rect.height;
+    calc_rect.y -= calc_rect.height;
+  }
+
+  cc->States()->scissor_test->Push(true);
+  cc->States()->scissor_region->Push(calc_rect);
+
+  frame_buffer_->Bind();
+  frame_buffer_->Clear(color);
+  frame_buffer_->Unbind();
+
+  cc->States()->scissor_region->Pop();
+  cc->States()->scissor_test->Pop();
+
+  NeedUpdate();
+}
+
+void Bitmap::GradientFillRectInternal(const base::Rect& rect,
+                                      const base::Vec4& color1,
+                                      const base::Vec4& color2, bool vertical) {
+  auto* cc = content::RendererThread::GetCCForRenderer();
+
+  auto* quad = cc->GetQuad();
+  quad->SetPosition(rect);
+
+  if (vertical) {
+    quad->SetColor(0, color1);
+    quad->SetColor(1, color1);
+    quad->SetColor(2, color2);
+    quad->SetColor(3, color2);
+  } else {
+    quad->SetColor(0, color1);
+    quad->SetColor(1, color2);
+    quad->SetColor(2, color2);
+    quad->SetColor(3, color1);
+  }
+
+  frame_buffer_->Bind();
+  cc->States()->viewport->Push(base::Rect(base::Vec2i(), GetSize()));
+  cc->States()->blend->Push(false);
+
+  auto* shader = cc->Shaders()->color_shader.get();
+  shader->Bind();
+  shader->SetTransOffset(base::Vec2i());
+  shader->SetViewportMatrix(GetSize());
+
+  quad->Draw();
+
+  cc->States()->blend->Pop();
+  cc->States()->viewport->Pop();
+  frame_buffer_->Unbind();
 
   NeedUpdate();
 }

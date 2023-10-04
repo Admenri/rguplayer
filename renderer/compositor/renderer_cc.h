@@ -38,6 +38,7 @@ class CCLayer {
     std::unique_ptr<gpu::BaseShader> base_shader;
     std::unique_ptr<gpu::DrawableShader> drawable_shader;
     std::unique_ptr<gpu::BltShader> blt_shader;
+    std::unique_ptr<gpu::ColorShader> color_shader;
   };
 
   CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx);

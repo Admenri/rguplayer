@@ -29,6 +29,7 @@ CCLayer::CCLayer(base::WeakPtr<ui::Widget> window, const SDL_GLContext& gl_ctx)
   shaders_.base_shader = std::make_unique<gpu::BaseShader>(context_);
   shaders_.drawable_shader = std::make_unique<gpu::DrawableShader>(context_);
   shaders_.blt_shader = std::make_unique<gpu::BltShader>(context_);
+  shaders_.color_shader = std::make_unique<gpu::ColorShader>(context_);
 
   /* Init viewport and clear */
   States()->viewport->Push(base::Rect(base::Vec2i(), window->GetSize()));
