@@ -22,7 +22,7 @@
 
 namespace modules {
 
-class Bitmap : public Disposable {
+class Bitmap : public base::RefCounted<Bitmap>, public Disposable {
  public:
   Bitmap(scoped_refptr<content::RendererThread> worker, int width, int height);
   Bitmap(scoped_refptr<content::RendererThread> worker,
@@ -37,21 +37,23 @@ class Bitmap : public Disposable {
   base::Vec2i GetSize();
   base::Rect GetRect();
 
-  void Blt(int x, int y, Bitmap* src_bitmap, const base::Rect& src_rect,
-           int opacity = 255);
-  void StretchBlt(const base::Rect& dst_rect, Bitmap* src_bitmap,
+  scoped_refptr<Bitmap> Clone();
+
+  void Blt(int x, int y, scoped_refptr<Bitmap> src_bitmap,
+           const base::Rect& src_rect, int opacity = 255);
+  void StretchBlt(const base::Rect& dst_rect, scoped_refptr<Bitmap> src_bitmap,
                   const base::Rect& src_rect, int opacity = 255);
 
-  void FillRect(const base::Rect& rect, const Color& color);
+  void FillRect(const base::Rect& rect, scoped_refptr<Color> color);
 
-  void GradientFillRect(const base::Rect& rect, const Color& color1,
-                        const Color& color2, bool vertical = false);
+  void GradientFillRect(const base::Rect& rect, scoped_refptr<Color> color1,
+                        scoped_refptr<Color> color2, bool vertical = false);
 
   void Clear();
   void ClearRect(const base::Rect& rect);
 
-  Color GetPixel(int x, int y);
-  void SetPixel(int x, int y, const Color& color);
+  scoped_refptr<Color> GetPixel(int x, int y);
+  void SetPixel(int x, int y, scoped_refptr<Color> color);
 
   void HueChange(int hue);
 
@@ -73,8 +75,9 @@ class Bitmap : public Disposable {
       std::variant<base::Vec2i, SDL_Surface*> init_data);
   void ClearInternal(const std::optional<base::Rect>& rect);
   void GetSurfaceInternal(base::OnceClosure complete_closure);
-  void SetPixelInternal(const base::Vec2i& pos, const Color& color);
-  void StretchBltInternal(const base::Rect& dst_rect, Bitmap* src_bitmap,
+  void SetPixelInternal(const base::Vec2i& pos, const base::Vec4i& color);
+  void StretchBltInternal(const base::Rect& dst_rect,
+                          scoped_refptr<Bitmap> src_bitmap,
                           const base::Rect& src_rect, int opacity);
   void FillRectInternal(const base::Rect& rect, const base::Vec4& color);
   void GradientFillRectInternal(const base::Rect& rect,

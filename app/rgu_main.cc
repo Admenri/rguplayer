@@ -40,17 +40,17 @@ int main() {
       new content::RendererThread();
   render_thread->InitContextAsync(win.get());
 
-  std::unique_ptr<modules::Bitmap> bmp(
+  scoped_refptr<modules::Bitmap> bmp(
       new modules::Bitmap(render_thread, "D:\\Desktop\\rgu\\app\\example.png"));
 
-  std::unique_ptr<modules::Bitmap> bmp2(
+  scoped_refptr<modules::Bitmap> bmp2(
       new modules::Bitmap(render_thread, "D:\\Desktop\\rgu\\app\\aaa.jpg"));
 
   auto i = SDL_GetTicks();
   {
     bmp->ClearRect(base::Rect(10, 10, 100, 100));
 
-    bmp->SetPixel(5, 5, modules::Color(0, 0, 255, 255));
+    bmp->SetPixel(5, 5, new modules::Color(0, 0, 255, 255));
 
     auto* surf = bmp->GetSurface();
     IMG_SavePNG(surf, "example.png");
@@ -59,13 +59,13 @@ int main() {
                     125);
 
     bmp->GradientFillRect(base::Rect(200, 200, 200, 50),
-                          modules::Color(0, 0, 255, 0),
-                          modules::Color(0, 0, 255, 255));
+                          new modules::Color(0, 0, 255, 0),
+                          new modules::Color(0, 0, 255, 255));
   }
   base::Debug() << "Time Ticks:" << SDL_GetTicks() - i;
 
   render_thread->GetRenderThreadRunner()->PostTask(base::BindOnce(
-      [](modules::Bitmap* bmp) {
+      [](scoped_refptr<modules::Bitmap> bmp) {
         auto* cc = content::RendererThread::GetCCForRenderer();
         auto ctx = cc->GetContext();
 
@@ -112,7 +112,7 @@ int main() {
 
         SDL_GL_SwapWindow(cc->GetWindow()->AsSDLWindow());
       },
-      bmp.get()));
+      bmp));
 
   base::RunLoop loop;
   base::RunLoop::BindEventDispatcher(

@@ -9,8 +9,17 @@ set(MODULES_SRC
   bitmap.cc
   bitmap.h
   disposable.h
+  drawable.cc
+  drawable.h
+  flashable.h
+  graphics.cc
+  graphics.h
+  sprite.cc
+  sprite.h
   utility.cc
   utility.h
+  viewport.cc
+  viewport.h
 )
 
 add_library(core_modules ${MODULES_SRC})

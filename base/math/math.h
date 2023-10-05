@@ -1,3 +1,7 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #ifndef BASE_MATH_MATH_H_
 #define BASE_MATH_MATH_H_
 
@@ -172,11 +176,16 @@ class Rect {
   Rect(const Rect&) = default;
   Rect& operator=(const Rect&) = default;
 
-  SDL_Rect ToSDLRect();
-  RectF ToFloatRect();
+  bool operator==(const Rect& other) {
+    return other.x == x && other.y == y && other.width == width &&
+           other.height == height;
+  }
 
-  base::Vec2i Position() { return base::Vec2i(x, y); }
-  base::Vec2i Size() { return base::Vec2i(width, height); }
+  SDL_Rect ToSDLRect() const;
+  RectF ToFloatRect() const;
+
+  base::Vec2i Position() const { return base::Vec2i(x, y); }
+  base::Vec2i Size() const { return base::Vec2i(width, height); }
 
  public:
   int x, y, width, height;
@@ -198,8 +207,13 @@ class RectF {
   RectF(const RectF&) = default;
   RectF& operator=(const RectF&) = default;
 
-  base::Vec2 Position() { return base::Vec2(x, y); }
-  base::Vec2 Size() { return base::Vec2(width, height); }
+  bool operator==(const RectF& other) {
+    return other.x == x && other.y == y && other.width == width &&
+           other.height == height;
+  }
+
+  base::Vec2 Position() const { return base::Vec2(x, y); }
+  base::Vec2 Size() const { return base::Vec2(width, height); }
 
  public:
   float x, y, width, height;

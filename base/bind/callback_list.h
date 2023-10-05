@@ -92,7 +92,7 @@
 #include <memory>
 #include <utility>
 
-#include "base/auto_reset.h"
+#include "base/memory/auto_reset.h"
 #include "base/bind/bind.h"
 #include "base/bind/callback.h"
 #include "base/bind/callback_helpers.h"

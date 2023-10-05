@@ -24,9 +24,9 @@ class Disposable {
     is_disposed_ = true;
   }
 
-  bool IsDisosed() { return is_disposed_; }
+  bool IsDisosed() const { return is_disposed_; }
 
-  void CheckedForDispose() {
+  void CheckedForDispose() const {
     if (IsDisosed())
       throw base::Exception(base::Exception::RGSSError, "Disposed object.");
   }

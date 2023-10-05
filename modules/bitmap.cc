@@ -58,8 +58,14 @@ base::Rect Bitmap::GetRect() {
   return base::Rect(base::Vec2i(), size_);
 }
 
-void Bitmap::Blt(int x, int y, Bitmap* src_bitmap, const base::Rect& src_rect,
-                 int opacity) {
+scoped_refptr<Bitmap> Bitmap::Clone() {
+  scoped_refptr<Bitmap> bitmap = new Bitmap(worker_, GetSize().x, GetSize().y);
+  bitmap->Blt(0, 0, this, GetRect());
+  return bitmap;
+}
+
+void Bitmap::Blt(int x, int y, scoped_refptr<Bitmap> src_bitmap,
+                 const base::Rect& src_rect, int opacity) {
   CheckedForDispose();
 
   if (src_rect.width <= 0 || src_rect.height <= 0) return;
@@ -75,7 +81,8 @@ void Bitmap::Blt(int x, int y, Bitmap* src_bitmap, const base::Rect& src_rect,
              opacity);
 }
 
-void Bitmap::StretchBlt(const base::Rect& dst_rect, Bitmap* src_bitmap,
+void Bitmap::StretchBlt(const base::Rect& dst_rect,
+                        scoped_refptr<Bitmap> src_bitmap,
                         const base::Rect& src_rect, int opacity) {
   CheckedForDispose();
 
@@ -90,27 +97,28 @@ void Bitmap::StretchBlt(const base::Rect& dst_rect, Bitmap* src_bitmap,
       src_bitmap, src_rect, opacity));
 }
 
-void Bitmap::FillRect(const base::Rect& rect, const Color& color) {
+void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
   CheckedForDispose();
 
   if (rect.width <= 0 || rect.height <= 0) return;
 
   worker_->GetRenderThreadRunner()->PostTask(
       base::BindOnce(&Bitmap::FillRectInternal, weak_ptr_factory_.GetWeakPtr(),
-                     rect, color.ToFloatColor()));
+                     rect, color->ToFloatColor()));
 }
 
-void Bitmap::GradientFillRect(const base::Rect& rect, const Color& color1,
-                              const Color& color2, bool vertical) {
+void Bitmap::GradientFillRect(const base::Rect& rect,
+                              scoped_refptr<Color> color1,
+                              scoped_refptr<Color> color2, bool vertical) {
   CheckedForDispose();
 
   if (rect.width <= 0 || rect.height <= 0) return;
 
-  if (color1.GetAlpha() == 0 && color2.GetAlpha() == 0) return;
+  if (color1->GetAlpha() == 0 && color2->GetAlpha() == 0) return;
 
   worker_->GetRenderThreadRunner()->PostTask(base::BindOnce(
       &Bitmap::GradientFillRectInternal, weak_ptr_factory_.GetWeakPtr(), rect,
-      color1.ToFloatColor(), color2.ToFloatColor(), vertical));
+      color1->ToFloatColor(), color2->ToFloatColor(), vertical));
 }
 
 void Bitmap::Clear() {
@@ -127,7 +135,7 @@ void Bitmap::ClearRect(const base::Rect& rect) {
       &Bitmap::ClearInternal, weak_ptr_factory_.GetWeakPtr(), rect));
 }
 
-Color Bitmap::GetPixel(int x, int y) {
+scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
   CheckedForDispose();
 
   GetSurface();
@@ -137,13 +145,13 @@ Color Bitmap::GetPixel(int x, int y) {
   uint8_t* bytes = (uint8_t*)read_pixel_buffer_->pixels + offset;
   uint32_t pixel = *((uint32_t*)bytes);
 
-  return Color((pixel >> pixel_format_->Rshift) & 0xFF,
-               (pixel >> pixel_format_->Gshift) & 0xFF,
-               (pixel >> pixel_format_->Bshift) & 0xFF,
-               (pixel >> pixel_format_->Ashift) & 0xFF);
+  return new Color((pixel >> pixel_format_->Rshift) & 0xFF,
+                   (pixel >> pixel_format_->Gshift) & 0xFF,
+                   (pixel >> pixel_format_->Bshift) & 0xFF,
+                   (pixel >> pixel_format_->Ashift) & 0xFF);
 }
 
-void Bitmap::SetPixel(int x, int y, const Color& color) {
+void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
   CheckedForDispose();
 
   if (read_pixel_buffer_) {
@@ -151,13 +159,13 @@ void Bitmap::SetPixel(int x, int y, const Color& color) {
         x * pixel_format_->BytesPerPixel + y * read_pixel_buffer_->pitch;
     uint8_t* bytes = (uint8_t*)read_pixel_buffer_->pixels + offset;
     *((uint32_t*)bytes) =
-        SDL_MapRGBA(pixel_format_.get(), color.GetRed(), color.GetGreen(),
-                    color.GetBlue(), color.GetAlpha());
+        SDL_MapRGBA(pixel_format_.get(), color->GetRed(), color->GetGreen(),
+                    color->GetBlue(), color->GetAlpha());
   }
 
   worker_->GetRenderThreadRunner()->PostTask(
       base::BindOnce(&Bitmap::SetPixelInternal, weak_ptr_factory_.GetWeakPtr(),
-                     base::Vec2i(x, y), color));
+                     base::Vec2i(x, y), color->ToBase()));
 }
 
 void Bitmap::HueChange(int hue) { CheckedForDispose(); }
@@ -287,12 +295,12 @@ void Bitmap::GetSurfaceInternal(base::OnceClosure complete_closure) {
   std::move(complete_closure).Run();
 }
 
-void Bitmap::SetPixelInternal(const base::Vec2i& pos, const Color& color) {
+void Bitmap::SetPixelInternal(const base::Vec2i& pos,
+                              const base::Vec4i& color) {
   texture_->Bind();
 
   uint32_t pixel =
-      SDL_MapRGBA(pixel_format_.get(), color.GetRed(), color.GetGreen(),
-                  color.GetBlue(), color.GetAlpha());
+      SDL_MapRGBA(pixel_format_.get(), color.x, color.y, color.z, color.w);
   texture_->BufferData(base::Vec4i(pos.x, pos.y, 1, 1), &pixel, GL_RGBA);
 
   texture_->Unbind();
@@ -300,7 +308,8 @@ void Bitmap::SetPixelInternal(const base::Vec2i& pos, const Color& color) {
   NeedUpdate();
 }
 
-void Bitmap::StretchBltInternal(const base::Rect& dst_rect, Bitmap* src_bitmap,
+void Bitmap::StretchBltInternal(const base::Rect& dst_rect,
+                                scoped_refptr<Bitmap> src_bitmap,
                                 const base::Rect& src_rect, int opacity) {
   auto* cc = content::RendererThread::GetCCForRenderer();
 

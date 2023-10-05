@@ -68,6 +68,7 @@ class GLFrameBuffer {
   static void BltBegin(CCLayer* cc, GLFrameBuffer* target,
                        const base::Vec2i& size);
   static void BltSource(CCLayer* cc, scoped_refptr<GLTexture> target);
+  static void BltClear(CCLayer* cc);
   static void BltEnd(CCLayer* cc, GLFrameBuffer* target,
                      const base::Rect& src_rect, const base::Rect& dst_rect);
 
@@ -75,6 +76,30 @@ class GLFrameBuffer {
   scoped_refptr<gpu::GLES2CommandContext> context_;
   scoped_refptr<GLTexture> texture_;
   GLuint frame_buffer_;
+};
+
+class DoubleFrameBuffer {
+ public:
+  struct Buffer {
+    scoped_refptr<GLTexture> texture;
+    std::unique_ptr<GLFrameBuffer> frame_buffer;
+  };
+
+  DoubleFrameBuffer(scoped_refptr<gpu::GLES2CommandContext> context,
+                    const base::Vec2i& size);
+  virtual ~DoubleFrameBuffer();
+
+  DoubleFrameBuffer(const DoubleFrameBuffer&) = delete;
+  DoubleFrameBuffer& operator=(const DoubleFrameBuffer&) = delete;
+
+  void Resize(const base::Vec2i& size);
+  void Swap();
+
+  Buffer* GetFrontend() { return &frames_[0]; }
+  Buffer* GetBackend() { return &frames_[1]; }
+
+ private:
+  Buffer frames_[2];
 };
 
 }  // namespace renderer

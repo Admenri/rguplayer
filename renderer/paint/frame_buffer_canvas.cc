@@ -103,6 +103,11 @@ void GLFrameBuffer::BltSource(CCLayer* cc, scoped_refptr<GLTexture> target) {
   shader->SetTextureSize(target->GetSize());
 }
 
+void GLFrameBuffer::BltClear(CCLayer* cc) {
+  cc->GetContext()->glClearColor(0, 0, 0, 0);
+  cc->GetContext()->glClear(GL_COLOR_BUFFER_BIT);
+}
+
 void GLFrameBuffer::BltEnd(CCLayer* cc, GLFrameBuffer* target,
                            const base::Rect& src_rect,
                            const base::Rect& dst_rect) {
@@ -117,5 +122,46 @@ void GLFrameBuffer::BltEnd(CCLayer* cc, GLFrameBuffer* target,
 
   if (target) target->Unbind();
 }
+
+DoubleFrameBuffer::DoubleFrameBuffer(
+    scoped_refptr<gpu::GLES2CommandContext> context, const base::Vec2i& size) {
+  frames_[0].texture = new GLTexture(context);
+  frames_[0].texture->Bind();
+  frames_[0].texture->SetSize(size);
+  frames_[0].texture->SetTextureFilter(GL_NEAREST);
+  frames_[0].texture->AllocEmpty();
+
+  frames_[0].frame_buffer.reset(new GLFrameBuffer(context));
+  frames_[0].frame_buffer->Bind();
+  frames_[0].frame_buffer->SetRenderTarget(frames_[0].texture);
+  frames_[0].frame_buffer->Clear();
+  frames_[0].frame_buffer->Unbind();
+
+  frames_[1].texture = new GLTexture(context);
+  frames_[1].texture->Bind();
+  frames_[1].texture->SetSize(size);
+  frames_[1].texture->SetTextureFilter(GL_NEAREST);
+  frames_[1].texture->AllocEmpty();
+
+  frames_[1].frame_buffer.reset(new GLFrameBuffer(context));
+  frames_[1].frame_buffer->Bind();
+  frames_[1].frame_buffer->SetRenderTarget(frames_[1].texture);
+  frames_[1].frame_buffer->Clear();
+  frames_[1].frame_buffer->Unbind();
+}
+
+DoubleFrameBuffer::~DoubleFrameBuffer() {}
+
+void DoubleFrameBuffer::Resize(const base::Vec2i& size) {
+  frames_[0].texture->Bind();
+  frames_[0].texture->SetSize(size);
+  frames_[0].texture->AllocEmpty();
+
+  frames_[1].texture->Bind();
+  frames_[1].texture->SetSize(size);
+  frames_[1].texture->AllocEmpty();
+}
+
+void DoubleFrameBuffer::Swap() { std::swap(frames_[0], frames_[1]); }
 
 }  // namespace renderer

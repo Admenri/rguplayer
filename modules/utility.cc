@@ -4,8 +4,4 @@
 
 #include "modules/utility.h"
 
-namespace modules {
-
-
-
-}
+namespace modules {}
