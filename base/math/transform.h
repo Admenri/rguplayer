@@ -43,10 +43,10 @@ class TransformMatrix {
   TransformMatrix &operator=(const TransformMatrix &) = default;
 
  public:
-  Vec2 &GetPosition() { return position_; }
-  Vec2 &GetOrigin() { return origin_; }
-  Vec2 &GetScale() { return scale_; }
-  float GetRotation() { return rotation_; }
+  const Vec2 &GetPosition() const { return position_; }
+  const Vec2 &GetOrigin() const { return origin_; }
+  const Vec2 &GetScale() const { return scale_; }
+  float GetRotation() const { return rotation_; }
 
   void SetPosition(const Vec2 &value) {
     position_ = value;

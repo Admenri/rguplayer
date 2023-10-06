@@ -16,6 +16,8 @@
 #include "base/worker/thread_worker.h"
 #include "content/render_thread.h"
 #include "modules/bitmap.h"
+#include "modules/graphics.h"
+#include "modules/sprite.h"
 #include "renderer/compositor/renderer_cc.h"
 #include "ui/widget/widget.h"
 
@@ -39,6 +41,9 @@ int main() {
   scoped_refptr<content::RendererThread> render_thread =
       new content::RendererThread();
   render_thread->InitContextAsync(win.get());
+
+  std::unique_ptr<modules::Graphics> graphics(new modules::Graphics(
+      render_thread, base::Rect(base::Vec2i(), win->GetSize())));
 
   scoped_refptr<modules::Bitmap> bmp(
       new modules::Bitmap(render_thread, "D:\\Desktop\\rgu\\app\\example.png"));
@@ -64,55 +69,17 @@ int main() {
   }
   base::Debug() << "Time Ticks:" << SDL_GetTicks() - i;
 
-  render_thread->GetRenderThreadRunner()->PostTask(base::BindOnce(
-      [](scoped_refptr<modules::Bitmap> bmp) {
-        auto* cc = content::RendererThread::GetCCForRenderer();
-        auto ctx = cc->GetContext();
+  scoped_refptr<modules::Viewport> viewport(
+      new modules::Viewport(graphics.get()));
 
-        base::Debug() << "[APP] OpenGL Info: Renderer   :"
-                      << ctx->glGetString(GL_RENDERER);
-        base::Debug() << "                   Version    :"
-                      << ctx->glGetString(GL_VERSION);
-        base::Debug() << "                   SL Version :"
-                      << ctx->glGetString(GL_SHADING_LANGUAGE_VERSION);
-        base::Debug() << "                   Max Texture Size:"
-                      << cc->GetTextureMaxSize() << "x"
-                      << cc->GetTextureMaxSize();
-        base::Debug() << "[APP] SDL Info: Main Version :"
-                      << SDL_COMPILEDVERSION;
-        base::Debug() << "                TTF Version  :"
-                      << SDL_TTF_COMPILEDVERSION;
-        base::Debug() << "                IMG Version  :"
-                      << SDL_IMAGE_COMPILEDVERSION;
+  scoped_refptr<modules::Sprite> sprite(
+      new modules::Sprite(graphics.get(), viewport));
+  sprite->InitRefCountedAttributes();
+  sprite->SetBitmap(bmp);
 
-        ctx->glClearColor(0, 1, 0, 1);
-        ctx->glClear(GL_COLOR_BUFFER_BIT);
+  viewport->SetOX(100);
 
-        auto* shader = cc->Shaders()->drawable_shader.get();
-        renderer::QuadDrawable quad(cc->GetQuadIndicesBuffer(),
-                                    cc->GetContext());
-
-        base::TransformMatrix transform;
-        /*transform.SetPosition(
-            base::Vec2i(cc->States()->viewport->Current().width / 2,
-                        cc->States()->viewport->Current().height / 2));
-        transform.SetOrigin(
-            base::Vec2i(bmp->GetSize().x / 2, bmp->GetSize().y / 2));
-        transform.SetRotation(45);*/
-
-        shader->Bind();
-        shader->SetViewportMatrix(cc->States()->viewport->Current().Size());
-        shader->SetTransformMatrix(transform.GetMatrixDataUnsafe());
-        shader->SetTexture(bmp->GetGLTexture()->GetTextureRaw());
-        shader->SetTextureSize(bmp->GetSize());
-
-        quad.SetPosition(base::RectF(base::Vec2(), bmp->GetSize()));
-        quad.SetTexcoord(base::RectF(base::Vec2(), bmp->GetSize()));
-        quad.Draw();
-
-        SDL_GL_SwapWindow(cc->GetWindow()->AsSDLWindow());
-      },
-      bmp));
+  graphics->Update();
 
   base::RunLoop loop;
   base::RunLoop::BindEventDispatcher(

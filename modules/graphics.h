@@ -10,9 +10,10 @@
 
 namespace modules {
 
-class Screen : public DrawFrame {
+class Screen : public DrawableManager {
  public:
-  Screen(scoped_refptr<content::RendererThread> render_thread);
+  Screen(scoped_refptr<content::RendererThread> render_thread,
+         const base::Vec2i& resolution);
   ~Screen() override;
 
   Screen(const Screen&) = delete;
@@ -25,6 +26,8 @@ class Screen : public DrawFrame {
   renderer::DoubleFrameBuffer* GetScreenBuffer() {
     return double_buffer_.get();
   }
+
+  base::Vec2i GetResolution() { return drawable_viewport_.rect_.Size(); }
 
  private:
   void InitScreenInternal();
@@ -42,7 +45,8 @@ class Screen : public DrawFrame {
 
 class Graphics {
  public:
-  Graphics(scoped_refptr<content::RendererThread> render_thread);
+  Graphics(scoped_refptr<content::RendererThread> render_thread,
+           const base::Rect& screen_info);
   virtual ~Graphics();
 
   Graphics(const Graphics&) = delete;

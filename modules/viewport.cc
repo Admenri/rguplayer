@@ -11,7 +11,8 @@ Viewport::Viewport(Graphics* screen)
       screen_(screen),
       color_(nullptr),
       tone_(nullptr) {
-  viewport_.rect_ = base::Rect(0, 0, screen->GetWidth(), screen->GetHeight());
+  drawable_viewport_.rect_ =
+      base::Rect(0, 0, screen->GetWidth(), screen->GetHeight());
 }
 
 Viewport::Viewport(Graphics* screen, int x, int y, int width, int height)
@@ -19,7 +20,7 @@ Viewport::Viewport(Graphics* screen, int x, int y, int width, int height)
       screen_(screen),
       color_(nullptr),
       tone_(nullptr) {
-  viewport_.rect_ = base::Rect(x, y, width, height);
+  drawable_viewport_.rect_ = base::Rect(x, y, width, height);
 }
 
 Viewport::Viewport(Graphics* screen, const base::Rect& rect)
@@ -27,42 +28,43 @@ Viewport::Viewport(Graphics* screen, const base::Rect& rect)
       screen_(screen),
       color_(nullptr),
       tone_(nullptr) {
-  viewport_.rect_ = rect;
+  drawable_viewport_.rect_ = rect;
 }
 
 Viewport::~Viewport() { Dispose(); }
 
-void Viewport::SetRect(const base::Rect& rect) {
-  viewport_.rect_ = rect;
+void Viewport::SetRect(scoped_refptr<Rect> rect) {
+  rect_ = rect;
 
+  drawable_viewport_.rect_ = rect->AsBase();
   OnRectChanged();
 }
 
-base::Rect Viewport::GetRect() const { return viewport_.rect_; }
+scoped_refptr<Rect> Viewport::GetRect() const { return rect_; }
 
 void Viewport::SetOX(int ox) {
   CheckedForDispose();
 
-  if (viewport_.original_point_.x == ox) return;
+  if (drawable_viewport_.origin_.x == ox) return;
 
-  viewport_.original_point_.x = ox;
+  drawable_viewport_.origin_.x = ox;
 
   NotifyViewportChanged();
 }
 
-int Viewport::GetOX() const { return viewport_.original_point_.x; }
+int Viewport::GetOX() const { return drawable_viewport_.origin_.x; }
 
 void Viewport::SetOY(int oy) {
   CheckedForDispose();
 
-  if (viewport_.original_point_.y == oy) return;
+  if (drawable_viewport_.origin_.y == oy) return;
 
-  viewport_.original_point_.y = oy;
+  drawable_viewport_.origin_.y = oy;
 
   NotifyViewportChanged();
 }
 
-int Viewport::GetOY() const { return viewport_.original_point_.y; }
+int Viewport::GetOY() const { return drawable_viewport_.origin_.y; }
 
 void Viewport::SetColor(scoped_refptr<Color> color) { color_ = color; }
 
@@ -73,7 +75,7 @@ void Viewport::SetTone(scoped_refptr<Tone> tone) { tone_ = tone; }
 scoped_refptr<Tone> Viewport::GetTone() const { return tone_; }
 
 void Viewport::InitRefCountedAttributes() {
-  rect_ = new Rect(viewport_.rect_);
+  rect_ = new Rect(drawable_viewport_.rect_);
   color_ = new Color();
   tone_ = new Tone();
 
@@ -90,20 +92,44 @@ void Viewport::Paint() {
   auto* cc = content::RendererThread::GetCCForRenderer();
 
   cc->States()->scissor_test->Push(true);
-  cc->States()->scissor_region->Push(viewport_.rect_);
+  cc->States()->scissor_region->Push(drawable_viewport_.rect_);
 
-  DrawFrame::DrawablesPaint();
+  DrawableManager::Composite();
 
   cc->States()->scissor_region->Pop();
   cc->States()->scissor_test->Pop();
 }
 
-void Viewport::ViewportChanged(const ViewportInfo& viewport) {}
+void Viewport::ViewportRectChanged(const DrawableViewport& viewport) {}
 
 void Viewport::OnRectChanged() {
-  viewport_.rect_ = rect_->AsBase();
+  drawable_viewport_.rect_ = rect_->AsBase();
 
   NotifyViewportChanged();
+}
+
+ViewportDrawable::ViewportDrawable(Graphics* screen,
+                                   scoped_refptr<Viewport> viewport, int z)
+    : Drawable((viewport ? static_cast<DrawableManager*>(viewport.get())
+                         : screen->GetScreen()),
+               z),
+      screen_(screen),
+      viewport_(viewport) {}
+
+void ViewportDrawable::SetViewport(scoped_refptr<Viewport> viewport) {
+  NeedCheckAccess();
+
+  viewport_ = viewport;
+
+  SetDrawableManager(viewport.get());
+
+  OnViewportChange();
+}
+
+scoped_refptr<Viewport> ViewportDrawable::GetViewport() const {
+  NeedCheckAccess();
+
+  return viewport_;
 }
 
 }  // namespace modules

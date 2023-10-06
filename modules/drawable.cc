@@ -8,30 +8,30 @@
 
 namespace modules {
 
-DrawFrame::DrawFrame() {}
+DrawableManager::DrawableManager() {}
 
-DrawFrame::~DrawFrame() {
+DrawableManager::~DrawableManager() {
   for (base::LinkNode<Drawable>* it = drawable_children_.begin();
        it != drawable_children_.end(); it = it->Next()) {
-    it->Data()->parent_ = nullptr;
+    it->Data()->drawable_manager_ = nullptr;
   }
 }
 
-void DrawFrame::DrawablesPaint() {
+void DrawableManager::Composite() {
   for (base::LinkNode<Drawable>* it = drawable_children_.begin();
        it != drawable_children_.end(); it = it->Next()) {
     if (it->Data()->IsVisible()) it->Data()->Paint();
   }
 }
 
-void DrawFrame::NotifyViewportChanged() {
+void DrawableManager::NotifyViewportChanged() {
   for (base::LinkNode<Drawable>* it = drawable_children_.begin();
        it != drawable_children_.end(); it = it->Next()) {
-    it->Data()->ViewportChanged(viewport_);
+    it->Data()->ViewportRectChanged(drawable_viewport_);
   }
 }
 
-void DrawFrame::Insert(Drawable& element) {
+void DrawableManager::Insert(Drawable& element) {
   base::LinkNode<Drawable>* iter;
 
   for (iter = drawable_children_.begin(); iter != drawable_children_.end();
@@ -47,7 +47,7 @@ void DrawFrame::Insert(Drawable& element) {
   drawable_children_.PushBack(element.node_);
 }
 
-void DrawFrame::InsertAfter(Drawable& element, Drawable& after) {
+void DrawableManager::InsertAfter(Drawable& element, Drawable& after) {
   base::LinkNode<Drawable>* iter;
 
   for (iter = &after.node_; iter != drawable_children_.end();
@@ -63,23 +63,28 @@ void DrawFrame::InsertAfter(Drawable& element, Drawable& after) {
   drawable_children_.PushBack(element.node_);
 }
 
-void DrawFrame::Reinsert(Drawable& element) {
+void DrawableManager::Reinsert(Drawable& element) {
   drawable_children_.Remove(element.node_);
   Insert(element);
 }
 
-Drawable::Drawable(DrawFrame* frame) : parent_(frame), node_(this) {}
+Drawable::Drawable(DrawableManager* frame, int z, bool visible)
+    : drawable_manager_(frame), z_(z), visible_(visible), node_(this) {
+  frame->Insert(*this);
+}
 
 Drawable::~Drawable() { UnlinkNode(); }
 
-void Drawable::SetParent(DrawFrame* frame) {
+void Drawable::SetDrawableManager(DrawableManager* frame) {
   NeedCheckAccess();
 
   UnlinkNode();
 
-  parent_ = frame;
+  drawable_manager_ = frame;
+
   frame->Insert(*this);
-  ViewportChanged(frame->viewport_);
+
+  ViewportRectChanged(frame->drawable_viewport_);
 }
 
 void Drawable::SetZ(int z) {
@@ -89,7 +94,7 @@ void Drawable::SetZ(int z) {
 
   z_ = z;
 
-  parent_->Reinsert(*this);
+  drawable_manager_->Reinsert(*this);
 }
 
 int Drawable::GetZ() const {
@@ -111,7 +116,7 @@ void Drawable::SetVisible(bool visible) {
 }
 
 void Drawable::UnlinkNode() {
-  if (parent_) parent_->drawable_children_.Remove(node_);
+  if (drawable_manager_) drawable_manager_->drawable_children_.Remove(node_);
 }
 
 bool Drawable::operator<(const Drawable& other) const {

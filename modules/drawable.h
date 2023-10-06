@@ -12,24 +12,25 @@ namespace modules {
 
 class Drawable;
 
-class DrawFrame {
+class DrawableManager {
  public:
-  struct ViewportInfo {
+  struct DrawableViewport {
     base::Rect rect_;
-    base::Vec2i original_point_;
+    base::Vec2i origin_;
 
-    base::Vec2i GetRealOffset() const {
-      return rect_.Position() - original_point_;
-    }
+    base::Vec2i GetRealOffset() const { return rect_.Position() - origin_; }
   };
 
-  DrawFrame();
-  virtual ~DrawFrame();
+  DrawableManager();
+  virtual ~DrawableManager();
 
-  DrawFrame(const DrawFrame&) = delete;
-  DrawFrame& operator=(const DrawFrame) = delete;
+  DrawableManager(const DrawableManager&) = delete;
+  DrawableManager& operator=(const DrawableManager) = delete;
 
-  void DrawablesPaint();
+  // RenderThread calling
+  void Composite();
+
+  // Anythread calling
   void NotifyViewportChanged();
 
  protected:
@@ -39,19 +40,19 @@ class DrawFrame {
   void InsertAfter(Drawable& element, Drawable& after);
   void Reinsert(Drawable& element);
 
-  ViewportInfo viewport_;
+  DrawableViewport drawable_viewport_;
   base::LinkList<Drawable> drawable_children_;
 };
 
 class Drawable {
  public:
-  Drawable(DrawFrame* frame);
+  Drawable(DrawableManager* frame, int z = 0, bool visible = true);
   virtual ~Drawable();
 
   Drawable(const Drawable&) = delete;
   Drawable& operator=(const Drawable) = delete;
 
-  void SetParent(DrawFrame* frame);
+  void SetDrawableManager(DrawableManager* frame);
 
   void SetZ(int z);
   int GetZ() const;
@@ -60,18 +61,20 @@ class Drawable {
   void SetVisible(bool visible);
 
  protected:
+  friend class DrawableManager;
+
   virtual void Paint() = 0;
-  virtual void ViewportChanged(const DrawFrame::ViewportInfo& viewport) = 0;
+  virtual void ViewportRectChanged(
+      const DrawableManager::DrawableViewport& viewport) = 0;
   virtual void NeedCheckAccess() const = 0;
 
   void UnlinkNode();
 
-  friend class DrawFrame;
   bool operator<(const Drawable& other) const;
   int z_ = 0;
   bool visible_ = true;
 
-  DrawFrame* parent_;
+  DrawableManager* drawable_manager_;
   base::LinkNode<Drawable> node_;
 };
 

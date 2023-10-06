@@ -6,8 +6,11 @@
 
 namespace modules {
 
-Screen::Screen(scoped_refptr<content::RendererThread> render_thread)
+Screen::Screen(scoped_refptr<content::RendererThread> render_thread,
+               const base::Vec2i& resolution)
     : render_thread_(render_thread) {
+  drawable_viewport_.rect_ = base::Rect(base::Vec2i(), resolution);
+
   render_thread_->GetRenderThreadRunner()->PostTask(base::BindOnce(
       &Screen::InitScreenInternal, weak_ptr_factory_.GetWeakPtr()));
 }
@@ -37,16 +40,16 @@ void Screen::InitScreenInternal() {
   screen_quad_.reset(
       new renderer::QuadDrawable(cc->GetQuadIndicesBuffer(), cc->GetContext()));
   double_buffer_.reset(new renderer::DoubleFrameBuffer(
-      cc->GetContext(), cc->GetWindow()->GetSize()));
+      cc->GetContext(), drawable_viewport_.rect_.Size()));
 }
 
 void Screen::CompositeInternal(base::OnceClosure sync_complete) {
   auto* cc = content::RendererThread::GetCCForRenderer();
 
-  cc->States()->viewport->Push(viewport_.rect_);
+  cc->States()->viewport->Push(drawable_viewport_.rect_);
   double_buffer_->GetFrontend()->frame_buffer->Bind();
 
-  DrawablesPaint();
+  DrawableManager::Composite();
 
   double_buffer_->GetFrontend()->frame_buffer->Unbind();
   cc->States()->viewport->Pop();
@@ -57,7 +60,7 @@ void Screen::CompositeInternal(base::OnceClosure sync_complete) {
 void Screen::ResizeScreenInternal(const base::Vec2i& size) {
   double_buffer_->Resize(size);
 
-  viewport_.rect_ = base::Rect(base::Vec2i(), size);
+  drawable_viewport_.rect_ = base::Rect(base::Vec2i(), size);
 
   NotifyViewportChanged();
 }
@@ -66,8 +69,13 @@ void Screen::SwapBuffer(renderer::CCLayer* cc) {
   SDL_GL_SwapWindow(cc->GetWindow()->AsSDLWindow());
 }
 
-Graphics::Graphics(scoped_refptr<content::RendererThread> render_thread) {
-  screen_.reset(new Screen(render_thread));
+Graphics::Graphics(scoped_refptr<content::RendererThread> render_thread,
+                   const base::Rect& screen_info)
+    : render_thread_(render_thread) {
+  screen_info_.display_offset_ = screen_info.Position();
+  screen_info_.resolution = screen_info.Size();
+
+  screen_.reset(new Screen(render_thread_, screen_info_.resolution));
 }
 
 Graphics::~Graphics() {}
@@ -94,11 +102,14 @@ void Graphics::DrawScreenInternal() {
 
   renderer::GLFrameBuffer::BltBegin(cc, nullptr, screen_rect.Size());
   renderer::GLFrameBuffer::BltSource(cc, frame_buffer->GetFrontend()->texture);
+  renderer::GLFrameBuffer::BltClear(cc);
   renderer::GLFrameBuffer::BltEnd(
       cc, nullptr, screen_rect,
       base::Rect(screen_info_.display_offset_.x,
                  screen_info_.display_offset_.y + screen_rect.height,
                  screen_rect.width, -screen_rect.height));
+
+  SDL_GL_SwapWindow(cc->GetWindow()->AsSDLWindow());
 }
 
 }  // namespace modules

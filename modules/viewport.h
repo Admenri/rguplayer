@@ -16,7 +16,7 @@ namespace modules {
 
 class Viewport : public base::RefCounted<Viewport>,
                  public Disposable,
-                 public DrawFrame,
+                 public DrawableManager,
                  public Drawable,
                  public Flashable {
  public:
@@ -28,8 +28,8 @@ class Viewport : public base::RefCounted<Viewport>,
   Viewport(const Viewport&) = delete;
   Viewport& operator=(const Viewport&) = delete;
 
-  void SetRect(const base::Rect& rect);
-  base::Rect GetRect() const;
+  void SetRect(scoped_refptr<Rect> rect);
+  scoped_refptr<Rect> GetRect() const;
 
   void SetOX(int ox);
   int GetOX() const;
@@ -47,7 +47,7 @@ class Viewport : public base::RefCounted<Viewport>,
  protected:
   void OnObjectDisposed() override;
   void Paint() override;
-  void ViewportChanged(const ViewportInfo& viewport) override;
+  void ViewportRectChanged(const DrawableViewport& viewport) override;
   void NeedCheckAccess() const override { CheckedForDispose(); }
 
  private:
@@ -61,6 +61,27 @@ class Viewport : public base::RefCounted<Viewport>,
   base::CallbackListSubscription rect_observer_;
 
   base::WeakPtrFactory<Viewport> weak_ptr_factory_{this};
+};
+
+class ViewportDrawable : public Drawable {
+ public:
+  ViewportDrawable(Graphics* screen, scoped_refptr<Viewport> viewport = nullptr,
+                   int z = 0);
+
+  ViewportDrawable(const ViewportDrawable&) = delete;
+  ViewportDrawable& operator=(const ViewportDrawable) = delete;
+
+  void SetViewport(scoped_refptr<Viewport> viewport);
+  scoped_refptr<Viewport> GetViewport() const;
+
+ protected:
+  virtual void OnViewportChange() {}
+
+  Graphics* GetScreen() { return screen_; }
+
+ private:
+  Graphics* screen_;
+  scoped_refptr<Viewport> viewport_;
 };
 
 }  // namespace modules

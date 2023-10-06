@@ -15,18 +15,11 @@ namespace modules {
 
 class Rect : public base::RefCounted<Rect> {
  public:
-  Rect();
+  Rect() {}
   Rect(const base::Rect& rect) : rect_(rect) {}
   explicit Rect(int x, int y, int width, int height)
       : rect_(x, y, width, height) {}
   virtual ~Rect() = default;
-
-  Rect(const Rect& other) { rect_ = other.rect_; }
-
-  Rect& operator=(const Rect& other) {
-    rect_ = other.rect_;
-    return *this;
-  }
 
   void Set(int x, int y, int width, int height) {
     rect_ = base::Rect(x, y, width, height);
@@ -45,7 +38,7 @@ class Rect : public base::RefCounted<Rect> {
   int GetX() const { return rect_.x; }
   int GetY() const { return rect_.y; }
   int GetWidth() const { return rect_.width; }
-  int GeiHeight() const { return rect_.height; }
+  int GetHeight() const { return rect_.height; }
 
   void SetX(int x) {
     rect_.x = x;
@@ -71,6 +64,8 @@ class Rect : public base::RefCounted<Rect> {
     return value_observer_.Add(callback);
   }
 
+  void SetBase(const base::Rect& rect) { rect_ = rect; }
+
  private:
   base::RepeatingCallbackList<void()> value_observer_;
 
@@ -84,9 +79,6 @@ class Color : public base::RefCounted<Color> {
       : color_(std::clamp(red, 0, 255), std::clamp(green, 0, 255),
                std::clamp(blue, 0, 255), std::clamp(alpha, 0, 255)) {}
   virtual ~Color() = default;
-
-  Color(const Color&) = default;
-  Color& operator=(const Color&) = default;
 
   void Set(int red, int green, int blue, int alpha) {
     color_ = base::Vec4i(std::clamp(red, 0, 255), std::clamp(green, 0, 255),
@@ -124,9 +116,6 @@ class Tone : public base::RefCounted<Tone> {
       : tone_(std::clamp(red, 0, 255), std::clamp(green, 0, 255),
               std::clamp(blue, 0, 255), std::clamp(gray, 0, 255)) {}
   virtual ~Tone() = default;
-
-  Tone(const Tone&) = default;
-  Tone& operator=(const Tone&) = default;
 
   void Set(int red, int green, int blue, int gray) {
     tone_ = base::Vec4i(std::clamp(red, 0, 255), std::clamp(green, 0, 255),

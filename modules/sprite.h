@@ -18,11 +18,11 @@ namespace modules {
 
 class Sprite : public base::RefCounted<Sprite>,
                public Disposable,
-               public Drawable,
+               public ViewportDrawable,
                public Flashable {
  public:
   Sprite(Graphics* screen);
-  Sprite(Graphics* screen, Viewport* viewport);
+  Sprite(Graphics* screen, scoped_refptr<Viewport> viewport);
   ~Sprite() override;
 
   Sprite(const Sprite&) = delete;
@@ -39,12 +39,6 @@ class Sprite : public base::RefCounted<Sprite>,
   void SetSrcRect(scoped_refptr<Rect> src_rect);
   scoped_refptr<Rect> GetSrcRect() const;
 
-  void SetViewport(scoped_refptr<Viewport> viewport);
-  scoped_refptr<Viewport> GetViewport() const;
-
-  void SetVisible(bool visible);
-  bool GetVisible() const;
-
   void SetX(int x);
   int GetX() const;
 
@@ -57,14 +51,14 @@ class Sprite : public base::RefCounted<Sprite>,
   void SetOY(int oy);
   int GetOY() const;
 
-  void SetZoomX(double zoom_x);
-  double GetZoomX() const;
+  void SetZoomX(float zoom_x);
+  float GetZoomX() const;
 
-  void SetZoomY(double zoom_y);
-  double GetZoomY() const;
+  void SetZoomY(float zoom_y);
+  float GetZoomY() const;
 
-  void SetAngle(double angle);
-  double GetAngle() const;
+  void SetAngle(float angle);
+  float GetAngle() const;
 
   void SetWaveAmp(int wave_amp);
   int GetWaveAmp() const;
@@ -87,7 +81,7 @@ class Sprite : public base::RefCounted<Sprite>,
   void SetBushOpacity(int opacity);
   int GetBushOpacity() const;
 
-  void SetOpacity();
+  void SetOpacity(int opacity);
   int GetOpacity() const;
 
   void SetBlendMode(renderer::BlendMode mode);
@@ -102,10 +96,14 @@ class Sprite : public base::RefCounted<Sprite>,
   void InitRefCountedAttributes();
 
  private:
+  void InitSpriteRendererInternal();
+  void OnSrcRectChangedInternal();
+
   void OnObjectDisposed() override;
 
   void Paint() override;
-  void ViewportChanged(const DrawFrame::ViewportInfo& viewport) override;
+  void ViewportRectChanged(
+      const DrawableManager::DrawableViewport& viewport) override;
   void NeedCheckAccess() const override { CheckedForDispose(); }
 
   void OnSrcRectChanged();
@@ -120,6 +118,8 @@ class Sprite : public base::RefCounted<Sprite>,
   scoped_refptr<Tone> tone_;
   renderer::BlendMode blend_mode_ = renderer::BlendMode::Default;
   int opacity_ = 255;
+  float fopacity_ = 1.f;
+  bool mirror_ = false;
 
   base::CallbackListSubscription src_rect_observer_;
 
