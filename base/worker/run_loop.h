@@ -12,6 +12,7 @@
 #include "base/bind/callback.h"
 #include "base/memory/lock.h"
 #include "base/memory/ref_counted.h"
+#include "base/third_party/concurrentqueue/blockingconcurrentqueue.h"
 
 namespace base {
 
@@ -117,6 +118,8 @@ class RunLoop {
   base::OnceClosure QuitClosure();
   void QuitWhenIdle();
 
+  bool IsQuitRequired() { return quit_flag_.IsSet(); }
+
  private:
   friend class RunnerImpl;
   void InitInternal(MessagePumpType type);
@@ -124,9 +127,9 @@ class RunLoop {
   void LockAddTask(base::OnceClosure task_closure);
   scoped_refptr<SequencedTaskRunner> internal_runner_;
 
+  MessagePumpType type_;
   base::AtomicFlag quit_flag_;
-  base::Lock queue_lock_;
-  std::list<base::OnceClosure> closure_task_list_;
+  moodycamel::BlockingConcurrentQueue<base::OnceClosure> closure_task_list_;
 
   base::WeakPtrFactory<RunLoop> weak_ptr_factory_{this};
 };

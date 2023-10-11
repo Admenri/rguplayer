@@ -8,11 +8,23 @@
 
 namespace base {
 
-ThreadWorker::ThreadWorker() {}
+namespace {
+
+class SyncSequencedTaskRunner : public SequencedTaskRunner {
+ public:
+  void PostTask(base::OnceClosure task) override { std::move(task).Run(); }
+};
+
+}  // namespace
+
+ThreadWorker::ThreadWorker(bool sync_worker)
+    : sync_(sync_worker),
+      task_runner_(sync_worker ? new SyncSequencedTaskRunner() : nullptr) {}
 
 ThreadWorker::~ThreadWorker() { Stop(); }
 
 void ThreadWorker::Start(RunLoop::MessagePumpType message_type) {
+  if (sync_) return;
   thread_.reset(new std::jthread(ThreadWorker::ThreadFunc, message_type,
                                  std::ref(start_flag_),
                                  std::ref(task_runner_)));
@@ -24,6 +36,7 @@ void ThreadWorker::Stop() {
 }
 
 void ThreadWorker::WaitUntilStart() {
+  if (sync_) return;
   while (!start_flag_.IsSet()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
@@ -31,6 +44,14 @@ void ThreadWorker::WaitUntilStart() {
 
 scoped_refptr<base::SequencedTaskRunner> ThreadWorker::task_runner() {
   return task_runner_;
+}
+
+void ThreadWorker::WaitForSync() {
+  if (sync_) return;
+  task_runner()->PostTask(
+      base::BindOnce(&moodycamel::LightweightSemaphore::signal,
+                     base::Unretained(&semaphore_), 1));
+  semaphore_.wait();
 }
 
 void ThreadWorker::ThreadFunc(

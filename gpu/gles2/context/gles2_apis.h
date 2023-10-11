@@ -5,6 +5,10 @@
 #define GL_APIENTRYP GL_APIENTRY *
 #endif
 
+/*
+ * GLES2 Base functions
+ */
+
 typedef void(GL_APIENTRYP _PFNGLACTIVETEXTUREPROC)(GLenum texture);
 typedef void(GL_APIENTRYP _PFNGLATTACHSHADERPROC)(GLuint program,
                                                   GLuint shader);
@@ -295,5 +299,15 @@ typedef void(GL_APIENTRYP _PFNGLVERTEXATTRIBPOINTERPROC)(
     const void *pointer);
 typedef void(GL_APIENTRYP _PFNGLVIEWPORTPROC)(GLint x, GLint y, GLsizei width,
                                               GLsizei height);
+
+/*
+ * OES ARB_vertex_arrays
+ */
+
+typedef void(GL_APIENTRYP _PFNGLBINDVERTEXARRAYPROC)(GLuint array);
+typedef void(GL_APIENTRYP _PFNGLDELETEVERTEXARRAYSPROC)(GLsizei n,
+                                                        const GLuint *arrays);
+typedef void(GL_APIENTRYP _PFNGLGENVERTEXARRAYSPROC)(GLsizei n, GLuint *arrays);
+typedef GLboolean(GL_APIENTRYP _PFNGLISVERTEXARRAYPROC)(GLuint array);
 
 #endif  // GPU_GLES2_GLES2_H_

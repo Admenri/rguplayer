@@ -6,49 +6,46 @@
 #define GPU_GLES2_SHADER_SHADER_MANAGER_H_
 
 #include "base/math/math.h"
-#include "base/memory/ref_counted.h"
 #include "gpu/gl_forward.h"
 
 namespace gpu {
 
-enum ShaderLocation : GLuint {
+enum ShaderAttribLocation : GLuint {
   Position = 0,
   TexCoord,
   Color,
 };
 
-class ShaderManager {
+class GLES2Shader {
  public:
-  ShaderManager(scoped_refptr<gpu::GLES2CommandContext> context);
-  virtual ~ShaderManager();
+  GLES2Shader();
+  virtual ~GLES2Shader();
 
-  ShaderManager(const ShaderManager&) = delete;
-  ShaderManager& operator=(const ShaderManager&) = delete;
+  GLES2Shader(const GLES2Shader&) = delete;
+  GLES2Shader& operator=(const GLES2Shader&) = delete;
 
   void Bind();
   void Unbind();
-  GLuint GetProgram();
 
  protected:
   virtual void Setup(const std::string& vertex_shader,
                      const std::string& frag_shader);
-  void CompileShader(GLuint gl_shader, const std::string& shader_source);
 
-  scoped_refptr<gpu::GLES2CommandContext> GetContext() { return context_; }
-
- private:
-  scoped_refptr<gpu::GLES2CommandContext> context_;
+  virtual bool BindAttribLocation() { return false; }
 
   GLuint vertex_shader_;
   GLuint frag_shader_;
   GLuint program_;
+
+ private:
+  void CompileShader(GLuint gl_shader, const std::string& shader_source);
 };
 
-class ShaderBase : public ShaderManager {
+class GLES2ShaderBase : public GLES2Shader {
  public:
-  ShaderBase(scoped_refptr<gpu::GLES2CommandContext> context);
+  GLES2ShaderBase();
 
-  void SetViewportMatrix(const base::Vec2i& size);
+  void SetProjectionMatrix(const base::Vec2i& size);
 
  protected:
   void Setup(const std::string& vertex_shader,
@@ -57,68 +54,24 @@ class ShaderBase : public ShaderManager {
   void SetTexture(GLint location, GLuint tex, uint16_t unit);
 
  private:
-  GLint viewp_matrix_location_;
+  GLint u_projectionMat_;
 };
 
-class BaseShader : public ShaderBase {
+class BaseShader : public GLES2ShaderBase {
  public:
-  BaseShader(scoped_refptr<gpu::GLES2CommandContext> context);
+  BaseShader();
 
   void SetTextureSize(const base::Vec2& tex_size);
   void SetTransOffset(const base::Vec2& offset);
   void SetTexture(GLuint tex);
 
- private:
-  GLint tex_size_location_;
-  GLint trans_offset_location_;
-
-  GLint texture_location_;
-};
-
-class BltShader : public ShaderBase {
- public:
-  BltShader(scoped_refptr<gpu::GLES2CommandContext> context);
-
-  void SetTexture(GLuint tex);
-  void SetTextureSize(const base::Vec2& tex_size);
-  void SetTransOffset(const base::Vec2& offset);
-  void SetDstTexture(GLuint tex);
-  void SetOpacity(float opacity);
-  void SetSubRect(const base::Vec4& rect);
+ protected:
+  bool BindAttribLocation() override;
 
  private:
-  GLint tex_size_location_;
-  GLint trans_offset_location_;
-
-  GLint src_texture_location_;
-  GLint dst_texture_location_;
-  GLint sub_rect_location_;
-  GLint opacity_location_;
-};
-
-class DrawableShader : public ShaderBase {
- public:
-  DrawableShader(scoped_refptr<gpu::GLES2CommandContext> context);
-
-  void SetTextureSize(const base::Vec2& tex_size);
-  void SetTransformMatrix(const float* transform);
-  void SetTexture(GLuint tex);
-
- private:
-  GLint tex_size_location_;
-  GLint transform_matrix_location_;
-
-  GLint texture_location_;
-};
-
-class ColorShader : public ShaderBase {
- public:
-  ColorShader(scoped_refptr<gpu::GLES2CommandContext> context);
-
-  void SetTransOffset(const base::Vec2& offset);
-
- private:
-  GLint trans_offset_location_;
+  GLint u_texSize_;
+  GLint u_transOffset_;
+  GLint u_texture_;
 };
 
 }  // namespace gpu

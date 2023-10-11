@@ -48,7 +48,7 @@ void RunLoop::BindEventDispatcher(
 }
 
 RunLoop::RunLoop() {
-  InitInternal(IsInUIThread() ? MessagePumpType::IO : MessagePumpType::UI);
+  InitInternal(IsInUIThread() ? MessagePumpType::UI : MessagePumpType::IO);
 }
 
 RunLoop::RunLoop(MessagePumpType type) {
@@ -78,19 +78,19 @@ void RunLoop::Run() {
 }
 
 bool RunLoop::DoLoop() {
-  if (!closure_task_list_.empty()) {
-    std::move(closure_task_list_.front()).Run();
-
-    base::AutoLock queue_lock_mutex(queue_lock_);
-    closure_task_list_.pop_front();
+  base::OnceClosure task;
+  if (closure_task_list_.try_dequeue(task)) {
+    std::move(task).Run();
     return true;
   }
 
-  SDL_Event sdl_event;
-  if (SDL_PollEvent(&sdl_event)) {
-    if (!g_event_dispatcher[sdl_event.type].is_null()) {
-      g_event_dispatcher[sdl_event.type].Run(sdl_event);
-      return true;
+  if (type_ == MessagePumpType::UI) {
+    SDL_Event sdl_event;
+    if (SDL_PollEvent(&sdl_event)) {
+      if (!g_event_dispatcher[sdl_event.type].is_null()) {
+        g_event_dispatcher[sdl_event.type].Run(sdl_event);
+        return true;
+      }
     }
   }
 
@@ -100,6 +100,7 @@ bool RunLoop::DoLoop() {
 void RunLoop::QuitWhenIdle() { RequireQuit(); }
 
 void RunLoop::InitInternal(MessagePumpType type) {
+  type_ = type;
   internal_runner_ =
       base::MakeRefCounted<RunnerImpl>(weak_ptr_factory_.GetWeakPtr());
 }
@@ -107,9 +108,8 @@ void RunLoop::InitInternal(MessagePumpType type) {
 void RunLoop::RequireQuit() { quit_flag_.Set(); }
 
 void RunLoop::LockAddTask(base::OnceClosure task_closure) {
-  if (task_closure) {
-    base::AutoLock mutex_lock(queue_lock_);
-    closure_task_list_.push_back(std::move(task_closure));
+  if (!task_closure.is_null()) {
+    closure_task_list_.enqueue(std::move(task_closure));
   }
 }
 

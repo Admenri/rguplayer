@@ -169,8 +169,9 @@ class Vec4 {
 class Rect {
  public:
   Rect() : x(0), y(0), width(0), height(0) {}
+  Rect(const Vec2i& size) : x(0), y(0), width(size.x), height(size.y) {}
   Rect(int ix, int iy, int iw, int ih) : x(ix), y(iy), width(iw), height(ih) {}
-  Rect(Vec2i pos, Vec2i size)
+  Rect(const Vec2i& pos, const Vec2i& size)
       : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
   Rect(const Rect&) = default;
@@ -194,9 +195,10 @@ class Rect {
 class RectF {
  public:
   RectF() : x(0.f), y(0.f), width(0.f), height(0.f) {}
+  RectF(const Vec2& size) : x(0), y(0), width(size.x), height(size.y) {}
   RectF(float ix, float iy, float iw, float ih)
       : x(ix), y(iy), width(iw), height(ih) {}
-  RectF(Vec2 pos, Vec2 size)
+  RectF(const Vec2& pos, const Vec2& size)
       : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
   RectF(const Rect& ir)
       : x(static_cast<float>(ir.x)),

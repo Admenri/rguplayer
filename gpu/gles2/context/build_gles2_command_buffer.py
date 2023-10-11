@@ -22,7 +22,7 @@ if args.header:
   converted_functions.append(autogen_comments)
   for function in functions:
     if function != "":
-      converted_functions.append("_PFN" + function.upper() + "PROC " + function + " = nullptr;\n\n")
+      converted_functions.append("_PFNGL" + function.upper() + "PROC " + function + " = nullptr;\n\n")
   with open(args.output, "w") as file:
     file.writelines(converted_functions)
 
@@ -34,6 +34,6 @@ elif args.body:
   converted_functions.append(autogen_comments)
   for function in functions:
     if function != "":
-      converted_functions.append("{} = static_cast<{}>(GetProc(\"{}\"));\n\n".format(function, "_PFN" + function.upper() + "PROC", function))
+      converted_functions.append("{} = static_cast<{}>(GetProc(\"{}\"));\n\n".format(function, "_PFNGL" + function.upper() + "PROC", function))
   with open(args.output, "w") as file:
     file.writelines(converted_functions)

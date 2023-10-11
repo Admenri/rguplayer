@@ -46,6 +46,10 @@ set(BASE_SRC
   worker/thread_worker.cc
   worker/thread_worker.h
   template_util.h
+
+  third_party/concurrentqueue/blockingconcurrentqueue.h
+  third_party/concurrentqueue/concurrentqueue.h
+  third_party/concurrentqueue/lightweightsemaphore.h
 )
 
 add_library(core_base ${BASE_SRC})

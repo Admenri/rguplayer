@@ -2,6 +2,26 @@
 cmake_minimum_required(VERSION 3.18.0)
 
 #--------------------------------------------------------------------------------
+# Define gpu source
+#--------------------------------------------------------------------------------
+
+set(GPU_SRC
+  gles2/context/gles_context.cc
+  gles2/context/gles_context.h
+  gles2/gsm/gles_gsm.cc
+  gles2/gsm/gles_gsm.h
+  gles2/gsm/state_stacks.cc
+  gles2/gsm/state_stacks.h
+  gles2/shader/shader_manager.cc
+  gles2/shader/shader_manager.h
+  gles2/meta/gles_meta.cc
+  gles2/meta/gles_meta.h
+  gles2/vertex/vertex_array.cc
+  gles2/vertex/vertex_array.h
+  gl_forward.h
+)
+
+#--------------------------------------------------------------------------------
 # Autogen script
 #--------------------------------------------------------------------------------
 
@@ -22,28 +42,6 @@ endif()
 # Export body file import
 execute_process(
   COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --file=gles2_commands.txt --body --output=gles2_command_buffer_autogen.cc
-  WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/context
-  RESULT_VARIABLE PYTHON_SCRIPT_RESULT
-  OUTPUT_QUIET
-)
-
-##############################EXT###################################
-
-# Export header file import
-execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --file=gles2_ext_commands_fbo.txt --header --output=gles2_command_buffer_header_autogen_ext_fbo.h
-  WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/context
-  RESULT_VARIABLE PYTHON_SCRIPT_RESULT
-  OUTPUT_QUIET
-)
-
-if(NOT PYTHON_SCRIPT_RESULT EQUAL 0)
-  message(FATAL_ERROR "Failed to generate gles2 header: ${PYTHON_SCRIPT_RESULT}")
-endif()
-
-# Export body file import
-execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} ${SRC_ROOT}/gpu/gles2/context/build_gles2_command_buffer.py --file=gles2_ext_commands_fbo.txt --body --output=gles2_command_buffer_autogen_ext_fbo.cc
   WORKING_DIRECTORY ${SRC_ROOT}/gpu/gles2/context
   RESULT_VARIABLE PYTHON_SCRIPT_RESULT
   OUTPUT_QUIET
@@ -73,18 +71,6 @@ foreach(shader_file ${shader_files})
     endif()
   endif()
 endforeach()
-
-#--------------------------------------------------------------------------------
-# Define gpu source
-#--------------------------------------------------------------------------------
-
-set(GPU_SRC
-  gles2/context/gles_context.cc
-  gles2/context/gles_context.h
-  gles2/shader/shader_manager.cc
-  gles2/shader/shader_manager.h
-  gl_forward.h
-)
 
 add_library(core_gpu ${GPU_SRC})
 target_link_libraries(core_gpu core_base SDL2::Core)

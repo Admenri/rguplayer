@@ -15,34 +15,31 @@
 
 namespace gpu {
 
-class GLES2CommandContext
-    : public base::RefCountedThreadSafe<GLES2CommandContext> {
+class GLES2CommandContext;
+
+extern GLES2CommandContext GL;
+
+class GLES2CommandContext final {
  public:
   GLES2CommandContext();
-  virtual ~GLES2CommandContext();
+  ~GLES2CommandContext();
 
   GLES2CommandContext(const GLES2CommandContext&) = delete;
   GLES2CommandContext& operator=(const GLES2CommandContext&) = delete;
 
+  /* (-except: OGLError-) */
   void InitContext();
-  bool IsGLES() { return is_gles_; }
 
  public:
   // Import from autogen header part
 #include "gpu/gles2/context/gles2_command_buffer_header_autogen.h"
 
-// FrameBufferObject EXT
-#include "gpu/gles2/context/gles2_command_buffer_header_autogen_ext_fbo.h"
-
  private:
   friend class base::RefCountedThreadSafe<GLES2CommandContext>;
   void* GetProc(const std::string& proc_name);
 
-  void ParseExtensionsCore(std::vector<std::string>& out);
-  void ParseExtensionsCompat(std::vector<std::string>& out);
-
-  bool is_gles_ = false;
-  std::string suffix_;
+  std::string gl_prefix_;
+  std::string gl_suffix_;
 };
 
 }  // namespace gpu

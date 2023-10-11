@@ -1,18 +1,17 @@
 
-// From gl_shader_manager.cc:140
-uniform mat4 viewpMat;
+uniform mat4 u_projectionMat;
 
-// Texture size calc and Transform
-uniform vec2 texSize;
-uniform vec2 transOffset;
+uniform vec2 u_texSize;
+uniform vec2 u_transOffset;
 
-attribute vec2 position;
-attribute vec2 texCoord;
+attribute vec2 a_position;
+attribute vec2 a_texCoord;
 
 varying vec2 v_texCoord;
 
 void main() {
-	gl_Position = viewpMat * vec4(position + transOffset, 0, 1);
+	gl_Position = u_projectionMat * vec4(a_position + u_transOffset, 0.0, 1.0);
+	gl_PointSize = 1.0;
 
-	v_texCoord = texCoord * texSize;
+	v_texCoord = a_texCoord * u_texSize;
 }

@@ -15,7 +15,7 @@ namespace base {
 
 class ThreadWorker {
  public:
-  ThreadWorker();
+  ThreadWorker(bool sync_worker = false);
   virtual ~ThreadWorker();
 
   ThreadWorker(const ThreadWorker&) = delete;
@@ -27,6 +27,10 @@ class ThreadWorker {
   void WaitUntilStart();
   scoped_refptr<base::SequencedTaskRunner> task_runner();
 
+  bool IsSyncMode() { return sync_; }
+
+  void WaitForSync();
+
  private:
   static void ThreadFunc(std::stop_token token,
                          RunLoop::MessagePumpType message_type,
@@ -34,8 +38,10 @@ class ThreadWorker {
                          scoped_refptr<base::SequencedTaskRunner>& runner);
   std::unique_ptr<std::jthread> thread_;
 
+  moodycamel::LightweightSemaphore semaphore_;
   scoped_refptr<base::SequencedTaskRunner> task_runner_;
   base::AtomicFlag start_flag_;
+  bool sync_;
 
   base::WeakPtrFactory<ThreadWorker> weak_ptr_factory_{this};
 };
