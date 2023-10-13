@@ -40,29 +40,57 @@ struct VertexArray {
   // ARB_vertex_arrays
   GLID<VertexArray> id;
 
-  static void Init(VertexArray& vao);
+  GLID<VertexBuffer> vbo;
+  GLID<IndexBuffer> ibo;
+
+  inline static void SetAttrib(VertexArray& vao) {
+    VertexBuffer::Bind(vao.vbo);
+    IndexBuffer::Bind(vao.ibo);
+
+    for (size_t i = 0; i < VertexInfo<Type>::attr_size; i++) {
+      GL.EnableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
+      GL.VertexAttribPointer(VertexInfo<Type>::attrs[i].index,
+                             VertexInfo<Type>::attrs[i].size,
+                             VertexInfo<Type>::attrs[i].type, GL_FALSE,
+                             sizeof(Type), VertexInfo<Type>::attrs[i].offset);
+    }
+  }
+
+  inline static void Init(VertexArray& vao) {
+    if (GL.GenVertexArrays) {
+      GL.GenVertexArrays(1, &vao.id.gl);
+      GL.BindVertexArray(vao.id.gl);
+
+      SetAttrib(vao);
+    }
+  }
 
   inline static void Uninit(VertexArray& vao) {
-    GL.DeleteVertexArrays(1, &vao.id);
+    if (GL.GenVertexArrays) {
+      GL.DeleteVertexArrays(1, &vao.id.gl);
+    }
   }
 
-  inline static void Bind(VertexArray& vao) { GL.BindVertexArray(vao.id.gl); }
-  inline static void Unbind(VertexArray& vao) { GL.BindVertexArray(0); }
+  inline static void Bind(VertexArray& vao) {
+    if (GL.GenVertexArrays) {
+      GL.BindVertexArray(vao.id.gl);
+    } else {
+      SetAttrib(vao);
+    }
+  }
+  inline static void Unbind() {
+    if (GL.GenVertexArrays) {
+      GL.BindVertexArray(0);
+    } else {
+      for (size_t i = 0; i < VertexInfo<Type>::attr_size; i++) {
+        GL.DisableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
+      }
+
+      VertexBuffer::Unbind();
+      IndexBuffer::Unbind();
+    }
+  }
 };
-
-template <typename VertexType>
-inline void VertexArray<VertexType>::Init(VertexArray& vao) {
-  GL.GenVertexArrays(1, &vao.id.gl);
-  GL.BindVertexArray(vao.id.gl);
-
-  for (size_t i = 0; i < VertexInfo<Type>::attr_size; i++) {
-    GL.EnableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
-    GL.VertexAttribPointer(VertexInfo<Type>::attrs[i].index,
-                           VertexInfo<Type>::attrs[i].size,
-                           VertexInfo<Type>::attrs[i].type, GL_FALSE,
-                           sizeof(Type), VertexInfo<Type>::attrs[i].offset);
-  }
-}
 
 }  // namespace gpu
 

@@ -11,7 +11,6 @@ varying vec2 v_texCoord;
 
 void main() {
 	gl_Position = u_projectionMat * vec4(a_position + u_transOffset, 0.0, 1.0);
-	gl_PointSize = 1.0;
 
 	v_texCoord = a_texCoord * u_texSize;
 }

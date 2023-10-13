@@ -14,6 +14,7 @@
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
 #include "base/worker/thread_worker.h"
+#include "gpu/gles2/draw/quad_drawable.h"
 #include "gpu/gles2/gsm/gles_gsm.h"
 #include "gpu/gles2/vertex/vertex_array.h"
 #include "ui/widget/widget.h"
@@ -32,7 +33,7 @@ int main() {
   std::unique_ptr<ui::Widget> win(new ui::Widget());
   ui::Widget::InitParams params;
   params.size = base::Vec2i(800, 600);
-  params.title = "RGU Widget";
+  params.title = "Graph Widget";
   win->Init(std::move(params));
 
   SDL_GL_CreateContext(win->AsSDLWindow());
@@ -40,14 +41,53 @@ int main() {
   gpu::GL.InitContext();
   gpu::GSM.InitStates();
 
-  gpu::VertexArray<gpu::CommonVertex> vertex;
+  gpu::QuadDrawable quad;
 
-  gpu::VertexArray<gpu::CommonVertex>::Init(vertex);
+  gpu::GSM.states.viewport.Set(base::Rect(win->GetSize()));
+
+  gpu::GL.ClearColor(0, 1, 0, 1);
+  gpu::GL.Clear(GL_COLOR_BUFFER_BIT);
+
+  gpu::GLID<gpu::Texture> tex = gpu::Texture::Gen();
+
+  gpu::Texture::Bind(tex);
+  gpu::Texture::SetFilter();
+  gpu::Texture::SetWrap();
+
+  SDL_Surface* img =
+      IMG_Load("D:\\Desktop\\rgu\\app\\resources\\rgu_favicon_512.png");
+  auto size = base::Vec2i(img->w, img->h);
+  gpu::Texture::TexImage2D(img->w, img->h, GL_RGBA, img->pixels);
+
+  auto& shader = gpu::GSM.shaders->base;
+
+  shader.Bind();
+  shader.SetProjectionMatrix(base::Vec2i(800, 600));
+  shader.SetTexture(tex);
+  shader.SetTextureSize(size);
+  shader.SetTransOffset(base::Vec2i(20, 20));
+
+  quad.SetPositionRect(base::Rect(size));
+  quad.SetTexCoordRect(base::Rect(size));
+
+  gpu::GSM.states.blend.Push(true);
+  gpu::GSM.states.blend_func.Push(gpu::GLBlendType::Normal);
+
+  quad.Draw();
+
+  SDL_GL_SwapWindow(win->AsSDLWindow());
+
+  gpu::GSM.states.blend.Pop();
+  gpu::GSM.states.blend_func.Pop();
 
   base::RunLoop loop(base::RunLoop::MessagePumpType::UI);
   base::RunLoop::BindEventDispatcher(
       SDL_QUIT,
       base::BindRepeating(SysEvent, base::Passed(loop.QuitClosure())));
+
+  while (auto e = gpu::GL.GetError()) {
+    base::Debug() << "GLError:" << e;
+  }
 
   loop.Run();
 

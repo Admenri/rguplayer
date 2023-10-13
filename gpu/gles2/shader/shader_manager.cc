@@ -36,10 +36,10 @@ GLES2Shader::~GLES2Shader() {
   GL.DeleteShader(frag_shader_);
 }
 
-void GLES2Shader::Bind() { GSM.program.Set(program_); }
+void GLES2Shader::Bind() { GSM.states.program.Set(program_); }
 
 void GLES2Shader::Unbind() {
-  GSM.program.Set(0);
+  GSM.states.program.Set(0);
   GL.ActiveTexture(GL_TEXTURE0);
 }
 
@@ -161,14 +161,8 @@ void BaseShader::SetTransOffset(const base::Vec2& offset) {
   GL.Uniform2f(u_transOffset_, offset.x, offset.y);
 }
 
-void BaseShader::SetTexture(GLuint tex) {
-  GLES2ShaderBase::SetTexture(u_texture_, tex, 1);
-}
-
-bool BaseShader::BindAttribLocation() {
-  GL.BindAttribLocation(program_, ShaderAttribLocation::Position, "a_position");
-  GL.BindAttribLocation(program_, ShaderAttribLocation::TexCoord, "a_texCoord");
-  return true;
+void BaseShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
 }
 
 }  // namespace gpu

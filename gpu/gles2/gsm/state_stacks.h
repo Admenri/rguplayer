@@ -22,11 +22,15 @@ class StateStack {
 
   GLType Current() { return current_; }
 
+  void Init(const GLType& value) {
+    current_ = value;
+    OnSetState(value);
+  }
+
   void Set(const GLType& value) {
     if (current_ == value) return;
 
-    current_ = value;
-    OnSetState(value);
+    Init(value);
   }
 
   void Push(const GLType& value) {
@@ -85,6 +89,11 @@ enum class GLBlendType {
 class GLBlendFunc : public StateStack<GLBlendType> {
  public:
   void OnSetState(const GLBlendType& value);
+};
+
+class GLClearColor : public StateStack<base::Vec4> {
+ public:
+  void OnSetState(const base::Vec4& value);
 };
 
 }  // namespace gpu

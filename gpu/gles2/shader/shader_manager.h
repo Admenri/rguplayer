@@ -7,6 +7,7 @@
 
 #include "base/math/math.h"
 #include "gpu/gl_forward.h"
+#include "gpu/gles2/meta/gles_meta.h"
 
 namespace gpu {
 
@@ -63,10 +64,7 @@ class BaseShader : public GLES2ShaderBase {
 
   void SetTextureSize(const base::Vec2& tex_size);
   void SetTransOffset(const base::Vec2& offset);
-  void SetTexture(GLuint tex);
-
- protected:
-  bool BindAttribLocation() override;
+  void SetTexture(GLID<Texture> tex);
 
  private:
   GLint u_texSize_;
