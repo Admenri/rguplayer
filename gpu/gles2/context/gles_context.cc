@@ -5,7 +5,6 @@
 #include "gpu/gles2/context/gles_context.h"
 
 #include "SDL_video.h"
-#include "base/debug/debugwriter.h"
 #include "base/exceptions/exception.h"
 
 namespace gpu {
@@ -31,7 +30,7 @@ void* GLES2CommandContext::GetProc(const std::string& proc_name) {
   void* proc_ptr = SDL_GL_GetProcAddress(proc.c_str());
 
   if (!proc_ptr) {
-    base::Debug() << "Cannot find OGL proc:" << proc_name;
+    LOG(ERROR) << "Cannot find OGL proc:" << proc_name;
     throw base::Exception::Exception(base::Exception::OpenGLError,
                                      "Cannot find OGL proc: %s",
                                      proc_name.c_str());

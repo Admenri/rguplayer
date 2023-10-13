@@ -27,23 +27,23 @@ class StateStack {
     OnSetState(value);
   }
 
-  void Set(const GLType& value) {
+  inline void Set(const GLType& value) {
     if (current_ == value) return;
 
     Init(value);
   }
 
-  void Push(const GLType& value) {
+  inline void Push(const GLType& value) {
     stack_.push(current_);
     Set(value);
   }
 
-  void Pop() {
+  inline void Pop() {
     Set(stack_.top());
     stack_.pop();
   }
 
-  void Refresh() { OnSetState(current_); }
+  inline void Refresh() { OnSetState(current_); }
 
  protected:
   virtual void OnSetState(const GLType& value) = 0;
@@ -55,27 +55,27 @@ class StateStack {
 
 class GLViewport : public StateStack<base::Rect> {
  public:
-  void OnSetState(const base::Rect& value);
+  void OnSetState(const base::Rect& value) override;
 };
 
 class GLProgram : public StateStack<GLuint> {
  public:
-  void OnSetState(const GLuint& value);
+  void OnSetState(const GLuint& value) override;
 };
 
 class GLScissorTest : public StateStack<bool> {
  public:
-  void OnSetState(const bool& value);
+  void OnSetState(const bool& value) override;
 };
 
 class GLScissorRegion : public StateStack<base::Rect> {
  public:
-  void OnSetState(const base::Rect& value);
+  void OnSetState(const base::Rect& value) override;
 };
 
 class GLBlend : public StateStack<bool> {
  public:
-  void OnSetState(const bool& value);
+  void OnSetState(const bool& value) override;
 };
 
 enum class GLBlendType {
@@ -88,12 +88,12 @@ enum class GLBlendType {
 
 class GLBlendFunc : public StateStack<GLBlendType> {
  public:
-  void OnSetState(const GLBlendType& value);
+  void OnSetState(const GLBlendType& value) override;
 };
 
 class GLClearColor : public StateStack<base::Vec4> {
  public:
-  void OnSetState(const base::Vec4& value);
+  void OnSetState(const base::Vec4& value) override;
 };
 
 }  // namespace gpu

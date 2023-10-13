@@ -5,6 +5,8 @@
 
 #include "base/debug/logging.h"
 
+#include <iostream>
+
 #if defined(OS_WIN)
 #include <windows.h>
 
@@ -164,8 +166,12 @@ LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
 LogMessage::~LogMessage() {
   std::string str_newline(stream_.str());
 
-  Debug() << "[Log] File: " << file_ << " Line: " << line_
-          << " Level: " << severity_ << " Info: " << str_newline;
+  if (severity_ >= LOG_ERROR) {
+    std::cout << "[ELOG] File: " << file_ << "\nLine: " << line_
+              << "\nLevel: " << severity_ << "\nInfo: " << str_newline << '\n';
+  } else {
+    std::cout << "[LOG] " << str_newline << '\n';
+  }
 }
 
 #if defined(OS_WIN)

@@ -21,6 +21,7 @@ class GlobalStateManager final {
  public:
   struct GLShaderWare {
     BaseShader base;
+    TransformShader transform;
   };
 
   GlobalStateManager() = default;

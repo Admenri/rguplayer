@@ -72,6 +72,20 @@ class BaseShader : public GLES2ShaderBase {
   GLint u_texture_;
 };
 
+class TransformShader : public GLES2ShaderBase {
+ public:
+  TransformShader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransformMatrix(const float* mat4);
+  void SetTexture(GLID<Texture> tex);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transformMat_;
+  GLint u_texture_;
+};
+
 }  // namespace gpu
 
 #endif  // GPU_GLES2_SHADER_SHADER_MANAGER_H_

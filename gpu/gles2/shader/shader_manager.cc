@@ -6,7 +6,6 @@
 
 #include <vector>
 
-#include "base/debug/debugwriter.h"
 #include "base/exceptions/exception.h"
 #include "gpu/gles2/gsm/gles_gsm.h"
 
@@ -16,6 +15,7 @@ namespace shader {
 
 #include "gpu/gles2/shader/shader_source/base.frag.xxd"
 #include "gpu/gles2/shader/shader_source/base.vert.xxd"
+#include "gpu/gles2/shader/shader_source/transform.vert.xxd"
 
 static inline std::string FromRawData(const uint8_t* raw_data,
                                       const uint32_t data_size) {
@@ -73,7 +73,7 @@ void GLES2Shader::Setup(const std::string& vertex_shader,
     GL.GetProgramInfoLog(program_, static_cast<GLsizei>(log.size()), 0,
                          &log[0]);
 
-    base::Debug() << "[GLSL]" << log;
+    LOG(ERROR) << "[GLSL]" << log;
 
     throw base::Exception(base::Exception::OpenGLError,
                           "GLSL: An error occured while linking program.");
@@ -111,7 +111,7 @@ void GLES2Shader::CompileShader(GLuint gl_shader,
     GL.GetShaderInfoLog(gl_shader, static_cast<GLsizei>(log.size()), 0,
                         &log[0]);
 
-    base::Debug() << "[GLSL]" << log;
+    LOG(ERROR) << "[GLSL]" << log;
 
     throw base::Exception(base::Exception::OpenGLError,
                           "GLSL: An error occured while compiling shader.");
@@ -162,6 +162,28 @@ void BaseShader::SetTransOffset(const base::Vec2& offset) {
 }
 
 void BaseShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+TransformShader::TransformShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::transform_vert, shader::transform_vert_len),
+      shader::FromRawData(shader::base_frag, shader::base_frag_len));
+
+  u_texSize_ = GL.GetUniformLocation(program_, "u_texSize");
+  u_transformMat_ = GL.GetUniformLocation(program_, "u_transformMat");
+  u_texture_ = GL.GetUniformLocation(program_, "u_texture");
+}
+
+void TransformShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void TransformShader::SetTransformMatrix(const float* mat4) {
+  GL.UniformMatrix4fv(u_transformMat_, 1, GL_FALSE, mat4);
+}
+
+void TransformShader::SetTexture(GLID<Texture> tex) {
   GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
 }
 

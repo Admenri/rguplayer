@@ -179,7 +179,6 @@
 #include <string>
 
 #include "base/buildflags/build.h"
-#include "base/debug/debugwriter.h"
 
 namespace base {
 namespace logging {
