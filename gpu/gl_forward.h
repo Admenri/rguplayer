@@ -5,6 +5,7 @@
 #ifndef GPU_GL_FORWARD_H_
 #define GPU_GL_FORWARD_H_
 
-#include "gles2/context/gles_context.h"
+// GLES2 Renderer
+#include "gpu/gles2/context/gles_context.h"
 
 #endif  // GPU_GL_FORWARD_H_

@@ -19,10 +19,21 @@ set(BASE_SRC
   bind/cancelable_callback.h
   buildflags/build.h
   buildflags/compiler_specific.h
-  container/link_list.h
+  containers/cxx20_erase.h
+  containers/cxx20_erase_deque.h
+  containers/cxx20_erase_forward_list.h
+  containers/cxx20_erase_internal.h
+  containers/cxx20_erase_list.h
+  containers/cxx20_erase_map.h
+  containers/cxx20_erase_set.h
+  containers/cxx20_erase_string.h
+  containers/cxx20_erase_unordered_map.h
+  containers/cxx20_erase_unordered_set.h
+  containers/cxx20_erase_vector.h
+  containers/linked_list.cc
+  containers/linked_list.h
   debug/logging.cc
   debug/logging.h
-  debug/debugwriter.h
   exceptions/exception.h
   math/math.cc
   math/math.h

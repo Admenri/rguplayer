@@ -13,6 +13,8 @@ namespace {
 class SyncSequencedTaskRunner : public SequencedTaskRunner {
  public:
   void PostTask(base::OnceClosure task) override { std::move(task).Run(); }
+
+  void WaitForSync() override {}
 };
 
 }  // namespace
@@ -31,8 +33,8 @@ void ThreadWorker::Start(RunLoop::MessagePumpType message_type) {
 }
 
 void ThreadWorker::Stop() {
-  task_runner_.reset();
   thread_.reset();
+  task_runner_.reset();
 }
 
 void ThreadWorker::WaitUntilStart() {
@@ -44,14 +46,6 @@ void ThreadWorker::WaitUntilStart() {
 
 scoped_refptr<base::SequencedTaskRunner> ThreadWorker::task_runner() {
   return task_runner_;
-}
-
-void ThreadWorker::WaitForSync() {
-  if (sync_) return;
-  task_runner()->PostTask(
-      base::BindOnce(&moodycamel::LightweightSemaphore::signal,
-                     base::Unretained(&semaphore_), 1));
-  semaphore_.wait();
 }
 
 void ThreadWorker::ThreadFunc(

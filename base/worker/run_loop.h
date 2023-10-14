@@ -66,6 +66,7 @@ class SequencedTaskRunner : public base::RefCounted<SequencedTaskRunner> {
   SequencedTaskRunner& operator=(const SequencedTaskRunner) = delete;
 
   virtual void PostTask(base::OnceClosure task) = 0;
+  virtual void WaitForSync() = 0;
 
   template <class T>
   bool DeleteSoon(const T* object) {

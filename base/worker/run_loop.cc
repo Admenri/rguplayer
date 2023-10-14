@@ -32,8 +32,15 @@ class RunnerImpl : public SequencedTaskRunner {
     if (runner_) runner_->LockAddTask(std::move(task));
   }
 
+  void WaitForSync() override {
+    PostTask(base::BindOnce(&moodycamel::LightweightSemaphore::signal,
+                            base::Unretained(&semaphore_), 1));
+    semaphore_.wait();
+  }
+
  private:
   base::WeakPtr<RunLoop> runner_;
+  moodycamel::LightweightSemaphore semaphore_;
 };
 
 bool RunLoop::IsInUIThread() {
