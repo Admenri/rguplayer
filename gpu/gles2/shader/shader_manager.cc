@@ -15,6 +15,9 @@ namespace shader {
 
 #include "gpu/gles2/shader/shader_source/base.frag.xxd"
 #include "gpu/gles2/shader/shader_source/base.vert.xxd"
+#include "gpu/gles2/shader/shader_source/basecolor.frag.xxd"
+#include "gpu/gles2/shader/shader_source/basecolor.vert.xxd"
+#include "gpu/gles2/shader/shader_source/texblt.frag.xxd"
 #include "gpu/gles2/shader/shader_source/transform.vert.xxd"
 
 static inline std::string FromRawData(const uint8_t* raw_data,
@@ -185,6 +188,56 @@ void TransformShader::SetTransformMatrix(const float* mat4) {
 
 void TransformShader::SetTexture(GLID<Texture> tex) {
   GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+TexBltShader::TexBltShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::base_vert, shader::base_vert_len),
+      shader::FromRawData(shader::texblt_frag, shader::texblt_frag_len));
+
+  u_texSize_ = GL.GetUniformLocation(program_, "u_texSize");
+  u_transOffset_ = GL.GetUniformLocation(program_, "u_transOffset");
+  u_texture_ = GL.GetUniformLocation(program_, "u_texture");
+  u_dst_texture_ = GL.GetUniformLocation(program_, "u_dst_texture");
+  u_offset_scale_ = GL.GetUniformLocation(program_, "u_offset_scale");
+  u_opacity_ = GL.GetUniformLocation(program_, "u_opacity");
+}
+
+void TexBltShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void TexBltShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void TexBltShader::SetSrcTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+void TexBltShader::SetDstTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_dst_texture_, tex.gl, 2);
+}
+
+void TexBltShader::SetOffsetScale(const base::Vec4& offset_scale) {
+  GL.Uniform4f(u_offset_scale_, offset_scale.x, offset_scale.y, offset_scale.z,
+               offset_scale.w);
+}
+
+void TexBltShader::SetOpacity(float opacity) {
+  GL.Uniform1f(u_opacity_, opacity);
+}
+
+ColorShader::ColorShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::basecolor_vert, shader::basecolor_vert_len),
+      shader::FromRawData(shader::basecolor_frag, shader::basecolor_frag_len));
+
+  u_transOffset_ = GL.GetUniformLocation(program_, "u_transOffset");
+}
+
+void ColorShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
 }
 
 }  // namespace gpu

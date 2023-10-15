@@ -106,6 +106,12 @@ class QuadDrawable final : public CommonVertexDrawable<4> {
   base::RectF texCoord_cache_;
 };
 
+struct Blt {
+  static void BeginDraw(TextureFrameBuffer& dest_tfb);
+  static void TexSource(TextureFrameBuffer& src_tfb);
+  static void EndDraw(const base::Rect& src_rect, const base::Rect& dest_rect);
+};
+
 }  // namespace gpu
 
 #endif  // GPU_GLES2_DRAW_QUAD_DRAWABLE_H_

@@ -28,6 +28,8 @@ class RenderRunner final {
   RenderRunner(const RenderRunner&) = delete;
   RenderRunner& operator=(const RenderRunner&) = delete;
 
+  static RenderRunner* GetInstance();
+
   void CreateContextAsync(InitParams renderer_settings);
   scoped_refptr<base::SequencedTaskRunner> GetRenderThreadRunner();
 

@@ -5,8 +5,11 @@
 #include "gpu/gles2/draw/quad_drawable.h"
 
 #include <algorithm>
+#include <array>
 
 namespace gpu {
+
+static const std::array<uint16_t, 6> index_template = {0, 1, 2, 2, 3, 0};
 
 GeometryDrawable::GeometryDrawable()
     : CommonVertexDrawable(GLID<IndexBuffer>()) {}
@@ -55,12 +58,9 @@ void QuadIndexBuffer::EnsureSize(size_t count) {
 
   size_t begin = buffer.size() / 6;
   buffer.reserve(count * 6);
-  for (size_t i = begin; i < count; ++i) {
-    static const uint16_t index_template[] = {0, 1, 2, 2, 3, 0};
-
+  for (size_t i = begin; i < count; ++i)
     for (size_t j = 0; j < 6; ++j)
       buffer.push_back(static_cast<uint16_t>(i * 4 + index_template[j]));
-  }
 
   IndexBuffer::Bind(ibo);
   IndexBuffer::BufferData(buffer.size() * sizeof(uint16_t), &buffer[0]);
@@ -111,6 +111,35 @@ void QuadDrawable::Draw() {
   VertexArray<CommonVertex>::Bind(vertex_array_);
   GL.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
   VertexArray<CommonVertex>::Unbind();
+}
+
+inline void Blt::BeginDraw(TextureFrameBuffer& dest_tfb) {
+  FrameBuffer::Bind(dest_tfb.fbo);
+
+  auto& shader = GSM.shaders->base;
+
+  auto size = base::Vec2i(dest_tfb.width, dest_tfb.height);
+  GSM.states.viewport.Push(size);
+
+  shader.Bind();
+  shader.SetProjectionMatrix(size);
+  shader.SetTransOffset(base::Vec2i());
+}
+
+inline void Blt::TexSource(TextureFrameBuffer& src_tfb) {
+  auto& shader = GSM.shaders->base;
+  shader.SetTexture(src_tfb.tex);
+  shader.SetTextureSize(base::Vec2i(src_tfb.width, src_tfb.height));
+}
+
+inline void Blt::EndDraw(const base::Rect& src_rect,
+                         const base::Rect& dest_rect) {
+  auto* quad = GSM.common_quad.get();
+  quad->SetPositionRect(dest_rect);
+  quad->SetTexCoordRect(src_rect);
+  quad->Draw();
+
+  GSM.states.viewport.Pop();
 }
 
 }  // namespace gpu

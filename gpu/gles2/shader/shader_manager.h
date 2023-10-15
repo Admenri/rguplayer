@@ -86,6 +86,36 @@ class TransformShader : public GLES2ShaderBase {
   GLint u_texture_;
 };
 
+class TexBltShader : public GLES2ShaderBase {
+ public:
+  TexBltShader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetSrcTexture(GLID<Texture> tex);
+  void SetDstTexture(GLID<Texture> tex);
+  void SetOffsetScale(const base::Vec4& offset_scale);
+  void SetOpacity(float opacity);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transOffset_;
+  GLint u_texture_;
+  GLint u_dst_texture_;
+  GLint u_offset_scale_;
+  GLint u_opacity_;
+};
+
+class ColorShader : public GLES2ShaderBase {
+ public:
+  ColorShader();
+
+  void SetTransOffset(const base::Vec2& offset);
+
+ private:
+  GLint u_transOffset_;
+};
+
 }  // namespace gpu
 
 #endif  // GPU_GLES2_SHADER_SHADER_MANAGER_H_

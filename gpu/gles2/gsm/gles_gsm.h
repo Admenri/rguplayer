@@ -12,6 +12,7 @@
 
 namespace gpu {
 
+class QuadDrawable;
 class GlobalStateManager;
 class QuadIndexBuffer;
 
@@ -22,6 +23,8 @@ class GlobalStateManager final {
   struct GLShaderWare {
     BaseShader base;
     TransformShader transform;
+    TexBltShader texblt;
+    ColorShader color;
   };
 
   GlobalStateManager() = default;
@@ -30,6 +33,9 @@ class GlobalStateManager final {
   GlobalStateManager& operator=(const GlobalStateManager&) = delete;
 
   void InitStates();
+  void QuitStates();
+
+  void EnsureGenericTex(int width, int height);
 
   struct {
     GLViewport viewport;
@@ -42,6 +48,9 @@ class GlobalStateManager final {
   } states;
 
   std::unique_ptr<GLShaderWare> shaders;
+
+  TextureFrameBuffer common_tfb;
+  std::unique_ptr<QuadDrawable> common_quad;
 
   std::unique_ptr<QuadIndexBuffer> quad_ibo;
 };

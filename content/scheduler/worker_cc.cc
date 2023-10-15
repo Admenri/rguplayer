@@ -6,14 +6,20 @@
 
 namespace content {
 
+WorkerTreeHost* g_worker_scheduler = nullptr;
+
 WorkerTreeHost::WorkerTreeHost(bool sync_worker) {
   event_runner_ = std::make_unique<EventRunner>();
   render_runner_ = std::make_unique<RenderRunner>(sync_worker);
+  g_worker_scheduler = this;
 }
 
-WorkerTreeHost::~WorkerTreeHost() { render_runner_.reset(); }
+WorkerTreeHost::~WorkerTreeHost() {
+  render_runner_.reset();
+  g_worker_scheduler = nullptr;
+}
 
-WorkerTreeHost* WorkerTreeHost::GetInstance() { return nullptr; }
+WorkerTreeHost* WorkerTreeHost::GetInstance() { return g_worker_scheduler; }
 
 void WorkerTreeHost::Run(RenderRunner::InitParams graph_params) {
   render_runner_->CreateContextAsync(std::move(graph_params));

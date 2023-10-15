@@ -8,14 +8,21 @@
 
 namespace content {
 
+RenderRunner* g_render_runner = nullptr;
+
 RenderRunner::RenderRunner(bool sync)
-    : render_worker_(std::make_unique<base::ThreadWorker>(sync)) {}
+    : render_worker_(std::make_unique<base::ThreadWorker>(sync)) {
+  g_render_runner = this;
+}
 
 RenderRunner::~RenderRunner() {
   task_runner_->PostTask(base::BindOnce(&RenderRunner::ReleaseContextInternal,
                                         weak_ptr_factory_.GetWeakPtr()));
   task_runner_->WaitForSync();
+  g_render_runner = nullptr;
 }
+
+RenderRunner* RenderRunner::GetInstance() { return g_render_runner; }
 
 void RenderRunner::CreateContextAsync(InitParams renderer_settings) {
   render_worker_->Start(base::RunLoop::MessagePumpType::IO);

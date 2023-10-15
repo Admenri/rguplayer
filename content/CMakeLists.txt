@@ -12,6 +12,11 @@ set(CONTENT_SRC
   render/render_runner.h
   scheduler/worker_cc.cc
   scheduler/worker_cc.h
+  script/bitmap.cc
+  script/bitmap.h
+  script/disposable.h
+  script/utility.cc
+  script/utility.h
 )
 
 add_library(core_content ${CONTENT_SRC})
