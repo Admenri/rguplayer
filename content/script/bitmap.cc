@@ -7,43 +7,48 @@
 #include <SDL_image.h>
 
 #include "content/render/render_runner.h"
+#include "content/scheduler/worker_cc.h"
 
 namespace content {
 
-Bitmap::Bitmap(int width, int height) {
+Bitmap::Bitmap(int width, int height)
+    : pixel_format_(SDL_AllocFormat(SDL_PIXELFORMAT_ABGR8888)) {
   width = std::abs(width);
   height = std::abs(height);
 
-  size_.x = width;
-  size_.y = height;
+  size_ = base::Vec2i(width, height);
+  surface_buffer_ = nullptr;
 
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(base::BindOnce(
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
       &Bitmap::InitBitmapInternal, weak_ptr_factory_.GetWeakPtr(),
       base::Vec2i(width, height)));
 }
 
-Bitmap::Bitmap(const std::string& filename) {
-  SDL_Surface* surf = IMG_Load(filename.c_str());
+Bitmap::Bitmap(const std::string& filename)
+    : pixel_format_(SDL_AllocFormat(SDL_PIXELFORMAT_ABGR8888)) {
+  surface_buffer_ = IMG_Load(filename.c_str());
 
-  size_.x = surf->w;
-  size_.y = surf->h;
+  size_ = base::Vec2i(surface_buffer_->w, surface_buffer_->h);
 
-  if (surf->format->format != pixel_format_) {
-    SDL_Surface* conv = SDL_ConvertSurface(surf, format_, 0);
-    SDL_FreeSurface(surf);
+  if (surface_buffer_->format->format != pixel_format_->format) {
+    SDL_Surface* conv = SDL_ConvertSurface(surface_buffer_, pixel_format_, 0);
+    SDL_FreeSurface(surface_buffer_);
+    surface_buffer_ = conv;
   }
 
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(base::BindOnce(
-      &Bitmap::InitBitmapInternal, weak_ptr_factory_.GetWeakPtr(), surf));
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(
+      base::BindOnce(&Bitmap::InitBitmapInternal,
+                     weak_ptr_factory_.GetWeakPtr(), surface_buffer_));
 }
 
 Bitmap::~Bitmap() { Dispose(); }
 
 scoped_refptr<Bitmap> Bitmap::Clone() {
   CheckIsDisposed();
-  scoped_refptr<Bitmap> new_bitmap = new Bitmap(size_.x, size_.y);
 
+  scoped_refptr<Bitmap> new_bitmap = new Bitmap(size_.x, size_.y);
   new_bitmap->Blt(0, 0, this, size_);
+
   return new_bitmap;
 }
 
@@ -54,7 +59,7 @@ void Bitmap::Blt(int x, int y, scoped_refptr<Bitmap> src_bitmap,
   if (src_rect.width <= 0 || src_rect.height <= 0) return;
   if (src_bitmap->IsDisposed() || !opacity) return;
 
-  auto rect = src_rect;
+  base::Rect rect = src_rect;
 
   if (rect.x + rect.width > src_bitmap->GetWidth())
     rect.width = src_bitmap->GetWidth() - rect.x;
@@ -62,8 +67,8 @@ void Bitmap::Blt(int x, int y, scoped_refptr<Bitmap> src_bitmap,
   if (rect.y + rect.height > src_bitmap->GetHeight())
     rect.height = src_bitmap->GetHeight() - rect.y;
 
-  rect.width = std::clamp(rect.width, 0, std::numeric_limits<int>::max());
-  rect.height = std::clamp(rect.height, 0, std::numeric_limits<int>::max());
+  rect.width = std::max(0, rect.width);
+  rect.height = std::max(0, rect.height);
 
   StretchBlt(base::Rect(x, y, rect.width, rect.height), src_bitmap, rect,
              opacity);
@@ -81,7 +86,7 @@ void Bitmap::StretchBlt(const base::Rect& dest_rect,
 
   if (src_bitmap->IsDisposed() || !opacity) return;
 
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(base::BindOnce(
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
       &Bitmap::StretchBltInternal, weak_ptr_factory_.GetWeakPtr(), dest_rect,
       src_bitmap, src_rect, opacity / 255.0f));
 
@@ -93,7 +98,7 @@ void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
 
   if (rect.width <= 0 || rect.height <= 0) return;
 
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(
       base::BindOnce(&Bitmap::FillRectInternal, weak_ptr_factory_.GetWeakPtr(),
                      rect, color->AsBase()));
 
@@ -107,7 +112,7 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
 
   if (rect.width <= 0 || rect.height <= 0) return;
 
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(base::BindOnce(
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
       &Bitmap::GradientFillRectInternal, weak_ptr_factory_.GetWeakPtr(), rect,
       color1->AsBase(), color2->AsBase(), vertical));
 
@@ -117,7 +122,7 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
 void Bitmap::Clear() {
   CheckIsDisposed();
 
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(
       base::BindOnce(&Bitmap::FillRectInternal, weak_ptr_factory_.GetWeakPtr(),
                      size_, base::Vec4()));
 
@@ -127,7 +132,7 @@ void Bitmap::Clear() {
 void Bitmap::ClearRect(const base::Rect& rect) {
   CheckIsDisposed();
 
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(
       base::BindOnce(&Bitmap::FillRectInternal, weak_ptr_factory_.GetWeakPtr(),
                      rect, base::Vec4()));
 
@@ -137,7 +142,10 @@ void Bitmap::ClearRect(const base::Rect& rect) {
 scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
   CheckIsDisposed();
 
-  SurfaceRequired();
+  if (surface_need_update_) {
+    SurfaceRequired();
+    surface_need_update_ = false;
+  }
 
   int bpp = surface_buffer_->format->BytesPerPixel;
   uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
@@ -161,10 +169,10 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
 
     auto data = color->AsNormal();
     *reinterpret_cast<uint32_t*>(pixel) =
-        SDL_MapRGBA(format_, data.x, data.y, data.z, data.w);
+        SDL_MapRGBA(pixel_format_, data.x, data.y, data.z, data.w);
   }
 
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(
       base::BindOnce(&Bitmap::SetPixelInternal, weak_ptr_factory_.GetWeakPtr(),
                      x, y, color->AsNormal()));
 
@@ -201,7 +209,6 @@ void Bitmap::DrawText(const base::Rect& rect, const std::string& str,
 
   // TODO:
 
-
   NeedUpdateSurface();
 }
 
@@ -214,25 +221,35 @@ scoped_refptr<Rect> Bitmap::TextSize(const std::string& str) {
 }
 
 SDL_Surface* Bitmap::SurfaceRequired() {
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(base::BindOnce(
-      &Bitmap::GetSurfaceInternal, weak_ptr_factory_.GetWeakPtr()));
-
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->WaitForSync();
-
-  DCHECK(surface_buffer_);
-
-  return surface_buffer_;
-}
-
-void Bitmap::OnObjectDisposed() {
-  SDL_FreeFormat(format_);
+  /* Sync for surface operation */
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->WaitForSync();
 
   if (surface_buffer_) {
     SDL_FreeSurface(surface_buffer_);
   }
 
-  RenderRunner::GetInstance()->GetRenderThreadRunner()->PostTask(base::BindOnce(
-      &gpu::TextureFrameBuffer::Del, base::OwnedRef(std::move(tex_fbo_))));
+  surface_buffer_ = SDL_CreateRGBSurface(
+      0, size_.x, size_.y, pixel_format_->BitsPerPixel, pixel_format_->Rmask,
+      pixel_format_->Gmask, pixel_format_->Bmask, pixel_format_->Amask);
+
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
+      &Bitmap::GetSurfaceInternal, weak_ptr_factory_.GetWeakPtr()));
+  /* Sync for surface get pixels */
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->WaitForSync();
+
+  return surface_buffer_;
+}
+
+void Bitmap::OnObjectDisposed() {
+  SDL_FreeFormat(pixel_format_);
+
+  if (surface_buffer_) {
+    SDL_FreeSurface(surface_buffer_);
+    surface_buffer_ = nullptr;
+  }
+
+  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
+      &Bitmap::DestroyBitmapInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
 void Bitmap::InitBitmapInternal(
@@ -241,6 +258,7 @@ void Bitmap::InitBitmapInternal(
 
   if (std::holds_alternative<base::Vec2i>(initial_data)) {
     auto size = std::get<base::Vec2i>(initial_data);
+    surface_buffer_ = nullptr;
     gpu::TextureFrameBuffer::Alloc(tex_fbo_, size.x, size.y);
   } else if (std::holds_alternative<SDL_Surface*>(initial_data)) {
     surface_buffer_ = std::get<SDL_Surface*>(initial_data);
@@ -255,6 +273,8 @@ void Bitmap::InitBitmapInternal(
   gpu::TextureFrameBuffer::LinkFrameBuffer(tex_fbo_);
 }
 
+void Bitmap::DestroyBitmapInternal() { gpu::TextureFrameBuffer::Del(tex_fbo_); }
+
 void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
                                 scoped_refptr<Bitmap> src_bitmap,
                                 const base::Rect& src_rect, float opacity) {
@@ -263,15 +283,14 @@ void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
 
   gpu::Blt::BeginDraw(dst_tex);
   gpu::Blt::TexSource(tex_fbo_);
-  gpu::Blt::EndDraw(dest_rect.Size(), dest_rect);
+  gpu::Blt::EndDraw(dest_rect, dest_rect.Size());
 
   /*
-   * (texCoord - src_offset) * src_dst_scale
+   * (texCoord - src_offset) * src_dst_factor
    */
   base::Vec4 offset_scale;
-  offset_scale.x = static_cast<float>(src_rect.width) / src_bitmap->GetWidth();
-  offset_scale.y =
-      static_cast<float>(src_rect.height) / src_bitmap->GetHeight();
+  offset_scale.x = static_cast<float>(src_rect.x) / src_bitmap->GetWidth();
+  offset_scale.y = static_cast<float>(src_rect.y) / src_bitmap->GetHeight();
   offset_scale.z =
       (static_cast<float>(src_bitmap->GetWidth()) / src_rect.width) *
       (static_cast<float>(dest_rect.width) / dst_tex.width);
@@ -323,6 +342,7 @@ void Bitmap::GradientFillRectInternal(const base::Rect& rect,
   gpu::FrameBuffer::Bind(tex_fbo_.fbo);
 
   gpu::GSM.states.viewport.Push(size_);
+  gpu::GSM.states.blend.Push(false);
 
   auto& shader = gpu::GSM.shaders->color;
   shader.Bind();
@@ -347,6 +367,7 @@ void Bitmap::GradientFillRectInternal(const base::Rect& rect,
   quad->Draw();
 
   gpu::GSM.states.viewport.Pop();
+  gpu::GSM.states.blend.Pop();
 }
 
 void Bitmap::SetPixelInternal(int x, int y, const base::Vec4i& color) {
@@ -359,13 +380,6 @@ void Bitmap::SetPixelInternal(int x, int y, const base::Vec4i& color) {
 }
 
 void Bitmap::GetSurfaceInternal() {
-  if (surface_buffer_) {
-    SDL_FreeSurface(surface_buffer_);
-  }
-
-  surface_buffer_ = SDL_CreateRGBSurfaceWithFormat(
-      0, size_.x, size_.y, format_->BitsPerPixel, pixel_format_);
-
   gpu::GSM.states.viewport.Push(size_);
   gpu::FrameBuffer::Bind(tex_fbo_.fbo);
   gpu::GL.ReadPixels(0, 0, size_.x, size_.y, GL_RGBA, GL_UNSIGNED_BYTE,
@@ -374,10 +388,8 @@ void Bitmap::GetSurfaceInternal() {
 }
 
 void Bitmap::NeedUpdateSurface() {
-  if (surface_buffer_) {
-    SDL_FreeSurface(surface_buffer_);
-    surface_buffer_ = nullptr;
-  }
+  // For get pixel cache
+  surface_need_update_ = true;
 
   observers_.Notify();
 }

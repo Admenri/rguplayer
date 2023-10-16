@@ -8,30 +8,25 @@
 
 namespace content {
 
-RenderRunner* g_render_runner = nullptr;
-
 RenderRunner::RenderRunner(bool sync)
-    : render_worker_(std::make_unique<base::ThreadWorker>(sync)) {
-  g_render_runner = this;
-}
+    : render_worker_(std::make_unique<base::ThreadWorker>(sync)) {}
 
 RenderRunner::~RenderRunner() {
   task_runner_->PostTask(base::BindOnce(&RenderRunner::ReleaseContextInternal,
                                         weak_ptr_factory_.GetWeakPtr()));
   task_runner_->WaitForSync();
-  g_render_runner = nullptr;
 }
 
-RenderRunner* RenderRunner::GetInstance() { return g_render_runner; }
-
-void RenderRunner::CreateContextAsync(InitParams renderer_settings) {
-  render_worker_->Start(base::RunLoop::MessagePumpType::IO);
+void RenderRunner::CreateContextSync(InitParams renderer_settings) {
+  render_worker_->Start(base::RunLoop::MessagePumpType::Worker);
   render_worker_->WaitUntilStart();
   task_runner_ = render_worker_->task_runner();
 
   task_runner_->PostTask(base::BindOnce(
       &RenderRunner::CreateRenderContextInternal,
       weak_ptr_factory_.GetWeakPtr(), std::move(renderer_settings)));
+
+  task_runner_->WaitForSync();
 }
 
 scoped_refptr<base::SequencedTaskRunner> RenderRunner::GetRenderThreadRunner() {
@@ -44,7 +39,6 @@ void RenderRunner::CreateRenderContextInternal(InitParams renderer_settings) {
   gpu::GL.InitContext();
   gpu::GSM.InitStates();
 
-  gpu::GL.ClearColor(0, 1, 0, 1);
   gpu::GL.Clear(GL_COLOR_BUFFER_BIT);
   SDL_GL_SwapWindow(renderer_settings.ogl_window->AsSDLWindow());
 }

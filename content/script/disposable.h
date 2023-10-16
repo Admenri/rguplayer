@@ -21,8 +21,9 @@ class Disposable {
 
   void Dispose() {
     if (is_disposed_) return;
-    is_disposed_ = true;
+
     OnObjectDisposed();
+    is_disposed_ = true;
     observers_.Notify();
   }
 
@@ -35,8 +36,9 @@ class Disposable {
 
  protected:
   void CheckIsDisposed() {
-    throw base::Exception(base::Exception::RGSSError, "Disposed object: %s",
-                          DisposedObjectName().data());
+    if (IsDisposed())
+      throw base::Exception(base::Exception::RGSSError, "Disposed object: %s",
+                            DisposedObjectName().data());
   }
 
   virtual void OnObjectDisposed() = 0;

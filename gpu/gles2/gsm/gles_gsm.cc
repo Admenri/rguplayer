@@ -26,6 +26,8 @@ void GlobalStateManager::InitStates() {
   quad_ibo->EnsureSize(1);
 
   common_tfb = TextureFrameBuffer::Gen();
+  TextureFrameBuffer::Alloc(common_tfb, 64, 64);
+  TextureFrameBuffer::LinkFrameBuffer(common_tfb);
 
   common_quad = std::make_unique<QuadDrawable>();
 }
@@ -41,9 +43,8 @@ void GlobalStateManager::QuitStates() {
 void GlobalStateManager::EnsureGenericTex(int width, int height) {
   if (common_tfb.width >= width && common_tfb.height >= height) return;
 
-  width = std::clamp(width, common_tfb.width, std::numeric_limits<int>::max());
-  height =
-      std::clamp(height, common_tfb.height, std::numeric_limits<int>::max());
+  width = std::max(width, common_tfb.width);
+  height = std::max(height, common_tfb.height);
 
   TextureFrameBuffer::Alloc(common_tfb, width, height);
 }

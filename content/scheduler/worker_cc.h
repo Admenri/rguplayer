@@ -5,6 +5,7 @@
 #ifndef CONTENT_SCHEDULER_WORKER_CC_H_
 #define CONTENT_SCHEDULER_WORKER_CC_H_
 
+#include "content/binding/binding_runner.h"
 #include "content/event/event_runner.h"
 #include "content/render/render_runner.h"
 
@@ -21,14 +22,17 @@ class WorkerTreeHost {
   static WorkerTreeHost* GetInstance();
 
   /* Run scheduler on event thread */
-  void Run(RenderRunner::InitParams graph_params);
+  void Run(RenderRunner::InitParams graph_params,
+           BindingRunner::BindingParams script_params);
 
   scoped_refptr<base::SequencedTaskRunner> GetUITaskRunner();
   scoped_refptr<base::SequencedTaskRunner> GetRenderTaskRunner();
+  scoped_refptr<base::SequencedTaskRunner> GetBindingTaskRunner();
 
  private:
   std::unique_ptr<EventRunner> event_runner_;
   std::unique_ptr<RenderRunner> render_runner_;
+  std::unique_ptr<BindingRunner> binding_runner_;
 };
 
 }  // namespace content

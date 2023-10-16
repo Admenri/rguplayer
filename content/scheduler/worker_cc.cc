@@ -11,18 +11,24 @@ WorkerTreeHost* g_worker_scheduler = nullptr;
 WorkerTreeHost::WorkerTreeHost(bool sync_worker) {
   event_runner_ = std::make_unique<EventRunner>();
   render_runner_ = std::make_unique<RenderRunner>(sync_worker);
+  binding_runner_ = std::make_unique<BindingRunner>();
   g_worker_scheduler = this;
 }
 
 WorkerTreeHost::~WorkerTreeHost() {
+  binding_runner_.reset();
   render_runner_.reset();
   g_worker_scheduler = nullptr;
 }
 
 WorkerTreeHost* WorkerTreeHost::GetInstance() { return g_worker_scheduler; }
 
-void WorkerTreeHost::Run(RenderRunner::InitParams graph_params) {
-  render_runner_->CreateContextAsync(std::move(graph_params));
+void WorkerTreeHost::Run(RenderRunner::InitParams graph_params,
+                         BindingRunner::BindingParams script_params) {
+  render_runner_->CreateContextSync(std::move(graph_params));
+  binding_runner_->InitializeBindingInterpreter();
+
+  binding_runner_->PostBindingBoot(std::move(script_params));
 
   event_runner_->RunMain();
 }
@@ -33,6 +39,11 @@ scoped_refptr<base::SequencedTaskRunner> WorkerTreeHost::GetUITaskRunner() {
 
 scoped_refptr<base::SequencedTaskRunner> WorkerTreeHost::GetRenderTaskRunner() {
   return render_runner_->GetRenderThreadRunner();
+}
+
+scoped_refptr<base::SequencedTaskRunner>
+WorkerTreeHost::GetBindingTaskRunner() {
+  return binding_runner_->GetBindingRunnerTask();
 }
 
 }  // namespace content

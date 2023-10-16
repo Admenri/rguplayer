@@ -15,6 +15,8 @@ namespace content {
 
 class ValueNotification {
  public:
+  virtual ~ValueNotification() = default;
+
   base::CallbackListSubscription AddChangedObserver(
       base::OnceClosure observer) {
     return observers_.Add(std::move(observer));
@@ -31,7 +33,7 @@ class Rect : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
  public:
   Rect() {}
   Rect(const base::Rect& rect) : data_(rect) {}
-  ~Rect();
+  ~Rect() override {}
 
   Rect(const Rect&) = default;
   Rect& operator=(const Rect&) = default;
@@ -94,6 +96,7 @@ class Tone : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
               std::clamp(green, 0, 255) / 255.0f,
               std::clamp(blue, 0, 255) / 255.0f,
               std::clamp(gray, 0, 255) / 255.0f) {}
+  ~Tone() override {}
 
   Tone(const Tone&) = default;
   Tone& operator=(const Tone&) = default;
@@ -149,6 +152,7 @@ class Color : public base::RefCountedThreadSafe<Rect>,
   Color(int red, int green, int blue, int alpha = 255)
       : data_(std::clamp(red, 0, 255), std::clamp(green, 0, 255),
               std::clamp(blue, 0, 255), std::clamp(alpha, 0, 255)) {}
+  ~Color() override {}
 
   Color(const Color&) = default;
   Color& operator=(const Color&) = default;

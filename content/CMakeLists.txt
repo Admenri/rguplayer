@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.18.0)
 #--------------------------------------------------------------------------------
 
 set(CONTENT_SRC
+  binding/binding_runner.cc
+  binding/binding_runner.h
   event/event_runner.cc
   event/event_runner.h
   render/render_runner.cc

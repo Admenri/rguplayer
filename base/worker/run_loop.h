@@ -103,7 +103,7 @@ class RunLoop {
 
   enum class MessagePumpType {
     UI = 0,
-    IO,
+    Worker,
   };
 
   RunLoop();

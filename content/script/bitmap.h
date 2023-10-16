@@ -20,7 +20,7 @@
 
 namespace content {
 
-class Bitmap : public base::RefCountedThreadSafe<Bitmap>, public Disposable {
+class Bitmap : public base::RefCounted<Bitmap>, public Disposable {
  public:
   Bitmap(int width, int height);
   Bitmap(const std::string& filename);
@@ -72,6 +72,7 @@ class Bitmap : public base::RefCountedThreadSafe<Bitmap>, public Disposable {
  private:
   void InitBitmapInternal(
       const std::variant<base::Vec2i, SDL_Surface*>& initial_data);
+  void DestroyBitmapInternal();
   void StretchBltInternal(const base::Rect& dest_rect,
                           scoped_refptr<Bitmap> src_bitmap,
                           const base::Rect& src_rect, float opacity);
@@ -83,14 +84,14 @@ class Bitmap : public base::RefCountedThreadSafe<Bitmap>, public Disposable {
   void SetPixelInternal(int x, int y, const base::Vec4i& color);
   void NeedUpdateSurface();
 
-  const uint32_t pixel_format_ = SDL_PIXELFORMAT_ABGR8888;
-  SDL_PixelFormat* format_{SDL_AllocFormat(pixel_format_)};
+  gpu::TextureFrameBuffer tex_fbo_;
 
-  base::OnceClosureList observers_;
+  SDL_Surface* surface_buffer_;
+  bool surface_need_update_ = false;
 
   base::Vec2i size_;
-  gpu::TextureFrameBuffer tex_fbo_;
-  SDL_Surface* surface_buffer_ = nullptr;
+  base::OnceClosureList observers_;
+  SDL_PixelFormat* pixel_format_;
 
   base::WeakPtrFactory<Bitmap> weak_ptr_factory_{this};
 };

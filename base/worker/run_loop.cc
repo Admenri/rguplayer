@@ -33,9 +33,11 @@ class RunnerImpl : public SequencedTaskRunner {
   }
 
   void WaitForSync() override {
-    PostTask(base::BindOnce(&moodycamel::LightweightSemaphore::signal,
-                            base::Unretained(&semaphore_), 1));
-    semaphore_.wait();
+    if (runner_) {
+      PostTask(base::BindOnce(&moodycamel::LightweightSemaphore::signal,
+                              base::Unretained(&semaphore_), 1));
+      semaphore_.wait();
+    }
   }
 
  private:
@@ -54,9 +56,7 @@ void RunLoop::BindEventDispatcher(
   g_event_dispatcher[event_type] = callback;
 }
 
-RunLoop::RunLoop() {
-  InitInternal(IsInUIThread() ? MessagePumpType::UI : MessagePumpType::IO);
-}
+RunLoop::RunLoop() { InitInternal(MessagePumpType::Worker); }
 
 RunLoop::RunLoop(MessagePumpType type) {
   if (type == MessagePumpType::UI) g_ui_thread_id = std::this_thread::get_id();
