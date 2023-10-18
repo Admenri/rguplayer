@@ -39,6 +39,7 @@ void RenderRunner::CreateRenderContextInternal(InitParams renderer_settings) {
   gpu::GL.InitContext();
   gpu::GSM.InitStates();
 
+  SDL_GL_SetSwapInterval(0);
   gpu::GL.Clear(GL_COLOR_BUFFER_BIT);
   SDL_GL_SwapWindow(renderer_settings.ogl_window->AsSDLWindow());
 }

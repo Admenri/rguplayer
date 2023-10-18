@@ -107,6 +107,7 @@ class QuadDrawable final : public CommonVertexDrawable<4> {
 };
 
 struct Blt {
+  static void BeginScreen(const base::Vec2i& resolution);
   static void BeginDraw(TextureFrameBuffer& dest_tfb);
   static void TexSource(TextureFrameBuffer& src_tfb);
   static void EndDraw(const base::Rect& src_rect, const base::Rect& dest_rect);

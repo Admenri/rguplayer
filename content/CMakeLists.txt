@@ -17,8 +17,17 @@ set(CONTENT_SRC
   script/bitmap.cc
   script/bitmap.h
   script/disposable.h
+  script/drawable.cc
+  script/drawable.h
+  script/flashable.h
+  script/graphics.cc
+  script/graphics.h
+  script/sprite.cc
+  script/sprite.h
   script/utility.cc
   script/utility.h
+  script/viewport.cc
+  script/viewport.h
 )
 
 add_library(core_content ${CONTENT_SRC})

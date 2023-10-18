@@ -35,14 +35,14 @@ class Disposable {
   }
 
  protected:
-  void CheckIsDisposed() {
+  void CheckIsDisposed() const {
     if (IsDisposed())
       throw base::Exception(base::Exception::RGSSError, "Disposed object: %s",
                             DisposedObjectName().data());
   }
 
   virtual void OnObjectDisposed() = 0;
-  virtual std::string_view DisposedObjectName() = 0;
+  virtual std::string_view DisposedObjectName() const = 0;
 
  private:
   base::OnceClosureList observers_;

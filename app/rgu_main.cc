@@ -16,6 +16,7 @@
 #include "base/worker/run_loop.h"
 #include "base/worker/thread_worker.h"
 #include "content/scheduler/worker_cc.h"
+#include "content/script/drawable.h"
 #include "gpu/gles2/draw/quad_drawable.h"
 #include "gpu/gles2/gsm/gles_gsm.h"
 #include "gpu/gles2/vertex/vertex_array.h"
@@ -40,7 +41,8 @@ int main() {
   render_params.initial_resolution = win->GetSize();
 
   content::BindingRunner::BindingParams binding_params;
-
+  binding_params.window = win->AsWeakPtr();
+  binding_params.resolution = win->GetSize();
   engine->Run(std::move(render_params), std::move(binding_params));
 
   engine.reset();

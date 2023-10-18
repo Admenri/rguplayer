@@ -115,6 +115,19 @@ void QuadDrawable::Draw() {
   IndexBuffer::Unbind();
 }
 
+void Blt::BeginScreen(const base::Vec2i& resolution) {
+  FrameBuffer::Unbind();
+
+  auto& shader = GSM.shaders->base;
+
+  GSM.states.viewport.Push(resolution);
+  GSM.states.blend.Push(false);
+
+  shader.Bind();
+  shader.SetProjectionMatrix(resolution);
+  shader.SetTransOffset(base::Vec2i());
+}
+
 void Blt::BeginDraw(TextureFrameBuffer& dest_tfb) {
   FrameBuffer::Bind(dest_tfb.fbo);
 

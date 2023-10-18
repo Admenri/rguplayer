@@ -18,7 +18,7 @@ class ValueNotification {
   virtual ~ValueNotification() = default;
 
   base::CallbackListSubscription AddChangedObserver(
-      base::OnceClosure observer) {
+      base::RepeatingClosure observer) {
     return observers_.Add(std::move(observer));
   }
 
@@ -26,7 +26,7 @@ class ValueNotification {
   inline void UpdateData() { observers_.Notify(); }
 
  private:
-  base::OnceClosureList observers_;
+  base::RepeatingClosureList observers_;
 };
 
 class Rect : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
@@ -83,6 +83,8 @@ class Rect : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
 
     return data_;
   }
+
+  void SetBase(const base::Rect& rect) { data_ = rect; }
 
  private:
   base::Rect data_;

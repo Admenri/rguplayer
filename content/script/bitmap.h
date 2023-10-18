@@ -33,6 +33,7 @@ class Bitmap : public base::RefCounted<Bitmap>, public Disposable {
 
   int GetWidth() { return size_.x; }
   int GetHeight() { return size_.y; }
+  base::Vec2i GetSize() const { return size_; }
   scoped_refptr<Rect> GetRect() { return new Rect(size_); }
 
   void Blt(int x, int y, scoped_refptr<Bitmap> src_bitmap,
@@ -60,14 +61,17 @@ class Bitmap : public base::RefCounted<Bitmap>, public Disposable {
 
   SDL_Surface* SurfaceRequired();
 
-  base::CallbackListSubscription AddBitmapObserver(base::OnceClosure observer) {
+  base::CallbackListSubscription AddBitmapObserver(
+      base::RepeatingClosure observer) {
     return observers_.Add(std::move(observer));
   }
+
+  gpu::TextureFrameBuffer& AsGLType() { return tex_fbo_; }
 
  protected:
   void OnObjectDisposed() override;
 
-  std::string_view DisposedObjectName() { return "Bitmap"; }
+  std::string_view DisposedObjectName() const override { return "Bitmap"; }
 
  private:
   void InitBitmapInternal(
@@ -90,7 +94,7 @@ class Bitmap : public base::RefCounted<Bitmap>, public Disposable {
   bool surface_need_update_ = false;
 
   base::Vec2i size_;
-  base::OnceClosureList observers_;
+  base::RepeatingClosureList observers_;
   SDL_PixelFormat* pixel_format_;
 
   base::WeakPtrFactory<Bitmap> weak_ptr_factory_{this};

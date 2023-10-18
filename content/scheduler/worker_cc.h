@@ -21,6 +21,9 @@ class WorkerTreeHost {
 
   static WorkerTreeHost* GetInstance();
 
+  RenderRunner* AsRenderPort() { return render_runner_.get(); }
+  BindingRunner* AsBindingPort() { return binding_runner_.get(); }
+
   /* Run scheduler on event thread */
   void Run(RenderRunner::InitParams graph_params,
            BindingRunner::BindingParams script_params);

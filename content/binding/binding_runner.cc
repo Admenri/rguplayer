@@ -3,6 +3,7 @@
 #include <SDL_image.h>
 
 #include "content/script/bitmap.h"
+#include "content/script/sprite.h"
 
 namespace content {
 
@@ -30,6 +31,9 @@ void BindingRunner::PostBindingBoot(BindingParams initial_param) {
 }
 
 void BindingRunner::BindingMain(BindingParams initial_param) {
+  graphics_screen_ = std::make_unique<Graphics>(initial_param.window,
+                                                initial_param.resolution);
+
   LOG(INFO) << __FUNCTION__;
 
   {
@@ -48,6 +52,19 @@ void BindingRunner::BindingMain(BindingParams initial_param) {
     /* Sync method test */
     SDL_Surface* surf = bmp->SurfaceRequired();
     IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+
+    scoped_refptr<Sprite> sp = new Sprite();
+    sp->SetBitmap(bmp);
+    sp->GetTransform().SetOrigin(
+        base::Vec2i(sp->GetWidth() / 2, sp->GetHeight() / 2));
+    sp->GetTransform().SetPosition(base::Vec2i(
+        graphics_screen_->GetWidth() / 2, graphics_screen_->GetHeight() / 2));
+
+    int xxx = 0;
+    for (;;) {
+      sp->GetTransform().SetRotation(++xxx);
+      graphics_screen_->Update();
+    }
   }
 
   LOG(INFO) << __FUNCTION__;
