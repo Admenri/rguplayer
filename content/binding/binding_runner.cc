@@ -60,7 +60,7 @@ void BindingRunner::BindingMain(BindingParams initial_param) {
     sp->GetTransform().SetPosition(base::Vec2i(
         graphics_screen_->GetWidth() / 2, graphics_screen_->GetHeight() / 2));
 
-    int xxx = 0;
+    float xxx = 0;
     for (;;) {
       sp->GetTransform().SetRotation(++xxx);
       graphics_screen_->Update();

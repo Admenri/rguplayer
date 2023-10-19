@@ -94,20 +94,18 @@ class Tone : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
  public:
   Tone() {}
   Tone(int red, int green, int blue, int gray = 255)
-      : data_(std::clamp(red, 0, 255) / 255.0f,
-              std::clamp(green, 0, 255) / 255.0f,
-              std::clamp(blue, 0, 255) / 255.0f,
-              std::clamp(gray, 0, 255) / 255.0f) {}
+      : data_(std::clamp(red, 0, 255), std::clamp(green, 0, 255),
+              std::clamp(blue, 0, 255), std::clamp(gray, 0, 255)) {}
   ~Tone() override {}
 
   Tone(const Tone&) = default;
   Tone& operator=(const Tone&) = default;
 
   void Set(int red, int green, int blue, int gray) {
-    data_.x = std::clamp(red, 0, 255) / 255.0f;
-    data_.y = std::clamp(green, 0, 255) / 255.0f;
-    data_.z = std::clamp(blue, 0, 255) / 255.0f;
-    data_.w = std::clamp(gray, 0, 255) / 255.0f;
+    data_.x = std::clamp(red, 0, 255);
+    data_.y = std::clamp(green, 0, 255);
+    data_.z = std::clamp(blue, 0, 255);
+    data_.w = std::clamp(gray, 0, 255);
 
     UpdateData();
   }
@@ -117,34 +115,39 @@ class Tone : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
     UpdateData();
   }
 
-  int GetRed() const { return data_.x * 255; }
+  int GetRed() const { return data_.x; }
   void SetRed(int red) {
-    data_.x = std::clamp(red, 0, 255) / 255.0f;
+    data_.x = std::clamp(red, 0, 255);
     UpdateData();
   }
 
-  int GetGreen() const { return data_.y * 255; }
+  int GetGreen() const { return data_.y; }
   void SetGreen(int green) {
-    data_.y = std::clamp(green, 0, 255) / 255.0f;
+    data_.y = std::clamp(green, 0, 255);
     UpdateData();
   }
 
-  int GetBlue() const { return data_.z * 255; }
+  int GetBlue() const { return data_.z; }
   void SetBlue(int blue) {
-    data_.z = std::clamp(blue, 0, 255) / 255.0f;
+    data_.z = std::clamp(blue, 0, 255);
     UpdateData();
   }
 
-  int GetGray() const { return data_.w * 255; }
+  int GetGray() const { return data_.w; }
   void SetGray(int gray) {
-    data_.w = std::clamp(gray, 0, 255) / 255.0f;
+    data_.w = std::clamp(gray, 0, 255);
     UpdateData();
   }
 
-  base::Vec4& AsBase() { return data_; }
+  base::Vec4 AsBase() {
+    return base::Vec4(data_.x / 255.0f, data_.y / 255.0f, data_.z / 255.0f,
+                      data_.w / 255.0f);
+  }
+
+  base::Vec4i& AsNormal() { return data_; }
 
  private:
-  base::Vec4 data_;
+  base::Vec4i data_;
 };
 
 class Color : public base::RefCountedThreadSafe<Rect>,
@@ -197,16 +200,14 @@ class Color : public base::RefCountedThreadSafe<Rect>,
     UpdateData();
   }
 
-  base::Vec4& AsBase() {
-    value_ = base::Vec4(data_.x / 255.0f, data_.y / 255.0f, data_.z / 255.0f,
-                        data_.w / 255.0f);
-    return value_;
+  base::Vec4 AsBase() {
+    return base::Vec4(data_.x / 255.0f, data_.y / 255.0f, data_.z / 255.0f,
+                      data_.w / 255.0f);
   }
 
   base::Vec4i& AsNormal() { return data_; }
 
  private:
-  base::Vec4 value_;
   base::Vec4i data_;
 };
 

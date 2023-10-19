@@ -55,7 +55,7 @@ void Sprite::InitAttributeInternal() {
   src_rect_observer_ = src_rect_->AddChangedObserver(base::BindRepeating(
       &Sprite::OnSrcRectChangedInternal, weak_ptr_factory_.GetWeakPtr()));
 
-  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
+  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
       &Sprite::InitSpriteInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
@@ -66,7 +66,7 @@ void Sprite::InitSpriteInternal() {
 void Sprite::DestroySpriteInternal() { quad_.reset(); }
 
 void Sprite::OnObjectDisposed() {
-  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
+  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
       &Sprite::DestroySpriteInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
@@ -95,7 +95,7 @@ void Sprite::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
 }
 
 void Sprite::OnSrcRectChangedInternal() {
-  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
+  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
       &Sprite::AsyncSrcRectChangedInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
@@ -106,7 +106,8 @@ void Sprite::AsyncSrcRectChangedInternal() {
   rect.width = std::clamp(rect.width, 0, bitmap_size.x - rect.x);
   rect.height = std::clamp(rect.height, 0, bitmap_size.y - rect.y);
 
-  quad_->SetPositionRect(base::Vec2(rect.width, rect.height));
+  quad_->SetPositionRect(base::Vec2(static_cast<float>(rect.width),
+                                    static_cast<float>(rect.height)));
   quad_->SetTexCoordRect(rect);
 }
 

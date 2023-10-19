@@ -9,14 +9,14 @@
 namespace content {
 
 Viewport::Viewport()
-    : Drawable(WorkerTreeHost::GetInstance()->AsBindingPort()->GetScreen(), 0,
+    : Drawable(WorkerTreeHost::GetInstance()->AsWorker<2>()->GetScreen(), 0,
                true) {
   viewport_rect().rect =
-      WorkerTreeHost::GetInstance()->AsBindingPort()->GetScreen()->GetSize();
+      WorkerTreeHost::GetInstance()->AsWorker<2>()->GetScreen()->GetSize();
 }
 
 Viewport::Viewport(const base::Rect& rect)
-    : Drawable(WorkerTreeHost::GetInstance()->AsBindingPort()->GetScreen(), 0,
+    : Drawable(WorkerTreeHost::GetInstance()->AsWorker<2>()->GetScreen(), 0,
                true) {
   viewport_rect().rect = rect;
 }
@@ -40,11 +40,10 @@ void Viewport::Composite() {
 void Viewport::OnViewportRectChanged(const ViewportInfo& rect) {}
 
 ViewportChild::ViewportChild(scoped_refptr<Viewport> viewport, int z)
-    : Drawable(
-          viewport
-              ? static_cast<DrawableParent*>(viewport.get())
-              : WorkerTreeHost::GetInstance()->AsBindingPort()->GetScreen(),
-          z, true) {}
+    : Drawable(viewport
+                   ? static_cast<DrawableParent*>(viewport.get())
+                   : WorkerTreeHost::GetInstance()->AsWorker<2>()->GetScreen(),
+               z, true) {}
 
 void ViewportChild::SetViewport(scoped_refptr<Viewport> viewport) {
   CheckDisposed();

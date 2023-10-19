@@ -9,15 +9,17 @@ namespace content {
 WorkerTreeHost* g_worker_scheduler = nullptr;
 
 WorkerTreeHost::WorkerTreeHost(bool sync_worker) {
-  event_runner_ = std::make_unique<EventRunner>();
-  render_runner_ = std::make_unique<RenderRunner>(sync_worker);
-  binding_runner_ = std::make_unique<BindingRunner>();
+  workers_ = std::make_tuple(std::make_unique<EventRunner>(),
+                             std::make_unique<RenderRunner>(sync_worker),
+                             std::make_unique<BindingRunner>());
+
   g_worker_scheduler = this;
 }
 
 WorkerTreeHost::~WorkerTreeHost() {
-  binding_runner_.reset();
-  render_runner_.reset();
+  std::get<2>(workers_).reset();
+  std::get<1>(workers_).reset();
+
   g_worker_scheduler = nullptr;
 }
 
@@ -25,25 +27,25 @@ WorkerTreeHost* WorkerTreeHost::GetInstance() { return g_worker_scheduler; }
 
 void WorkerTreeHost::Run(RenderRunner::InitParams graph_params,
                          BindingRunner::BindingParams script_params) {
-  render_runner_->CreateContextSync(std::move(graph_params));
-  binding_runner_->InitializeBindingInterpreter();
+  std::get<1>(workers_)->CreateContextSync(std::move(graph_params));
+  std::get<2>(workers_)->InitializeBindingInterpreter();
 
-  binding_runner_->PostBindingBoot(std::move(script_params));
+  std::get<2>(workers_)->PostBindingBoot(std::move(script_params));
 
-  event_runner_->RunMain();
+  std::get<0>(workers_)->RunMain();
 }
 
 scoped_refptr<base::SequencedTaskRunner> WorkerTreeHost::GetUITaskRunner() {
-  return event_runner_->GetUIThreadTaskRunner();
+  return std::get<0>(g_worker_scheduler->workers_)->GetUIThreadTaskRunner();
 }
 
 scoped_refptr<base::SequencedTaskRunner> WorkerTreeHost::GetRenderTaskRunner() {
-  return render_runner_->GetRenderThreadRunner();
+  return std::get<1>(g_worker_scheduler->workers_)->GetRenderThreadRunner();
 }
 
 scoped_refptr<base::SequencedTaskRunner>
 WorkerTreeHost::GetBindingTaskRunner() {
-  return binding_runner_->GetBindingRunnerTask();
+  return std::get<2>(g_worker_scheduler->workers_)->GetBindingRunnerTask();
 }
 
 }  // namespace content

@@ -7,19 +7,19 @@ namespace content {
 Graphics::Graphics(base::WeakPtr<ui::Widget> window,
                    const base::Vec2i& initial_resolution)
     : window_(window), resolution_(initial_resolution) {
-  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
+  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
       &Graphics::InitScreenBufferInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
 Graphics::~Graphics() {
-  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
+  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
       &Graphics::DestroyBufferInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
 void Graphics::Update() {
-  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->PostTask(base::BindOnce(
+  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
       &Graphics::PresentScreenInternal, weak_ptr_factory_.GetWeakPtr()));
-  WorkerTreeHost::GetInstance()->GetRenderTaskRunner()->WaitForSync();
+  WorkerTreeHost::GetRenderTaskRunner()->WaitForSync();
 }
 
 void Graphics::InitScreenBufferInternal() {

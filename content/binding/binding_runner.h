@@ -10,8 +10,6 @@ namespace content {
 class BindingRunner final {
  public:
   struct BindingParams {
-    std::string_view debug_output;
-
     base::WeakPtr<ui::Widget> window;
     base::Vec2i resolution;
 
@@ -36,7 +34,6 @@ class BindingRunner final {
  private:
   void BindingMain(BindingParams initial_param);
   std::unique_ptr<base::ThreadWorker> binding_worker_;
-
   scoped_refptr<base::SequencedTaskRunner> binding_runner_;
 
   std::unique_ptr<Graphics> graphics_screen_;
