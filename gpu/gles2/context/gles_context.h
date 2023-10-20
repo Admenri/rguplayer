@@ -17,7 +17,7 @@ namespace gpu {
 
 class GLES2CommandContext;
 
-extern GLES2CommandContext GL;
+thread_local extern GLES2CommandContext GL;
 
 class GLES2CommandContext final {
  public:

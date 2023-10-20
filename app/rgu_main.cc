@@ -40,7 +40,7 @@ int main() {
   render_params.ogl_window = win->AsWeakPtr();
   render_params.initial_resolution = win->GetSize();
 
-  content::BindingRunner::BindingParams binding_params;
+  content::BindingRunner::InitParams binding_params;
   binding_params.window = win->AsWeakPtr();
   binding_params.resolution = win->GetSize();
   engine->Run(std::move(render_params), std::move(binding_params));

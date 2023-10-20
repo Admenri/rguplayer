@@ -8,16 +8,12 @@
 
 namespace content {
 
-Viewport::Viewport()
-    : Drawable(WorkerTreeHost::GetInstance()->AsWorker<2>()->GetScreen(), 0,
-               true) {
-  viewport_rect().rect =
-      WorkerTreeHost::GetInstance()->AsWorker<2>()->GetScreen()->GetSize();
+Viewport::Viewport() : Drawable(BindingRunner::Get()->GetScreen(), 0, true) {
+  viewport_rect().rect = BindingRunner::Get()->GetScreen()->GetSize();
 }
 
 Viewport::Viewport(const base::Rect& rect)
-    : Drawable(WorkerTreeHost::GetInstance()->AsWorker<2>()->GetScreen(), 0,
-               true) {
+    : Drawable(BindingRunner::Get()->GetScreen(), 0, true) {
   viewport_rect().rect = rect;
 }
 
@@ -40,9 +36,8 @@ void Viewport::Composite() {
 void Viewport::OnViewportRectChanged(const ViewportInfo& rect) {}
 
 ViewportChild::ViewportChild(scoped_refptr<Viewport> viewport, int z)
-    : Drawable(viewport
-                   ? static_cast<DrawableParent*>(viewport.get())
-                   : WorkerTreeHost::GetInstance()->AsWorker<2>()->GetScreen(),
+    : Drawable(viewport ? static_cast<DrawableParent*>(viewport.get())
+                        : BindingRunner::Get()->GetScreen(),
                z, true) {}
 
 void ViewportChild::SetViewport(scoped_refptr<Viewport> viewport) {

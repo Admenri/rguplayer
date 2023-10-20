@@ -1,3 +1,7 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #ifndef CONTENT_BINDING_BINDING_RUNNER_H_
 #define CONTENT_BINDING_BINDING_RUNNER_H_
 
@@ -7,36 +11,43 @@
 
 namespace content {
 
+class WorkerTreeHost;
+
 class BindingRunner final {
  public:
-  struct BindingParams {
+  struct BindingModules {
+    std::unique_ptr<Graphics> graphics;
+  };
+
+  struct InitParams {
     base::WeakPtr<ui::Widget> window;
     base::Vec2i resolution;
 
-    BindingParams() = default;
-    BindingParams(const BindingParams&) = delete;
-    BindingParams(BindingParams&&) = default;
+    InitParams() = default;
+    InitParams(const InitParams&) = delete;
+    InitParams(InitParams&&) = default;
   };
 
-  BindingRunner();
+  BindingRunner(WorkerTreeHost* tree_host);
   ~BindingRunner();
 
   BindingRunner(const BindingRunner&) = delete;
   BindingRunner& operator=(const BindingRunner&) = delete;
 
-  scoped_refptr<base::SequencedTaskRunner> GetBindingRunnerTask();
+  void InitAndBootBinding(InitParams initial_param);
+  scoped_refptr<base::SequencedTaskRunner> GetTaskRunner();
 
-  void InitializeBindingInterpreter();
-  void PostBindingBoot(BindingParams initial_param);
-
-  Graphics* GetScreen() { return graphics_screen_.get(); }
+  static BindingRunner* Get();
+  Graphics* GetScreen() { return modules_.graphics.get(); }
+  scoped_refptr<base::SequencedTaskRunner> GetRenderer();
 
  private:
-  void BindingMain(BindingParams initial_param);
-  std::unique_ptr<base::ThreadWorker> binding_worker_;
-  scoped_refptr<base::SequencedTaskRunner> binding_runner_;
+  void InitInternalModules(const InitParams& initial_param);
+  void BindingMain(InitParams initial_param);
+  BindingModules modules_;
 
-  std::unique_ptr<Graphics> graphics_screen_;
+  WorkerTreeHost* tree_host_;
+  std::unique_ptr<base::ThreadWorker> binding_worker_;
 
   base::WeakPtrFactory<BindingRunner> weak_ptr_factory_{this};
 };

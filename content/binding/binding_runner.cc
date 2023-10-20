@@ -1,3 +1,7 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "content/binding/binding_runner.h"
 
 #include <SDL_image.h>
@@ -7,35 +11,46 @@
 
 namespace content {
 
-BindingRunner::BindingRunner()
-    : binding_worker_(std::make_unique<base::ThreadWorker>()) {}
+thread_local BindingRunner* t_binding_runner_;
+
+BindingRunner::BindingRunner(WorkerTreeHost* tree_host)
+    : tree_host_(tree_host),
+      binding_worker_(std::make_unique<base::ThreadWorker>()) {}
 
 BindingRunner::~BindingRunner() {
   binding_worker_->task_runner()->WaitForSync();
 }
 
-scoped_refptr<base::SequencedTaskRunner> BindingRunner::GetBindingRunnerTask() {
-  return binding_runner_;
-}
-
-void BindingRunner::InitializeBindingInterpreter() {
+void BindingRunner::InitAndBootBinding(InitParams initial_param) {
   binding_worker_->Start(base::RunLoop::MessagePumpType::Worker);
   binding_worker_->WaitUntilStart();
-  binding_runner_ = binding_worker_->task_runner();
-}
 
-void BindingRunner::PostBindingBoot(BindingParams initial_param) {
   binding_worker_->task_runner()->PostTask(
       base::BindOnce(&BindingRunner::BindingMain,
                      weak_ptr_factory_.GetWeakPtr(), std::move(initial_param)));
 }
 
-void BindingRunner::BindingMain(BindingParams initial_param) {
-  graphics_screen_ = std::make_unique<Graphics>(initial_param.window,
-                                                initial_param.resolution);
+scoped_refptr<base::SequencedTaskRunner> BindingRunner::GetTaskRunner() {
+  return binding_worker_->task_runner();
+}
+
+BindingRunner* BindingRunner::Get() { return t_binding_runner_; }
+
+scoped_refptr<base::SequencedTaskRunner> BindingRunner::GetRenderer() {
+  return tree_host_->GetRenderTaskRunner();
+}
+
+void BindingRunner::InitInternalModules(const InitParams& initial_param) {
+  t_binding_runner_ = this;
+
+  modules_.graphics = std::make_unique<Graphics>(initial_param.window,
+                                                 initial_param.resolution);
+}
+
+void BindingRunner::BindingMain(InitParams initial_param) {
+  InitInternalModules(initial_param);
 
   LOG(INFO) << __FUNCTION__;
-
   {
     scoped_refptr<Bitmap> bmp =
         new Bitmap("D:\\Desktop\\rgu\\app\\test\\example.png");
@@ -57,16 +72,15 @@ void BindingRunner::BindingMain(BindingParams initial_param) {
     sp->SetBitmap(bmp);
     sp->GetTransform().SetOrigin(
         base::Vec2i(sp->GetWidth() / 2, sp->GetHeight() / 2));
-    sp->GetTransform().SetPosition(base::Vec2i(
-        graphics_screen_->GetWidth() / 2, graphics_screen_->GetHeight() / 2));
+    sp->GetTransform().SetPosition(
+        base::Vec2i(GetScreen()->GetWidth() / 2, GetScreen()->GetHeight() / 2));
 
     float xxx = 0;
     for (;;) {
       sp->GetTransform().SetRotation(++xxx);
-      graphics_screen_->Update();
+      GetScreen()->Update();
     }
   }
-
   LOG(INFO) << __FUNCTION__;
 }
 

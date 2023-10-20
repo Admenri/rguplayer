@@ -19,7 +19,7 @@ Bitmap::Bitmap(int width, int height)
   size_ = base::Vec2i(width, height);
   surface_buffer_ = nullptr;
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Bitmap::InitBitmapInternal, weak_ptr_factory_.GetWeakPtr(),
       base::Vec2i(width, height)));
 }
@@ -36,7 +36,7 @@ Bitmap::Bitmap(const std::string& filename)
     surface_buffer_ = conv;
   }
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(
+  BindingRunner::Get()->GetRenderer()->PostTask(
       base::BindOnce(&Bitmap::InitBitmapInternal,
                      weak_ptr_factory_.GetWeakPtr(), surface_buffer_));
 }
@@ -86,7 +86,7 @@ void Bitmap::StretchBlt(const base::Rect& dest_rect,
 
   if (src_bitmap->IsDisposed() || !opacity) return;
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Bitmap::StretchBltInternal, weak_ptr_factory_.GetWeakPtr(), dest_rect,
       src_bitmap, src_rect, opacity / 255.0f));
 
@@ -98,7 +98,7 @@ void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
 
   if (rect.width <= 0 || rect.height <= 0) return;
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(
+  BindingRunner::Get()->GetRenderer()->PostTask(
       base::BindOnce(&Bitmap::FillRectInternal, weak_ptr_factory_.GetWeakPtr(),
                      rect, color->AsBase()));
 
@@ -112,7 +112,7 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
 
   if (rect.width <= 0 || rect.height <= 0) return;
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Bitmap::GradientFillRectInternal, weak_ptr_factory_.GetWeakPtr(), rect,
       color1->AsBase(), color2->AsBase(), vertical));
 
@@ -122,7 +122,7 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
 void Bitmap::Clear() {
   CheckIsDisposed();
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(
+  BindingRunner::Get()->GetRenderer()->PostTask(
       base::BindOnce(&Bitmap::FillRectInternal, weak_ptr_factory_.GetWeakPtr(),
                      size_, base::Vec4()));
 
@@ -132,7 +132,7 @@ void Bitmap::Clear() {
 void Bitmap::ClearRect(const base::Rect& rect) {
   CheckIsDisposed();
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(
+  BindingRunner::Get()->GetRenderer()->PostTask(
       base::BindOnce(&Bitmap::FillRectInternal, weak_ptr_factory_.GetWeakPtr(),
                      rect, base::Vec4()));
 
@@ -172,7 +172,7 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
         SDL_MapRGBA(pixel_format_, data.x, data.y, data.z, data.w);
   }
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(
+  BindingRunner::Get()->GetRenderer()->PostTask(
       base::BindOnce(&Bitmap::SetPixelInternal, weak_ptr_factory_.GetWeakPtr(),
                      x, y, color->AsNormal()));
 
@@ -222,7 +222,7 @@ scoped_refptr<Rect> Bitmap::TextSize(const std::string& str) {
 
 SDL_Surface* Bitmap::SurfaceRequired() {
   /* Sync for surface operation */
-  WorkerTreeHost::GetRenderTaskRunner()->WaitForSync();
+  BindingRunner::Get()->GetRenderer()->WaitForSync();
 
   if (surface_buffer_) {
     SDL_FreeSurface(surface_buffer_);
@@ -232,10 +232,10 @@ SDL_Surface* Bitmap::SurfaceRequired() {
       0, size_.x, size_.y, pixel_format_->BitsPerPixel, pixel_format_->Rmask,
       pixel_format_->Gmask, pixel_format_->Bmask, pixel_format_->Amask);
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Bitmap::GetSurfaceInternal, weak_ptr_factory_.GetWeakPtr()));
   /* Sync for surface get pixels */
-  WorkerTreeHost::GetRenderTaskRunner()->WaitForSync();
+  BindingRunner::Get()->GetRenderer()->WaitForSync();
 
   return surface_buffer_;
 }
@@ -248,7 +248,7 @@ void Bitmap::OnObjectDisposed() {
     surface_buffer_ = nullptr;
   }
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Bitmap::DestroyBitmapInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 

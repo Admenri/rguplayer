@@ -6,46 +6,22 @@
 
 namespace content {
 
-WorkerTreeHost* g_worker_scheduler = nullptr;
-
-WorkerTreeHost::WorkerTreeHost(bool sync_worker) {
-  workers_ = std::make_tuple(std::make_unique<EventRunner>(),
-                             std::make_unique<RenderRunner>(sync_worker),
-                             std::make_unique<BindingRunner>());
-
-  g_worker_scheduler = this;
-}
+WorkerTreeHost::WorkerTreeHost(bool sync_worker)
+    : event_runner_(new EventRunner()),
+      render_runner_(new RenderRunner(sync_worker)),
+      binding_runner_(new BindingRunner(this)) {}
 
 WorkerTreeHost::~WorkerTreeHost() {
-  std::get<2>(workers_).reset();
-  std::get<1>(workers_).reset();
-
-  g_worker_scheduler = nullptr;
+  binding_runner_.reset();
+  render_runner_.reset();
 }
-
-WorkerTreeHost* WorkerTreeHost::GetInstance() { return g_worker_scheduler; }
 
 void WorkerTreeHost::Run(RenderRunner::InitParams graph_params,
-                         BindingRunner::BindingParams script_params) {
-  std::get<1>(workers_)->CreateContextSync(std::move(graph_params));
-  std::get<2>(workers_)->InitializeBindingInterpreter();
+                         BindingRunner::InitParams script_params) {
+  render_runner_->InitGLContext(std::move(graph_params));
+  binding_runner_->InitAndBootBinding(std::move(script_params));
 
-  std::get<2>(workers_)->PostBindingBoot(std::move(script_params));
-
-  std::get<0>(workers_)->RunMain();
-}
-
-scoped_refptr<base::SequencedTaskRunner> WorkerTreeHost::GetUITaskRunner() {
-  return std::get<0>(g_worker_scheduler->workers_)->GetUIThreadTaskRunner();
-}
-
-scoped_refptr<base::SequencedTaskRunner> WorkerTreeHost::GetRenderTaskRunner() {
-  return std::get<1>(g_worker_scheduler->workers_)->GetRenderThreadRunner();
-}
-
-scoped_refptr<base::SequencedTaskRunner>
-WorkerTreeHost::GetBindingTaskRunner() {
-  return std::get<2>(g_worker_scheduler->workers_)->GetBindingRunnerTask();
+  event_runner_->RunMain();
 }
 
 }  // namespace content

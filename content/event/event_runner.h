@@ -18,11 +18,9 @@ class EventRunner final {
   EventRunner& operator=(const EventRunner&) = delete;
 
   void RunMain();
-  scoped_refptr<base::SequencedTaskRunner> GetUIThreadTaskRunner();
+  scoped_refptr<base::SequencedTaskRunner> GetTaskRunner();
 
  private:
-  friend class WorkerTreeHost;
-
   static void EventFilter(base::OnceClosure quit_closure,
                           const SDL_Event& sdl_event);
 

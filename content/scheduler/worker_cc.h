@@ -13,11 +13,7 @@
 
 namespace content {
 
-using WorkerTree =
-    std::tuple<std::unique_ptr<EventRunner>, std::unique_ptr<RenderRunner>,
-               std::unique_ptr<BindingRunner>>;
-
-class WorkerTreeHost {
+class WorkerTreeHost final {
  public:
   WorkerTreeHost(bool sync_worker);
   ~WorkerTreeHost();
@@ -25,26 +21,26 @@ class WorkerTreeHost {
   WorkerTreeHost(const WorkerTreeHost&) = delete;
   WorkerTreeHost& operator=(const WorkerTreeHost&) = delete;
 
-  static WorkerTreeHost* GetInstance();
-
   /* Run scheduler on event thread */
   void Run(RenderRunner::InitParams graph_params,
-           BindingRunner::BindingParams script_params);
+           BindingRunner::InitParams script_params);
 
-  static scoped_refptr<base::SequencedTaskRunner> GetUITaskRunner();
-  static scoped_refptr<base::SequencedTaskRunner> GetRenderTaskRunner();
-  static scoped_refptr<base::SequencedTaskRunner> GetBindingTaskRunner();
+  scoped_refptr<base::SequencedTaskRunner> GetUITaskRunner() {
+    return event_runner_->GetTaskRunner();
+  }
 
-  WorkerTree& AccessToTree() { return workers_; }
+  scoped_refptr<base::SequencedTaskRunner> GetRenderTaskRunner() {
+    return render_runner_->GetTaskRunner();
+  }
 
-  /* Binding interface */
-  template <int index>
-  decltype(auto) AsWorker() {
-    return std::get<index>(workers_).get();
+  scoped_refptr<base::SequencedTaskRunner> GetBindingRunner() {
+    return binding_runner_->GetTaskRunner();
   }
 
  private:
-  WorkerTree workers_;
+  std::unique_ptr<EventRunner> event_runner_;
+  std::unique_ptr<RenderRunner> render_runner_;
+  std::unique_ptr<BindingRunner> binding_runner_;
 };
 
 }  // namespace content

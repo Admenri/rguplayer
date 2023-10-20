@@ -16,7 +16,7 @@ class QuadDrawable;
 class GlobalStateManager;
 class QuadIndexBuffer;
 
-extern GlobalStateManager GSM;
+thread_local extern GlobalStateManager GSM;
 
 class GlobalStateManager final {
  public:

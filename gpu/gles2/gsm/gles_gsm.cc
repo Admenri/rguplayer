@@ -8,7 +8,7 @@
 
 namespace gpu {
 
-GlobalStateManager GSM;
+thread_local GlobalStateManager GSM;
 
 void GlobalStateManager::InitStates() {
   GL.Disable(GL_DEPTH_TEST);

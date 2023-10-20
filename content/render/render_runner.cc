@@ -12,25 +12,24 @@ RenderRunner::RenderRunner(bool sync)
     : render_worker_(std::make_unique<base::ThreadWorker>(sync)) {}
 
 RenderRunner::~RenderRunner() {
-  task_runner_->PostTask(base::BindOnce(&RenderRunner::ReleaseContextInternal,
-                                        weak_ptr_factory_.GetWeakPtr()));
-  task_runner_->WaitForSync();
+  GetTaskRunner()->PostTask(base::BindOnce(
+      &RenderRunner::ReleaseContextInternal, weak_ptr_factory_.GetWeakPtr()));
+  GetTaskRunner()->WaitForSync();
 }
 
-void RenderRunner::CreateContextSync(InitParams renderer_settings) {
+void RenderRunner::InitGLContext(InitParams inital_params) {
   render_worker_->Start(base::RunLoop::MessagePumpType::Worker);
   render_worker_->WaitUntilStart();
-  task_runner_ = render_worker_->task_runner();
 
-  task_runner_->PostTask(base::BindOnce(
-      &RenderRunner::CreateRenderContextInternal,
-      weak_ptr_factory_.GetWeakPtr(), std::move(renderer_settings)));
+  GetTaskRunner()->PostTask(
+      base::BindOnce(&RenderRunner::CreateRenderContextInternal,
+                     weak_ptr_factory_.GetWeakPtr(), std::move(inital_params)));
 
-  task_runner_->WaitForSync();
+  GetTaskRunner()->WaitForSync();
 }
 
-scoped_refptr<base::SequencedTaskRunner> RenderRunner::GetRenderThreadRunner() {
-  return task_runner_;
+scoped_refptr<base::SequencedTaskRunner> RenderRunner::GetTaskRunner() {
+  return render_worker_->task_runner();
 }
 
 void RenderRunner::CreateRenderContextInternal(InitParams renderer_settings) {

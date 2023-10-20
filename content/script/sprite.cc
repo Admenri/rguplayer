@@ -1,3 +1,7 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "content/script/sprite.h"
 
 #include "content/scheduler/worker_cc.h"
@@ -55,7 +59,7 @@ void Sprite::InitAttributeInternal() {
   src_rect_observer_ = src_rect_->AddChangedObserver(base::BindRepeating(
       &Sprite::OnSrcRectChangedInternal, weak_ptr_factory_.GetWeakPtr()));
 
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Sprite::InitSpriteInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
@@ -66,7 +70,7 @@ void Sprite::InitSpriteInternal() {
 void Sprite::DestroySpriteInternal() { quad_.reset(); }
 
 void Sprite::OnObjectDisposed() {
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Sprite::DestroySpriteInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
@@ -95,7 +99,7 @@ void Sprite::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
 }
 
 void Sprite::OnSrcRectChangedInternal() {
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Sprite::AsyncSrcRectChangedInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 

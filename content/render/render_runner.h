@@ -28,18 +28,15 @@ class RenderRunner final {
   RenderRunner(const RenderRunner&) = delete;
   RenderRunner& operator=(const RenderRunner&) = delete;
 
-  void CreateContextSync(InitParams renderer_settings);
-  scoped_refptr<base::SequencedTaskRunner> GetRenderThreadRunner();
+  void InitGLContext(InitParams inital_params);
+  scoped_refptr<base::SequencedTaskRunner> GetTaskRunner();
 
  private:
-  friend class WorkerTreeHost;
-
   void CreateRenderContextInternal(InitParams renderer_settings);
   void ReleaseContextInternal();
 
-  std::unique_ptr<base::ThreadWorker> render_worker_;
-  scoped_refptr<base::SequencedTaskRunner> task_runner_;
   SDL_GLContext glctx_ = nullptr;
+  std::unique_ptr<base::ThreadWorker> render_worker_;
 
   base::WeakPtrFactory<RenderRunner> weak_ptr_factory_{this};
 };

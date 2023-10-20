@@ -9,7 +9,7 @@
 
 namespace gpu {
 
-GLES2CommandContext GL;
+thread_local GLES2CommandContext GL;
 
 GLES2CommandContext::GLES2CommandContext() {}
 

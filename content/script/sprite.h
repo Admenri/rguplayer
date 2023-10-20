@@ -1,3 +1,7 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #ifndef CONTENT_SCRIPT_SPRITE_H_
 #define CONTENT_SCRIPT_SPRITE_H_
 

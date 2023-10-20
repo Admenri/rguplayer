@@ -1,3 +1,7 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "content/script/graphics.h"
 
 #include "content/scheduler/worker_cc.h"
@@ -7,19 +11,19 @@ namespace content {
 Graphics::Graphics(base::WeakPtr<ui::Widget> window,
                    const base::Vec2i& initial_resolution)
     : window_(window), resolution_(initial_resolution) {
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Graphics::InitScreenBufferInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
 Graphics::~Graphics() {
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Graphics::DestroyBufferInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
 void Graphics::Update() {
-  WorkerTreeHost::GetRenderTaskRunner()->PostTask(base::BindOnce(
+  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Graphics::PresentScreenInternal, weak_ptr_factory_.GetWeakPtr()));
-  WorkerTreeHost::GetRenderTaskRunner()->WaitForSync();
+  BindingRunner::Get()->GetRenderer()->WaitForSync();
 }
 
 void Graphics::InitScreenBufferInternal() {
