@@ -85,10 +85,6 @@ class Drawable : public base::LinkNode<Drawable> {
   virtual void OnViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) = 0;
 
-  DrawableParent::ViewportInfo& GetViewportInfo() {
-    return parent_->viewport_rect();
-  }
-
  private:
   friend class DrawableParent;
   DrawableParent* parent_;

@@ -12,8 +12,6 @@ Sprite::Sprite() : ViewportChild(nullptr) { InitAttributeInternal(); }
 
 Sprite::Sprite(scoped_refptr<Viewport> viewport) : ViewportChild(viewport) {
   InitAttributeInternal();
-
-  transform_.SetGlobalOffset(viewport->viewport_rect().GetRealOffset());
 }
 
 Sprite::~Sprite() { Dispose(); }
@@ -61,6 +59,9 @@ void Sprite::InitAttributeInternal() {
 
   BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Sprite::InitSpriteInternal, weak_ptr_factory_.GetWeakPtr()));
+
+  if (auto* viewport = GetViewport().get())
+    OnViewportRectChanged(viewport->viewport_rect());
 }
 
 void Sprite::InitSpriteInternal() {
@@ -95,7 +96,9 @@ void Sprite::Composite() {
 }
 
 void Sprite::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
-  transform_.SetGlobalOffset(rect.GetRealOffset());
+  BindingRunner::Get()->GetRenderer()->PostTask(
+      base::BindOnce(&Sprite::OnViewportRectChangedInternal,
+                     weak_ptr_factory_.GetWeakPtr(), rect));
 }
 
 void Sprite::OnSrcRectChangedInternal() {
@@ -113,6 +116,11 @@ void Sprite::AsyncSrcRectChangedInternal() {
   quad_->SetPositionRect(base::Vec2(static_cast<float>(rect.width),
                                     static_cast<float>(rect.height)));
   quad_->SetTexCoordRect(rect);
+}
+
+void Sprite::OnViewportRectChangedInternal(
+    const DrawableParent::ViewportInfo& rect) {
+  transform_.SetGlobalOffset(rect.GetRealOffset());
 }
 
 }  // namespace content

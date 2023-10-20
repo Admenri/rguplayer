@@ -68,6 +68,7 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void OnSrcRectChangedInternal();
   void AsyncSrcRectChangedInternal();
+  void OnViewportRectChangedInternal(const DrawableParent::ViewportInfo& rect);
 
   scoped_refptr<Bitmap> bitmap_;
   scoped_refptr<Rect> src_rect_;
