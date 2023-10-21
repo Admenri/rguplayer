@@ -24,6 +24,8 @@ set(CONTENT_SRC
   script/graphics.h
   script/sprite.cc
   script/sprite.h
+  script/table.cc
+  script/table.h
   script/utility.cc
   script/utility.h
   script/viewport.cc
