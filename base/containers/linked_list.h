@@ -73,6 +73,8 @@ class LinkedList {
   }
 
   LinkNode<T> *head() { return root_.next_; }
+  LinkNode<T> *tail() { return root_.previous_; }
+
   LinkNode<T> *end() { return &root_; }
 
   bool empty() const { return root_.next_ == &root_; }

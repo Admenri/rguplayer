@@ -58,7 +58,7 @@ void DrawableParent::InsertDrawable(Drawable* drawable) {
 void DrawableParent::CompositeChildren() {
   if (drawables_.empty()) return;
 
-  for (auto it = drawables_.end()->previous(); it != drawables_.end();
+  for (auto it = drawables_.tail(); it != drawables_.end();
        it = it->previous()) {
     it->value()->Composite();
   }
