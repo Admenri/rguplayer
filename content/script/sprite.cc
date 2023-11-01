@@ -8,8 +8,6 @@
 
 namespace content {
 
-Sprite::Sprite() : ViewportChild(nullptr) { InitAttributeInternal(); }
-
 Sprite::Sprite(scoped_refptr<Viewport> viewport) : ViewportChild(viewport) {
   InitAttributeInternal();
 }
@@ -61,24 +59,24 @@ void Sprite::InitAttributeInternal() {
       &Sprite::InitSpriteInternal, weak_ptr_factory_.GetWeakPtr()));
 
   if (auto* viewport = GetViewport().get())
-    OnViewportRectChanged(viewport->viewport_rect());
+    OnViewportRectChanged(parent_rect());
 }
 
 void Sprite::InitSpriteInternal() {
   quad_ = std::make_unique<gpu::QuadDrawable>();
 }
 
-void Sprite::DestroySpriteInternal() { quad_.reset(); }
-
 void Sprite::OnObjectDisposed() {
-  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
-      &Sprite::DestroySpriteInternal, weak_ptr_factory_.GetWeakPtr()));
+  weak_ptr_factory_.InvalidateWeakPtrs();
+
+  BindingRunner::Get()->GetRenderer()->DeleteSoon(std::move(quad_));
 }
 
 void Sprite::Composite() {
   if (Flashable::IsFlashEmpty()) return;
 
-  if (!bitmap_) return;
+  if (!opacity_) return;
+  if (!bitmap_ || bitmap_->IsDisposed()) return;
 
   auto& shader = gpu::GSM.shaders->transform;
 
@@ -90,9 +88,11 @@ void Sprite::Composite() {
   shader.SetTexture(bitmap_size.tex);
   shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
 
+  gpu::GSM.states.blend.Push(true);
   gpu::GSM.states.blend_func.Push(blend_mode_);
   quad_->Draw();
   gpu::GSM.states.blend_func.Pop();
+  gpu::GSM.states.blend.Pop();
 }
 
 void Sprite::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {

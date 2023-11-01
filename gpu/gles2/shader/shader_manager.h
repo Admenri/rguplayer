@@ -116,6 +116,28 @@ class ColorShader : public GLES2ShaderBase {
   GLint u_transOffset_;
 };
 
+class PlaneShader : public GLES2ShaderBase {
+ public:
+  PlaneShader();
+
+  void SetTransOffset(const base::Vec2& offset);
+  void SetTexture(GLID<Texture> tex);
+  void SetTextureSize(const base::Vec2& tex_size);
+
+  void SetOpacity(float opacity);
+  void SetColor(const base::Vec4& color);
+  void SetTone(const base::Vec4& tone);
+
+ private:
+  GLint u_transOffset_;
+  GLint u_texture_;
+  GLint u_texSize_;
+
+  GLint u_opacity_;
+  GLint u_color_;
+  GLint u_tone_;
+};
+
 }  // namespace gpu
 
 #endif  // GPU_GLES2_SHADER_SHADER_MANAGER_H_

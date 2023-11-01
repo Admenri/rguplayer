@@ -8,7 +8,6 @@
 
 #include "base/bind/callback.h"
 #include "base/buildflags/compiler_specific.h"
-#include "base/containers/cxx20_erase.h"
 #include "base/debug/logging.h"
 #include "base/exceptions/exception.h"
 #include "base/math/transform.h"
@@ -17,6 +16,7 @@
 #include "base/worker/thread_worker.h"
 #include "content/scheduler/worker_cc.h"
 #include "content/script/drawable.h"
+#include "content/script/plane.h"
 #include "gpu/gles2/draw/quad_drawable.h"
 #include "gpu/gles2/gsm/gles_gsm.h"
 #include "gpu/gles2/vertex/vertex_array.h"

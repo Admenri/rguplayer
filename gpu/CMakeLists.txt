@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 3.18.0)
 set(GPU_SRC
   gles2/context/gles_context.cc
   gles2/context/gles_context.h
+  gles2/draw/quad_array.h
   gles2/draw/quad_drawable.cc
   gles2/draw/quad_drawable.h
   gles2/gsm/gles_gsm.cc

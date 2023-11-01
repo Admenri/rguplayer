@@ -7,6 +7,7 @@
 #include <SDL_image.h>
 
 #include "content/script/bitmap.h"
+#include "content/script/plane.h"
 #include "content/script/sprite.h"
 
 namespace content {
@@ -74,6 +75,9 @@ void BindingRunner::BindingMain(InitParams initial_param) {
         base::Vec2i(sp->GetWidth() / 2, sp->GetHeight() / 2));
     sp->GetTransform().SetPosition(
         base::Vec2i(GetScreen()->GetWidth() / 2, GetScreen()->GetHeight() / 2));
+
+    scoped_refptr<Plane> pl = new Plane();
+    pl->SetBitmap(new Bitmap("D:\\Desktop\\rgu\\app\\test\\bg.png"));
 
     float xxx = 0;
     for (;;) {

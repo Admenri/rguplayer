@@ -19,8 +19,7 @@ class Sprite : public base::RefCounted<Sprite>,
                public ViewportChild,
                public Flashable {
  public:
-  Sprite();
-  Sprite(scoped_refptr<Viewport> viewport);
+  Sprite(scoped_refptr<Viewport> viewport = nullptr);
   ~Sprite() override;
 
   Sprite(const Sprite&) = delete;
@@ -55,9 +54,7 @@ class Sprite : public base::RefCounted<Sprite>,
 
  private:
   void InitAttributeInternal();
-
   void InitSpriteInternal();
-  void DestroySpriteInternal();
 
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Sprite"; }

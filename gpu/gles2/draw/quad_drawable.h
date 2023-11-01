@@ -106,6 +106,25 @@ class QuadDrawable final : public CommonVertexDrawable<4> {
   base::RectF texCoord_cache_;
 };
 
+template <typename V>
+static void QuadSetPositionRect(V* vert, const base::RectF& pos) {
+  int i = -1;
+  vert[++i].position = base::Vec2(pos.x, pos.y);
+  vert[++i].position = base::Vec2(pos.x + pos.width, pos.y);
+  vert[++i].position = base::Vec2(pos.x + pos.width, pos.y + pos.height);
+  vert[++i].position = base::Vec2(pos.x, pos.y + pos.height);
+}
+
+template <typename V>
+static void QuadSetTexCoordRect(V* vert, const base::RectF& texcoord) {
+  int i = -1;
+  vert[++i].texCoord = base::Vec2(texcoord.x, texcoord.y);
+  vert[++i].texCoord = base::Vec2(texcoord.x + texcoord.width, texcoord.y);
+  vert[++i].texCoord =
+      base::Vec2(texcoord.x + texcoord.width, texcoord.y + texcoord.height);
+  vert[++i].texCoord = base::Vec2(texcoord.x, texcoord.y + texcoord.height);
+}
+
 struct Blt {
   static void BeginScreen(const base::Vec2i& resolution);
   static void BeginDraw(TextureFrameBuffer& dest_tfb);

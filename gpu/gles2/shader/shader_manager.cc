@@ -17,6 +17,7 @@ namespace shader {
 #include "gpu/gles2/shader/shader_source/base.vert.xxd"
 #include "gpu/gles2/shader/shader_source/basecolor.frag.xxd"
 #include "gpu/gles2/shader/shader_source/basecolor.vert.xxd"
+#include "gpu/gles2/shader/shader_source/plane.frag.xxd"
 #include "gpu/gles2/shader/shader_source/texblt.frag.xxd"
 #include "gpu/gles2/shader/shader_source/transform.vert.xxd"
 
@@ -238,6 +239,44 @@ ColorShader::ColorShader() {
 
 void ColorShader::SetTransOffset(const base::Vec2& offset) {
   GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+PlaneShader::PlaneShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::base_vert, shader::base_vert_len),
+      shader::FromRawData(shader::plane_frag, shader::plane_frag_len));
+
+  u_transOffset_ = GL.GetUniformLocation(program_, "u_transOffset");
+  u_texture_ = GL.GetUniformLocation(program_, "u_texture");
+  u_texSize_ = GL.GetUniformLocation(program_, "u_texSize");
+
+  u_opacity_ = GL.GetUniformLocation(program_, "u_opacity");
+  u_color_ = GL.GetUniformLocation(program_, "u_color");
+  u_tone_ = GL.GetUniformLocation(program_, "u_tone");
+}
+
+void PlaneShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void PlaneShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+void PlaneShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void PlaneShader::SetOpacity(float opacity) {
+  GL.Uniform1f(u_opacity_, opacity);
+}
+
+void PlaneShader::SetColor(const base::Vec4& color) {
+  GL.Uniform4f(u_color_, color.x, color.y, color.z, color.w);
+}
+
+void PlaneShader::SetTone(const base::Vec4& tone) {
+  GL.Uniform4f(u_tone_, tone.x, tone.y, tone.z, tone.w);
 }
 
 }  // namespace gpu

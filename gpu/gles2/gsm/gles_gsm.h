@@ -25,6 +25,7 @@ class GlobalStateManager final {
     TransformShader transform;
     TexBltShader texblt;
     ColorShader color;
+    PlaneShader plane;
   };
 
   GlobalStateManager() = default;

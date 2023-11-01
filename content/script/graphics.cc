@@ -11,6 +11,8 @@ namespace content {
 Graphics::Graphics(base::WeakPtr<ui::Widget> window,
                    const base::Vec2i& initial_resolution)
     : window_(window), resolution_(initial_resolution) {
+  viewport_rect().rect = initial_resolution;
+
   BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
       &Graphics::InitScreenBufferInternal, weak_ptr_factory_.GetWeakPtr()));
 }
@@ -65,6 +67,9 @@ void Graphics::ResizeResolutionInternal() {
 
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
+
+  viewport_rect().rect = resolution_;
+  NotifyViewportChanged();
 }
 
 void Graphics::PresentScreenInternal() {

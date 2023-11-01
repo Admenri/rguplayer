@@ -76,7 +76,6 @@ class Bitmap : public base::RefCounted<Bitmap>, public Disposable {
  private:
   void InitBitmapInternal(
       const std::variant<base::Vec2i, SDL_Surface*>& initial_data);
-  void DestroyBitmapInternal();
   void StretchBltInternal(const base::Rect& dest_rect,
                           scoped_refptr<Bitmap> src_bitmap,
                           const base::Rect& src_rect, float opacity);

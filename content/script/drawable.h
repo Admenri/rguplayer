@@ -37,6 +37,7 @@ class DrawableParent {
   void NotifyViewportChanged();
 
   ViewportInfo& viewport_rect() { return viewport_rect_; }
+  base::LinkedList<Drawable>& link() { return drawables_; }
 
  private:
   ViewportInfo viewport_rect_;
@@ -77,6 +78,10 @@ class Drawable : public base::LinkNode<Drawable> {
     CheckDisposed();
 
     return visible_;
+  }
+
+  DrawableParent::ViewportInfo& parent_rect() {
+    return parent_->viewport_rect();
   }
 
  protected:

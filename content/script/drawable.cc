@@ -7,7 +7,7 @@
 namespace content {
 
 Drawable::Drawable(DrawableParent* parent, int z, bool visible)
-    : parent_(parent), z_(z), visible_(visible) {
+    : base::LinkNode<Drawable>(), parent_(parent), z_(z), visible_(visible) {
   parent_->InsertDrawable(this);
 }
 
@@ -46,9 +46,11 @@ DrawableParent::~DrawableParent() {
 }
 
 void DrawableParent::InsertDrawable(Drawable* drawable) {
-  for (auto it = drawables_.head(); it != drawables_.end(); it = it->next())
-    if (it->value()->z_ < drawable->z_)
-      return it->value()->InsertBefore(drawable);
+  for (auto it = drawables_.head(); it != drawables_.end(); it = it->next()) {
+    if (it->value()->z_ < drawable->z_) {
+      return drawables_.InsertBefore(it, drawable);
+    }
+  }
 
   drawables_.Append(drawable);
 }
@@ -56,7 +58,8 @@ void DrawableParent::InsertDrawable(Drawable* drawable) {
 void DrawableParent::CompositeChildren() {
   if (drawables_.empty()) return;
 
-  for (auto it = drawables_.head(); it != drawables_.end(); it = it->next()) {
+  for (auto it = drawables_.end()->previous(); it != drawables_.end();
+       it = it->previous()) {
     it->value()->Composite();
   }
 }

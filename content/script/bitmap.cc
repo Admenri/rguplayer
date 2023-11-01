@@ -241,6 +241,8 @@ SDL_Surface* Bitmap::SurfaceRequired() {
 }
 
 void Bitmap::OnObjectDisposed() {
+  weak_ptr_factory_.InvalidateWeakPtrs();
+
   SDL_FreeFormat(pixel_format_);
 
   if (surface_buffer_) {
@@ -248,8 +250,8 @@ void Bitmap::OnObjectDisposed() {
     surface_buffer_ = nullptr;
   }
 
-  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
-      &Bitmap::DestroyBitmapInternal, weak_ptr_factory_.GetWeakPtr()));
+  BindingRunner::Get()->GetRenderer()->PostTask(
+      base::BindOnce(&gpu::TextureFrameBuffer::Del, base::OwnedRef(tex_fbo_)));
 }
 
 void Bitmap::InitBitmapInternal(
@@ -272,8 +274,6 @@ void Bitmap::InitBitmapInternal(
 
   gpu::TextureFrameBuffer::LinkFrameBuffer(tex_fbo_);
 }
-
-void Bitmap::DestroyBitmapInternal() { gpu::TextureFrameBuffer::Del(tex_fbo_); }
 
 void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
                                 scoped_refptr<Bitmap> src_bitmap,
