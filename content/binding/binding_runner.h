@@ -7,6 +7,7 @@
 
 #include "base/worker/thread_worker.h"
 #include "content/script/graphics.h"
+#include "content/script/input.h"
 #include "ui/widget/widget.h"
 
 namespace content {
@@ -17,6 +18,7 @@ class BindingRunner final {
  public:
   struct BindingModules {
     std::unique_ptr<Graphics> graphics;
+    std::unique_ptr<Input> input;
   };
 
   struct InitParams {
@@ -38,7 +40,10 @@ class BindingRunner final {
   scoped_refptr<base::SequencedTaskRunner> GetTaskRunner();
 
   static BindingRunner* Get();
+
   Graphics* GetScreen() { return modules_.graphics.get(); }
+  Input* GetInput() { return modules_.input.get(); }
+
   scoped_refptr<base::SequencedTaskRunner> GetRenderer();
 
  private:

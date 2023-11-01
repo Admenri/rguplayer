@@ -10,9 +10,8 @@ EventRunner::EventRunner()
     : event_loop_(
           std::make_unique<base::RunLoop>(base::RunLoop::MessagePumpType::UI)),
       ui_runner_(event_loop_->task_runner()) {
-  base::RunLoop::BindEventDispatcher(
-      SDL_QUIT, base::BindRepeating(&EventRunner::EventFilter,
-                                    base::Passed(event_loop_->QuitClosure())));
+  dispatcher_binding_ = base::RunLoop::BindEventDispatcher(base::BindRepeating(
+      &EventRunner::EventFilter, weak_ptr_factory_.GetWeakPtr()));
 }
 
 EventRunner::~EventRunner() { event_loop_.reset(); }
@@ -23,10 +22,12 @@ scoped_refptr<base::SequencedTaskRunner> EventRunner::GetTaskRunner() {
   return event_loop_->task_runner();
 }
 
-void EventRunner::EventFilter(base::OnceClosure quit_closure,
-                              const SDL_Event& sdl_event) {
-  if (sdl_event.type == SDL_QUIT) {
-    std::move(quit_closure).Run();
+void EventRunner::EventFilter(const SDL_Event& sdl_event) {
+  switch (sdl_event.type) {
+    case SDL_QUIT:
+      return event_loop_->QuitWhenIdle();
+    default:
+      break;
   }
 }
 

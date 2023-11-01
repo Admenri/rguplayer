@@ -10,6 +10,7 @@
 #include <queue>
 
 #include "base/bind/callback.h"
+#include "base/bind/callback_list.h"
 #include "base/memory/lock.h"
 #include "base/memory/ref_counted.h"
 #include "base/third_party/concurrentqueue/blockingconcurrentqueue.h"
@@ -96,8 +97,7 @@ class SequencedTaskRunner : public base::RefCounted<SequencedTaskRunner> {
 
 class RunLoop {
  public:
-  static void BindEventDispatcher(
-      Uint32 event_type,
+  static base::CallbackListSubscription BindEventDispatcher(
       base::RepeatingCallback<void(const SDL_Event&)> callback);
   static bool IsInUIThread();
 

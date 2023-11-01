@@ -22,6 +22,8 @@ set(CONTENT_SRC
   script/flashable.h
   script/graphics.cc
   script/graphics.h
+  script/input.cc
+  script/input.h
   script/plane.cc
   script/plane.h
   script/sprite.cc

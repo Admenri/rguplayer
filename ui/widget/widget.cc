@@ -21,7 +21,11 @@ Widget* Widget::FromWindowID(uint32_t window_id) {
   return static_cast<Widget*>(SDL_GetWindowData(sdl_window, kNativeWidgetKey));
 }
 
-Widget::Widget() : window_(nullptr) {}
+Widget::Widget() : window_(nullptr) {
+  ui_dispatcher_binding_ =
+      base::RunLoop::BindEventDispatcher(base::BindRepeating(
+          &Widget::UIEventDispatcher, weak_ptr_factory_.GetWeakPtr()));
+}
 
 Widget::~Widget() {
   if (window_) SDL_DestroyWindow(window_);
@@ -75,6 +79,29 @@ base::Vec2i Widget::GetSize() {
   base::Vec2i size;
   SDL_GetWindowSize(window_, &size.x, &size.y);
   return size;
+}
+
+bool Widget::GetKeyState(::SDL_Scancode scancode) const {
+  return key_states_[scancode];
+}
+
+void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
+  uint32_t window_id = SDL_GetWindowID(window_);
+
+  switch (sdl_event.type) {
+    case SDL_KEYDOWN:
+      if (sdl_event.key.windowID == window_id) {
+        key_states_[sdl_event.key.keysym.scancode] = true;
+      }
+      break;
+    case SDL_KEYUP:
+      if (sdl_event.key.windowID == window_id) {
+        key_states_[sdl_event.key.keysym.scancode] = false;
+      }
+      break;
+    default:
+      break;
+  }
 }
 
 }  // namespace ui

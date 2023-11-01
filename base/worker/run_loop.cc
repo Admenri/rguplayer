@@ -13,8 +13,7 @@ namespace base {
 
 namespace {
 
-base::RepeatingCallback<void(const SDL_Event&)>
-    g_event_dispatcher[SDL_LASTEVENT];
+base::RepeatingCallbackList<void(const SDL_Event&)> g_event_dispatcher;
 
 std::thread::id g_ui_thread_id;
 
@@ -49,11 +48,9 @@ bool RunLoop::IsInUIThread() {
   return std::this_thread::get_id() == g_ui_thread_id;
 }
 
-void RunLoop::BindEventDispatcher(
-    Uint32 event_type,
+base::CallbackListSubscription RunLoop::BindEventDispatcher(
     base::RepeatingCallback<void(const SDL_Event&)> callback) {
-  SDL_EventState(event_type, SDL_ENABLE);
-  g_event_dispatcher[event_type] = callback;
+  return g_event_dispatcher.Add(std::move(callback));
 }
 
 RunLoop::RunLoop() { InitInternal(MessagePumpType::Worker); }
@@ -94,8 +91,8 @@ bool RunLoop::DoLoop() {
   if (type_ == MessagePumpType::UI) {
     SDL_Event sdl_event;
     if (SDL_PollEvent(&sdl_event)) {
-      if (!g_event_dispatcher[sdl_event.type].is_null()) {
-        g_event_dispatcher[sdl_event.type].Run(sdl_event);
+      if (!g_event_dispatcher.empty()) {
+        g_event_dispatcher.Notify(sdl_event);
         return true;
       }
     }

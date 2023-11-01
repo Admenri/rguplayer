@@ -12,7 +12,7 @@
 
 namespace content {
 
-class Graphics : public DrawableParent {
+class Graphics final : public DrawableParent {
  public:
   Graphics(base::WeakPtr<ui::Widget> window,
            const base::Vec2i& initial_resolution);

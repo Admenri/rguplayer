@@ -21,11 +21,13 @@ class EventRunner final {
   scoped_refptr<base::SequencedTaskRunner> GetTaskRunner();
 
  private:
-  static void EventFilter(base::OnceClosure quit_closure,
-                          const SDL_Event& sdl_event);
+  void EventFilter(const SDL_Event& sdl_event);
 
   std::unique_ptr<base::RunLoop> event_loop_;
   scoped_refptr<base::SequencedTaskRunner> ui_runner_;
+  base::CallbackListSubscription dispatcher_binding_;
+
+  base::WeakPtrFactory<EventRunner> weak_ptr_factory_{this};
 };
 
 }  // namespace content

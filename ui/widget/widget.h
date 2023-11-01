@@ -5,10 +5,13 @@
 #ifndef UI_WIDGET_WIDGET_H_
 #define UI_WIDGET_WIDGET_H_
 
+#include <SDL_keyboard.h>
+
 #include <memory>
 #include <optional>
 #include <string>
 
+#include "base/bind/callback_list.h"
 #include "base/math/math.h"
 #include "base/memory/weak_ptr.h"
 
@@ -74,10 +77,15 @@ class Widget {
 
   static Widget* FromWindowID(uint32_t window_id);
 
+  bool GetKeyState(::SDL_Scancode scancode) const;
+
  private:
-  static void UIEventDispatcher(const SDL_Event& sdl_event);
+  void UIEventDispatcher(const SDL_Event& sdl_event);
   SDL_Window* window_;
   std::unique_ptr<WidgetDelegate> delegate_;
+
+  base::CallbackListSubscription ui_dispatcher_binding_;
+  bool key_states_[SDL_NUM_SCANCODES];
 
   base::WeakPtrFactory<Widget> weak_ptr_factory_{this};
 };

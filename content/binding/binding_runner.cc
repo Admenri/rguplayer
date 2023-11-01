@@ -46,6 +46,13 @@ void BindingRunner::InitInternalModules(const InitParams& initial_param) {
 
   modules_.graphics = std::make_unique<Graphics>(initial_param.window,
                                                  initial_param.resolution);
+
+  modules_.input = std::make_unique<Input>(initial_param.window);
+
+  Input::KeySymMap key_binding;
+  key_binding[SDL_SCANCODE_RSHIFT] = "A";
+
+  modules_.input->ApplyKeySymBinding(key_binding);
 }
 
 void BindingRunner::BindingMain(InitParams initial_param) {
@@ -83,6 +90,15 @@ void BindingRunner::BindingMain(InitParams initial_param) {
     for (;;) {
       sp->GetTransform().SetRotation(++xxx);
       GetScreen()->Update();
+
+      GetInput()->Update();
+
+      if (GetInput()->IsTriggered("A")) LOG(INFO) << "ID Trigger.";
+
+      if (GetInput()->KeyTriggered(SDL_SCANCODE_F)) LOG(INFO) << "F Key Trigger.";
+      if (GetInput()->KeyRepeated(SDL_SCANCODE_F)) LOG(INFO) << "F Key Repeat.";
+
+      SDL_Delay(1000 / 60);
     }
   }
   LOG(INFO) << __FUNCTION__;
