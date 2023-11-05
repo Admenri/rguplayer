@@ -56,6 +56,15 @@ void DrawableParent::InsertDrawable(Drawable* drawable) {
   drawables_.Append(drawable);
 }
 
+void DrawableParent::NotifyPrepareComposite() {
+  if (drawables_.empty()) return;
+
+  for (auto it = drawables_.tail(); it != drawables_.end();
+       it = it->previous()) {
+    it->value()->BeforeComposite();
+  }
+}
+
 void DrawableParent::CompositeChildren() {
   if (drawables_.empty()) return;
 

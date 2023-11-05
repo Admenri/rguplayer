@@ -49,6 +49,7 @@ class Bitmap : public base::RefCounted<Bitmap>, public Disposable {
   void Clear();
   void ClearRect(const base::Rect& rect);
 
+  /* Sync Method */
   scoped_refptr<Color> GetPixel(int x, int y);
   void SetPixel(int x, int y, scoped_refptr<Color> color);
 
@@ -59,6 +60,7 @@ class Bitmap : public base::RefCounted<Bitmap>, public Disposable {
   void DrawText(const base::Rect& rect, const std::string& str, int align = 0);
   scoped_refptr<Rect> TextSize(const std::string& str);
 
+  /* Sync Method */
   SDL_Surface* SurfaceRequired();
 
   base::CallbackListSubscription AddBitmapObserver(

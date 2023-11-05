@@ -8,6 +8,8 @@ namespace content {
 
 Input::Input(base::WeakPtr<ui::Widget> input_device) : window_(input_device) {
   memset(key_states_.data(), 0, key_states_.size() * sizeof(KeyState));
+  memset(recent_key_states_.data(), 0,
+         recent_key_states_.size() * sizeof(KeyState));
 }
 
 Input::~Input() {}

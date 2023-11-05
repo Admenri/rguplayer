@@ -141,8 +141,15 @@ struct TextureFrameBuffer {
     return tfb;
   }
 
+  inline static void Del(TextureFrameBuffer& tfb) {
+    Texture::Del(tfb.tex);
+    FrameBuffer::Del(tfb.fbo);
+  }
+
   inline static void Alloc(TextureFrameBuffer& tfb, GLsizei width,
                            GLsizei height) {
+    if (width == tfb.width && height == tfb.height) return;
+
     Texture::Bind(tfb.tex);
     Texture::TexImage2D(width, height, GL_RGBA);
     tfb.width = width;
@@ -152,11 +159,6 @@ struct TextureFrameBuffer {
   inline static void LinkFrameBuffer(TextureFrameBuffer& tfb) {
     FrameBuffer::Bind(tfb.fbo);
     FrameBuffer::SetTexture(tfb.tex);
-  }
-
-  inline static void Del(TextureFrameBuffer& tfb) {
-    Texture::Del(tfb.tex);
-    FrameBuffer::Del(tfb.fbo);
   }
 };
 

@@ -31,6 +31,7 @@ class DrawableParent {
   void InsertDrawable(Drawable* drawable);
 
   /* Running in render thread */
+  void NotifyPrepareComposite();
   void CompositeChildren();
 
   /* Notify on binding thread */
@@ -85,6 +86,7 @@ class Drawable : public base::LinkNode<Drawable> {
   }
 
  protected:
+  virtual void BeforeComposite() {}
   virtual void Composite() = 0;
   virtual void CheckDisposed() const = 0;
   virtual void OnViewportRectChanged(

@@ -9,6 +9,7 @@
 #include "content/script/bitmap.h"
 #include "content/script/plane.h"
 #include "content/script/sprite.h"
+#include "content/script/window.h"
 
 namespace content {
 
@@ -86,6 +87,12 @@ void BindingRunner::BindingMain(InitParams initial_param) {
     scoped_refptr<Plane> pl = new Plane();
     pl->SetBitmap(new Bitmap("D:\\Desktop\\rgu\\app\\test\\bg.png"));
 
+    scoped_refptr<Window2> vx_win = new Window2(100, 100, 300, 300);
+    vx_win->SetWindowskin(
+        new Bitmap("D:\\Desktop\\rgu\\app\\test\\Window.png"));
+    vx_win->SetZ(100);
+    vx_win->GetTone()->Set(-68, -68, 68, 0);
+
     float xxx = 0;
     for (;;) {
       sp->GetTransform().SetRotation(++xxx);
@@ -93,10 +100,15 @@ void BindingRunner::BindingMain(InitParams initial_param) {
 
       GetInput()->Update();
 
+      vx_win->Move(100, 100, xxx, xxx);
+
       if (GetInput()->IsTriggered("A")) LOG(INFO) << "ID Trigger.";
 
-      if (GetInput()->KeyTriggered(SDL_SCANCODE_F)) LOG(INFO) << "F Key Trigger.";
+      if (GetInput()->KeyTriggered(SDL_SCANCODE_F))
+        LOG(INFO) << "F Key Trigger.";
       if (GetInput()->KeyRepeated(SDL_SCANCODE_F)) LOG(INFO) << "F Key Repeat.";
+
+      if (auto i = GetInput()->Dir8()) LOG(INFO) << "Dir8:" << i;
 
       SDL_Delay(1000 / 60);
     }

@@ -39,6 +39,7 @@ class BindingRunner final {
   void InitAndBootBinding(InitParams initial_param);
   scoped_refptr<base::SequencedTaskRunner> GetTaskRunner();
 
+  /* Get for binding thread, other thread will return null */
   static BindingRunner* Get();
 
   Graphics* GetScreen() { return modules_.graphics.get(); }

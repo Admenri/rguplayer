@@ -125,6 +125,15 @@ static void QuadSetTexCoordRect(V* vert, const base::RectF& texcoord) {
   vert[++i].texCoord = base::Vec2(texcoord.x, texcoord.y + texcoord.height);
 }
 
+template <typename V>
+static int QuadSetTexPosRect(V* vert, const base::RectF& texcoord,
+                             const base::RectF& pos) {
+  QuadSetTexCoordRect(vert, texcoord);
+  QuadSetPositionRect(vert, pos);
+
+  return 1;
+}
+
 struct Blt {
   static void BeginScreen(const base::Vec2i& resolution);
   static void BeginDraw(TextureFrameBuffer& dest_tfb);

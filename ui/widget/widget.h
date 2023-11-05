@@ -85,7 +85,7 @@ class Widget {
   std::unique_ptr<WidgetDelegate> delegate_;
 
   base::CallbackListSubscription ui_dispatcher_binding_;
-  bool key_states_[SDL_NUM_SCANCODES];
+  bool key_states_[SDL_NUM_SCANCODES]{0};
 
   base::WeakPtrFactory<Widget> weak_ptr_factory_{this};
 };

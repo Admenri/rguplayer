@@ -33,13 +33,16 @@ class Graphics final : public DrawableParent {
   void CompositeScreenInternal();
   void ResizeResolutionInternal();
 
-  void PresentScreenInternal();
+  void PresentScreenInternal(bool* paint_raiser);
 
   gpu::TextureFrameBuffer screen_buffer_[2];
   std::unique_ptr<gpu::QuadDrawable> screen_quad_;
 
   base::WeakPtr<ui::Widget> window_;
   base::Vec2i resolution_;
+
+  uint64_t frame_count_ = 0;
+  double frame_rate_ = 60.0;
 
   base::WeakPtrFactory<Graphics> weak_ptr_factory_{this};
 };

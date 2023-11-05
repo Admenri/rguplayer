@@ -30,10 +30,13 @@ set(CONTENT_SRC
   script/sprite.h
   script/table.cc
   script/table.h
+  script/tilequad.h
   script/utility.cc
   script/utility.h
   script/viewport.cc
   script/viewport.h
+  script/window.cc
+  script/window.h
 )
 
 add_library(core_content ${CONTENT_SRC})

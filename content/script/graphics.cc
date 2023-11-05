@@ -4,6 +4,8 @@
 
 #include "content/script/graphics.h"
 
+#include <SDL_timer.h>
+
 #include "content/scheduler/worker_cc.h"
 
 namespace content {
@@ -23,9 +25,22 @@ Graphics::~Graphics() {
 }
 
 void Graphics::Update() {
-  BindingRunner::Get()->GetRenderer()->PostTask(base::BindOnce(
-      &Graphics::PresentScreenInternal, weak_ptr_factory_.GetWeakPtr()));
-  BindingRunner::Get()->GetRenderer()->WaitForSync();
+  bool complete_flag = false;
+  BindingRunner::Get()->GetRenderer()->PostTask(
+      base::BindOnce(&Graphics::PresentScreenInternal,
+                     weak_ptr_factory_.GetWeakPtr(), &complete_flag));
+
+  /* Delay for desire frame rate */
+  SDL_Delay(1000 / frame_rate_);
+
+  /* If not complete drawing */
+  if (!complete_flag) {
+    /* Drawtime > expect drawtime, sync for draw complete */
+    BindingRunner::Get()->GetRenderer()->WaitForSync();
+  }
+
+  /* Increase frame render count */
+  ++frame_count_;
 }
 
 void Graphics::InitScreenBufferInternal() {
@@ -50,6 +65,9 @@ void Graphics::DestroyBufferInternal() {
 }
 
 void Graphics::CompositeScreenInternal() {
+  /* Prepare composite notify */
+  DrawableParent::NotifyPrepareComposite();
+
   gpu::FrameBuffer::Bind(screen_buffer_[0].fbo);
   gpu::GSM.states.clear_color.Set(base::Vec4());
   gpu::FrameBuffer::Clear();
@@ -72,7 +90,7 @@ void Graphics::ResizeResolutionInternal() {
   NotifyViewportChanged();
 }
 
-void Graphics::PresentScreenInternal() {
+void Graphics::PresentScreenInternal(bool* paint_raiser) {
   CompositeScreenInternal();
 
   gpu::Blt::BeginScreen(resolution_);
@@ -85,6 +103,7 @@ void Graphics::PresentScreenInternal() {
   gpu::Blt::EndDraw(resolution_, target_rect);
 
   SDL_GL_SwapWindow(window_->AsSDLWindow());
+  *paint_raiser = true;
 }
 
 }  // namespace content
