@@ -34,7 +34,7 @@ int main() {
   win->Init(std::move(params));
 
   std::unique_ptr<content::WorkerTreeHost> engine =
-      std::make_unique<content::WorkerTreeHost>(false /* Sync Worker */);
+      std::make_unique<content::WorkerTreeHost>(false /* Render Sync Worker */);
 
   content::RenderRunner::InitParams render_params;
   render_params.ogl_window = win->AsWeakPtr();

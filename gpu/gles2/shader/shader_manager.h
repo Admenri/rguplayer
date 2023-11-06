@@ -65,6 +65,22 @@ class BaseShader : public GLES2ShaderBase {
   void SetTextureSize(const base::Vec2& tex_size);
   void SetTransOffset(const base::Vec2& offset);
   void SetTexture(GLID<Texture> tex);
+  void SetOpacity(float opacity);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transOffset_;
+  GLint u_texture_;
+  GLint u_opacity_;
+};
+
+class BaseAlphaShader : public GLES2ShaderBase {
+ public:
+  BaseAlphaShader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetTexture(GLID<Texture> tex);
 
  private:
   GLint u_texSize_;
@@ -72,18 +88,32 @@ class BaseShader : public GLES2ShaderBase {
   GLint u_texture_;
 };
 
-class TransformShader : public GLES2ShaderBase {
+class SpriteShader : public GLES2ShaderBase {
  public:
-  TransformShader();
+  SpriteShader();
 
   void SetTextureSize(const base::Vec2& tex_size);
   void SetTransformMatrix(const float* mat4);
   void SetTexture(GLID<Texture> tex);
 
+  void SetOpacity(float opacity);
+  void SetColor(const base::Vec4& color);
+  void SetTone(const base::Vec4& tone);
+
+  void SetBushDepth(float depth);
+  void SetBushOpacity(float depthOpacity);
+
  private:
   GLint u_texSize_;
   GLint u_transformMat_;
   GLint u_texture_;
+
+  GLint u_color_;
+  GLint u_tone_;
+  GLint u_opacity_;
+
+  GLint u_bushDepth_;
+  GLint u_bushOpacity_;
 };
 
 class TexBltShader : public GLES2ShaderBase {

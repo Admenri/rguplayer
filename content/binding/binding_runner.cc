@@ -23,10 +23,12 @@ BindingRunner::~BindingRunner() {
   binding_worker_->task_runner()->WaitForSync();
 }
 
-void BindingRunner::InitAndBootBinding(InitParams initial_param) {
+void BindingRunner::InitThread() {
   binding_worker_->Start(base::RunLoop::MessagePumpType::Worker);
   binding_worker_->WaitUntilStart();
+}
 
+void BindingRunner::RunMainAsync(InitParams initial_param) {
   binding_worker_->task_runner()->PostTask(
       base::BindOnce(&BindingRunner::BindingMain,
                      weak_ptr_factory_.GetWeakPtr(), std::move(initial_param)));
@@ -50,10 +52,10 @@ void BindingRunner::InitInternalModules(const InitParams& initial_param) {
 
   modules_.input = std::make_unique<Input>(initial_param.window);
 
-  Input::KeySymMap key_binding;
-  key_binding[SDL_SCANCODE_RSHIFT] = "A";
+  std::unique_ptr<Input::KeySymMap> key_binding(new Input::KeySymMap);
+  (*key_binding)[SDL_SCANCODE_RSHIFT] = "A";
 
-  modules_.input->ApplyKeySymBinding(key_binding);
+  modules_.input->ApplyKeySymBinding(std::move(*key_binding));
 }
 
 void BindingRunner::BindingMain(InitParams initial_param) {
@@ -84,6 +86,12 @@ void BindingRunner::BindingMain(InitParams initial_param) {
     sp->GetTransform().SetPosition(
         base::Vec2i(GetScreen()->GetWidth() / 2, GetScreen()->GetHeight() / 2));
 
+    sp->SetBushDepth(100);
+    sp->SetBushOpacity(128);
+
+    sp->SetWaveAmp(20);
+    sp->GetSrcRect()->Set(base::Rect(100, 100, 100, 100));
+
     scoped_refptr<Plane> pl = new Plane();
     pl->SetBitmap(new Bitmap("D:\\Desktop\\rgu\\app\\test\\bg.png"));
 
@@ -92,15 +100,25 @@ void BindingRunner::BindingMain(InitParams initial_param) {
         new Bitmap("D:\\Desktop\\rgu\\app\\test\\Window.png"));
     vx_win->SetZ(100);
     vx_win->GetTone()->Set(-68, -68, 68, 0);
+    vx_win->SetPause(true);
+
+    vx_win->SetContents(bmp);
+
+    vx_win->SetActive(true);
+    vx_win->SetCursorRect(new Rect(base::Rect(110, 110, 100, 100)));
+
+    vx_win->SetArrowsVisible(true);
 
     float xxx = 0;
     for (;;) {
+      sp->Update();
       sp->GetTransform().SetRotation(++xxx);
+
       GetScreen()->Update();
 
       GetInput()->Update();
 
-      vx_win->Move(100, 100, xxx, xxx);
+      vx_win->Update();
 
       if (GetInput()->IsTriggered("A")) LOG(INFO) << "ID Trigger.";
 
@@ -109,8 +127,6 @@ void BindingRunner::BindingMain(InitParams initial_param) {
       if (GetInput()->KeyRepeated(SDL_SCANCODE_F)) LOG(INFO) << "F Key Repeat.";
 
       if (auto i = GetInput()->Dir8()) LOG(INFO) << "Dir8:" << i;
-
-      SDL_Delay(1000 / 60);
     }
   }
   LOG(INFO) << __FUNCTION__;

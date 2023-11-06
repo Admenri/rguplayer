@@ -11,6 +11,7 @@
 #include "content/script/disposable.h"
 #include "content/script/flashable.h"
 #include "content/script/viewport.h"
+#include "gpu/gles2/draw/quad_array.h"
 
 namespace content {
 
@@ -32,20 +33,94 @@ class Sprite : public base::RefCounted<Sprite>,
   scoped_refptr<Bitmap> GetBitmap() { return bitmap_; }
 
   void SetSrcRect(scoped_refptr<Rect> rect);
-  scoped_refptr<Rect> GetRect() { return src_rect_; }
+  scoped_refptr<Rect> GetSrcRect() { return src_rect_; }
 
   void SetMirror(bool mirror);
   bool GetMirror() const { return mirror_; }
 
-  void SetOpacity(int opacity) { opacity_ = opacity; }
+  void SetOpacity(int opacity) {
+    CheckIsDisposed();
+
+    opacity = std::clamp(opacity, 0, 255);
+
+    opacity_ = opacity;
+  }
+
   int GetOpacity() const { return opacity_; }
 
-  void SetBlendMode(gpu::GLBlendType blend_type) { blend_mode_ = blend_type; }
+  void SetBlendMode(gpu::GLBlendType blend_type) {
+    CheckIsDisposed();
+    blend_mode_ = blend_type;
+  }
+
   gpu::GLBlendType GetBlendMode() const { return blend_mode_; }
 
+  /* Bush depth & opacity */
+  void SetBushDepth(int depth) {
+    CheckIsDisposed();
+    bush_.depth_ = depth;
+  }
+
+  int GetBushDepth() {
+    CheckIsDisposed();
+    return bush_.depth_;
+  }
+
+  void SetBushOpacity(int bushOpacity) {
+    CheckIsDisposed();
+    bush_.opacity_ = bushOpacity;
+  }
+
+  int GetBushOpacity() {
+    CheckIsDisposed();
+    return bush_.opacity_;
+  }
+
+  /* Wave emit */
+  void SetWaveAmp(int wave_amp) {
+    CheckIsDisposed();
+    wave_.amp_ = wave_amp;
+  }
+
+  int GetWaveAmp() {
+    CheckIsDisposed();
+    return wave_.amp_;
+  }
+
+  void SetWaveLength(int length) {
+    CheckIsDisposed();
+    wave_.length_ = length;
+  }
+
+  int GetWaveLength() {
+    CheckIsDisposed();
+    return wave_.length_;
+  }
+
+  void SetWaveSpeed(int speed) {
+    CheckIsDisposed();
+    wave_.speed_ = speed;
+  }
+
+  int GetWaveSpeed() {
+    CheckIsDisposed();
+    return wave_.speed_;
+  }
+
+  void SetWavePhase(float phase) {
+    CheckIsDisposed();
+    wave_.phase_ = phase;
+  }
+
+  float GetWavePhase() {
+    CheckIsDisposed();
+    return wave_.phase_;
+  }
+
+  /* Update wave flash */
   void Update() override;
 
-  /* Non-threaded safe, only for testing */
+  /* Non-threaded safe */
   base::TransformMatrix& GetTransform() {
     CheckIsDisposed();
 
@@ -59,6 +134,7 @@ class Sprite : public base::RefCounted<Sprite>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Sprite"; }
 
+  void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override { CheckIsDisposed(); }
   void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;
@@ -67,22 +143,28 @@ class Sprite : public base::RefCounted<Sprite>,
   void AsyncSrcRectChangedInternal();
   void OnViewportRectChangedInternal(const DrawableParent::ViewportInfo& rect);
 
+  void UpdateWaveQuadsInternal();
+
   scoped_refptr<Bitmap> bitmap_;
   scoped_refptr<Rect> src_rect_;
   base::TransformMatrix transform_;
 
   struct {
-    int amp = 0;
-    int length = 0;
-    int speed = 0;
-    int phase = 0;
+    bool active_ = false;
+
+    int amp_ = 0;
+    int length_ = 180;
+    int speed_ = 360;
+    float phase_ = 0.0f;
+
+    bool need_update_ = true;
   } wave_;
 
   bool mirror_ = false;
 
   struct {
-    int depth = 0;
-    int opacity = 0;
+    int depth_ = 0;
+    int opacity_ = 128;
   } bush_;
 
   int opacity_ = 255;
@@ -93,6 +175,7 @@ class Sprite : public base::RefCounted<Sprite>,
   scoped_refptr<Tone> tone_;
 
   std::unique_ptr<gpu::QuadDrawable> quad_;
+  std::unique_ptr<gpu::QuadDrawableArray<gpu::CommonVertex>> wave_quads_;
 
   base::CallbackListSubscription src_rect_observer_;
 

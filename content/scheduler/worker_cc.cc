@@ -18,9 +18,17 @@ WorkerTreeHost::~WorkerTreeHost() {
 
 void WorkerTreeHost::Run(RenderRunner::InitParams graph_params,
                          BindingRunner::InitParams script_params) {
-  render_runner_->InitGLContext(std::move(graph_params));
-  binding_runner_->InitAndBootBinding(std::move(script_params));
+  binding_runner_->InitThread();
 
+  /* Run renderer init on binding thread if sync render worker */
+  binding_runner_->GetTaskRunner()->PostTask(base::BindOnce(
+      &RenderRunner::InitGLContext, base::Unretained(render_runner_.get()),
+      std::move(graph_params)));
+
+  /* Execute binding init after other worker init */
+  binding_runner_->RunMainAsync(std::move(script_params));
+
+  /* Launch event loop on main thread for message pump */
   event_runner_->RunMain();
 }
 

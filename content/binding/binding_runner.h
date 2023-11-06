@@ -36,7 +36,8 @@ class BindingRunner final {
   BindingRunner(const BindingRunner&) = delete;
   BindingRunner& operator=(const BindingRunner&) = delete;
 
-  void InitAndBootBinding(InitParams initial_param);
+  void InitThread();
+  void RunMainAsync(InitParams initial_param);
   scoped_refptr<base::SequencedTaskRunner> GetTaskRunner();
 
   /* Get for binding thread, other thread will return null */

@@ -4,7 +4,6 @@
 
 #include "gpu/gles2/draw/quad_drawable.h"
 
-#include <algorithm>
 #include <array>
 
 namespace gpu {
@@ -97,10 +96,17 @@ void QuadDrawable::SetTexCoordRect(const base::RectF& texcoord) {
 }
 
 void QuadDrawable::SetColor(int index, const base::Vec4& color) {
+  if (index == -1) {
+    int i = -1;
+    vertex_[++i].color = color;
+    vertex_[++i].color = color;
+    vertex_[++i].color = color;
+    vertex_[++i].color = color;
+    return;
+  }
+
   CommonVertex& vert = vertex_[std::clamp(index, 0, 3)];
-
   if (vert.color == color) return;
-
   vert.color = color;
   need_update_ = true;
 }

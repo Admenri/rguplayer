@@ -1,3 +1,7 @@
+// Copyright 2023 Admenri.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #ifndef CONTENT_SCRIPT_WINDOW_H_
 #define CONTENT_SCRIPT_WINDOW_H_
 
@@ -40,9 +44,6 @@ class Window2 : public base::RefCounted<Window2>,
 
   bool IsActive() const { return active_; }
   void SetActive(bool active);
-
-  bool IsVisible() const { return visible_; }
-  void SetVisible(bool visible);
 
   bool IsArrowsVisible() const { return arrows_visible_; }
   void SetArrowsVisible(bool arrows_visible);
@@ -103,7 +104,18 @@ class Window2 : public base::RefCounted<Window2>,
   void CalcBaseQuadArrayInternal();
   void UpdateBaseTextureInternal();
   void UpdateBaseQuadInternal();
+  void CalcArrowsQuadArrayInternal();
+  void UpdateInternal();
+
   void ToneChangedInternal();
+  void CursorRectChangedInternal();
+
+  void UpdateCursorStepInternal();
+  void UpdatePauseStepInternal();
+  void UpdateCursorQuadsInternal();
+
+  void UpdateContentsQuadInternal();
+  void UpdateContentsOpacityInternal();
 
   scoped_refptr<Bitmap> windowskin_;
   scoped_refptr<Bitmap> contents_;
@@ -130,15 +142,39 @@ class Window2 : public base::RefCounted<Window2>,
   struct {
     std::unique_ptr<gpu::QuadDrawableArray<gpu::CommonVertex>> quad_array_;
 
-    size_t bg_tile_count_;
-    size_t frame_tile_count_;
+    size_t bg_tile_count_ = 0;
+    size_t frame_tile_count_ = 0;
     gpu::TextureFrameBuffer tfb_;
 
     bool base_tex_updated_ = true;
   } base_layer_;
 
+  struct {
+    std::unique_ptr<gpu::QuadDrawableArray<gpu::CommonVertex>> arrows_quads_;
+    size_t quad_count_ = 0;
+    bool quad_need_update_ = true;
+
+    gpu::CommonVertex* pause_vertex_;
+    bool need_update_ = true;
+
+    int pause_quad_index_ = 0;
+    int pause_alpha_index_ = 0;
+  } arrows_;
+
+  struct {
+    std::unique_ptr<gpu::QuadDrawableArray<gpu::CommonVertex>> cursor_quads_;
+    bool need_update_ = true;
+    bool need_cursor_update_ = true;
+
+    int cursor_alpha_index_ = 0;
+  } cursor_;
+
+  base::Rect padding_rect_;
+
   std::unique_ptr<gpu::QuadDrawable> base_quad_;
   bool base_quad_updated_ = true;
+
+  std::unique_ptr<gpu::QuadDrawable> content_quad_;
 
   base::WeakPtrFactory<Window2> weak_ptr_factory_{this};
 };

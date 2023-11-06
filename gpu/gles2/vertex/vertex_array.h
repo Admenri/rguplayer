@@ -17,7 +17,9 @@ namespace gpu {
 struct CommonVertex {
   base::Vec2 position;
   base::Vec2 texCoord;
-  base::Vec4 color;
+
+  /* Default color for alpha composite */
+  base::Vec4 color{0, 0, 0, 1.0f};
 };
 
 struct VertexItemAttribute {

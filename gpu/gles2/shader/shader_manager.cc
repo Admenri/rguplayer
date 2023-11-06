@@ -15,9 +15,12 @@ namespace shader {
 
 #include "gpu/gles2/shader/shader_source/base.frag.xxd"
 #include "gpu/gles2/shader/shader_source/base.vert.xxd"
+#include "gpu/gles2/shader/shader_source/basealpha.frag.xxd"
+#include "gpu/gles2/shader/shader_source/basealpha.vert.xxd"
 #include "gpu/gles2/shader/shader_source/basecolor.frag.xxd"
 #include "gpu/gles2/shader/shader_source/basecolor.vert.xxd"
 #include "gpu/gles2/shader/shader_source/plane.frag.xxd"
+#include "gpu/gles2/shader/shader_source/sprite.frag.xxd"
 #include "gpu/gles2/shader/shader_source/texblt.frag.xxd"
 #include "gpu/gles2/shader/shader_source/transform.vert.xxd"
 
@@ -155,6 +158,7 @@ BaseShader::BaseShader() {
   u_texSize_ = GL.GetUniformLocation(program_, "u_texSize");
   u_transOffset_ = GL.GetUniformLocation(program_, "u_transOffset");
   u_texture_ = GL.GetUniformLocation(program_, "u_texture");
+  u_opacity_ = GL.GetUniformLocation(program_, "u_opacity");
 }
 
 void BaseShader::SetTextureSize(const base::Vec2& tex_size) {
@@ -169,26 +173,79 @@ void BaseShader::SetTexture(GLID<Texture> tex) {
   GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
 }
 
-TransformShader::TransformShader() {
+void BaseShader::SetOpacity(float opacity) {
+  GL.Uniform1f(u_opacity_, opacity);
+}
+
+BaseAlphaShader::BaseAlphaShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::basealpha_vert, shader::basealpha_vert_len),
+      shader::FromRawData(shader::basealpha_frag, shader::basealpha_frag_len));
+
+  u_texSize_ = GL.GetUniformLocation(program_, "u_texSize");
+  u_transOffset_ = GL.GetUniformLocation(program_, "u_transOffset");
+  u_texture_ = GL.GetUniformLocation(program_, "u_texture");
+}
+
+void BaseAlphaShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void BaseAlphaShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void BaseAlphaShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+SpriteShader::SpriteShader() {
   GLES2ShaderBase::Setup(
       shader::FromRawData(shader::transform_vert, shader::transform_vert_len),
-      shader::FromRawData(shader::base_frag, shader::base_frag_len));
+      shader::FromRawData(shader::sprite_frag, shader::sprite_frag_len));
 
   u_texSize_ = GL.GetUniformLocation(program_, "u_texSize");
   u_transformMat_ = GL.GetUniformLocation(program_, "u_transformMat");
   u_texture_ = GL.GetUniformLocation(program_, "u_texture");
+
+  u_opacity_ = GL.GetUniformLocation(program_, "u_opacity");
+  u_color_ = GL.GetUniformLocation(program_, "u_color");
+  u_tone_ = GL.GetUniformLocation(program_, "u_tone");
+
+  u_bushDepth_ = GL.GetUniformLocation(program_, "u_bushDepth");
+  u_bushOpacity_ = GL.GetUniformLocation(program_, "u_bushOpacity");
 }
 
-void TransformShader::SetTextureSize(const base::Vec2& tex_size) {
+void SpriteShader::SetTextureSize(const base::Vec2& tex_size) {
   GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
 }
 
-void TransformShader::SetTransformMatrix(const float* mat4) {
+void SpriteShader::SetTransformMatrix(const float* mat4) {
   GL.UniformMatrix4fv(u_transformMat_, 1, GL_FALSE, mat4);
 }
 
-void TransformShader::SetTexture(GLID<Texture> tex) {
+void SpriteShader::SetTexture(GLID<Texture> tex) {
   GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+void SpriteShader::SetOpacity(float opacity) {
+  GL.Uniform1f(u_opacity_, opacity);
+}
+
+void SpriteShader::SetColor(const base::Vec4& color) {
+  GL.Uniform4f(u_color_, color.x, color.y, color.z, color.w);
+}
+
+void SpriteShader::SetTone(const base::Vec4& tone) {
+  GL.Uniform4f(u_tone_, tone.x, tone.y, tone.z, tone.w);
+}
+
+void SpriteShader::SetBushDepth(float bushDepth) {
+  GL.Uniform1f(u_bushDepth_, bushDepth);
+}
+
+void SpriteShader::SetBushOpacity(float bushOpacity) {
+  GL.Uniform1f(u_bushOpacity_, bushOpacity);
 }
 
 TexBltShader::TexBltShader() {

@@ -111,6 +111,7 @@ class Plane : public base::RefCounted<Plane>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Plane"; }
 
+  void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const { CheckIsDisposed(); }
   void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;

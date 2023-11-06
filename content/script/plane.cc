@@ -79,14 +79,16 @@ void Plane::OnObjectDisposed() {
   BindingRunner::Get()->GetRenderer()->DeleteSoon(std::move(quad_array_));
 }
 
-void Plane::Composite() {
-  if (!opacity_) return;
-  if (!bitmap_ || bitmap_->IsDisposed()) return;
-
+void Plane::BeforeComposite() {
   if (quad_array_dirty_) {
     UpdateQuadArray();
     quad_array_dirty_ = false;
   }
+}
+
+void Plane::Composite() {
+  if (!opacity_) return;
+  if (!bitmap_ || bitmap_->IsDisposed()) return;
 
   auto& shader = gpu::GSM.shaders->plane;
 

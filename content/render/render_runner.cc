@@ -34,11 +34,11 @@ scoped_refptr<base::SequencedTaskRunner> RenderRunner::GetTaskRunner() {
 
 void RenderRunner::CreateRenderContextInternal(InitParams renderer_settings) {
   glctx_ = SDL_GL_CreateContext(renderer_settings.ogl_window->AsSDLWindow());
+  SDL_GL_SetSwapInterval(0);
 
   gpu::GL.InitContext();
   gpu::GSM.InitStates();
 
-  SDL_GL_SetSwapInterval(0);
   gpu::GL.Clear(GL_COLOR_BUFFER_BIT);
   SDL_GL_SwapWindow(renderer_settings.ogl_window->AsSDLWindow());
 }

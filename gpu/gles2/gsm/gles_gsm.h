@@ -22,10 +22,11 @@ class GlobalStateManager final {
  public:
   struct GLShaderWare {
     BaseShader base;
-    TransformShader transform;
+    SpriteShader sprite;
     TexBltShader texblt;
     ColorShader color;
     PlaneShader plane;
+    BaseAlphaShader base_alpha;
   };
 
   GlobalStateManager() = default;

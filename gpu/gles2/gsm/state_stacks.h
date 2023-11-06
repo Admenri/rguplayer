@@ -38,6 +38,8 @@ class StateStack {
     Set(value);
   }
 
+  inline void PushOnly() { stack_.push(current_); }
+
   inline void Pop() {
     Set(stack_.top());
     stack_.pop();
@@ -71,6 +73,8 @@ class GLScissorTest : public StateStack<bool> {
 class GLScissorRegion : public StateStack<base::Rect> {
  public:
   void OnSetState(const base::Rect& value) override;
+
+  void SetIntersect(const base::Rect& value);
 };
 
 class GLBlend : public StateStack<bool> {

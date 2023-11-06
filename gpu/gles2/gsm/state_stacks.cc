@@ -20,6 +20,18 @@ void GLScissorRegion::OnSetState(const base::Rect& value) {
   GL.Scissor(value.x, value.y, value.width, value.height);
 }
 
+void GLScissorRegion::SetIntersect(const base::Rect& value) {
+  const base::Rect& current = Current();
+
+  SDL_Rect r1 = {current.x, current.y, current.width, current.height};
+  SDL_Rect r2 = {value.x, value.y, value.width, value.height};
+
+  SDL_Rect result;
+  if (!SDL_IntersectRect(&r1, &r2, &result)) result.w = result.h = 0;
+
+  Set(base::Rect(result.x, result.y, result.w, result.h));
+}
+
 void GLBlend::OnSetState(const bool& value) {
   value ? GL.Enable(GL_BLEND) : GL.Disable(GL_BLEND);
 }

@@ -44,7 +44,12 @@ void Sprite::SetMirror(bool mirror) {
   OnSrcRectChangedInternal();
 }
 
-void Sprite::Update() { Flashable::Update(); }
+void Sprite::Update() {
+  Flashable::Update();
+
+  wave_.phase_ += wave_.speed_ / 180.0f;
+  wave_.need_update_ = true;
+}
 
 void Sprite::InitAttributeInternal() {
   src_rect_ = new Rect();
@@ -64,12 +69,21 @@ void Sprite::InitAttributeInternal() {
 
 void Sprite::InitSpriteInternal() {
   quad_ = std::make_unique<gpu::QuadDrawable>();
+  wave_quads_ = std::make_unique<gpu::QuadDrawableArray<gpu::CommonVertex>>();
 }
 
 void Sprite::OnObjectDisposed() {
   weak_ptr_factory_.InvalidateWeakPtrs();
 
   BindingRunner::Get()->GetRenderer()->DeleteSoon(std::move(quad_));
+  BindingRunner::Get()->GetRenderer()->DeleteSoon(std::move(wave_quads_));
+}
+
+void Sprite::BeforeComposite() {
+  if (wave_.need_update_) {
+    UpdateWaveQuadsInternal();
+    wave_.need_update_ = false;
+  }
 }
 
 void Sprite::Composite() {
@@ -78,7 +92,7 @@ void Sprite::Composite() {
   if (!opacity_) return;
   if (!bitmap_ || bitmap_->IsDisposed()) return;
 
-  auto& shader = gpu::GSM.shaders->transform;
+  auto& shader = gpu::GSM.shaders->sprite;
 
   shader.Bind();
   shader.SetProjectionMatrix(gpu::GSM.states.viewport.Current().Size());
@@ -87,10 +101,27 @@ void Sprite::Composite() {
   auto& bitmap_size = bitmap_->AsGLType();
   shader.SetTexture(bitmap_size.tex);
   shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
+  shader.SetOpacity(opacity_ / 255.0f);
+
+  const base::Vec4 color = color_->AsBase();
+  shader.SetColor(
+      (Flashable::IsFlashing() && Flashable::GetFlashColor().w > color.w)
+          ? Flashable::GetFlashColor()
+          : color);
+
+  shader.SetTone(tone_->AsBase());
+  shader.SetBushDepth(src_rect_->GetY() + src_rect_->GetHeight() -
+                      bush_.depth_);
+  shader.SetBushOpacity(bush_.opacity_ / 255.0f);
 
   gpu::GSM.states.blend.Push(true);
   gpu::GSM.states.blend_func.Push(blend_mode_);
-  quad_->Draw();
+
+  if (wave_.active_)
+    wave_quads_->Draw();
+  else
+    quad_->Draw();
+
   gpu::GSM.states.blend_func.Pop();
   gpu::GSM.states.blend.Pop();
 }
@@ -121,6 +152,70 @@ void Sprite::AsyncSrcRectChangedInternal() {
 void Sprite::OnViewportRectChangedInternal(
     const DrawableParent::ViewportInfo& rect) {
   transform_.SetGlobalOffset(rect.GetRealOffset());
+}
+
+void Sprite::UpdateWaveQuadsInternal() {
+  // Wave from other runtime
+  // TODO: [deprecated] enhance wave process
+  auto emitWaveChunk = [this](gpu::CommonVertex*& vert, float phase, int width,
+                              float zoomY, int chunkY, int chunkLength) {
+    float wavePos = phase + (chunkY / (float)wave_.length_) * (float)(M_PI * 2);
+    float chunkX = std::sin(wavePos) * wave_.amp_;
+
+    base::Rect tex(src_rect_->GetX(), src_rect_->GetY() + chunkY / zoomY, width,
+                   chunkLength / zoomY);
+    base::Rect pos = tex;
+    pos.x = chunkX;
+
+    gpu::QuadSetTexPosRect(vert, tex, pos);
+    vert += 4;
+  };
+
+  if (!wave_.amp_) {
+    wave_.active_ = false;
+    return;
+  }
+
+  wave_.active_ = true;
+
+  int width = src_rect_->GetWidth();
+  int height = src_rect_->GetHeight();
+  float zoomY = transform_.GetScale().y;
+
+  if (wave_.amp_ < -(width / 2)) {
+    wave_quads_->Resize(0);
+    wave_quads_->Update();
+
+    return;
+  }
+
+  /* The length of the sprite as it appears on screen */
+  int visibleLength = (int)(height * zoomY);
+
+  /* First chunk length (aligned to 8 pixel boundary */
+  int firstLength = ((int)transform_.GetPosition().y) % 8;
+
+  /* Amount of full 8 pixel chunks in the middle */
+  int chunks = (visibleLength - firstLength) / 8;
+
+  /* Final chunk length */
+  int lastLength = (visibleLength - firstLength) % 8;
+
+  wave_quads_->Resize(!!firstLength + chunks + !!lastLength);
+  gpu::CommonVertex* vert = &wave_quads_->vertices()[0];
+
+  float phase = (wave_.phase_ * (float)M_PI) / 180.0f;
+
+  if (firstLength > 0) emitWaveChunk(vert, phase, width, zoomY, 0, firstLength);
+
+  for (int i = 0; i < chunks; ++i)
+    emitWaveChunk(vert, phase, width, zoomY, firstLength + i * 8, 8);
+
+  if (lastLength > 0)
+    emitWaveChunk(vert, phase, width, zoomY, firstLength + chunks * 8,
+                  lastLength);
+
+  wave_quads_->Update();
 }
 
 }  // namespace content

@@ -38,6 +38,12 @@ class Vec2i {
   Vec2i operator-(const Vec2i& value) {
     return Vec2i(x - value.x, y - value.y);
   }
+  Vec2i operator*(const Vec2i& value) {
+    return Vec2i(x * value.x, y * value.y);
+  }
+  Vec2i operator/(const Vec2i& value) {
+    return Vec2i(x / value.x, y / value.y);
+  }
 
  public:
   int x, y;
@@ -56,6 +62,8 @@ class Vec2 {
   bool operator==(const Vec2& other) { return other.x == x && other.y == y; }
   Vec2 operator+(const Vec2& value) { return Vec2(x + value.x, y + value.y); }
   Vec2 operator-(const Vec2& value) { return Vec2(x - value.x, y - value.y); }
+  Vec2 operator*(const Vec2& value) { return Vec2(x * value.x, y * value.y); }
+  Vec2 operator/(const Vec2& value) { return Vec2(x / value.x, y / value.y); }
 
  public:
   float x, y;
@@ -79,6 +87,14 @@ class Vec3i {
 
   Vec3i operator-(const Vec3i& value) {
     return Vec3i(x - value.x, y - value.y, z - value.z);
+  }
+
+  Vec3i operator*(const Vec3i& value) {
+    return Vec3i(x * value.x, y * value.y, z * value.z);
+  }
+
+  Vec3i operator/(const Vec3i& value) {
+    return Vec3i(x / value.x, y / value.y, z / value.z);
   }
 
  public:
@@ -109,6 +125,14 @@ class Vec3 {
     return Vec3(x - value.x, y - value.y, z - value.z);
   }
 
+  Vec3 operator*(const Vec3& value) {
+    return Vec3(x * value.x, y * value.y, z * value.z);
+  }
+
+  Vec3 operator/(const Vec3& value) {
+    return Vec3(x / value.x, y / value.y, z / value.z);
+  }
+
  public:
   float x, y, z;
 };
@@ -131,6 +155,14 @@ class Vec4i {
 
   Vec4i operator-(const Vec4i& value) {
     return Vec4i(x - value.x, y - value.y, z - value.z, w - value.w);
+  }
+
+  Vec4i operator*(const Vec4i& value) {
+    return Vec4i(x * value.x, y * value.y, z * value.z, w * value.w);
+  }
+
+  Vec4i operator/(const Vec4i& value) {
+    return Vec4i(x / value.x, y / value.y, z / value.z, w / value.w);
   }
 
  public:
@@ -160,6 +192,14 @@ class Vec4 {
 
   Vec4 operator-(const Vec4& value) {
     return Vec4(x - value.x, y - value.y, z - value.z, w - value.w);
+  }
+
+  Vec4 operator*(const Vec4& value) {
+    return Vec4(x * value.x, y * value.y, z * value.z, w * value.w);
+  }
+
+  Vec4 operator/(const Vec4& value) {
+    return Vec4(x / value.x, y / value.y, z / value.z, w / value.w);
   }
 
  public:

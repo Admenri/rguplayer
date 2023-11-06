@@ -25,13 +25,15 @@ Graphics::~Graphics() {
 }
 
 void Graphics::Update() {
+  // TODO: fps manager required
+
   bool complete_flag = false;
   BindingRunner::Get()->GetRenderer()->PostTask(
       base::BindOnce(&Graphics::PresentScreenInternal,
                      weak_ptr_factory_.GetWeakPtr(), &complete_flag));
 
   /* Delay for desire frame rate */
-  SDL_Delay(1000 / frame_rate_);
+  SDL_Delay(1000 / 60);
 
   /* If not complete drawing */
   if (!complete_flag) {
@@ -72,6 +74,7 @@ void Graphics::CompositeScreenInternal() {
   gpu::GSM.states.clear_color.Set(base::Vec4());
   gpu::FrameBuffer::Clear();
 
+  gpu::GSM.states.scissor_rect.Set(resolution_);
   gpu::GSM.states.viewport.Push(resolution_);
   DrawableParent::CompositeChildren();
   gpu::GSM.states.viewport.Pop();

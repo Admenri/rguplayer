@@ -20,6 +20,8 @@ set(CONTENT_SRC
   script/drawable.cc
   script/drawable.h
   script/flashable.h
+  script/font.cc
+  script/font.h
   script/graphics.cc
   script/graphics.h
   script/input.cc
@@ -31,7 +33,6 @@ set(CONTENT_SRC
   script/table.cc
   script/table.h
   script/tilequad.h
-  script/utility.cc
   script/utility.h
   script/viewport.cc
   script/viewport.h

@@ -5,6 +5,7 @@
 #ifndef GPU_GLES2_DRAW_QUAD_DRAWABLE_H_
 #define GPU_GLES2_DRAW_QUAD_DRAWABLE_H_
 
+#include <algorithm>
 #include <vector>
 
 #include "base/math/math.h"
@@ -97,7 +98,7 @@ class QuadDrawable final : public CommonVertexDrawable<4> {
 
   void SetPositionRect(const base::RectF& pos);
   void SetTexCoordRect(const base::RectF& texcoord);
-  void SetColor(int index, const base::Vec4& color);
+  void SetColor(int index = -1, const base::Vec4& color = base::Vec4());
 
   void Draw() override;
 
@@ -123,6 +124,21 @@ static void QuadSetTexCoordRect(V* vert, const base::RectF& texcoord) {
   vert[++i].texCoord =
       base::Vec2(texcoord.x + texcoord.width, texcoord.y + texcoord.height);
   vert[++i].texCoord = base::Vec2(texcoord.x, texcoord.y + texcoord.height);
+}
+
+template <typename V>
+static void QuadSetColor(V* vert, int index = -1,
+                         const base::Vec4& color = base::Vec4()) {
+  if (index == -1) {
+    int i = -1;
+    vert[++i].color = color;
+    vert[++i].color = color;
+    vert[++i].color = color;
+    vert[++i].color = color;
+    return;
+  }
+
+  vert[std::clamp(index, 0, 3)].color = color;
 }
 
 template <typename V>
