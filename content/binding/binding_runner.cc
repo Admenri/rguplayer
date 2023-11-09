@@ -118,12 +118,12 @@ void BindingRunner::BindingMain(InitParams initial_param) {
 
       GetInput()->Update();
 
-      vx_win->Update();
+      if (!vx_win->IsDisposed()) vx_win->Update();
 
       if (GetInput()->IsTriggered("A")) LOG(INFO) << "ID Trigger.";
 
-      if (GetInput()->KeyTriggered(SDL_SCANCODE_F))
-        LOG(INFO) << "F Key Trigger.";
+      if (GetInput()->KeyTriggered(SDL_SCANCODE_F)) vx_win->Dispose();
+
       if (GetInput()->KeyRepeated(SDL_SCANCODE_F)) LOG(INFO) << "F Key Repeat.";
 
       if (auto i = GetInput()->Dir8()) LOG(INFO) << "Dir8:" << i;

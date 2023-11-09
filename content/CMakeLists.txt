@@ -32,6 +32,8 @@ set(CONTENT_SRC
   script/sprite.h
   script/table.cc
   script/table.h
+  script/tilemap.cc
+  script/tilemap.h
   script/tilequad.h
   script/utility.h
   script/viewport.cc

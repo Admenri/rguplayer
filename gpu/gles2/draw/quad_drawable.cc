@@ -114,11 +114,9 @@ void QuadDrawable::SetColor(int index, const base::Vec4& color) {
 void QuadDrawable::Draw() {
   CommonVertexDrawable::Draw();
 
-  IndexBuffer::Bind(vertex_array_.ibo);
   VertexArray<CommonVertex>::Bind(vertex_array_);
   GL.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
   VertexArray<CommonVertex>::Unbind();
-  IndexBuffer::Unbind();
 }
 
 void Blt::BeginScreen(const base::Vec2i& resolution) {

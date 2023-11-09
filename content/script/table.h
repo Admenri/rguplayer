@@ -7,6 +7,7 @@
 
 #include <vector>
 
+#include "base/bind/callback_list.h"
 #include "base/memory/ref_counted.h"
 
 namespace content {
@@ -30,6 +31,7 @@ class Table final : public base::RefCounted<Table> {
   void Resize(int x, int y);
   void Resize(int x, int y, int z);
 
+  // Internal
   inline int16_t& At(int x, int y, int z) {
     return data_[x + y * x_size_ + z * y_size_ * x_size_];
   }
@@ -38,7 +40,13 @@ class Table final : public base::RefCounted<Table> {
     return data_[x + y * x_size_ + z * y_size_ * x_size_];
   }
 
+  base::CallbackListSubscription AddObserver(base::RepeatingClosure observer) {
+    return observers_.Add(std::move(observer));
+  }
+
  private:
+  base::RepeatingClosureList observers_;
+
   int x_size_, y_size_, z_size_;
   std::vector<int16_t> data_;
 };

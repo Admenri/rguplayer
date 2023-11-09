@@ -74,6 +74,8 @@ void Plane::SetZoomY(double zoom_y) {
 }
 
 void Plane::OnObjectDisposed() {
+  RemoveFromList();
+
   weak_ptr_factory_.InvalidateWeakPtrs();
 
   BindingRunner::Get()->GetRenderer()->DeleteSoon(std::move(quad_array_));

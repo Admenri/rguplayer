@@ -92,7 +92,7 @@ class Window2 : public base::RefCounted<Window2>,
 
  private:
   void OnObjectDisposed() override;
-  std::string_view DisposedObjectName() const override { return "Window"; }
+  std::string_view DisposedObjectName() const override { return "Window2"; }
 
   void BeforeComposite() override;
   void Composite() override;

@@ -64,6 +64,8 @@ struct VertexArray {
       GL.BindVertexArray(vao.id.gl);
 
       SetAttrib(vao);
+
+      GL.BindVertexArray(0);
     }
   }
 
@@ -80,6 +82,7 @@ struct VertexArray {
       SetAttrib(vao);
     }
   }
+
   inline static void Unbind() {
     if (GL.GenVertexArrays) {
       GL.BindVertexArray(0);
@@ -88,8 +91,8 @@ struct VertexArray {
         GL.DisableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
       }
 
-      VertexBuffer::Unbind();
       IndexBuffer::Unbind();
+      VertexBuffer::Unbind();
     }
   }
 };

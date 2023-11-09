@@ -289,6 +289,8 @@ void Window2::SetTone(scoped_refptr<Tone> tone) {
 }
 
 void Window2::OnObjectDisposed() {
+  RemoveFromList();
+
   weak_ptr_factory_.InvalidateWeakPtrs();
 
   BindingRunner::Get()->GetRenderer()->DeleteSoon(
@@ -299,7 +301,6 @@ void Window2::OnObjectDisposed() {
       std::move(cursor_.cursor_quads_));
 
   BindingRunner::Get()->GetRenderer()->DeleteSoon(std::move(base_quad_));
-
   BindingRunner::Get()->GetRenderer()->DeleteSoon(std::move(content_quad_));
 
   BindingRunner::Get()->GetRenderer()->PostTask(

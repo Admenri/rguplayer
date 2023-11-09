@@ -53,7 +53,6 @@ class QuadDrawableArray final {
   }
 
   void Draw(size_t offset, size_t count) {
-    IndexBuffer::Bind(vao_.ibo);
     VertexArray<VertexType>::Bind(vao_);
 
     const char* _offset = (const char*)0 + offset * 6 * sizeof(uint16_t);
@@ -61,7 +60,6 @@ class QuadDrawableArray final {
                     _offset);
 
     VertexArray<VertexType>::Unbind();
-    IndexBuffer::Unbind();
   }
 
   void Draw() { Draw(0, quad_count_); }

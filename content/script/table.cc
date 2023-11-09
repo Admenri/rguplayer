@@ -39,6 +39,8 @@ void Table::Set(int16_t value, int x, int y, int z) {
     return;
 
   data_[x + y * x_size_ + z * y_size_ * x_size_] = value;
+
+  observers_.Notify();
 }
 
 void Table::Resize(int x) { Resize(x, y_size_); }
@@ -61,6 +63,8 @@ void Table::Resize(int x, int y, int z) {
   x_size_ = x;
   y_size_ = y;
   z_size_ = z;
+
+  observers_.Notify();
 }
 
 }  // namespace content

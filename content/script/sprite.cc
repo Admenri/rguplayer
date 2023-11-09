@@ -73,6 +73,8 @@ void Sprite::InitSpriteInternal() {
 }
 
 void Sprite::OnObjectDisposed() {
+  RemoveFromList();
+
   weak_ptr_factory_.InvalidateWeakPtrs();
 
   BindingRunner::Get()->GetRenderer()->DeleteSoon(std::move(quad_));
