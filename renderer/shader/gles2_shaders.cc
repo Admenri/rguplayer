@@ -6,6 +6,8 @@
 
 namespace renderer {
 
+static char kGLESPrecisionDefine[] = "precision mediump float;";
+
 namespace shader {
 
 #include "renderer/shader/glsl/base.frag.xxd"
@@ -43,9 +45,11 @@ void GLES2Shader::Bind() {}
 void GLES2Shader::Unbind() {}
 
 bool GLES2Shader::Setup(const std::string& vertex_shader,
-                        const std::string& frag_shader) {
-  CompileShader(vertex_shader_, vertex_shader);
-  CompileShader(frag_shader_, frag_shader);
+                        const std::string& vertex_name,
+                        const std::string& frag_shader,
+                        const std::string& frag_name) {
+  CompileShader(vertex_shader_, vertex_shader, vertex_name);
+  CompileShader(frag_shader_, frag_shader, frag_name);
 
   GL.AttachShader(program(), vertex_shader_);
   GL.AttachShader(program(), frag_shader_);
@@ -70,7 +74,7 @@ bool GLES2Shader::Setup(const std::string& vertex_shader,
     GL.GetProgramInfoLog(program(), static_cast<GLsizei>(log.size()), 0,
                          &log[0]);
 
-    LOG(ERROR) << "[GLSL]" << log;
+    LOG(ERROR) << "[GLSL] Program: " << log;
     return false;
   }
 
@@ -78,7 +82,9 @@ bool GLES2Shader::Setup(const std::string& vertex_shader,
 }
 
 bool GLES2Shader::CompileShader(GLuint glshader,
-                                const std::string& shader_source) { /*
+                                const std::string& shader_source,
+                                const std::string& shader_name) {
+  /*
      Vertex shader:
        0. Version Defines
        1. Common Header
@@ -87,6 +93,10 @@ bool GLES2Shader::CompileShader(GLuint glshader,
 
   std::vector<const GLchar*> shader_srcs;
   std::vector<GLint> shader_sizes;
+
+  // Common header source
+  shader_srcs.push_back(reinterpret_cast<const GLchar*>(kGLESPrecisionDefine));
+  shader_sizes.push_back(static_cast<GLint>(sizeof(kGLESPrecisionDefine) - 1));
 
   // Setup shader source
   shader_srcs.push_back(reinterpret_cast<const GLchar*>(shader_source.c_str()));
@@ -106,7 +116,7 @@ bool GLES2Shader::CompileShader(GLuint glshader,
     std::string log(log_length, '\0');
     GL.GetShaderInfoLog(glshader, static_cast<GLsizei>(log.size()), 0, &log[0]);
 
-    LOG(ERROR) << "[GLSL]" << log;
+    LOG(ERROR) << "[GLSL] " << shader_name << ": " << log;
     return false;
   }
 
@@ -116,8 +126,10 @@ bool GLES2Shader::CompileShader(GLuint glshader,
 GLES2ShaderBase::GLES2ShaderBase() : u_projectionMat_(0) {}
 
 bool GLES2ShaderBase::Setup(const std::string& vertex_shader,
-                            const std::string& frag_shader) {
-  if (!GLES2Shader::Setup(vertex_shader, frag_shader))
+                            const std::string& vertex_name,
+                            const std::string& frag_shader,
+                            const std::string& frag_name) {
+  if (!GLES2Shader::Setup(vertex_shader, vertex_name, frag_shader, frag_name))
     return false;
 
   u_projectionMat_ = GL.GetUniformLocation(program(), "u_projectionMat");
@@ -143,12 +155,13 @@ void GLES2ShaderBase::SetProjectionMatrix(const base::Vec2i& size) {
 BaseShader::BaseShader() {
   GLES2ShaderBase::Setup(
       shader::FromRawData(shader::base_vert, shader::base_vert_len),
-      shader::FromRawData(shader::base_frag, shader::base_frag_len));
+      "base_vert",
+      shader::FromRawData(shader::base_frag, shader::base_frag_len),
+      "base_frag");
 
   u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
   u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
   u_texture_ = GL.GetUniformLocation(program(), "u_texture");
-  u_opacity_ = GL.GetUniformLocation(program(), "u_opacity");
 }
 
 void BaseShader::SetTextureSize(const base::Vec2& tex_size) {
@@ -163,14 +176,12 @@ void BaseShader::SetTexture(GLID<Texture> tex) {
   GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
 }
 
-void BaseShader::SetOpacity(float opacity) {
-  GL.Uniform1f(u_opacity_, opacity);
-}
-
 BaseAlphaShader::BaseAlphaShader() {
   GLES2ShaderBase::Setup(
       shader::FromRawData(shader::basealpha_vert, shader::basealpha_vert_len),
-      shader::FromRawData(shader::basealpha_frag, shader::basealpha_frag_len));
+      "basealpha_vert",
+      shader::FromRawData(shader::basealpha_frag, shader::basealpha_frag_len),
+      "basealpha_frag");
 
   u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
   u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
@@ -192,7 +203,9 @@ void BaseAlphaShader::SetTexture(GLID<Texture> tex) {
 SpriteShader::SpriteShader() {
   GLES2ShaderBase::Setup(
       shader::FromRawData(shader::transform_vert, shader::transform_vert_len),
-      shader::FromRawData(shader::sprite_frag, shader::sprite_frag_len));
+      "transform_vert",
+      shader::FromRawData(shader::sprite_frag, shader::sprite_frag_len),
+      "sprite_frag");
 
   u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
   u_transformMat_ = GL.GetUniformLocation(program(), "u_transformMat");
@@ -241,7 +254,9 @@ void SpriteShader::SetBushOpacity(float bushOpacity) {
 TexBltShader::TexBltShader() {
   GLES2ShaderBase::Setup(
       shader::FromRawData(shader::base_vert, shader::base_vert_len),
-      shader::FromRawData(shader::texblt_frag, shader::texblt_frag_len));
+      "base_vert",
+      shader::FromRawData(shader::texblt_frag, shader::texblt_frag_len),
+      "texblt_frag");
 
   u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
   u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
@@ -279,7 +294,9 @@ void TexBltShader::SetOpacity(float opacity) {
 ColorShader::ColorShader() {
   GLES2ShaderBase::Setup(
       shader::FromRawData(shader::basecolor_vert, shader::basecolor_vert_len),
-      shader::FromRawData(shader::basecolor_frag, shader::basecolor_frag_len));
+      "basecolor_vert",
+      shader::FromRawData(shader::basecolor_frag, shader::basecolor_frag_len),
+      "basecolor_frag");
 
   u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
 }
@@ -291,7 +308,9 @@ void ColorShader::SetTransOffset(const base::Vec2& offset) {
 PlaneShader::PlaneShader() {
   GLES2ShaderBase::Setup(
       shader::FromRawData(shader::base_vert, shader::base_vert_len),
-      shader::FromRawData(shader::plane_frag, shader::plane_frag_len));
+      "base_vert",
+      shader::FromRawData(shader::plane_frag, shader::plane_frag_len),
+      "plane_frag");
 
   u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
   u_texture_ = GL.GetUniformLocation(program(), "u_texture");

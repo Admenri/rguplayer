@@ -24,7 +24,7 @@ void RenderRunner::InitRenderer(const InitParams& params) {
   worker_->WaitUntilStart();
 
   PostTask(base::BindOnce(&RenderRunner::InitGLContextInternal, AsWeakptr(),
-                          std::move(params)));
+                          base::OwnedRef(params)));
   WaitForSync();
 }
 
@@ -38,19 +38,23 @@ void RenderRunner::WaitForSync() {
   worker_->task_runner()->WaitForSync();
 }
 
-void RenderRunner::InitGLContextInternal(const InitParams& params) {
+void RenderRunner::InitGLContextInternal(InitParams params) {
   host_window_ = params.target_window;
   glcontext_ = SDL_GL_CreateContext(host_window_);
+  SDL_GL_MakeCurrent(host_window_, glcontext_);
   SDL_GL_SetSwapInterval(0);
 
   renderer::GLES2Context::CreateForCurrentThread();
   renderer::GSM.InitStates();
 
+  renderer::GL.ClearColor(0.f, 0.f, 1.f, 1.f);
   renderer::GL.Clear(GL_COLOR_BUFFER_BIT);
   SDL_GL_SwapWindow(host_window_);
 }
 
 void RenderRunner::QuitGLContextInternal() {
+  renderer::GSM.QuitStates();
+
   SDL_GL_DeleteContext(glcontext_);
   glcontext_ = nullptr;
 }

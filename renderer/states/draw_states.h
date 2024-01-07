@@ -7,6 +7,8 @@
 
 #include "base/math/math.h"
 
+#include "SDL_opengl.h"
+
 #include <stack>
 
 namespace renderer {

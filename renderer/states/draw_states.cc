@@ -6,6 +6,8 @@
 
 #include "renderer/context/gles2_context.h"
 
+#include "SDL_rect.h"
+
 namespace renderer {
 
 void GLViewport::OnSetState(const base::Rect& value) {
@@ -31,7 +33,7 @@ void GLScissorRegion::SetIntersect(const base::Rect& value) {
   SDL_Rect r2 = {value.x, value.y, value.width, value.height};
 
   SDL_Rect result;
-  if (!SDL_IntersectRect(&r1, &r2, &result))
+  if (!SDL_GetRectIntersection(&r1, &r2, &result))
     result.w = result.h = 0;
 
   Set(base::Rect(result.x, result.y, result.w, result.h));

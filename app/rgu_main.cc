@@ -1,10 +1,6 @@
 
 // clang-format off
 
-#include "ruby.h"
-#include "ruby/intern.h"
-#include "ruby/encoding.h"
-
 #include "base/debug/logging.h"
 #include "base/bind/callback.h"
 #include "base/memory/ref_counted.h"
@@ -19,6 +15,8 @@
 
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
+
+#include "content/worker/content_compositor.h"
 
 #include "physfs.h"
 
@@ -39,28 +37,6 @@ SDL_EGLAttrib* SDLCALL GetAttribArray() {
 int main(int argc, char* argv[]) {
   PHYSFS_init(argv[0]);
 
-  ruby_sysinit(&argc, &argv);
-
-  RUBY_INIT_STACK;
-  ruby_init();
-
-  std::vector<const char*> rubyArgsC{argv[0], "-e "};
-  void* node =
-      ruby_options(rubyArgsC.size(), const_cast<char**>(rubyArgsC.data()));
-
-  int state = 0;
-  bool valid = ruby_executable_node(node, &state);
-
-  if (valid)
-    state = ruby_exec_node(node);
-
-  if (state || !valid) {
-    return -1;
-  }
-
-  rb_enc_set_default_internal(rb_enc_from_encoding(rb_utf8_encoding()));
-  rb_enc_set_default_external(rb_enc_from_encoding(rb_utf8_encoding()));
-
   SDL_Init(SDL_INIT_EVERYTHING);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   TTF_Init();
@@ -69,49 +45,24 @@ int main(int argc, char* argv[]) {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
   SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
-
   SDL_EGL_SetEGLAttributeCallbacks(GetAttribArray, nullptr, nullptr);
 
-  SDL_Window* win =
-      SDL_CreateWindow("ANGLE Window", 800, 600, SDL_WINDOW_OPENGL);
-  SDL_GLContext ctx = SDL_GL_CreateContext(win);
+  SDL_Window* win = SDL_CreateWindow("RGU Window", 800, 600, SDL_WINDOW_OPENGL);
 
-  SDL_GL_MakeCurrent(win, ctx);
-  SDL_GL_SetSwapInterval(0);
+  content::WorkerTreeCompositor cc;
+  content::WorkerTreeCompositor::InitParams params;
 
-  renderer::GLES2Context::CreateForCurrentThread();
+  params.binding_params.initial_resolution = base::Vec2i(800, 600);
+  params.renderer_params.target_window = win;
 
-  printf("GL_VERSION: %s\n", renderer::GL.GetString(GL_VERSION));
-  printf("GL_VENDOR: %s\n", renderer::GL.GetString(GL_VENDOR));
-  printf("GL_RENDERER: %s\n", renderer::GL.GetString(GL_RENDERER));
-
-  SDL_Event e;
-  int t = 0;
-  while (true) {
-    SDL_PollEvent(&e);
-    if (e.type == SDL_EVENT_QUIT)
-      break;
-
-    renderer::GL.ClearColor((t < 255) ? t / 255.0f : 0,
-                            (t > 255 && t < 255 * 2) ? ((t - 255) / 255.0f) : 0,
-                            (t > 255 * 2) ? ((t - 255 * 2) / 255.0f) : 0, 1.0f);
-    renderer::GL.Clear(GL_COLOR_BUFFER_BIT);
-    SDL_GL_SwapWindow(win);
-
-    t += 5;
-    if (t >= 255 * 3)
-      t = 0;
-
-    SDL_Delay(10);
-  }
+  cc.InitCC(params);
+  cc.ContentMain();
 
   SDL_DestroyWindow(win);
 
   TTF_Quit();
   IMG_Quit();
   SDL_Quit();
-
-  ruby_cleanup(0);
 
   return 0;
 }

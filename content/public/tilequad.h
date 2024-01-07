@@ -40,8 +40,8 @@ int BuildTileH(Vertex* vertex,
   for (int i = 0; i < full_size; ++i) {
     Vertex* vert = &vertex[i * 4];
 
-    gpu::QuadSetTexCoordRect(vert, src_rect);
-    gpu::QuadSetPositionRect(vert, dest_rect);
+    renderer::QuadSetTexCoordRect(vert, src_rect);
+    renderer::QuadSetPositionRect(vert, dest_rect);
 
     dest_rect.x += src_rect.width;
   }
@@ -53,8 +53,8 @@ int BuildTileH(Vertex* vertex,
     process_src_rect.width = static_cast<float>(part_size);
     dest_rect.width = static_cast<float>(part_size);
 
-    gpu::QuadSetTexCoordRect(vert, process_src_rect);
-    gpu::QuadSetPositionRect(vert, dest_rect);
+    renderer::QuadSetTexCoordRect(vert, process_src_rect);
+    renderer::QuadSetPositionRect(vert, dest_rect);
   }
 
   return full_size + (part_size ? 1 : 0);
@@ -76,8 +76,8 @@ int BuildTileV(Vertex* vertex,
   for (int i = 0; i < full_size; ++i) {
     Vertex* vert = &vertex[i * 4];
 
-    gpu::QuadSetTexCoordRect(vert, src_rect);
-    gpu::QuadSetPositionRect(vert, dest_rect);
+    renderer::QuadSetTexCoordRect(vert, src_rect);
+    renderer::QuadSetPositionRect(vert, dest_rect);
 
     dest_rect.y += src_rect.height;
   }
@@ -89,8 +89,8 @@ int BuildTileV(Vertex* vertex,
     process_src_rect.height = static_cast<float>(part_size);
     dest_rect.height = static_cast<float>(part_size);
 
-    gpu::QuadSetTexCoordRect(vert, process_src_rect);
-    gpu::QuadSetPositionRect(vert, dest_rect);
+    renderer::QuadSetTexCoordRect(vert, process_src_rect);
+    renderer::QuadSetPositionRect(vert, dest_rect);
   }
 
   return full_size + (part_size ? 1 : 0);

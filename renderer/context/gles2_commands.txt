@@ -141,7 +141,7 @@ VertexAttrib4fv
 VertexAttribPointer
 Viewport
 
-BindVertexArray
-DeleteVertexArrays
-GenVertexArrays
-IsVertexArray
+BindVertexArrayOES
+DeleteVertexArraysOES
+GenVertexArraysOES
+IsVertexArrayOES

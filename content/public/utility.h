@@ -29,7 +29,7 @@ class ValueNotification {
   base::RepeatingClosureList observers_;
 };
 
-class Rect : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
+class Rect : public base::RefCounted<Rect>, public ValueNotification {
  public:
   Rect() {}
   Rect(const base::Rect& rect) : data_(rect) {}
@@ -90,7 +90,7 @@ class Rect : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
   base::Rect data_;
 };
 
-class Tone : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
+class Tone : public base::RefCounted<Rect>, public ValueNotification {
  public:
   Tone() {}
   Tone(int red, int green, int blue, int gray = 255)
@@ -152,7 +152,7 @@ class Tone : public base::RefCountedThreadSafe<Rect>, public ValueNotification {
   base::Vec4i data_;
 };
 
-class Color : public base::RefCountedThreadSafe<Rect>,
+class Color : public base::RefCounted<Rect>,
               public ValueNotification {
  public:
   Color() {}

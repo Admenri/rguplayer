@@ -4,6 +4,7 @@
 
 #include "content/public/graphics.h"
 
+#include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
 
 #include "SDL_timer.h"
@@ -22,6 +23,7 @@ Graphics::Graphics(scoped_refptr<RenderRunner> renderer,
 Graphics::~Graphics() {
   renderer()->PostTask(base::BindOnce(&Graphics::DestroyBufferInternal,
                                       weak_ptr_factory_.GetWeakPtr()));
+  renderer()->WaitForSync();
 }
 
 void Graphics::Update() {

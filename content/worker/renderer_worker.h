@@ -6,6 +6,7 @@
 #define CONTENT_WORKER_RENDERER_WORKER_H_
 
 #include "base/bind/callback.h"
+#include "base/memory/ref_counted.h"
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
 #include "base/worker/thread_worker.h"
@@ -14,15 +15,12 @@
 
 namespace content {
 
-class RenderRunner : public base::RefCountedThreadSafe<RenderRunner>,
-                     public base::SequencedTaskRunner {
+class RenderRunner : public base::SequencedTaskRunner {
  public:
   struct InitParams {
     SDL_Window* target_window = nullptr;
 
-    InitParams(const InitParams&) = delete;
-    InitParams& operator=(const InitParams&) = delete;
-    InitParams(InitParams&&) = default;
+    InitParams() = default;
   };
 
   RenderRunner(bool sync_worker = false);
@@ -44,7 +42,7 @@ class RenderRunner : public base::RefCountedThreadSafe<RenderRunner>,
   SDL_Window* window() { return host_window_; }
 
  private:
-  void InitGLContextInternal(const InitParams& params);
+  void InitGLContextInternal(InitParams params);
   void QuitGLContextInternal();
 
   std::unique_ptr<base::ThreadWorker> worker_;

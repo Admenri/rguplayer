@@ -12,7 +12,7 @@
 
 namespace content {
 
-class Graphics final : public base::RefCountedThreadSafe<Graphics>,
+class Graphics final : public base::RefCounted<Graphics>,
                        public DrawableParent {
  public:
   Graphics(scoped_refptr<RenderRunner> renderer,

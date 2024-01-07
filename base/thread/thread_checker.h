@@ -80,7 +80,7 @@ class ThreadCheckerImpl {
 
 }  // namespace internal
 
-class ThreadChecker : public internal::ThreadCheckerImpl {};
+class ThreadChecker : public internal::ThreadCheckerDoNothing {};
 
 }  // namespace base
 

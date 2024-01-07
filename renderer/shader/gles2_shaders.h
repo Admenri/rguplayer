@@ -33,11 +33,15 @@ class GLES2Shader {
 
  protected:
   virtual bool Setup(const std::string& vertex_shader,
-                     const std::string& frag_shader);
+                     const std::string& vertex_name,
+                     const std::string& frag_shader,
+                     const std::string& frag_name);
   virtual bool BindAttribLocation() { return true; }
 
  private:
-  bool CompileShader(GLuint glshader, const std::string& shader_source);
+  bool CompileShader(GLuint glshader,
+                     const std::string& shader_source,
+                     const std::string& shader_name);
 
   GLuint vertex_shader_;
   GLuint frag_shader_;
@@ -52,7 +56,9 @@ class GLES2ShaderBase : public GLES2Shader {
 
  protected:
   bool Setup(const std::string& vertex_shader,
-             const std::string& frag_shader) override;
+             const std::string& vertex_name,
+             const std::string& frag_shader,
+             const std::string& frag_name) override;
   void SetTexture(GLint location, GLuint tex, uint16_t unit);
 
  private:
@@ -66,7 +72,6 @@ class BaseShader : public GLES2ShaderBase {
   void SetTextureSize(const base::Vec2& tex_size);
   void SetTransOffset(const base::Vec2& offset);
   void SetTexture(GLID<Texture> tex);
-  void SetOpacity(float opacity);
 
  private:
   GLint u_texSize_;

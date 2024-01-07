@@ -27,6 +27,7 @@ void GlobalStateManager::InitStates() {
   common_tfb = TextureFrameBuffer::Gen();
   TextureFrameBuffer::Alloc(common_tfb, 64, 64);
   TextureFrameBuffer::LinkFrameBuffer(common_tfb);
+  FrameBuffer::Unbind();
 
   common_quad = std::make_unique<QuadDrawable>();
 }

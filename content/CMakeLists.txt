@@ -30,6 +30,12 @@ set(CORE_CONTENT_SRC
   public/viewport.h
   public/window.cc
   public/window.h
+  worker/binding_worker.cc
+  worker/binding_worker.h
+  worker/content_compositor.cc
+  worker/content_compositor.h
+  worker/event_runner.cc
+  worker/event_runner.h
   worker/renderer_worker.cc
   worker/renderer_worker.h
 )
