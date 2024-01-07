@@ -35,18 +35,19 @@ OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。
 
 ## 第三方库使用
 
-Chromium - https://www.chromium.org/chromium-projects/
-SDL - https://github.com/libsdl-org/SDL
-SDL_image - https://github.com/libsdl-org/SDL_image
-SDL_ttf - https://github.com/libsdl-org/SDL_ttf
-ANGLE - https://chromium.googlesource.com/angle/angle
-Cruby - https://www.ruby-lang.org/zh_cn/
-Physfs - https://github.com/icculus/physfs
-MRuby - https://mruby.org/
-concurrentqueue - https://github.com/cameron314/concurrentqueue
+- Chromium - https://www.chromium.org/chromium-projects/
+- SDL - https://github.com/libsdl-org/SDL
+- SDL_image - https://github.com/libsdl-org/SDL_image
+- SDL_ttf - https://github.com/libsdl-org/SDL_ttf
+- ANGLE - https://chromium.googlesource.com/angle/angle
+- CRuby - https://www.ruby-lang.org/zh_cn/
+- Physfs - https://github.com/icculus/physfs
+- MRuby - https://mruby.org/
+- concurrentqueue - https://github.com/cameron314/concurrentqueue
 
 ## 联系方式
 
+- AFDian: https://afdian.net/a/rguplayer
 - Mail: 2755482106@qq.com
 
 © 2024 Admenri
