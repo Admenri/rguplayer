@@ -1,11 +1,11 @@
-# base components
+# Base components
 cmake_minimum_required(VERSION 3.18.0)
 
 #--------------------------------------------------------------------------------
 # Define base source
 #--------------------------------------------------------------------------------
 
-set(BASE_SRC
+set(CORE_BASE_SRC
   bind/bind.h
   bind/bind_internal.h
   bind/callback.h
@@ -39,17 +39,21 @@ set(BASE_SRC
   memory/scoped_refptr.h
   memory/weak_ptr.cc
   memory/weak_ptr.h
+  thread/thread_checker.cc
   thread/thread_checker.h
   worker/run_loop.cc
   worker/run_loop.h
   worker/thread_worker.cc
   worker/thread_worker.h
   template_util.h
+)
 
+## concurrentqueue Licence: https://github.com/cameron314/concurrentqueue/blob/master/LICENSE.md
+set(CORE_BASE_THIRD_PARTY
   third_party/concurrentqueue/blockingconcurrentqueue.h
   third_party/concurrentqueue/concurrentqueue.h
   third_party/concurrentqueue/lightweightsemaphore.h
 )
 
-add_library(core_base ${BASE_SRC})
-target_link_libraries(core_base SDL2::Core)
+add_library(core_base ${CORE_BASE_SRC} ${CORE_BASE_THIRD_PARTY})
+target_link_libraries(core_base SDL3::SDL3-static)

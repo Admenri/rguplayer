@@ -1,4 +1,4 @@
-# Copyright 2023 Admenri.
+# Copyright 2024 Admenri.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -93,6 +93,10 @@ def main():
     out_symbol = get_named_option(rest_args, '--symbol', out_symbol)
 
     data_type = 'char' if string_data else 'unsigned char'
+
+    target_dir = os.path.dirname(output_file)
+    if not os.path.exists(target_dir) and target_dir != '':
+      os.makedirs(target_dir)
 
     write_dump(input_file, output_file, data_type, 'unsigned int', out_symbol, null_term)
 

@@ -347,3 +347,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/third_party/ruby
+/third_party/angle

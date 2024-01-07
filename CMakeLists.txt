@@ -1,64 +1,102 @@
-#  Main build file of rgu project
+# Main build file of rgu project
 cmake_minimum_required(VERSION 3.18.0)
 
+# base::jthread required
 set(CMAKE_CXX_STANDARD 20)
 
-project(rgu)
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
-set(SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${SRC_ROOT})
+project(rgu_player VERSION 1.0.0)
+include_directories("${PROJECT_SOURCE_DIR}")
 
 #--------------------------------------------------------------------------------
-# Third party configure
+# Platform and compiler check
 #--------------------------------------------------------------------------------
 
-if (WIN32)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  add_compile_definitions(NOMINMAX)
 
-set(SDL2_TTF_INCLUDE_DIR "${SRC_ROOT}/third_party/SDL2_ttf/include")
-set(SDL2_IMAGE_INCLUDE_DIR "${SRC_ROOT}/third_party/SDL2_image/include")
+  link_libraries(
+    "shell32;ws2_32;iphlpapi;imagehlp;shlwapi;bcrypt"
+    "setupapi;advapi32;uuid;version;oleaut32;ole32;imm32;winmm;user32;rpcrt4;usp10"
+  )
+else()
+  message("No Implement")
+endif()
+
+#--------------------------------------------------------------------------------
+# Third-party Libraries
+#--------------------------------------------------------------------------------
+
+## Third party include
+include_directories(third_party)
+
+## SDL
+set(SDL_STATIC on)
+add_subdirectory(third_party/SDL)
+
+## SDL_image
+set(BUILD_SHARED_LIBS off)
+add_subdirectory(third_party/SDL_image)
+include_directories(third_party/SDL_image/include/SDL3_image)
+
+## SDL_ttf
+set(SDL3TTF_BUILD_SHARED_LIBS off)
+add_subdirectory(third_party/SDL_ttf)
+include_directories(third_party/SDL_ttf/include/SDL3_ttf)
+
+## Google ANGLE
+include_directories(third_party/angle/include)
+
+## CRuby-Mri
+add_library(mri_ruby UNKNOWN IMPORTED)
 if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-set(SDL2_INCLUDE_DIR "${SRC_ROOT}/third_party/SDL2/include/x86")
-set(SDL2_LIBRARY "${SRC_ROOT}/third_party/SDL2/lib/x86/SDL2-static.lib")
-set(SDL2_TTF_LIBRARY "${SRC_ROOT}/third_party/SDL2_ttf/lib/x86/SDL2_ttf.lib")
-link_libraries("${SRC_ROOT}/third_party/SDL2_ttf/lib/x86/freetype.lib")
-set(SDL2_IMAGE_LIBRARY "${SRC_ROOT}/third_party/SDL2_image/lib/x86/SDL2_image-static.lib")
+  set(RUBY_INCLUDE_PATH
+    "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
+    "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x86/"
+  )
+
+  set(RUBY_LIBRARY_PATH
+    "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x86/vcruntime140-ruby320-static.lib"
+  )
 elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-set(SDL2_INCLUDE_DIR "${SRC_ROOT}/third_party/SDL2/include/x64")
-set(SDL2_LIBRARY "${SRC_ROOT}/third_party/SDL2/lib/x64/SDL2-static.lib")
-set(SDL2_TTF_LIBRARY "${SRC_ROOT}/third_party/SDL2_ttf/lib/x64/SDL2_ttf.lib")
-link_libraries("${SRC_ROOT}/third_party/SDL2_ttf/lib/x64/freetype.lib")
-set(SDL2_LIBRARY "${SRC_ROOT}/third_party/SDL2/lib/x64/SDL2-static.lib")
-set(SDL2_IMAGE_LIBRARY "${SRC_ROOT}/third_party/SDL2_image/lib/x64/SDL2_image-static.lib")
-endif()
+  set(RUBY_INCLUDE_PATH
+    "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
+    "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x64/"
+  )
 
-link_libraries(
-  "shell32;ws2_32;iphlpapi;imagehlp;shlwapi;bcrypt"
-  "setupapi;advapi32;uuid;version;oleaut32;ole32;imm32;winmm;user32;rpcrt4;usp10"
-)
-
-elseif (LINUX)
-message("No Implement")
-elseif (MACOS)
-message("No Implement")
-elseif (ANDROID)
+  set(RUBY_LIBRARY_PATH
+    "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x64/x64-vcruntime140-ruby320-static.lib"
+  )
+else()
 message("No Implement")
 endif()
+set_target_properties(mri_ruby PROPERTIES
+                      IMPORTED_LOCATION "${RUBY_LIBRARY_PATH}"
+                      INTERFACE_INCLUDE_DIRECTORIES "${RUBY_INCLUDE_PATH}")
+
+## Physfs
+set(PHYSFS_BUILD_STATIC TRUE)
+set(PHYSFS_BUILD_SHARED FALSE)
+add_subdirectory(third_party/physfs)
+include_directories(third_party/physfs/src)
 
 #--------------------------------------------------------------------------------
-# Find and build package
+# Auto-generated directory include path
 #--------------------------------------------------------------------------------
 
-find_package(SDL2 REQUIRED)
-find_package(SDL2_ttf REQUIRED)
-find_package(SDL2_image REQUIRED)
+set(PYTHON_EXECUTABLE python)
+
+set(RGU_AUTOGEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/gen")
+include_directories("${RGU_AUTOGEN_DIR}")
 
 #--------------------------------------------------------------------------------
 # Add rgu projects
 #--------------------------------------------------------------------------------
 
+## Base components import
 add_subdirectory(base)
-add_subdirectory(gpu)
-add_subdirectory(ui)
-add_subdirectory(content)
 
+## GLESRenderer
+add_subdirectory(renderer)
+
+## Entry of the RGU player
 add_subdirectory(app)

@@ -1,19 +1,22 @@
 ﻿# ![Logo](app/resources/rgu_favicon_64.png) RGU Player Core
-![GitHub](https://img.shields.io/github/license/Admenri/rguplayer)
-[![CodeFactor](https://www.codefactor.io/repository/github/Admenri/rguplayer/badge)](https://www.codefactor.io/repository/github/Admenri/rguplayer)
 
 ## 项目概述
 
-RGU是一款兼容RGSS 1/2/3，使用SDL2作为底层，OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。
-旧版由于代码结构过于混乱无法继续维护于是开始从头推倒重写。
+RGU是一款兼容RGSS 1/2/3，使用SDL作为底层，
+OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。
+旨在提供兼容RGSS的同时提供跨平台与性能提升支持。
 
-由于我目前的精力主要在另一个商业浏览器框架上，所以本项目不会分配太多精力来维护。
-鉴于本人大学学业压力大，所以之后的概述等仅提供中文版本，其他语言请自己翻译。
+本项目使用BSD-3协议开源。
+
+本项目语法风格与代码结构与The Chromium Project相似。
 
 ## 编译项目
 
-本项目使用CMake管理。
-* 项目开发中暂不提供详细编译步骤。
+ - 本项目使用CMake管理编译。
+ - 第三方依赖库部分使用Git拉取，部分需要用户自行编译处理。
+ - 项目中需要使用Python3来生成自动编译文件，请确保系统中已安装Python3。
+
+※ 开发中暂不提供编译步骤。
 
 ## 系统要求
 
@@ -24,14 +27,26 @@ RGU是一款兼容RGSS 1/2/3，使用SDL2作为底层，OpenGL ES(2.0) 图像标
 
 ## 思路来源
 
-SDL2
-RGM
-RGD
-MKXP
-SFML
+- SDL
+- RGM
+- MKXP
+- SFML
+- Chromium
 
-## 捐助（纯心意）
+## 第三方库使用
 
-[爱发电链接](https://afdian.net/a/rguplayer)
+Chromium - https://www.chromium.org/chromium-projects/
+SDL - https://github.com/libsdl-org/SDL
+SDL_image - https://github.com/libsdl-org/SDL_image
+SDL_ttf - https://github.com/libsdl-org/SDL_ttf
+ANGLE - https://chromium.googlesource.com/angle/angle
+Cruby - https://www.ruby-lang.org/zh_cn/
+Physfs - https://github.com/icculus/physfs
+MRuby - https://mruby.org/
+concurrentqueue - https://github.com/cameron314/concurrentqueue
 
-© 2023 Admenri
+## 联系方式
+
+- Mail: 2755482106@qq.com
+
+© 2024 Admenri

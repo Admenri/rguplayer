@@ -36,6 +36,9 @@
 // updated to match.
 
 #include "base/debug/logging.h"
+#include "base/memory/lock.h"
+
+#include <thread>
 
 namespace base {
 
@@ -54,9 +57,30 @@ class ThreadCheckerDoNothing {
   void DetachFromThread() {}
 };
 
+class ThreadCheckerImpl {
+ public:
+  ThreadCheckerImpl();
+  ~ThreadCheckerImpl();
+
+  bool CalledOnValidThread() const;
+
+  // Changes the thread that is checked for in CalledOnValidThread.  This may
+  // be useful when an object may be created on one thread and then used
+  // exclusively on another thread.
+  void DetachFromThread();
+
+ private:
+  void EnsureThreadIdAssigned() const;
+
+  mutable base::Lock lock_;
+  // This is mutable so that CalledOnValidThread can set it.
+  // It's guarded by |lock_|.
+  mutable std::thread::id valid_thread_id_;
+};
+
 }  // namespace internal
 
-class ThreadChecker : public internal::ThreadCheckerDoNothing {};
+class ThreadChecker : public internal::ThreadCheckerImpl {};
 
 }  // namespace base
 

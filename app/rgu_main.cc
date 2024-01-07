@@ -1,57 +1,117 @@
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
 
-#undef main
+// clang-format off
 
-#include <iostream>
+#include "ruby.h"
+#include "ruby/intern.h"
+#include "ruby/encoding.h"
 
-#include "base/bind/callback.h"
-#include "base/buildflags/compiler_specific.h"
 #include "base/debug/logging.h"
-#include "base/exceptions/exception.h"
-#include "base/math/transform.h"
-#include "base/memory/weak_ptr.h"
-#include "base/worker/run_loop.h"
-#include "base/worker/thread_worker.h"
-#include "content/scheduler/worker_cc.h"
-#include "content/script/drawable.h"
-#include "content/script/plane.h"
-#include "gpu/gles2/draw/quad_drawable.h"
-#include "gpu/gles2/gsm/gles_gsm.h"
-#include "gpu/gles2/vertex/vertex_array.h"
-#include "ui/widget/widget.h"
+#include "base/bind/callback.h"
+#include "base/memory/ref_counted.h"
 
-int main() {
-  SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-  TTF_Init();
+#include "renderer/context/gles2_context.h"
+
+#include "SDL.h"
+#include "SDL_opengles2.h"
+#include "SDL_video.h"
+#include "SDL_image.h"
+#include "SDL_ttf.h"
+
+#include "EGL/egl.h"
+#include "EGL/eglext.h"
+
+#include "physfs.h"
+
+// clang-format on
+
+SDL_EGLAttrib kAttrib[] = {
+    EGL_PLATFORM_ANGLE_TYPE_ANGLE,
+    EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE,
+    // EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
+    // EGL_PLATFORM_ANGLE_DEVICE_TYPE_SWIFTSHADER_ANGLE,
+    EGL_NONE,
+};
+
+SDL_EGLAttrib* SDLCALL GetAttribArray() {
+  return kAttrib;
+}
+
+int main(int argc, char* argv[]) {
+  PHYSFS_init(argv[0]);
+
+  ruby_sysinit(&argc, &argv);
+
+  RUBY_INIT_STACK;
+  ruby_init();
+
+  std::vector<const char*> rubyArgsC{argv[0], "-e "};
+  void* node =
+      ruby_options(rubyArgsC.size(), const_cast<char**>(rubyArgsC.data()));
+
+  int state = 0;
+  bool valid = ruby_executable_node(node, &state);
+
+  if (valid)
+    state = ruby_exec_node(node);
+
+  if (state || !valid) {
+    return -1;
+  }
+
+  rb_enc_set_default_internal(rb_enc_from_encoding(rb_utf8_encoding()));
+  rb_enc_set_default_external(rb_enc_from_encoding(rb_utf8_encoding()));
+
+  SDL_Init(SDL_INIT_EVERYTHING);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+  TTF_Init();
 
-  std::unique_ptr<ui::Widget> win(new ui::Widget());
-  ui::Widget::InitParams params;
-  params.size = base::Vec2i(800, 600);
-  params.title = "Graph Widget";
-  win->Init(std::move(params));
+  SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+  SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
 
-  std::unique_ptr<content::WorkerTreeHost> engine =
-      std::make_unique<content::WorkerTreeHost>(false /* Render Sync Worker */);
+  SDL_EGL_SetEGLAttributeCallbacks(GetAttribArray, nullptr, nullptr);
 
-  content::RenderRunner::InitParams render_params;
-  render_params.ogl_window = win->AsWeakPtr();
-  render_params.initial_resolution = win->GetSize();
+  SDL_Window* win =
+      SDL_CreateWindow("ANGLE Window", 800, 600, SDL_WINDOW_OPENGL);
+  SDL_GLContext ctx = SDL_GL_CreateContext(win);
 
-  content::BindingRunner::InitParams binding_params;
-  binding_params.window = win->AsWeakPtr();
-  binding_params.resolution = win->GetSize();
-  engine->Run(std::move(render_params), std::move(binding_params));
+  SDL_GL_MakeCurrent(win, ctx);
+  SDL_GL_SetSwapInterval(0);
 
-  engine.reset();
+  renderer::GLES2Context::CreateForCurrentThread();
 
-  win.reset();
+  printf("GL_VERSION: %s\n", renderer::GL.GetString(GL_VERSION));
+  printf("GL_VENDOR: %s\n", renderer::GL.GetString(GL_VENDOR));
+  printf("GL_RENDERER: %s\n", renderer::GL.GetString(GL_RENDERER));
 
-  IMG_Quit();
+  SDL_Event e;
+  int t = 0;
+  while (true) {
+    SDL_PollEvent(&e);
+    if (e.type == SDL_EVENT_QUIT)
+      break;
+
+    renderer::GL.ClearColor((t < 255) ? t / 255.0f : 0,
+                            (t > 255 && t < 255 * 2) ? ((t - 255) / 255.0f) : 0,
+                            (t > 255 * 2) ? ((t - 255 * 2) / 255.0f) : 0, 1.0f);
+    renderer::GL.Clear(GL_COLOR_BUFFER_BIT);
+    SDL_GL_SwapWindow(win);
+
+    t += 5;
+    if (t >= 255 * 3)
+      t = 0;
+
+    SDL_Delay(10);
+  }
+
+  SDL_DestroyWindow(win);
+
   TTF_Quit();
+  IMG_Quit();
   SDL_Quit();
+
+  ruby_cleanup(0);
 
   return 0;
 }
