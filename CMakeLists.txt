@@ -98,5 +98,8 @@ add_subdirectory(base)
 ## GLESRenderer
 add_subdirectory(renderer)
 
+## Content compositor
+add_subdirectory(content)
+
 ## Entry of the RGU player
 add_subdirectory(app)
