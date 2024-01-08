@@ -59,6 +59,8 @@ void Graphics::InitScreenBufferInternal() {
   renderer::TextureFrameBuffer::LinkFrameBuffer(screen_buffer_[1]);
 
   screen_quad_ = std::make_unique<renderer::QuadDrawable>();
+  screen_quad_->SetPositionRect(base::Vec2(resolution_));
+  screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
 }
 
 void Graphics::DestroyBufferInternal() {
@@ -122,20 +124,15 @@ void Graphics::RenderEffectRequire(const base::Vec4& color,
   const base::Rect& viewport_rect = renderer::GSM.states.scissor_rect.Current();
   const base::Rect& screen_rect = resolution_;
 
-  if (tone.w) {
+  if (tone.w != 0) {
     // Blt front buffer to back
-    if (!viewport_rect.IsEnclosed(screen_rect)) {
-      renderer::GSM.states.scissor.Push(false);
+    renderer::GSM.states.scissor.Push(false);
+    renderer::Blt::BeginDraw(screen_buffer_[1]);
+    renderer::Blt::TexSource(screen_buffer_[0]);
+    renderer::Blt::EndDraw(screen_rect, screen_rect);
+    renderer::GSM.states.scissor.Pop();
 
-      std::swap(screen_buffer_[0], screen_buffer_[1]);
-
-      renderer::Blt::BeginDraw(screen_buffer_[0]);
-      renderer::Blt::TexSource(screen_buffer_[1]);
-      renderer::Blt::EndDraw(screen_rect, screen_rect);
-
-      renderer::GSM.states.scissor.Pop();
-    }
-
+    renderer::FrameBuffer::Bind(screen_buffer_[0].fbo);
     auto& shader = renderer::GSM.shaders->gray;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
@@ -178,17 +175,15 @@ void Graphics::RenderEffectRequire(const base::Vec4& color,
       sub.z = -tone.z;
 
     renderer::GL.BlendFuncSeparate(GL_ONE, GL_ONE, GL_ZERO, GL_ONE);
-    if (add.x != 0 && add.y != 0 && add.z != 0) {
+    if (add.x != 0 || add.y != 0 || add.z != 0) {
       renderer::GL.BlendEquation(GL_FUNC_ADD);
       shader.SetColor(add);
-
       screen_quad_->Draw();
     }
 
-    if (sub.x != 0 && sub.y != 0 && sub.z != 0) {
+    if (sub.x != 0 || sub.y != 0 || sub.z != 0) {
       renderer::GL.BlendEquation(GL_FUNC_REVERSE_SUBTRACT);
       shader.SetColor(sub);
-
       screen_quad_->Draw();
     }
   }

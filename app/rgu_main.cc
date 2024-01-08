@@ -94,7 +94,8 @@ int main(int argc, char* argv[]) {
         pl->SetBitmap(
             new content::Bitmap(screen, "D:\\Desktop\\rgu\\app\\test\\bg.png"));
 
-        scoped_refptr<content::Viewport> viewp = new content::Viewport(screen);
+        scoped_refptr<content::Viewport> viewp =
+            new content::Viewport(screen, base::Rect(0, 0, 300, 300));
         viewp->SetZ(100);
 
         scoped_refptr<content::Window2> vx_win =
@@ -115,6 +116,8 @@ int main(int argc, char* argv[]) {
             new content::Rect(base::Rect(110, 110, 100, 100)));
 
         vx_win->SetArrowsVisible(true);
+
+        viewp->SetTone(new content::Tone(68, 68, 0, 0));
 
         float xxx = 0;
         while (!binding->quit_required()) {

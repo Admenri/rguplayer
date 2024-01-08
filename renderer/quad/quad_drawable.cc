@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 #include "renderer/quad/quad_drawable.h"
+
+#include "base/math/math.h"
 #include "renderer/thread/thread_manager.h"
 
 #include <array>

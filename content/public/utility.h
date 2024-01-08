@@ -94,19 +94,19 @@ class Tone : public base::RefCounted<Rect>, public ValueNotification {
  public:
   Tone() {}
   Tone(int red, int green, int blue, int gray = 255)
-      : data_(std::clamp(red, 0, 255),
-              std::clamp(green, 0, 255),
-              std::clamp(blue, 0, 255),
+      : data_(std::clamp(red, -255, 255),
+              std::clamp(green, -255, 255),
+              std::clamp(blue, -255, 255),
               std::clamp(gray, 0, 255)) {}
   ~Tone() override {}
 
   Tone(const Tone&) = default;
   Tone& operator=(const Tone&) = default;
 
-  void Set(int red, int green, int blue, int gray) {
-    data_.x = std::clamp(red, 0, 255);
-    data_.y = std::clamp(green, 0, 255);
-    data_.z = std::clamp(blue, 0, 255);
+  void Set(int red, int green, int blue, int gray = 255) {
+    data_.x = std::clamp(red, -255, 255);
+    data_.y = std::clamp(green, -255, 255);
+    data_.z = std::clamp(blue, -255, 255);
     data_.w = std::clamp(gray, 0, 255);
 
     UpdateData();
@@ -119,19 +119,19 @@ class Tone : public base::RefCounted<Rect>, public ValueNotification {
 
   int GetRed() const { return data_.x; }
   void SetRed(int red) {
-    data_.x = std::clamp(red, 0, 255);
+    data_.x = std::clamp(red, -255, 255);
     UpdateData();
   }
 
   int GetGreen() const { return data_.y; }
   void SetGreen(int green) {
-    data_.y = std::clamp(green, 0, 255);
+    data_.y = std::clamp(green, -255, 255);
     UpdateData();
   }
 
   int GetBlue() const { return data_.z; }
   void SetBlue(int blue) {
-    data_.z = std::clamp(blue, 0, 255);
+    data_.z = std::clamp(blue, -255, 255);
     UpdateData();
   }
 
