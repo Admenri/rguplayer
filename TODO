@@ -1,0 +1,28 @@
+2024.1.8:
+
+* Bitmap：
+- 模糊未实现
+- 色调变换未实现
+- 绘制文字未实现
+- 文字大小未实现
+
+* Font
+- 全部未实现
+
+* Window
+- 未实现RGSS1版本
+
+* Tilemap
+- 全部未实现
+
+* Viewport
+- 色调，混色效果未实现
+
+* Graphics
+- 除update和resize_screen外均未实现
+
+* Audio
+- 全部未实现
+
+* Input
+- 不符合跨平台要求故未实现
