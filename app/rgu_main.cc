@@ -51,7 +51,8 @@ int main(int argc, char* argv[]) {
   SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
   SDL_EGL_SetEGLAttributeCallbacks(GetAttribArray, nullptr, nullptr);
 
-  SDL_Window* win = SDL_CreateWindow("RGU Window", 800, 600, SDL_WINDOW_OPENGL);
+  SDL_Window* win = SDL_CreateWindow("RGU Window", 800, 600,
+                                     SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
   content::WorkerTreeCompositor cc;
   content::WorkerTreeCompositor::InitParams params;
@@ -59,6 +60,8 @@ int main(int argc, char* argv[]) {
   params.binding_params.binding_boot =
       base::BindRepeating([](scoped_refptr<content::BindingRunner> binding) {
         scoped_refptr<content::Graphics> screen = binding->graphics();
+
+        screen->ResizeScreen(base::Vec2i(1024, 768));
 
         scoped_refptr<content::Bitmap> bmp = new content::Bitmap(
             screen, "D:\\Desktop\\rgu\\app\\test\\example.png");

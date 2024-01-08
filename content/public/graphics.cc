@@ -4,6 +4,7 @@
 
 #include "content/public/graphics.h"
 
+#include "content/public/disposable.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
 
@@ -45,6 +46,24 @@ void Graphics::Update() {
 
   /* Increase frame render count */
   ++frame_count_;
+}
+
+void Graphics::ResizeScreen(const base::Vec2i& resolution) {
+  resolution_ = resolution;
+
+  renderer()->PostTask(base::BindOnce(&Graphics::ResizeResolutionInternal,
+                                      weak_ptr_factory_.GetWeakPtr()));
+  renderer()->WaitForSync();
+}
+
+void Graphics::Reset() {
+  // Disposed all elements
+  for (auto it = disposable_elements_.tail(); it != disposable_elements_.end();
+       it = it->previous()) {
+    it->value_as_init()->Dispose();
+  }
+
+  // TODO: Reset fpslimiter
 }
 
 void Graphics::InitScreenBufferInternal() {
@@ -116,6 +135,14 @@ void Graphics::PresentScreenInternal(bool* paint_raiser) {
 
   SDL_GL_SwapWindow(renderer_->window());
   *paint_raiser = true;
+}
+
+void Graphics::AddDisposable(Disposable* disp) {
+  disposable_elements_.Append(&disp->link_);
+}
+
+void Graphics::RemoveDisposable(Disposable* disp) {
+  disp->link_.RemoveFromList();
 }
 
 void Graphics::RenderEffectRequire(const base::Vec4& color,

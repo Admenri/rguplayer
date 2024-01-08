@@ -7,13 +7,17 @@
 namespace content {
 
 Viewport::Viewport(scoped_refptr<Graphics> screen)
-    : GraphicElement(screen), Drawable(screen.get(), 0, true) {
+    : GraphicElement(screen),
+      Disposable(screen),
+      Drawable(screen.get(), 0, true) {
   viewport_rect().rect = screen->GetSize();
   InitViewportInternal();
 }
 
 Viewport::Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect)
-    : GraphicElement(screen), Drawable(screen.get(), 0, true) {
+    : GraphicElement(screen),
+      Disposable(screen),
+      Drawable(screen.get(), 0, true) {
   viewport_rect().rect = rect;
   InitViewportInternal();
 }

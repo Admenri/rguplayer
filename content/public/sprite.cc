@@ -11,7 +11,9 @@
 namespace content {
 
 Sprite::Sprite(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
-    : GraphicElement(screen), ViewportChild(screen, viewport) {
+    : GraphicElement(screen),
+      Disposable(screen),
+      ViewportChild(screen, viewport) {
   InitAttributeInternal();
 }
 

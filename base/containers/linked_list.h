@@ -15,17 +15,20 @@ class LinkedList;
 template <typename T>
 class LinkNode {
  public:
-  LinkNode() : previous_(nullptr), next_(nullptr) {}
+  LinkNode() : previous_(nullptr), next_(nullptr), value_(nullptr) {}
+  LinkNode(T* data) : previous_(nullptr), next_(nullptr), value_(data) {}
   ~LinkNode() { RemoveFromList(); }
 
-  LinkNode(const LinkNode &) = delete;
-  LinkNode &operator=(const LinkNode &) = delete;
+  LinkNode(const LinkNode&) = delete;
+  LinkNode& operator=(const LinkNode&) = delete;
 
-  T *value() { return static_cast<T *>(this); }
-  const T *value() const { return static_cast<const T *>(this); }
+  T* value() { return static_cast<T*>(this); }
+  const T* value() const { return static_cast<const T*>(this); }
 
-  LinkNode<T> *previous() { return previous_; }
-  LinkNode<T> *next() { return next_; }
+  T* value_as_init() { return value_; }
+
+  LinkNode<T>* previous() { return previous_; }
+  LinkNode<T>* next() { return next_; }
 
   void RemoveFromList() {
     if (previous_ && next_) {
@@ -39,8 +42,9 @@ class LinkNode {
 
  private:
   friend class LinkedList<T>;
-  LinkNode<T> *previous_;
-  LinkNode<T> *next_;
+  LinkNode<T>* previous_;
+  LinkNode<T>* next_;
+  T* value_;
 };
 
 template <typename T>
@@ -51,31 +55,31 @@ class LinkedList {
     root_.next_ = &root_;
   }
 
-  void Prepend(LinkNode<T> *node) {
+  void Prepend(LinkNode<T>* node) {
     root_.next_->previous_ = node;
     node->previous_ = &root_;
     node->next_ = root_.next_;
     root_.next_ = node;
   }
 
-  void Append(LinkNode<T> *node) {
+  void Append(LinkNode<T>* node) {
     root_.previous_->next_ = node;
     node->next_ = &root_;
     node->previous_ = root_.previous_;
     root_.previous_ = node;
   }
 
-  void InsertBefore(LinkNode<T> *prev, LinkNode<T> *node) {
+  void InsertBefore(LinkNode<T>* prev, LinkNode<T>* node) {
     node->next_ = prev;
     node->previous_ = prev->previous_;
     prev->previous_->next_ = node;
     prev->previous_ = node;
   }
 
-  LinkNode<T> *head() { return root_.next_; }
-  LinkNode<T> *tail() { return root_.previous_; }
+  LinkNode<T>* head() { return root_.next_; }
+  LinkNode<T>* tail() { return root_.previous_; }
 
-  LinkNode<T> *end() { return &root_; }
+  LinkNode<T>* end() { return &root_; }
 
   bool empty() const { return root_.next_ == &root_; }
 

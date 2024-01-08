@@ -13,6 +13,7 @@ namespace content {
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
     : GraphicElement(host),
+      Disposable(host),
       pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
   width = std::abs(width);
   height = std::abs(height);
@@ -27,6 +28,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
     : GraphicElement(host),
+      Disposable(host),
       pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
   surface_buffer_ = IMG_Load(filename.c_str());
 

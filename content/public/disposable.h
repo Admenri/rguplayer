@@ -8,13 +8,17 @@
 #include "base/bind/callback_list.h"
 #include "base/buildflags/build.h"
 #include "base/exceptions/exception.h"
+#include "content/public/graphics.h"
 
 namespace content {
 
 class Disposable {
  public:
-  Disposable() = default;
-  virtual ~Disposable() = default;
+  Disposable(scoped_refptr<Graphics> screen) : screen_(screen), link_(this) {
+    screen_->AddDisposable(this);
+  }
+
+  virtual ~Disposable() { screen_->RemoveDisposable(this); }
 
   Disposable(const Disposable&) = delete;
   Disposable& operator=(const Disposable&) = delete;
@@ -46,7 +50,10 @@ class Disposable {
   virtual std::string_view DisposedObjectName() const = 0;
 
  private:
+  friend class Graphics;
   base::OnceClosureList observers_;
+  scoped_refptr<Graphics> screen_;
+  base::LinkNode<Disposable> link_;
 
   bool is_disposed_ = false;
 };

@@ -133,16 +133,16 @@ void QuadDrawable::Draw() {
   VertexArray<CommonVertex>::Unbind();
 }
 
-void Blt::BeginScreen(const base::Vec2i& resolution) {
+void Blt::BeginScreen(const base::Rect& rect) {
   FrameBuffer::Unbind();
 
   auto& shader = GSM.shaders->base;
 
-  GSM.states.viewport.Push(resolution);
+  GSM.states.viewport.Push(rect);
   GSM.states.blend.Push(false);
 
   shader.Bind();
-  shader.SetProjectionMatrix(resolution);
+  shader.SetProjectionMatrix(rect.Size());
   shader.SetTransOffset(base::Vec2i());
 }
 

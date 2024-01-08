@@ -12,6 +12,8 @@
 
 namespace content {
 
+class Disposable;
+
 class Graphics final : public base::RefCounted<Graphics>,
                        public DrawableParent {
  public:
@@ -27,16 +29,23 @@ class Graphics final : public base::RefCounted<Graphics>,
   base::Vec2i GetSize() { return resolution_; }
 
   void Update();
+  void ResizeScreen(const base::Vec2i& resolution);
+  void Reset();
 
   scoped_refptr<RenderRunner> renderer() { return renderer_; }
 
  private:
   friend class Viewport;
+  friend class Disposable;
+
   void InitScreenBufferInternal();
   void DestroyBufferInternal();
   void CompositeScreenInternal();
   void ResizeResolutionInternal();
   void PresentScreenInternal(bool* paint_raiser);
+
+  void AddDisposable(Disposable* disp);
+  void RemoveDisposable(Disposable* disp);
 
   void RenderEffectRequire(const base::Vec4& color,
                            const base::Vec4& tone,
@@ -47,6 +56,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   scoped_refptr<RenderRunner> renderer_;
   base::Vec2i resolution_;
+  base::LinkedList<Disposable> disposable_elements_;
 
   uint64_t frame_count_ = 0;
   double frame_rate_ = 60.0;
@@ -56,16 +66,16 @@ class Graphics final : public base::RefCounted<Graphics>,
 
 class GraphicElement {
  public:
-  GraphicElement(scoped_refptr<Graphics> screen) : host_(screen) {}
-  ~GraphicElement() = default;
+  GraphicElement(scoped_refptr<Graphics> screen) : host_screen_(screen) {}
+  virtual ~GraphicElement() = default;
 
   GraphicElement(const GraphicElement&) = delete;
   GraphicElement& operator=(const GraphicElement&) = delete;
 
-  scoped_refptr<Graphics> screen() { return host_; }
+  scoped_refptr<Graphics> screen() { return host_screen_; }
 
  private:
-  scoped_refptr<Graphics> host_;
+  scoped_refptr<Graphics> host_screen_;
 };
 
 }  // namespace content

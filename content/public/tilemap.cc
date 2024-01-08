@@ -51,7 +51,7 @@ class AboveLayer : public ViewportChild {
 
 Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
                    scoped_refptr<Viewport> viewport)
-    : GraphicElement(screen), viewport_(viewport) {
+    : GraphicElement(screen), Disposable(screen), viewport_(viewport) {
   ground_ =
       std::make_unique<GroundLayer>(screen, weak_ptr_factory_.GetWeakPtr());
   above_ = std::make_unique<AboveLayer>(screen, weak_ptr_factory_.GetWeakPtr());
