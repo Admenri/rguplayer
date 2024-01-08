@@ -56,19 +56,42 @@ struct VertexArray {
     }
   }
 
-  inline static void Init(VertexArray& vao) {}
+  inline static void Init(VertexArray& vao) {
+    if (GL.GenVertexArraysOES) {
+      GL.GenVertexArraysOES(1, &vao.id.gl);
+      GL.BindVertexArrayOES(vao.id.gl);
 
-  inline static void Uninit(VertexArray& vao) {}
+      SetAttrib(vao);
 
-  inline static void Bind(VertexArray& vao) { SetAttrib(vao); }
+      GL.BindVertexArrayOES(0);
+    }
+  }
+
+  inline static void Uninit(VertexArray& vao) {
+    if (GL.GenVertexArraysOES) {
+      GL.DeleteVertexArraysOES(1, &vao.id.gl);
+    }
+  }
+
+  inline static void Bind(VertexArray& vao) {
+    if (GL.GenVertexArraysOES) {
+      GL.BindVertexArrayOES(vao.id.gl);
+    } else {
+      SetAttrib(vao);
+    }
+  }
 
   inline static void Unbind() {
-    for (size_t i = 0; i < VertexInfo<Type>::attr_size; i++) {
-      GL.DisableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
-    }
+    if (GL.GenVertexArraysOES) {
+      GL.BindVertexArrayOES(0);
+    } else {
+      for (size_t i = 0; i < VertexInfo<Type>::attr_size; i++) {
+        GL.DisableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
+      }
 
-    IndexBuffer::Unbind();
-    VertexBuffer::Unbind();
+      IndexBuffer::Unbind();
+      VertexBuffer::Unbind();
+    }
   }
 };
 

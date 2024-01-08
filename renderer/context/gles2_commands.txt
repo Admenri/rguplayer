@@ -140,3 +140,8 @@ VertexAttrib4f
 VertexAttrib4fv
 VertexAttribPointer
 Viewport
+
+BindVertexArrayOES
+DeleteVertexArraysOES
+GenVertexArraysOES
+IsVertexArrayOES

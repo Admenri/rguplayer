@@ -65,6 +65,22 @@ class Viewport : public base::RefCounted<Viewport>,
     tone_ = tone;
   }
 
+  void SetRect(scoped_refptr<Rect> rect) {
+    CheckIsDisposed();
+
+    if (rect == rect_)
+      return;
+
+    rect_ = rect;
+    OnRectChangedInternal();
+  }
+
+  scoped_refptr<Rect> GetRect() {
+    CheckIsDisposed();
+
+    return rect_;
+  }
+
  private:
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Viewport"; }
@@ -76,9 +92,14 @@ class Viewport : public base::RefCounted<Viewport>,
   void OnViewportRectChanged(const ViewportInfo& rect) override;
 
   void InitViewportInternal();
+  void OnRectChangedInternal();
 
+  scoped_refptr<Rect> rect_;
   scoped_refptr<Color> color_;
   scoped_refptr<Tone> tone_;
+  base::CallbackListSubscription rect_observer_;
+
+  base::WeakPtrFactory<Viewport> weak_ptr_factory_{this};
 };
 
 class ViewportChild : public Drawable {
