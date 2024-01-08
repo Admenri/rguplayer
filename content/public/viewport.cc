@@ -53,9 +53,11 @@ void Viewport::Composite() {
 
 void Viewport::OnViewportRectChanged(const ViewportInfo& rect) {}
 
-ViewportChild::ViewportChild(scoped_refptr<Viewport> viewport, int z)
+ViewportChild::ViewportChild(scoped_refptr<Graphics> screen,
+                             scoped_refptr<Viewport> viewport,
+                             int z)
     : Drawable(viewport ? static_cast<DrawableParent*>(viewport.get())
-                        : viewport->screen().get(),
+                        : screen.get(),
                z,
                true) {}
 

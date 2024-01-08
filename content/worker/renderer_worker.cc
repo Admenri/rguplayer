@@ -47,7 +47,6 @@ void RenderRunner::InitGLContextInternal(InitParams params) {
   renderer::GLES2Context::CreateForCurrentThread();
   renderer::GSM.InitStates();
 
-  renderer::GL.ClearColor(0.f, 0.f, 1.f, 1.f);
   renderer::GL.Clear(GL_COLOR_BUFFER_BIT);
   SDL_GL_SwapWindow(host_window_);
 }

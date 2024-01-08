@@ -4,6 +4,8 @@
 
 #include "renderer/shader/gles2_shaders.h"
 
+#include "renderer/thread/thread_manager.h"
+
 namespace renderer {
 
 static char kGLESPrecisionDefine[] = "precision mediump float;";
@@ -40,9 +42,14 @@ GLES2Shader::~GLES2Shader() {
   GL.DeleteProgram(program_);
 }
 
-void GLES2Shader::Bind() {}
+void GLES2Shader::Bind() {
+  GSM.states.program.Set(program_);
+}
 
-void GLES2Shader::Unbind() {}
+void GLES2Shader::Unbind() {
+  GSM.states.program.Set(0);
+  GL.ActiveTexture(GL_TEXTURE0);
+}
 
 bool GLES2Shader::Setup(const std::string& vertex_shader,
                         const std::string& vertex_name,
@@ -129,8 +136,10 @@ bool GLES2ShaderBase::Setup(const std::string& vertex_shader,
                             const std::string& vertex_name,
                             const std::string& frag_shader,
                             const std::string& frag_name) {
-  if (!GLES2Shader::Setup(vertex_shader, vertex_name, frag_shader, frag_name))
+  if (!GLES2Shader::Setup(vertex_shader, vertex_name, frag_shader, frag_name)) {
+    LOG(ERROR) << "ShaderBase compile error.";
     return false;
+  }
 
   u_projectionMat_ = GL.GetUniformLocation(program(), "u_projectionMat");
   return true;

@@ -29,9 +29,14 @@ void BindingRunner::BindingMain() {
 
 void BindingRunner::BindingFuncMain(std::stop_token token,
                                     base::WeakPtr<BindingRunner> self) {
+  // Init binding thread runner
+  self->quit_req_ = &token;
   self->renderer_->InitRenderer(self->renderer_params_);
   self->graphics_ =
       new Graphics(self->renderer_, self->params_.initial_resolution);
+
+  // Boot binding external components
+  self->params_.binding_boot.Run(self.get());
 }
 
 }  // namespace content

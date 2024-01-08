@@ -82,7 +82,9 @@ class Viewport : public base::RefCounted<Viewport>,
 
 class ViewportChild : public Drawable {
  public:
-  ViewportChild(scoped_refptr<Viewport> viewport, int z = 0);
+  ViewportChild(scoped_refptr<Graphics> screen,
+                scoped_refptr<Viewport> viewport,
+                int z = 0);
 
   ViewportChild(const ViewportChild&) = delete;
   ViewportChild& operator=(const ViewportChild&) = delete;

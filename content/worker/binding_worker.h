@@ -18,6 +18,8 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   struct InitParams {
     base::Vec2i initial_resolution;
 
+    base::RepeatingCallback<void(scoped_refptr<BindingRunner>)> binding_boot;
+
     InitParams() = default;
   };
 
@@ -32,6 +34,9 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
                              const RenderRunner::InitParams& renderer_params);
   void BindingMain();
 
+  bool quit_required() { return quit_req_ && quit_req_->stop_requested(); }
+  scoped_refptr<Graphics> graphics() { return graphics_; }
+
  private:
   static void BindingFuncMain(std::stop_token token,
                               base::WeakPtr<BindingRunner> self);
@@ -41,6 +46,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   std::unique_ptr<std::jthread> runner_thread_;
   InitParams params_;
   RenderRunner::InitParams renderer_params_;
+  std::stop_token* quit_req_ = nullptr;
 
   base::WeakPtrFactory<BindingRunner> weak_ptr_factory_{this};
 };

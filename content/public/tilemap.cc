@@ -9,8 +9,8 @@ namespace content {
 // Reference: https://www.tktkgame.com/tkool/memo/vx/tile_id.html
 class GroundLayer : public ViewportChild {
  public:
-  GroundLayer(base::WeakPtr<Tilemap2> tilemap)
-      : ViewportChild(tilemap->viewport_), tilemap_(tilemap) {}
+  GroundLayer(scoped_refptr<Graphics> screen, base::WeakPtr<Tilemap2> tilemap)
+      : ViewportChild(screen, tilemap->viewport_), tilemap_(tilemap) {}
   ~GroundLayer() override {}
 
   GroundLayer(const GroundLayer&) = delete;
@@ -30,8 +30,8 @@ class GroundLayer : public ViewportChild {
 
 class AboveLayer : public ViewportChild {
  public:
-  AboveLayer(base::WeakPtr<Tilemap2> tilemap)
-      : ViewportChild(tilemap->viewport_, 200), tilemap_(tilemap) {}
+  AboveLayer(scoped_refptr<Graphics> screen, base::WeakPtr<Tilemap2> tilemap)
+      : ViewportChild(screen, tilemap->viewport_, 200), tilemap_(tilemap) {}
   ~AboveLayer() override {}
 
   AboveLayer(const AboveLayer&) = delete;
@@ -52,8 +52,9 @@ class AboveLayer : public ViewportChild {
 Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
                    scoped_refptr<Viewport> viewport)
     : GraphicElement(screen), viewport_(viewport) {
-  ground_ = std::make_unique<GroundLayer>(weak_ptr_factory_.GetWeakPtr());
-  above_ = std::make_unique<AboveLayer>(weak_ptr_factory_.GetWeakPtr());
+  ground_ =
+      std::make_unique<GroundLayer>(screen, weak_ptr_factory_.GetWeakPtr());
+  above_ = std::make_unique<AboveLayer>(screen, weak_ptr_factory_.GetWeakPtr());
 }
 
 Tilemap2::~Tilemap2() {

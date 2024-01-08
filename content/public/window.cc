@@ -72,7 +72,7 @@ static const uint8_t cursor_alpha_reset = 0x10;
 
 Window2::Window2(scoped_refptr<Graphics> screen,
                  scoped_refptr<Viewport> viewport)
-    : GraphicElement(screen), ViewportChild(viewport) {
+    : GraphicElement(screen), ViewportChild(screen, viewport) {
   InitWindow();
 }
 
@@ -82,7 +82,7 @@ Window2::Window2(scoped_refptr<Graphics> screen,
                  int width,
                  int height)
     : GraphicElement(screen),
-      ViewportChild(nullptr),
+      ViewportChild(screen, nullptr),
       rect_(x, y, width, height) {
   InitWindow();
 }

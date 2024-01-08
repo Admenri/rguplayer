@@ -17,7 +17,7 @@ namespace content {
 
 Plane::Plane(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
     : GraphicElement(screen),
-      ViewportChild(viewport),
+      ViewportChild(screen, viewport),
       color_(new Color()),
       tone_(new Tone()) {
   screen->renderer()->PostTask(base::BindOnce(&Plane::InitPlaneInternal,

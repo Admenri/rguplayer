@@ -17,6 +17,10 @@
 #include "EGL/eglext.h"
 
 #include "content/worker/content_compositor.h"
+#include "content/public/bitmap.h"
+#include "content/public/sprite.h"
+#include "content/public/plane.h"
+#include "content/public/window.h"
 
 #include "physfs.h"
 
@@ -51,6 +55,72 @@ int main(int argc, char* argv[]) {
 
   content::WorkerTreeCompositor cc;
   content::WorkerTreeCompositor::InitParams params;
+
+  params.binding_params.binding_boot =
+      base::BindRepeating([](scoped_refptr<content::BindingRunner> binding) {
+        scoped_refptr<content::Graphics> screen = binding->graphics();
+
+        scoped_refptr<content::Bitmap> bmp = new content::Bitmap(
+            screen, "D:\\Desktop\\rgu\\app\\test\\example.png");
+
+        scoped_refptr<content::Bitmap> sampler = new content::Bitmap(
+            screen, "D:\\Desktop\\rgu\\app\\test\\test.png");
+
+        bmp->ClearRect(base::Rect(20, 20, 50, 50));
+        bmp->Blt(100, 100, sampler, sampler->GetRect()->AsBase(), 255);
+
+        bmp->GradientFillRect(base::Rect(50, 100, 100, 50),
+                              new content::Color(0, 255, 0, 125),
+                              new content::Color(0, 0, 255, 125));
+
+        /* Sync method test */
+        SDL_Surface* surf = bmp->SurfaceRequired();
+        IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+
+        scoped_refptr<content::Sprite> sp = new content::Sprite(screen);
+        sp->SetBitmap(bmp);
+        sp->GetTransform().SetOrigin(
+            base::Vec2i(sp->GetWidth() / 2, sp->GetHeight() / 2));
+        sp->GetTransform().SetPosition(
+            base::Vec2i(screen->GetWidth() / 2, screen->GetHeight() / 2));
+
+        sp->SetBushDepth(100);
+        sp->SetBushOpacity(128);
+
+        sp->SetWaveAmp(20);
+        sp->GetSrcRect()->Set(base::Rect(100, 100, 100, 100));
+
+        scoped_refptr<content::Plane> pl = new content::Plane(screen);
+        pl->SetBitmap(
+            new content::Bitmap(screen, "D:\\Desktop\\rgu\\app\\test\\bg.png"));
+
+        scoped_refptr<content::Window2> vx_win =
+            new content::Window2(screen, 100, 100, 300, 300);
+        vx_win->SetWindowskin(new content::Bitmap(
+            screen, "D:\\Desktop\\rgu\\app\\test\\Window.png"));
+        vx_win->SetZ(100);
+        vx_win->GetTone()->Set(-68, -68, 68, 0);
+        vx_win->SetPause(true);
+
+        vx_win->SetContents(bmp);
+
+        vx_win->SetActive(true);
+        vx_win->SetCursorRect(
+            new content::Rect(base::Rect(110, 110, 100, 100)));
+
+        vx_win->SetArrowsVisible(true);
+
+        float xxx = 0;
+        while (!binding->quit_required()) {
+          sp->Update();
+          sp->GetTransform().SetRotation(++xxx);
+
+          screen->Update();
+
+          if (!vx_win->IsDisposed())
+            vx_win->Update();
+        }
+      });
 
   params.binding_params.initial_resolution = base::Vec2i(800, 600);
   params.renderer_params.target_window = win;
