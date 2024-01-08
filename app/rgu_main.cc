@@ -28,7 +28,7 @@
 
 SDL_EGLAttrib kAttrib[] = {
     EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-    EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE,
+    EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
     // EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
     // EGL_PLATFORM_ANGLE_DEVICE_TYPE_SWIFTSHADER_ANGLE,
     EGL_NONE,
@@ -74,8 +74,8 @@ int main(int argc, char* argv[]) {
                               new content::Color(0, 0, 255, 125));
 
         /* Sync method test */
-        SDL_Surface* surf = bmp->SurfaceRequired();
-        IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+        // SDL_Surface* surf = bmp->SurfaceRequired();
+        // IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
 
         scoped_refptr<content::Sprite> sp = new content::Sprite(screen);
         sp->SetBitmap(bmp);
@@ -94,8 +94,14 @@ int main(int argc, char* argv[]) {
         pl->SetBitmap(
             new content::Bitmap(screen, "D:\\Desktop\\rgu\\app\\test\\bg.png"));
 
+        scoped_refptr<content::Viewport> viewp = new content::Viewport(screen);
+        viewp->SetZ(100);
+
         scoped_refptr<content::Window2> vx_win =
             new content::Window2(screen, 100, 100, 300, 300);
+
+        vx_win->SetViewport(viewp);
+
         vx_win->SetWindowskin(new content::Bitmap(
             screen, "D:\\Desktop\\rgu\\app\\test\\Window.png"));
         vx_win->SetZ(100);

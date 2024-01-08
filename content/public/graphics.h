@@ -31,11 +31,16 @@ class Graphics final : public base::RefCounted<Graphics>,
   scoped_refptr<RenderRunner> renderer() { return renderer_; }
 
  private:
+  friend class Viewport;
   void InitScreenBufferInternal();
   void DestroyBufferInternal();
   void CompositeScreenInternal();
   void ResizeResolutionInternal();
   void PresentScreenInternal(bool* paint_raiser);
+
+  void RenderEffectRequire(const base::Vec4& color,
+                           const base::Vec4& tone,
+                           const base::Vec4& flash_color);
 
   renderer::TextureFrameBuffer screen_buffer_[2];
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;

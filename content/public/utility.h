@@ -148,12 +148,15 @@ class Tone : public base::RefCounted<Rect>, public ValueNotification {
 
   base::Vec4i& AsNormal() { return data_; }
 
+  bool IsValid() {
+    return data_.x != 0 || data_.y != 0 || data_.z != 0 || data_.w != 0;
+  }
+
  private:
   base::Vec4i data_;
 };
 
-class Color : public base::RefCounted<Rect>,
-              public ValueNotification {
+class Color : public base::RefCounted<Rect>, public ValueNotification {
  public:
   Color() {}
   Color(int red, int green, int blue, int alpha = 255)
@@ -210,6 +213,8 @@ class Color : public base::RefCounted<Rect>,
   }
 
   base::Vec4i& AsNormal() { return data_; }
+
+  bool IsValid() { return data_.w != 0; }
 
  private:
   base::Vec4i data_;

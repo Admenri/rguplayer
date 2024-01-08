@@ -18,6 +18,9 @@ namespace shader {
 #include "renderer/shader/glsl/basealpha.vert.xxd"
 #include "renderer/shader/glsl/basecolor.frag.xxd"
 #include "renderer/shader/glsl/basecolor.vert.xxd"
+#include "renderer/shader/glsl/flat.frag.xxd"
+#include "renderer/shader/glsl/gray.frag.xxd"
+#include "renderer/shader/glsl/minimum.vert.xxd"
 #include "renderer/shader/glsl/plane.frag.xxd"
 #include "renderer/shader/glsl/sprite.frag.xxd"
 #include "renderer/shader/glsl/texblt.frag.xxd"
@@ -352,6 +355,49 @@ void PlaneShader::SetColor(const base::Vec4& color) {
 
 void PlaneShader::SetTone(const base::Vec4& tone) {
   GL.Uniform4f(u_tone_, tone.x, tone.y, tone.z, tone.w);
+}
+
+GrayShader::GrayShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::base_vert, shader::base_vert_len),
+      "base_vert",
+      shader::FromRawData(shader::gray_frag, shader::gray_frag_len),
+      "gray_frag");
+
+  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
+  u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
+  u_texture_ = GL.GetUniformLocation(program(), "u_texture");
+  u_gray_ = GL.GetUniformLocation(program(), "u_gray");
+}
+
+void GrayShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void GrayShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void GrayShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+void GrayShader::SetGray(float gray) {
+  GL.Uniform1f(u_gray_, gray);
+}
+
+FlatShader::FlatShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::minimum_vert, shader::minimum_vert_len),
+      "minimum_vert",
+      shader::FromRawData(shader::flat_frag, shader::flat_frag_len),
+      "flat_frag");
+
+  u_color_ = GL.GetUniformLocation(program(), "u_color");
+}
+
+void FlatShader::SetColor(const base::Vec4& color) {
+  GL.Uniform4f(u_color_, color.x, color.y, color.z, color.w);
 }
 
 }  // namespace renderer

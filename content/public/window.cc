@@ -407,7 +407,6 @@ void Window2::Composite() {
 
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.PushOnly();
-
   renderer::GSM.states.scissor_rect.SetIntersect(padding_trans_rect);
 
   /* Control arrows and cursor */

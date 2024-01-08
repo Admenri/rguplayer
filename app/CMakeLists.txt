@@ -15,3 +15,7 @@ add_custom_command(TARGET rgu_player POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
   ${COPY_SOURCE_DIR} ${COPY_DEST_DIR}
 )
+
+target_compile_options(rgu_player PRIVATE
+    "$<$<CXX_COMPILER_ID:MSVC>:-utf-8>"
+)

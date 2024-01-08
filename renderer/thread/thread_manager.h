@@ -25,6 +25,8 @@ class GlobalStateManager final {
     ColorShader color;
     PlaneShader plane;
     BaseAlphaShader base_alpha;
+    GrayShader gray;
+    FlatShader flat;
   };
 
   GlobalStateManager() = default;

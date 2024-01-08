@@ -77,7 +77,6 @@ class BaseShader : public GLES2ShaderBase {
   GLint u_texSize_;
   GLint u_transOffset_;
   GLint u_texture_;
-  GLint u_opacity_;
 };
 
 class BaseAlphaShader : public GLES2ShaderBase {
@@ -172,6 +171,32 @@ class PlaneShader : public GLES2ShaderBase {
   GLint u_opacity_;
   GLint u_color_;
   GLint u_tone_;
+};
+
+class GrayShader : public GLES2ShaderBase {
+ public:
+  GrayShader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetTexture(GLID<Texture> tex);
+  void SetGray(float gray);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transOffset_;
+  GLint u_texture_;
+  GLint u_gray_;
+};
+
+class FlatShader : public GLES2ShaderBase {
+ public:
+  FlatShader();
+
+  void SetColor(const base::Vec4& color);
+
+ private:
+  GLint u_color_;
 };
 
 }  // namespace renderer

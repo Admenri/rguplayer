@@ -75,7 +75,8 @@ class Viewport : public base::RefCounted<Viewport>,
   void CheckDisposed() const override { CheckIsDisposed(); }
   void OnViewportRectChanged(const ViewportInfo& rect) override;
 
-  scoped_refptr<Rect> rect_;
+  void InitViewportInternal();
+
   scoped_refptr<Color> color_;
   scoped_refptr<Tone> tone_;
 };

@@ -9,11 +9,13 @@ namespace content {
 Viewport::Viewport(scoped_refptr<Graphics> screen)
     : GraphicElement(screen), Drawable(screen.get(), 0, true) {
   viewport_rect().rect = screen->GetSize();
+  InitViewportInternal();
 }
 
 Viewport::Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect)
     : GraphicElement(screen), Drawable(screen.get(), 0, true) {
   viewport_rect().rect = rect;
+  InitViewportInternal();
 }
 
 Viewport::~Viewport() {
@@ -21,14 +23,20 @@ Viewport::~Viewport() {
 }
 
 void Viewport::SetOX(int ox) {
-  CheckDisposed();
+  CheckIsDisposed();
+
+  if (viewport_rect().origin.x == ox)
+    return;
 
   viewport_rect().origin.x = ox;
   NotifyViewportChanged();
 }
 
 void Viewport::SetOY(int oy) {
-  CheckDisposed();
+  CheckIsDisposed();
+
+  if (viewport_rect().origin.y == oy)
+    return;
 
   viewport_rect().origin.y = oy;
   NotifyViewportChanged();
@@ -39,7 +47,8 @@ void Viewport::OnObjectDisposed() {
 }
 
 void Viewport::Composite() {
-  if (Flashable::IsFlashEmpty())
+  if (DrawableParent::link().empty() || Flashable::IsFlashEmpty() ||
+      !Drawable::GetVisible())
     return;
 
   renderer::GSM.states.scissor.Push(true);
@@ -47,11 +56,21 @@ void Viewport::Composite() {
 
   DrawableParent::CompositeChildren();
 
+  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
+    screen()->RenderEffectRequire(color_->AsBase(), tone_->AsBase(),
+                                  Flashable::GetFlashColor());
+  }
+
   renderer::GSM.states.scissor_rect.Pop();
   renderer::GSM.states.scissor.Pop();
 }
 
 void Viewport::OnViewportRectChanged(const ViewportInfo& rect) {}
+
+void Viewport::InitViewportInternal() {
+  color_ = new Color();
+  tone_ = new Tone();
+}
 
 ViewportChild::ViewportChild(scoped_refptr<Graphics> screen,
                              scoped_refptr<Viewport> viewport,
@@ -68,9 +87,7 @@ void ViewportChild::SetViewport(scoped_refptr<Viewport> viewport) {
     return;
 
   viewport_ = viewport;
-
   SetParent(viewport_.get());
-  OnViewportChanged();
 }
 
 }  // namespace content

@@ -227,6 +227,11 @@ class Rect {
 
   base::Vec2i Position() const { return base::Vec2i(x, y); }
   base::Vec2i Size() const { return base::Vec2i(width, height); }
+  bool IsEnclosed(const Rect& other) const {
+    return x <= other.x && y <= other.y &&
+           (x + width >= other.x + other.width) &&
+           (y + height >= other.y + other.height);
+  }
 
  public:
   int x, y, width, height;
@@ -256,6 +261,12 @@ class RectF {
 
   base::Vec2 Position() const { return base::Vec2(x, y); }
   base::Vec2 Size() const { return base::Vec2(width, height); }
+
+  bool IsEnclosed(const RectF& other) const {
+    return x <= other.x && y <= other.y &&
+           (x + width >= other.x + other.width) &&
+           (y + height >= other.y + other.height);
+  }
 
  public:
   float x, y, width, height;

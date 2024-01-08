@@ -15,9 +15,6 @@
 * Tilemap
 - 全部未实现
 
-* Viewport
-- 色调，混色效果未实现
-
 * Graphics
 - 除update和resize_screen外均未实现
 
