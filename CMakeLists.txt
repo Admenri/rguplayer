@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 project(rgu_player VERSION 1.0.0)
 include_directories("${PROJECT_SOURCE_DIR}")
 
+set(CORE_ENABLE_VIDEO off)
+
 #--------------------------------------------------------------------------------
 # Platform and compiler check
 #--------------------------------------------------------------------------------
@@ -79,11 +81,25 @@ set(PHYSFS_BUILD_SHARED FALSE)
 add_subdirectory(third_party/physfs)
 include_directories(third_party/physfs/src)
 
+## AOM
+if (CORE_ENABLE_VIDEO)
+  set(BUILD_SHARED_LIBS off)
+  include_directories(third_party/aom/aom)
+  add_subdirectory(third_party/aom)
+endif()
+
 #--------------------------------------------------------------------------------
 # Auto-generated directory include path
 #--------------------------------------------------------------------------------
 
-set(PYTHON_EXECUTABLE python)
+find_package(Python3 COMPONENTS Interpreter)
+
+if(Python3_FOUND)
+    set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+    message(STATUS "Found Python3: ${Python3_EXECUTABLE}")
+else()
+    message(FATAL_ERROR "Python3 not found.")
+endif()
 
 set(RGU_AUTOGEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/gen")
 include_directories("${RGU_AUTOGEN_DIR}")
