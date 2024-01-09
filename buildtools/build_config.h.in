@@ -1,0 +1,13 @@
+// Copyright 2024 Admenri.
+// Use of this source code is governed by a BSD - style license that can be
+// found in the LICENSE file.
+
+#ifndef BUILDTOOLS_BUILD_CONFIG_H_
+#define BUILDTOOLS_BUILD_CONFIG_H_
+
+#define CORE_FLAG_ON 1
+#define CORE_FLAG_OFF 0
+
+#define CORE_ENABLE_VIDEO CORE_FLAG_@CORE_ENABLE_VIDEO@
+
+#endif // !BUILDTOOLS_BUILD_CONFIG_H_

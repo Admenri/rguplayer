@@ -7,7 +7,13 @@ set(CMAKE_CXX_STANDARD 20)
 project(rgu_player VERSION 1.0.0)
 include_directories("${PROJECT_SOURCE_DIR}")
 
-set(CORE_ENABLE_VIDEO off)
+option(CORE_ENABLE_VIDEO "Enable Core Video Decode Functions" false)
+
+#--------------------------------------------------------------------------------
+# Generate config header
+#--------------------------------------------------------------------------------
+
+configure_file(buildtools/build_config.h.in gen/buildtools/build_config.h)
 
 #--------------------------------------------------------------------------------
 # Platform and compiler check
@@ -87,6 +93,13 @@ if (CORE_ENABLE_VIDEO)
   include_directories(third_party/aom)
   add_subdirectory(third_party/aom)
 endif()
+
+#--------------------------------------------------------------------------------
+# Components of Core
+#--------------------------------------------------------------------------------
+
+## FPSLimiter
+add_subdirectory(components/fpslimiter)
 
 #--------------------------------------------------------------------------------
 # Auto-generated directory include path
