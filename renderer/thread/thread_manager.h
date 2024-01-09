@@ -27,6 +27,8 @@ class GlobalStateManager final {
     BaseAlphaShader base_alpha;
     GrayShader gray;
     FlatShader flat;
+    AlphaTransShader alpha_trans;
+    VagueTransShader vague_shader;
   };
 
   GlobalStateManager() = default;

@@ -199,6 +199,48 @@ class FlatShader : public GLES2ShaderBase {
   GLint u_color_;
 };
 
+class AlphaTransShader : public GLES2ShaderBase {
+ public:
+  AlphaTransShader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetFrozenTexture(GLID<Texture> tex);
+  void SetCurrentTexture(GLID<Texture> tex);
+  void SetProgress(float progress);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transOffset_;
+
+  GLint u_frozen_texture_;
+  GLint u_current_texture_;
+  GLint u_progress_;
+};
+
+class VagueTransShader : public GLES2ShaderBase {
+ public:
+  VagueTransShader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetFrozenTexture(GLID<Texture> tex);
+  void SetCurrentTexture(GLID<Texture> tex);
+  void SetTransTexture(GLID<Texture> tex);
+  void SetProgress(float progress);
+  void SetVague(float vague);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transOffset_;
+
+  GLint u_frozen_texture_;
+  GLint u_current_texture_;
+  GLint u_trans_texture_;
+  GLint u_progress_;
+  GLint u_vague_;
+};
+
 }  // namespace renderer
 
 #endif  // !RENDERER_SHADER_GLES2_SHADERS_H_

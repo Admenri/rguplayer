@@ -42,6 +42,11 @@ class Graphics final : public base::RefCounted<Graphics>,
   void ResizeScreen(const base::Vec2i& resolution);
   void Reset();
 
+  void Freeze();
+  void Transition(int duration = 10,
+                  scoped_refptr<Bitmap> trans_bitmap = nullptr,
+                  int vague = 40);
+
   scoped_refptr<RenderRunner> renderer() { return renderer_; }
 
  private:
@@ -52,9 +57,16 @@ class Graphics final : public base::RefCounted<Graphics>,
   void DestroyBufferInternal();
   void CompositeScreenInternal();
   void ResizeResolutionInternal();
-  void PresentScreenInternal(bool* paint_raiser);
+  void PresentScreenInternal(bool* paint_raiser, bool backend = false);
   void SetBrightnessInternal();
   void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
+  void FreezeSceneInternal();
+  void TransitionSceneInternal(int duration,
+                               scoped_refptr<Bitmap> trans_bitmap,
+                               int vague);
+  void TransitionSceneInternalLoop(int i,
+                                   int duration,
+                                   scoped_refptr<Bitmap> trans_bitmap);
 
   void AddDisposable(Disposable* disp);
   void RemoveDisposable(Disposable* disp);
@@ -63,7 +75,10 @@ class Graphics final : public base::RefCounted<Graphics>,
                            const base::Vec4& tone,
                            const base::Vec4& flash_color);
 
+  void FrameCheckInternal();
+
   renderer::TextureFrameBuffer screen_buffer_[2];
+  renderer::TextureFrameBuffer frozen_snapshot_;
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;
   std::unique_ptr<renderer::QuadDrawable> brightness_quad_;
 
@@ -71,6 +86,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   base::Vec2i resolution_;
   base::LinkedList<Disposable> disposable_elements_;
 
+  bool frozen_ = false;
   uint64_t frame_count_ = 0;
   double frame_rate_ = 60.0;
   int brightness_ = 255;

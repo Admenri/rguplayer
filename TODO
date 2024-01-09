@@ -1,4 +1,4 @@
-2024.1.8:
+2024.1.9:
 
 * Bitmap：
 - 模糊未实现
@@ -16,8 +16,6 @@
 - 全部未实现
 
 * Graphics
-- freeze未完成
-- transition未完成
 - fadein/out未完成
 - playmovie未完成
 - fps计数器未实现

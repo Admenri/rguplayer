@@ -12,6 +12,7 @@ static char kGLESPrecisionDefine[] = "precision mediump float;";
 
 namespace shader {
 
+#include "renderer/shader/glsl/alphatrans.frag.xxd"
 #include "renderer/shader/glsl/base.frag.xxd"
 #include "renderer/shader/glsl/base.vert.xxd"
 #include "renderer/shader/glsl/basealpha.frag.xxd"
@@ -25,6 +26,7 @@ namespace shader {
 #include "renderer/shader/glsl/sprite.frag.xxd"
 #include "renderer/shader/glsl/texblt.frag.xxd"
 #include "renderer/shader/glsl/transform.vert.xxd"
+#include "renderer/shader/glsl/vaguetrans.frag.xxd"
 
 static inline std::string FromRawData(const uint8_t* raw_data,
                                       const uint32_t data_size) {
@@ -398,6 +400,84 @@ FlatShader::FlatShader() {
 
 void FlatShader::SetColor(const base::Vec4& color) {
   GL.Uniform4f(u_color_, color.x, color.y, color.z, color.w);
+}
+
+AlphaTransShader::AlphaTransShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::base_vert, shader::base_vert_len),
+      "base_vert",
+      shader::FromRawData(shader::alphatrans_frag, shader::alphatrans_frag_len),
+      "alphatrans_frag");
+
+  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
+  u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
+  u_frozen_texture_ = GL.GetUniformLocation(program(), "u_frozenTexture");
+  u_current_texture_ = GL.GetUniformLocation(program(), "u_currentTexture");
+  u_progress_ = GL.GetUniformLocation(program(), "u_progress");
+}
+
+void AlphaTransShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void AlphaTransShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void AlphaTransShader::SetFrozenTexture(GLID<Texture> tex) {
+  SetTexture(u_frozen_texture_, tex.gl, 1);
+}
+
+void AlphaTransShader::SetCurrentTexture(GLID<Texture> tex) {
+  SetTexture(u_current_texture_, tex.gl, 2);
+}
+
+void AlphaTransShader::SetProgress(float progress) {
+  GL.Uniform1f(u_progress_, progress);
+}
+
+VagueTransShader::VagueTransShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::base_vert, shader::base_vert_len),
+      "base_vert",
+      shader::FromRawData(shader::vaguetrans_frag, shader::vaguetrans_frag_len),
+      "vaguetrans_frag");
+
+  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
+  u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
+  u_frozen_texture_ = GL.GetUniformLocation(program(), "u_frozenTexture");
+  u_current_texture_ = GL.GetUniformLocation(program(), "u_currentTexture");
+  u_trans_texture_ = GL.GetUniformLocation(program(), "u_transTexture");
+  u_progress_ = GL.GetUniformLocation(program(), "u_progress");
+  u_vague_ = GL.GetUniformLocation(program(), "u_vague");
+}
+
+void VagueTransShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void VagueTransShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void VagueTransShader::SetFrozenTexture(GLID<Texture> tex) {
+  SetTexture(u_frozen_texture_, tex.gl, 1);
+}
+
+void VagueTransShader::SetCurrentTexture(GLID<Texture> tex) {
+  SetTexture(u_frozen_texture_, tex.gl, 2);
+}
+
+void VagueTransShader::SetTransTexture(GLID<Texture> tex) {
+  SetTexture(u_frozen_texture_, tex.gl, 3);
+}
+
+void VagueTransShader::SetProgress(float progress) {
+  GL.Uniform1f(u_progress_, progress);
+}
+
+void VagueTransShader::SetVague(float vague) {
+  GL.Uniform1f(u_vague_, vague);
 }
 
 }  // namespace renderer

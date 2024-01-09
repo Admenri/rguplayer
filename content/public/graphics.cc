@@ -65,12 +65,19 @@ void Graphics::FadeOut(int duration) {}
 void Graphics::FadeIn(int duration) {}
 
 void Graphics::Update() {
+  FrameCheckInternal();
+
+  if (frozen_)
+    return;
+
   // TODO: fps manager required
 
   bool complete_flag = false;
+  renderer()->PostTask(base::BindOnce(&Graphics::CompositeScreenInternal,
+                                      weak_ptr_factory_.GetWeakPtr()));
   renderer()->PostTask(base::BindOnce(&Graphics::PresentScreenInternal,
                                       weak_ptr_factory_.GetWeakPtr(),
-                                      &complete_flag));
+                                      &complete_flag, false));
 
   /* Delay for desire frame rate */
   SDL_Delay(1000 / 60);
@@ -86,6 +93,11 @@ void Graphics::Update() {
 }
 
 void Graphics::ResizeScreen(const base::Vec2i& resolution) {
+  FrameCheckInternal();
+
+  if (resolution_ == resolution)
+    return;
+
   resolution_ = resolution;
 
   renderer()->PostTask(base::BindOnce(&Graphics::ResizeResolutionInternal,
@@ -94,6 +106,12 @@ void Graphics::ResizeScreen(const base::Vec2i& resolution) {
 }
 
 void Graphics::Reset() {
+  // Reset freeze
+  frozen_ = false;
+
+  // Reset brightness
+  SetBrightness(255);
+
   // Disposed all elements
   for (auto it = disposable_elements_.tail(); it != disposable_elements_.end();
        it = it->previous()) {
@@ -101,6 +119,48 @@ void Graphics::Reset() {
   }
 
   // TODO: Reset fpslimiter
+}
+
+void Graphics::Freeze() {
+  FrameCheckInternal();
+
+  if (frozen_)
+    return;
+
+  frozen_ = true;
+  renderer()->PostTask(base::BindOnce(&Graphics::FreezeSceneInternal,
+                                      weak_ptr_factory_.GetWeakPtr()));
+  renderer()->WaitForSync();
+}
+
+void Graphics::Transition(int duration,
+                          scoped_refptr<Bitmap> trans_bitmap,
+                          int vague) {
+  FrameCheckInternal();
+
+  if (!frozen_)
+    return;
+
+  SetBrightness(255);
+  vague = std::clamp<int>(vague, 1, 256);
+
+  renderer()->PostTask(base::BindOnce(&Graphics::TransitionSceneInternal,
+                                      weak_ptr_factory_.GetWeakPtr(), duration,
+                                      trans_bitmap, vague));
+
+  renderer()->PostTask(
+      base::BindOnce([]() { renderer::GSM.states.blend.Push(false); }));
+
+  for (int i = 0; i < duration; ++i) {
+    renderer()->PostTask(base::BindOnce(&Graphics::TransitionSceneInternalLoop,
+                                        weak_ptr_factory_.GetWeakPtr(), i,
+                                        duration, trans_bitmap));
+  }
+
+  renderer()->PostTask(
+      base::BindOnce([]() { renderer::GSM.states.blend.Pop(); }));
+
+  frozen_ = false;
 }
 
 void Graphics::InitScreenBufferInternal() {
@@ -113,6 +173,11 @@ void Graphics::InitScreenBufferInternal() {
   renderer::TextureFrameBuffer::Alloc(screen_buffer_[1], resolution_.x,
                                       resolution_.y);
   renderer::TextureFrameBuffer::LinkFrameBuffer(screen_buffer_[1]);
+
+  frozen_snapshot_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(frozen_snapshot_, resolution_.x,
+                                      resolution_.y);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(frozen_snapshot_);
 
   screen_quad_ = std::make_unique<renderer::QuadDrawable>();
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
@@ -127,6 +192,7 @@ void Graphics::InitScreenBufferInternal() {
 void Graphics::DestroyBufferInternal() {
   renderer::TextureFrameBuffer::Del(screen_buffer_[0]);
   renderer::TextureFrameBuffer::Del(screen_buffer_[1]);
+  renderer::TextureFrameBuffer::Del(frozen_snapshot_);
 
   screen_quad_.reset();
   brightness_quad_.reset();
@@ -168,6 +234,8 @@ void Graphics::ResizeResolutionInternal() {
                                       resolution_.y);
   renderer::TextureFrameBuffer::Alloc(screen_buffer_[1], resolution_.x,
                                       resolution_.y);
+  renderer::TextureFrameBuffer::Alloc(frozen_snapshot_, resolution_.x,
+                                      resolution_.y);
 
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
@@ -179,20 +247,20 @@ void Graphics::ResizeResolutionInternal() {
   NotifyViewportChanged();
 }
 
-void Graphics::PresentScreenInternal(bool* paint_raiser) {
-  CompositeScreenInternal();
-
+void Graphics::PresentScreenInternal(bool* paint_raiser, bool backend) {
+  // TODO: incorrect content position
   renderer::Blt::BeginScreen(resolution_);
-  renderer::Blt::TexSource(screen_buffer_[0]);
-
+  renderer::Blt::TexSource(screen_buffer_[backend ? 1 : 0]);
   renderer::GSM.states.clear_color.Set(base::Vec4());
   renderer::FrameBuffer::Clear();
-
+  // Flip screen for Y
   base::Rect target_rect(0, resolution_.y, resolution_.x, -resolution_.y);
   renderer::Blt::EndDraw(resolution_, target_rect);
 
   SDL_GL_SwapWindow(renderer_->window());
-  *paint_raiser = true;
+
+  if (paint_raiser)
+    *paint_raiser = true;
 }
 
 void Graphics::SetBrightnessInternal() {
@@ -208,6 +276,68 @@ void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
   renderer::GSM.states.clear_color.Set(base::Vec4());
   renderer::FrameBuffer::Clear();
   renderer::Blt::EndDraw(resolution_, resolution_);
+}
+
+void Graphics::FreezeSceneInternal() {
+  CompositeScreenInternal();
+
+  renderer::Blt::BeginDraw(frozen_snapshot_);
+  renderer::Blt::TexSource(screen_buffer_[0]);
+  renderer::GSM.states.clear_color.Set(base::Vec4());
+  renderer::FrameBuffer::Clear();
+  renderer::Blt::EndDraw(resolution_, resolution_);
+}
+
+void Graphics::TransitionSceneInternal(int duration,
+                                       scoped_refptr<Bitmap> trans_bitmap,
+                                       int vague) {
+  CompositeScreenInternal();
+
+  auto& alpha_shader = renderer::GSM.shaders->alpha_trans;
+  auto& vague_shader = renderer::GSM.shaders->vague_shader;
+
+  if (!trans_bitmap) {
+    alpha_shader.Bind();
+    alpha_shader.SetProjectionMatrix(
+        renderer::GSM.states.viewport.Current().Size());
+    alpha_shader.SetTransOffset(base::Vec2());
+    alpha_shader.SetTextureSize(resolution_);
+    alpha_shader.SetFrozenTexture(frozen_snapshot_.tex);
+    alpha_shader.SetCurrentTexture(screen_buffer_[0].tex);
+  } else {
+    vague_shader.Bind();
+    vague_shader.SetProjectionMatrix(
+        renderer::GSM.states.viewport.Current().Size());
+    vague_shader.SetTransOffset(base::Vec2());
+    vague_shader.SetTextureSize(resolution_);
+    vague_shader.SetFrozenTexture(frozen_snapshot_.tex);
+    vague_shader.SetCurrentTexture(screen_buffer_[0].tex);
+    vague_shader.SetTransTexture(trans_bitmap->AsGLType().tex);
+    vague_shader.SetVague(vague / 256.0f);
+  }
+}
+
+void Graphics::TransitionSceneInternalLoop(int i,
+                                           int duration,
+                                           scoped_refptr<Bitmap> trans_bitmap) {
+  auto& alpha_shader = renderer::GSM.shaders->alpha_trans;
+  auto& vague_shader = renderer::GSM.shaders->vague_shader;
+  float progress = i * (1.0f / duration);
+
+  if (!trans_bitmap) {
+    alpha_shader.Bind();
+    alpha_shader.SetProgress(progress);
+  } else {
+    vague_shader.Bind();
+    vague_shader.SetProgress(progress);
+  }
+
+  renderer::FrameBuffer::Bind(screen_buffer_[1].fbo);
+  renderer::FrameBuffer::Clear();
+  screen_quad_->Draw();
+
+  // present with backend buffer
+  PresentScreenInternal(nullptr, true);
 }
 
 void Graphics::AddDisposable(Disposable* disp) {
@@ -306,5 +436,7 @@ void Graphics::RenderEffectRequire(const base::Vec4& color,
 
   renderer::GSM.states.blend_func.Refresh();
 }
+
+void Graphics::FrameCheckInternal() {}
 
 }  // namespace content
