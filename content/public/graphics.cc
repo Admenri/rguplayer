@@ -63,9 +63,22 @@ scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
   return snap;
 }
 
-void Graphics::FadeOut(int duration) {}
+void Graphics::FadeOut(int duration) {
+  int current_brightness = brightness_;
+  for (int i = 0; i < duration; ++i) {
+    SetBrightness(current_brightness - current_brightness * (i / duration));
+    Update();
+  }
+}
 
-void Graphics::FadeIn(int duration) {}
+void Graphics::FadeIn(int duration) {
+  int current_brightness = brightness_;
+  int diff = 255 - brightness_;
+  for (int i = 0; i < duration; ++i) {
+    SetBrightness(current_brightness + diff * (i / duration));
+    Update();
+  }
+}
 
 void Graphics::Update() {
   FrameCheckInternal();
@@ -310,17 +323,12 @@ void Graphics::TransitionSceneInternal(int duration,
         renderer::GSM.states.viewport.Current().Size());
     alpha_shader.SetTransOffset(base::Vec2());
     alpha_shader.SetTextureSize(resolution_);
-    alpha_shader.SetFrozenTexture(frozen_snapshot_.tex);
-    alpha_shader.SetCurrentTexture(screen_buffer_[0].tex);
   } else {
     vague_shader.Bind();
     vague_shader.SetProjectionMatrix(
         renderer::GSM.states.viewport.Current().Size());
     vague_shader.SetTransOffset(base::Vec2());
     vague_shader.SetTextureSize(resolution_);
-    vague_shader.SetFrozenTexture(frozen_snapshot_.tex);
-    vague_shader.SetCurrentTexture(screen_buffer_[0].tex);
-    vague_shader.SetTransTexture(trans_bitmap->AsGLType().tex);
     vague_shader.SetVague(vague / 256.0f);
   }
 }
