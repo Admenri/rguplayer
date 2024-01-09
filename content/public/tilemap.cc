@@ -125,8 +125,8 @@ void Tilemap2::SetViewport(scoped_refptr<Viewport> viewport) {
 
   if (viewport_ == viewport)
     return;
-  ground_->SetViewport(viewport);
-  above_->SetViewport(viewport);
+  ground_->SetViewport(viewport_);
+  above_->SetViewport(viewport_);
 }
 
 bool Tilemap2::GetVisible() const {

@@ -16,7 +16,11 @@
 - 全部未实现
 
 * Graphics
-- 除update和resize_screen外均未实现
+- freeze未完成
+- transition未完成
+- fadein/out未完成
+- playmovie未完成
+- fps计数器未实现
 
 * Audio
 - 全部未实现

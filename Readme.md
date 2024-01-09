@@ -44,6 +44,7 @@ OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。
 - Physfs - https://github.com/icculus/physfs
 - MRuby - https://mruby.org/
 - concurrentqueue - https://github.com/cameron314/concurrentqueue
+- aom - https://aomedia.googlesource.com/aom
 
 ## 联系方式
 

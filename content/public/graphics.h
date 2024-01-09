@@ -12,6 +12,7 @@
 
 namespace content {
 
+class Bitmap;
 class Disposable;
 
 class Graphics final : public base::RefCounted<Graphics>,
@@ -28,6 +29,15 @@ class Graphics final : public base::RefCounted<Graphics>,
   int GetHeight() const { return resolution_.y; }
   base::Vec2i GetSize() { return resolution_; }
 
+  int GetBrightness() const;
+  void SetBrightness(int brightness);
+
+  void Wait(int duration);
+  scoped_refptr<Bitmap> SnapToBitmap();
+
+  void FadeOut(int duration);
+  void FadeIn(int duration);
+
   void Update();
   void ResizeScreen(const base::Vec2i& resolution);
   void Reset();
@@ -43,6 +53,8 @@ class Graphics final : public base::RefCounted<Graphics>,
   void CompositeScreenInternal();
   void ResizeResolutionInternal();
   void PresentScreenInternal(bool* paint_raiser);
+  void SetBrightnessInternal();
+  void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
 
   void AddDisposable(Disposable* disp);
   void RemoveDisposable(Disposable* disp);
@@ -53,6 +65,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   renderer::TextureFrameBuffer screen_buffer_[2];
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;
+  std::unique_ptr<renderer::QuadDrawable> brightness_quad_;
 
   scoped_refptr<RenderRunner> renderer_;
   base::Vec2i resolution_;
@@ -60,6 +73,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   uint64_t frame_count_ = 0;
   double frame_rate_ = 60.0;
+  int brightness_ = 255;
 
   base::WeakPtrFactory<Graphics> weak_ptr_factory_{this};
 };

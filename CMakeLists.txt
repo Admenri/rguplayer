@@ -84,7 +84,7 @@ include_directories(third_party/physfs/src)
 ## AOM
 if (CORE_ENABLE_VIDEO)
   set(BUILD_SHARED_LIBS off)
-  include_directories(third_party/aom/aom)
+  include_directories(third_party/aom)
   add_subdirectory(third_party/aom)
 endif()
 

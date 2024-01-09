@@ -122,6 +122,12 @@ int main(int argc, char* argv[]) {
 
         viewp->SetTone(new content::Tone(68, 68, 0, 0));
 
+        screen->SetBrightness(125);
+
+        //scoped_refptr<content::Bitmap> snapshot = screen->SnapToBitmap();
+        //auto* surf = snapshot->SurfaceRequired();
+        //IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+
         float xxx = 0;
         while (!binding->quit_required()) {
           sp->Update();

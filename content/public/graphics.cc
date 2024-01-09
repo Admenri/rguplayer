@@ -4,6 +4,7 @@
 
 #include "content/public/graphics.h"
 
+#include "content/public/bitmap.h"
 #include "content/public/disposable.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
@@ -14,7 +15,7 @@ namespace content {
 
 Graphics::Graphics(scoped_refptr<RenderRunner> renderer,
                    const base::Vec2i& initial_resolution)
-    : renderer_(renderer), resolution_(initial_resolution) {
+    : renderer_(renderer), resolution_(initial_resolution), brightness_(255) {
   viewport_rect().rect = initial_resolution;
 
   renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
@@ -26,6 +27,43 @@ Graphics::~Graphics() {
                                       weak_ptr_factory_.GetWeakPtr()));
   renderer()->WaitForSync();
 }
+
+int Graphics::GetBrightness() const {
+  return brightness_;
+}
+
+void Graphics::SetBrightness(int brightness) {
+  brightness = std::clamp<int>(brightness, 0, 255);
+
+  if (brightness_ == brightness)
+    return;
+
+  brightness_ = brightness;
+
+  renderer()->PostTask(base::BindOnce(&Graphics::SetBrightnessInternal,
+                                      weak_ptr_factory_.GetWeakPtr()));
+}
+
+void Graphics::Wait(int duration) {
+  // Ref to RGSS document
+  for (int i = 0; i < duration; ++i) {
+    Update();
+  }
+}
+
+scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
+  scoped_refptr<Bitmap> snap = new Bitmap(this, resolution_.x, resolution_.y);
+
+  renderer()->PostTask(base::BindOnce(&Graphics::SnapToBitmapInternal,
+                                      weak_ptr_factory_.GetWeakPtr(), snap));
+  renderer()->WaitForSync();
+
+  return snap;
+}
+
+void Graphics::FadeOut(int duration) {}
+
+void Graphics::FadeIn(int duration) {}
 
 void Graphics::Update() {
   // TODO: fps manager required
@@ -80,6 +118,11 @@ void Graphics::InitScreenBufferInternal() {
   screen_quad_ = std::make_unique<renderer::QuadDrawable>();
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
+
+  brightness_quad_ = std::make_unique<renderer::QuadDrawable>();
+  screen_quad_->SetPositionRect(base::Vec2(resolution_));
+  screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
+  screen_quad_->SetColor();
 }
 
 void Graphics::DestroyBufferInternal() {
@@ -87,9 +130,13 @@ void Graphics::DestroyBufferInternal() {
   renderer::TextureFrameBuffer::Del(screen_buffer_[1]);
 
   screen_quad_.reset();
+  brightness_quad_.reset();
 }
 
 void Graphics::CompositeScreenInternal() {
+  if (!brightness_)
+    return;
+
   /* Prepare composite notify */
   DrawableParent::NotifyPrepareComposite();
 
@@ -98,9 +145,18 @@ void Graphics::CompositeScreenInternal() {
   renderer::FrameBuffer::Clear();
 
   renderer::GSM.states.scissor_rect.Set(resolution_);
-  renderer::GSM.states.viewport.Push(resolution_);
+  renderer::GSM.states.viewport.Set(resolution_);
+
   DrawableParent::CompositeChildren();
-  renderer::GSM.states.viewport.Pop();
+
+  if (brightness_ != 255) {
+    auto& shader = renderer::GSM.shaders->color;
+    shader.Bind();
+    shader.SetProjectionMatrix(resolution_);
+    shader.SetTransOffset(base::Vec2());
+
+    brightness_quad_->Draw();
+  }
 
   GLenum errcode = renderer::GL.GetError();
   if (errcode) {
@@ -116,6 +172,9 @@ void Graphics::ResizeResolutionInternal() {
 
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
+
+  brightness_quad_->SetPositionRect(base::Vec2(resolution_));
+  brightness_quad_->SetTexCoordRect(base::Vec2(resolution_));
 
   viewport_rect().rect = resolution_;
   NotifyViewportChanged();
@@ -135,6 +194,21 @@ void Graphics::PresentScreenInternal(bool* paint_raiser) {
 
   SDL_GL_SwapWindow(renderer_->window());
   *paint_raiser = true;
+}
+
+void Graphics::SetBrightnessInternal() {
+  brightness_quad_->SetColor(-1,
+                             base::Vec4(0, 0, 0, (255 - brightness_) / 255.0f));
+}
+
+void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
+  CompositeScreenInternal();
+
+  renderer::Blt::BeginDraw(target->AsGLType());
+  renderer::Blt::TexSource(screen_buffer_[0]);
+  renderer::GSM.states.clear_color.Set(base::Vec4());
+  renderer::FrameBuffer::Clear();
+  renderer::Blt::EndDraw(resolution_, resolution_);
 }
 
 void Graphics::AddDisposable(Disposable* disp) {
