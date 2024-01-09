@@ -97,6 +97,12 @@ int main(int argc, char* argv[]) {
         pl->SetBitmap(
             new content::Bitmap(screen, "D:\\Desktop\\rgu\\app\\test\\bg.png"));
 
+        for (int i = 0; i < 120; ++i) {
+          screen->Update();
+        }
+
+        screen->Freeze();
+
         scoped_refptr<content::Viewport> viewp =
             new content::Viewport(screen, base::Rect(0, 0, 300, 300));
         viewp->SetZ(100);
@@ -127,6 +133,10 @@ int main(int argc, char* argv[]) {
         scoped_refptr<content::Bitmap> snapshot = screen->SnapToBitmap();
         auto* surf = snapshot->SurfaceRequired();
         IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+
+        screen->Transition(
+            120, new content::Bitmap(
+                     screen, "D:\\Desktop\\rgu\\app\\test\\BattleStart.png"));
 
         float xxx = 0;
         while (!binding->quit_required()) {

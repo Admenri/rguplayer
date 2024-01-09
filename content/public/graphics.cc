@@ -15,7 +15,10 @@ namespace content {
 
 Graphics::Graphics(scoped_refptr<RenderRunner> renderer,
                    const base::Vec2i& initial_resolution)
-    : renderer_(renderer), resolution_(initial_resolution), brightness_(255) {
+    : renderer_(renderer),
+      resolution_(initial_resolution),
+      brightness_(255),
+      frozen_(false) {
   viewport_rect().rect = initial_resolution;
 
   renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
@@ -127,10 +130,11 @@ void Graphics::Freeze() {
   if (frozen_)
     return;
 
-  frozen_ = true;
   renderer()->PostTask(base::BindOnce(&Graphics::FreezeSceneInternal,
                                       weak_ptr_factory_.GetWeakPtr()));
   renderer()->WaitForSync();
+
+  frozen_ = true;
 }
 
 void Graphics::Transition(int duration,
@@ -155,10 +159,13 @@ void Graphics::Transition(int duration,
     renderer()->PostTask(base::BindOnce(&Graphics::TransitionSceneInternalLoop,
                                         weak_ptr_factory_.GetWeakPtr(), i,
                                         duration, trans_bitmap));
+
+    SDL_Delay(1000 / frame_rate_);
   }
 
   renderer()->PostTask(
       base::BindOnce([]() { renderer::GSM.states.blend.Pop(); }));
+  renderer()->WaitForSync();
 
   frozen_ = false;
 }
@@ -291,6 +298,7 @@ void Graphics::FreezeSceneInternal() {
 void Graphics::TransitionSceneInternal(int duration,
                                        scoped_refptr<Bitmap> trans_bitmap,
                                        int vague) {
+  // Snap to backend buffer
   CompositeScreenInternal();
 
   auto& alpha_shader = renderer::GSM.shaders->alpha_trans;
@@ -326,9 +334,14 @@ void Graphics::TransitionSceneInternalLoop(int i,
 
   if (!trans_bitmap) {
     alpha_shader.Bind();
+    alpha_shader.SetFrozenTexture(frozen_snapshot_.tex);
+    alpha_shader.SetCurrentTexture(screen_buffer_[0].tex);
     alpha_shader.SetProgress(progress);
   } else {
     vague_shader.Bind();
+    vague_shader.SetFrozenTexture(frozen_snapshot_.tex);
+    vague_shader.SetCurrentTexture(screen_buffer_[0].tex);
+    vague_shader.SetTransTexture(trans_bitmap->AsGLType().tex);
     vague_shader.SetProgress(progress);
   }
 

@@ -87,9 +87,10 @@ class Graphics final : public base::RefCounted<Graphics>,
   base::LinkedList<Disposable> disposable_elements_;
 
   bool frozen_ = false;
+  int brightness_ = 255;
+
   uint64_t frame_count_ = 0;
   double frame_rate_ = 60.0;
-  int brightness_ = 255;
 
   base::WeakPtrFactory<Graphics> weak_ptr_factory_{this};
 };

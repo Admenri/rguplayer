@@ -465,11 +465,11 @@ void VagueTransShader::SetFrozenTexture(GLID<Texture> tex) {
 }
 
 void VagueTransShader::SetCurrentTexture(GLID<Texture> tex) {
-  SetTexture(u_frozen_texture_, tex.gl, 2);
+  SetTexture(u_current_texture_, tex.gl, 2);
 }
 
 void VagueTransShader::SetTransTexture(GLID<Texture> tex) {
-  SetTexture(u_frozen_texture_, tex.gl, 3);
+  SetTexture(u_trans_texture_, tex.gl, 3);
 }
 
 void VagueTransShader::SetProgress(float progress) {
