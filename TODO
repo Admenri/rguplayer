@@ -16,7 +16,6 @@
 - 全部未实现
 
 * Graphics
-- fadein/out未完成
 - playmovie未完成
 - fps计数器未实现
 
@@ -25,6 +24,3 @@
 
 * Input
 - 不符合跨平台要求故未实现
-
-* RPG
-- 未完成
