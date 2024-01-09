@@ -56,7 +56,6 @@ scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
 
   renderer()->PostTask(base::BindOnce(&Graphics::SnapToBitmapInternal,
                                       weak_ptr_factory_.GetWeakPtr(), snap));
-  renderer()->WaitForSync();
 
   return snap;
 }

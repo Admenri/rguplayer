@@ -124,9 +124,9 @@ int main(int argc, char* argv[]) {
 
         screen->SetBrightness(125);
 
-        //scoped_refptr<content::Bitmap> snapshot = screen->SnapToBitmap();
-        //auto* surf = snapshot->SurfaceRequired();
-        //IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+        scoped_refptr<content::Bitmap> snapshot = screen->SnapToBitmap();
+        auto* surf = snapshot->SurfaceRequired();
+        IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
 
         float xxx = 0;
         while (!binding->quit_required()) {
