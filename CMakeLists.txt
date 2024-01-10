@@ -1,6 +1,9 @@
 # Main build file of rgu project
 cmake_minimum_required(VERSION 3.18.0)
 
+# base::jthread required
+set(CMAKE_CXX_STANDARD 20)
+
 project(rgu_player VERSION 1.0.0)
 include_directories("${PROJECT_SOURCE_DIR}")
 
@@ -117,9 +120,6 @@ include_directories("${RGU_AUTOGEN_DIR}")
 #--------------------------------------------------------------------------------
 # Add rgu projects
 #--------------------------------------------------------------------------------
-
-# base::jthread required
-set(CMAKE_CXX_STANDARD 20)
 
 ## Base components import
 add_subdirectory(base)

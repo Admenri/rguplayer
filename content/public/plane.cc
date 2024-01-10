@@ -114,17 +114,9 @@ void Plane::Composite() {
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTransOffset(parent_rect().GetRealOffset());
 
-  if (renderer::GL.OES_TextureNpot) {
-    auto& tex = bitmap_->AsGLType();
-    renderer::Texture::Bind(tex.tex);
-    renderer::Texture::SetWrap(GL_REPEAT);
+  shader.SetTexture(layer_tfb_.tex);
+  shader.SetTextureSize(base::Vec2i(layer_tfb_.width, layer_tfb_.height));
 
-    shader.SetTexture(tex.tex);
-    shader.SetTextureSize(bitmap_->GetSize());
-  } else {
-    shader.SetTexture(layer_tfb_.tex);
-    shader.SetTextureSize(base::Vec2i(layer_tfb_.width, layer_tfb_.height));
-  }
   shader.SetColor(color_->AsBase());
   shader.SetTone(tone_->AsBase());
   shader.SetOpacity(opacity_ / 255.0f);
@@ -134,10 +126,6 @@ void Plane::Composite() {
   quad_array_->Draw();
   renderer::GSM.states.blend_func.Pop();
   renderer::GSM.states.blend.Pop();
-
-  if (renderer::GL.OES_TextureNpot) {
-    renderer::Texture::SetWrap();
-  }
 }
 
 void Plane::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
@@ -158,21 +146,6 @@ void Plane::UpdateQuadArray() {
   if (!bitmap_ || bitmap_->IsDisposed())
     return;
 
-  if (renderer::GL.OES_TextureNpot) {
-    quad_array_->Resize(1);
-
-    base::RectF tex;
-    tex.x = (parent_rect().origin.x + static_cast<double>(ox_)) / zoom_x_;
-    tex.y = (parent_rect().origin.y + static_cast<double>(oy_)) / zoom_y_;
-    tex.width = parent_rect().rect.width / zoom_x_;
-    tex.height = parent_rect().rect.height / zoom_y_;
-
-    renderer::QuadSetTexCoordRect(&quad_array_->vertices()[0], tex);
-    quad_array_->Update();
-
-    return;
-  }
-
   const float scale_width =
       std::max(1.0f, static_cast<float>(bitmap_->GetWidth() * zoom_x_));
   const float scale_height =
@@ -183,9 +156,8 @@ void Plane::UpdateQuadArray() {
   const int repeat_y =
       static_cast<int>(std::sqrt(parent_rect().rect.height / scale_height)) + 1;
 
-  renderer::TextureFrameBuffer::Alloc(
-      layer_tfb_, static_cast<int>(scale_width * repeat_x),
-      static_cast<int>(scale_height * repeat_y));
+  renderer::TextureFrameBuffer::Alloc(layer_tfb_, scale_width * repeat_x,
+                                      scale_height * repeat_y);
 
   const float item_x = scale_width * repeat_x;
   const float item_y = scale_height * repeat_y;
