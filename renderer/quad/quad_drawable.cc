@@ -167,6 +167,17 @@ void Blt::TexSource(TextureFrameBuffer& src_tfb) {
   shader.SetTextureSize(base::Vec2i(src_tfb.width, src_tfb.height));
 }
 
+void Blt::EndDraw(const base::RectF& src_rect, const base::RectF& dest_rect) {
+  auto* quad = GSM.common_quad.get();
+
+  quad->SetPositionRect(dest_rect);
+  quad->SetTexCoordRect(src_rect);
+  quad->Draw();
+
+  GSM.states.viewport.Pop();
+  GSM.states.blend.Pop();
+}
+
 void Blt::EndDraw(const base::Rect& src_rect, const base::Rect& dest_rect) {
   auto* quad = GSM.common_quad.get();
 

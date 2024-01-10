@@ -133,6 +133,7 @@ class Plane : public base::RefCounted<Plane>,
 
   std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
       quad_array_;
+  renderer::TextureFrameBuffer layer_tfb_;
   bool quad_array_dirty_ = false;
 
   base::WeakPtrFactory<Plane> weak_ptr_factory_{this};

@@ -4,6 +4,8 @@
 
 #include "content/public/plane.h"
 
+#include <algorithm>
+
 namespace {
 
 float fwrap(float value, float range) {
@@ -88,6 +90,9 @@ void Plane::OnObjectDisposed() {
   weak_ptr_factory_.InvalidateWeakPtrs();
 
   screen()->renderer()->DeleteSoon(std::move(quad_array_));
+  screen()->renderer()->PostTask(
+      base::BindOnce(renderer::TextureFrameBuffer::Del,
+                     base::OwnedRef(std::move(layer_tfb_))));
 }
 
 void Plane::BeforeComposite() {
@@ -109,9 +114,8 @@ void Plane::Composite() {
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTransOffset(parent_rect().GetRealOffset());
 
-  auto& bitmap_size = bitmap_->AsGLType();
-  shader.SetTexture(bitmap_size.tex);
-  shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
+  shader.SetTexture(layer_tfb_.tex);
+  shader.SetTextureSize(base::Vec2i(layer_tfb_.width, layer_tfb_.height));
 
   shader.SetColor(color_->AsBase());
   shader.SetTone(tone_->AsBase());
@@ -131,41 +135,64 @@ void Plane::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
 void Plane::InitPlaneInternal() {
   quad_array_ =
       std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-
   quad_array_->Resize(1);
+
+  layer_tfb_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(layer_tfb_, 16, 16);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(layer_tfb_);
 }
 
 void Plane::UpdateQuadArray() {
   if (!bitmap_ || bitmap_->IsDisposed())
     return;
 
-  /* Scaled (zoomed) bitmap dimensions */
-  float sw = static_cast<float>(bitmap_->GetWidth() * zoom_x_);
-  float sh = static_cast<float>(bitmap_->GetHeight() * zoom_y_);
+  const float scale_width =
+      std::max(1.0f, static_cast<float>(bitmap_->GetWidth() * zoom_x_));
+  const float scale_height =
+      std::max(1.0f, static_cast<float>(bitmap_->GetHeight() * zoom_y_));
 
-  /* Plane offset wrapped by scaled bitmap dims */
-  float wox = fwrap((float)ox_, sw);
-  float woy = fwrap((float)oy_, sh);
+  const int repeat_x =
+      static_cast<int>(std::sqrt(parent_rect().rect.width / scale_width)) + 1;
+  const int repeat_y =
+      static_cast<int>(std::sqrt(parent_rect().rect.height / scale_height)) + 1;
 
-  /* Viewport dimensions */
-  int vpw = parent_rect().rect.width;
-  int vph = parent_rect().rect.height;
+  renderer::TextureFrameBuffer::Alloc(layer_tfb_, scale_width * repeat_x,
+                                      scale_height * repeat_y);
 
-  /* Amount the scaled bitmap is tiled (repeated) */
-  size_t tilesX = (size_t)std::ceil((vpw - sw + wox) / sw) + 1;
-  size_t tilesY = (size_t)std::ceil((vph - sh + woy) / sh) + 1;
+  const float item_x = scale_width * repeat_x;
+  const float item_y = scale_height * repeat_y;
 
   auto tex = bitmap_->GetSize();
-  quad_array_->Resize(tilesX * tilesY);
+  for (size_t y = 0; y < repeat_y; ++y) {
+    for (size_t x = 0; x < repeat_x; ++x) {
+      base::RectF pos(x * scale_width, y * scale_height, scale_width,
+                      scale_height);
 
-  for (size_t y = 0; y < tilesY; ++y) {
-    for (size_t x = 0; x < tilesX; ++x) {
-      size_t index = (y * tilesX + x) * 4;
+      renderer::Blt::BeginDraw(layer_tfb_);
+      renderer::Blt::TexSource(bitmap_->AsGLType());
+      renderer::Blt::EndDraw(base::Rect(tex), pos);
+    }
+  }
+
+  float wrap_ox = fwrap(parent_rect().origin.x, item_x);
+  float wrap_oy = fwrap(parent_rect().origin.y, item_y);
+
+  int tile_x =
+      std::ceil((parent_rect().rect.width + wrap_ox - item_x) / item_x) + 1;
+  int tile_y =
+      std::ceil((parent_rect().rect.height + wrap_oy - item_y) / item_y) + 1;
+
+  quad_array_->Resize(tile_x * tile_y);
+
+  for (size_t y = 0; y < tile_y; ++y) {
+    for (size_t x = 0; x < tile_x; ++x) {
+      size_t index = (y * tile_x + x) * 4;
       renderer::CommonVertex* vert = &quad_array_->vertices()[index];
-      base::RectF pos(x * sw - wox, y * sh - woy, sw, sh);
+      base::RectF pos(x * item_x - wrap_ox, y * item_y - wrap_oy, item_x,
+                      item_y);
 
       renderer::QuadSetPositionRect(vert, pos);
-      renderer::QuadSetTexCoordRect(vert, base::Vec2(tex));
+      renderer::QuadSetTexCoordRect(vert, base::Vec2(item_x, item_y));
     }
   }
 
