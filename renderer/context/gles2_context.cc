@@ -17,6 +17,9 @@ void GLES2Context::CreateForCurrentThread() {
 
 void GLES2Context::InitGLESContext() {
 #include "renderer/context/gles2_command_buffer_header_autogen.cc"
+
+  // OES Extensions
+  OES_TextureNpot = SDL_GL_ExtensionSupported("GL_OES_texture_npot");
 }
 
 void* GLES2Context::GetGLProc(const std::string& fname) {

@@ -33,6 +33,9 @@ class GLES2Context {
   // Import from autogen-commands
 #include "renderer/context/gles2_command_buffer_header_autogen.h"
 
+  // OES Extensions
+  bool OES_TextureNpot = false;
+
  private:
   void InitGLESContext();
   void* GetGLProc(const std::string& fname);
