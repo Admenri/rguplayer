@@ -74,6 +74,12 @@ class Graphics final : public base::RefCounted<Graphics>,
   void RenderEffectRequire(const base::Vec4& color,
                            const base::Vec4& tone,
                            const base::Vec4& flash_color);
+  void ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
+                           renderer::TextureFrameBuffer& backend,
+                           renderer::QuadDrawable& quad,
+                           const base::Vec4& color,
+                           const base::Vec4& tone,
+                           const base::Vec4& flash_color);
 
   void FrameCheckInternal();
 

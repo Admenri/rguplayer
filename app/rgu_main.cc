@@ -138,6 +138,12 @@ int main(int argc, char* argv[]) {
             120, new content::Bitmap(
                      screen, "D:\\Desktop\\rgu\\app\\test\\BattleStart.png"));
 
+        scoped_refptr<content::Bitmap> snapshot2 =
+            new content::Bitmap(screen, 800, 600);
+        viewp->SnapToBitmap(snapshot2);
+        auto* surf2 = snapshot2->SurfaceRequired();
+        IMG_SavePNG(surf2, "D:\\Desktop\\snap2.png");
+
         float xxx = 0;
         while (!binding->quit_required()) {
           sp->Update();

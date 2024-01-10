@@ -4,6 +4,9 @@
 
 #include "content/public/viewport.h"
 
+#include "content/public/bitmap.h"
+#include "renderer/quad/quad_drawable.h"
+
 namespace content {
 
 Viewport::Viewport(scoped_refptr<Graphics> screen)
@@ -46,8 +49,30 @@ void Viewport::SetOY(int oy) {
   NotifyViewportChanged();
 }
 
+void Viewport::SetRect(scoped_refptr<Rect> rect) {
+  CheckIsDisposed();
+
+  if (rect == rect_)
+    return;
+
+  rect_ = rect;
+  OnRectChangedInternal();
+}
+
+void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
+  CheckIsDisposed();
+
+  screen()->renderer()->PostTask(base::BindOnce(
+      &Viewport::SnapToBitmapInternal, weak_ptr_factory_.GetWeakPtr(), target));
+}
+
 void Viewport::OnObjectDisposed() {
   RemoveFromList();
+
+  screen()->renderer()->DeleteSoon(std::move(viewport_quad_));
+  screen()->renderer()->PostTask(
+      base::BindOnce(renderer::TextureFrameBuffer::Del,
+                     base::OwnedRef(std::move(viewport_buffer_))));
 }
 
 void Viewport::Composite() {
@@ -59,7 +84,6 @@ void Viewport::Composite() {
   renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);
 
   DrawableParent::CompositeChildren();
-
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
     screen()->RenderEffectRequire(color_->AsBase(), tone_->AsBase(),
                                   Flashable::GetFlashColor());
@@ -80,11 +104,62 @@ void Viewport::InitViewportInternal() {
 
   color_ = new Color();
   tone_ = new Tone();
+
+  screen()->renderer()->PostTask(base::BindOnce(
+      &Viewport::InitViewportBufferInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
 void Viewport::OnRectChangedInternal() {
   viewport_rect().rect = rect_->AsBase();
   NotifyViewportChanged();
+
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Viewport::OnViewportBufferSizeChangedInternal,
+                     weak_ptr_factory_.GetWeakPtr()));
+}
+
+void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
+  NotifyPrepareComposite();
+
+  renderer::FrameBuffer::Bind(target->AsGLType().fbo);
+  renderer::GSM.states.clear_color.Set(base::Vec4());
+  renderer::FrameBuffer::Clear();
+
+  renderer::GSM.states.scissor.Push(true);
+  renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);
+
+  CompositeChildren();
+  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
+    screen()->ApplyViewportEffect(target->AsGLType(), viewport_buffer_,
+                                  *viewport_quad_, color_->AsBase(),
+                                  tone_->AsBase(), Flashable::GetFlashColor());
+  }
+
+  renderer::GSM.states.scissor_rect.Pop();
+  renderer::GSM.states.scissor.Pop();
+}
+
+void Viewport::InitViewportBufferInternal() {
+  viewport_buffer_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
+                                      viewport_rect().rect.width,
+                                      viewport_rect().rect.height);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(viewport_buffer_);
+
+  viewport_quad_ = std::make_unique<renderer::QuadDrawable>();
+  auto rect = base::Rect(viewport_rect().rect.Size());
+  viewport_quad_->SetPositionRect(rect);
+  viewport_quad_->SetTexCoordRect(rect);
+}
+
+void Viewport::OnViewportBufferSizeChangedInternal() {
+  auto rect = base::Rect(viewport_rect().rect.Size());
+  viewport_quad_->SetPositionRect(rect);
+  viewport_quad_->SetTexCoordRect(rect);
+
+  renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
+                                      viewport_rect().rect.width,
+                                      viewport_rect().rect.height);
 }
 
 ViewportChild::ViewportChild(scoped_refptr<Graphics> screen,

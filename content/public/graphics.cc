@@ -372,28 +372,38 @@ void Graphics::RemoveDisposable(Disposable* disp) {
 void Graphics::RenderEffectRequire(const base::Vec4& color,
                                    const base::Vec4& tone,
                                    const base::Vec4& flash_color) {
+  ApplyViewportEffect(screen_buffer_[0], screen_buffer_[1], *screen_quad_,
+                      color, tone, flash_color);
+}
+
+void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
+                                   renderer::TextureFrameBuffer& backend,
+                                   renderer::QuadDrawable& quad,
+                                   const base::Vec4& color,
+                                   const base::Vec4& tone,
+                                   const base::Vec4& flash_color) {
   const base::Rect& viewport_rect = renderer::GSM.states.scissor_rect.Current();
   const base::Rect& screen_rect = resolution_;
 
   if (tone.w != 0) {
     // Blt front buffer to back
     renderer::GSM.states.scissor.Push(false);
-    renderer::Blt::BeginDraw(screen_buffer_[1]);
-    renderer::Blt::TexSource(screen_buffer_[0]);
+    renderer::Blt::BeginDraw(backend);
+    renderer::Blt::TexSource(frontend);
     renderer::Blt::EndDraw(screen_rect, screen_rect);
     renderer::GSM.states.scissor.Pop();
 
-    renderer::FrameBuffer::Bind(screen_buffer_[0].fbo);
+    renderer::FrameBuffer::Bind(frontend.fbo);
     auto& shader = renderer::GSM.shaders->gray;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetGray(tone.w);
 
-    shader.SetTexture(screen_buffer_[1].tex);
+    shader.SetTexture(backend.tex);
     shader.SetTextureSize(screen_rect.Size());
 
     renderer::GSM.states.blend.Push(false);
-    screen_quad_->Draw();
+    quad.Draw();
     renderer::GSM.states.blend.Pop();
   }
 
@@ -429,13 +439,13 @@ void Graphics::RenderEffectRequire(const base::Vec4& color,
     if (add.x != 0 || add.y != 0 || add.z != 0) {
       renderer::GL.BlendEquation(GL_FUNC_ADD);
       shader.SetColor(add);
-      screen_quad_->Draw();
+      quad.Draw();
     }
 
     if (sub.x != 0 || sub.y != 0 || sub.z != 0) {
       renderer::GL.BlendEquation(GL_FUNC_REVERSE_SUBTRACT);
       shader.SetColor(sub);
-      screen_quad_->Draw();
+      quad.Draw();
     }
   }
 
@@ -447,12 +457,12 @@ void Graphics::RenderEffectRequire(const base::Vec4& color,
 
   if (has_color_effect) {
     shader.SetColor(color);
-    screen_quad_->Draw();
+    quad.Draw();
   }
 
   if (has_flash_effect) {
     shader.SetColor(flash_color);
-    screen_quad_->Draw();
+    quad.Draw();
   }
 
   renderer::GSM.states.blend_func.Refresh();

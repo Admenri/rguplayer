@@ -65,21 +65,14 @@ class Viewport : public base::RefCounted<Viewport>,
     tone_ = tone;
   }
 
-  void SetRect(scoped_refptr<Rect> rect) {
-    CheckIsDisposed();
-
-    if (rect == rect_)
-      return;
-
-    rect_ = rect;
-    OnRectChangedInternal();
-  }
-
+  void SetRect(scoped_refptr<Rect> rect);
   scoped_refptr<Rect> GetRect() {
     CheckIsDisposed();
 
     return rect_;
   }
+
+  void SnapToBitmap(scoped_refptr<Bitmap> target);
 
  private:
   void OnObjectDisposed() override;
@@ -93,11 +86,18 @@ class Viewport : public base::RefCounted<Viewport>,
 
   void InitViewportInternal();
   void OnRectChangedInternal();
+  void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
+
+  void InitViewportBufferInternal();
+  void OnViewportBufferSizeChangedInternal();
 
   scoped_refptr<Rect> rect_;
   scoped_refptr<Color> color_;
   scoped_refptr<Tone> tone_;
   base::CallbackListSubscription rect_observer_;
+
+  std::unique_ptr<renderer::QuadDrawable> viewport_quad_;
+  renderer::TextureFrameBuffer viewport_buffer_;
 
   base::WeakPtrFactory<Viewport> weak_ptr_factory_{this};
 };
