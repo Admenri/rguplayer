@@ -10,6 +10,12 @@ OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。
 
 本项目语法风格与代码结构与The Chromium Project相似。
 
+## 开发中截图
+
+<img src="app/test/1.png" height="150">
+
+<img src="app/test/2.png" height="150">
+
 ## 编译项目
 
  - 本项目使用CMake管理编译。
