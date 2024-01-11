@@ -7,7 +7,7 @@
 namespace renderer {
 
 static const VertexItemAttribute CommonVertexInfo[] = {
-    {GLES2Shader::AttribLocation::Position, 4, GL_FLOAT,
+    {GLES2Shader::AttribLocation::Position, 2, GL_FLOAT,
      (const void*)offsetof(CommonVertex, position)},
     {GLES2Shader::AttribLocation::TexCoord, 2, GL_FLOAT,
      (const void*)offsetof(CommonVertex, texCoord)},
