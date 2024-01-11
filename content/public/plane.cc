@@ -163,16 +163,38 @@ void Plane::UpdateQuadArray() {
   const float item_y = scale_height * repeat_y;
 
   auto tex = bitmap_->GetSize();
+  quad_array_->Resize(repeat_x * repeat_y);
   for (size_t y = 0; y < repeat_y; ++y) {
     for (size_t x = 0; x < repeat_x; ++x) {
+      size_t index = (y * repeat_x + x) * 4;
+      renderer::CommonVertex* vert = &quad_array_->vertices()[index];
       base::RectF pos(x * scale_width, y * scale_height, scale_width,
                       scale_height);
 
-      renderer::Blt::BeginDraw(layer_tfb_);
-      renderer::Blt::TexSource(bitmap_->AsGLType());
-      renderer::Blt::EndDraw(base::Rect(tex), pos);
+      renderer::QuadSetPositionRect(vert, pos);
+      renderer::QuadSetTexCoordRect(vert, base::Rect(tex));
     }
   }
+
+  quad_array_->Update();
+
+  renderer::FrameBuffer::Bind(layer_tfb_.fbo);
+  renderer::FrameBuffer::Clear();
+
+  auto element_size =
+      base::Vec2i(static_cast<int>(item_x), static_cast<int>(item_y));
+  auto& shader = renderer::GSM.shaders->base;
+  shader.Bind();
+  shader.SetProjectionMatrix(element_size);
+  shader.SetTexture(bitmap_->AsGLType().tex);
+  shader.SetTextureSize(tex);
+  shader.SetTransOffset(base::Vec2i());
+
+  renderer::GSM.states.viewport.Push(element_size);
+  renderer::GSM.states.blend.Push(false);
+  quad_array_->Draw();
+  renderer::GSM.states.viewport.Pop();
+  renderer::GSM.states.blend.Pop();
 
   float wrap_ox = fwrap(parent_rect().origin.x, item_x);
   float wrap_oy = fwrap(parent_rect().origin.y, item_y);
