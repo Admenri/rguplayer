@@ -12,9 +12,9 @@ OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。
 
 ## 开发中截图
 
-<img src="app/test/1.png" height="150">
+<img src="app/test/1.png">
 
-<img src="app/test/2.png" height="150">
+<img src="app/test/2.png">
 
 ## 编译项目
 
