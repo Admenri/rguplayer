@@ -13,6 +13,8 @@
 #include "SDL_image.h"
 #include "SDL_ttf.h"
 
+#include "SDL_stdinc.h"
+
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 
@@ -167,6 +169,8 @@ int main(int argc, char* argv[]) {
   TTF_Quit();
   IMG_Quit();
   SDL_Quit();
+
+  PHYSFS_deinit();
 
   return 0;
 }
