@@ -23,8 +23,22 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
                  public GraphicElement,
                  public Disposable {
  public:
+  using TilemapBitmapID = enum {
+    TileA1 = 0,
+    TileA2,
+    TileA3,
+    TileA4,
+    TileA5,
+
+    TileB,
+    TileC,
+    TileD,
+    TileE,
+  };
+
   Tilemap2(scoped_refptr<Graphics> screen,
-           scoped_refptr<Viewport> viewport = nullptr);
+           scoped_refptr<Viewport> viewport = nullptr,
+           int tilesize = 32);
   ~Tilemap2() override;
 
   Tilemap2(const Tilemap2&) = delete;
@@ -63,7 +77,10 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Tilemap2"; }
 
+  void BeforeTilemapComposite();
+
   void InitTilemapInternal();
+  void CreateTileAtlasInternal();
 
   std::unique_ptr<GroundLayer> ground_;
   std::unique_ptr<AboveLayer> above_;
@@ -80,6 +97,10 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
 
   std::vector<renderer::CommonVertex> tile_vertices_;
   renderer::VertexArray<renderer::CommonVertex> vao_;
+
+  renderer::TextureFrameBuffer atlas_tfb_;
+  bool atlas_need_update_ = false;
+  int tile_size_;
 
   base::WeakPtrFactory<Tilemap2> weak_ptr_factory_{this};
 };
