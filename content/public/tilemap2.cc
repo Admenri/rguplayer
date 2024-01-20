@@ -44,6 +44,13 @@ inline int16_t TableGetFlag(scoped_refptr<content::Table> t, int x) {
   return t->At(x);
 }
 
+using AutotileSubPos = enum {
+  TopLeft = 0,
+  TopRight,
+  BottomLeft,
+  BottomRight,
+};
+
 using TilemapBlock = struct {
   base::Vec2i pos;
   base::Vec2i size;
@@ -154,6 +161,9 @@ const base::RectF kAutotileSrcRegular[] = {
     {0.0f, 0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f, 0.5f},
 };
 
+const int kAutotileSrcRegularSize =
+    sizeof(kAutotileSrcRegular) / sizeof(kAutotileSrcRegular[0]);
+
 const base::RectF kAutotileSrcWall[] = {
     {1.0f, 1.0f, 0.5f, 0.5f}, {0.5f, 1.0f, 0.5f, 0.5f},
     {1.0f, 0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f, 0.5f},
@@ -189,11 +199,17 @@ const base::RectF kAutotileSrcWall[] = {
     {0.0f, 1.5f, 0.5f, 0.5f}, {1.5f, 1.5f, 0.5f, 0.5f},
 };
 
+const int kAutotileSrcWallSize =
+    sizeof(kAutotileSrcWall) / sizeof(kAutotileSrcWall[0]);
+
 const base::RectF kAutotileSrcWaterfall[] = {
     {1.0f, 0.0f, 0.5f, 1.0f}, {0.5f, 0.0f, 0.5f, 1.0f},
     {0.0f, 0.0f, 0.5f, 1.0f}, {0.5f, 0.0f, 0.5f, 1.0f},
     {1.0f, 0.0f, 0.5f, 1.0f}, {1.5f, 0.0f, 0.5f, 1.0f},
     {0.0f, 0.0f, 0.5f, 1.0f}, {1.5f, 0.0f, 0.5f, 1.0f}};
+
+const int kAutotileSrcWaterfallSize =
+    sizeof(kAutotileSrcWaterfall) / sizeof(kAutotileSrcWaterfall[0]);
 
 const TilemapVXAtlasBlock kTilemapAtlas[] = {
     /* A1 tilemap */
@@ -399,7 +415,6 @@ SDL_Surface* CreateShadowSet(int tilesize) {
 
 namespace content {
 
-// Reference: https://www.tktkgame.com/tkool/memo/vx/tile_id.html
 class GroundLayer : public ViewportChild {
  public:
   GroundLayer(scoped_refptr<Graphics> screen, base::WeakPtr<Tilemap2> tilemap)
@@ -690,6 +705,172 @@ void Tilemap2::ParseMapDataBufferInternal() {
       renderer::QuadSetTexPosRect(vert, texcoords[i], position[i]);
   };
 
+  auto autotile_subpos = [&](base::RectF& pos, int i) {
+    switch (i) {
+      case TopLeft:
+        return;
+      case TopRight:
+        pos.x += 16;
+        return;
+      case BottomLeft:
+        pos.y += 16;
+        return;
+      case BottomRight:
+        pos.x += 16;
+        pos.y += 16;
+        return;
+      default:
+        break;
+    }
+  };
+
+  auto read_autotile_common = [&](int patternID, const base::Vec2i& offset,
+                                  int x, int y, const base::RectF rect_src[],
+                                  int rect_src_size, bool above) {
+    base::RectF tex[4], pos[4];
+
+    for (int i = 0; i < 4; ++i) {
+      base::RectF tex_rect =
+          rect_src[patternID * 4 + i] *
+          base::RectF(tile_size_, tile_size_, tile_size_, tile_size_);
+      tex_rect.x += 0.5f;
+      tex_rect.y += 0.5f;
+      tex_rect.width -= 1;
+      tex_rect.height -= 1;
+
+      tex[i] = tex_rect;
+      tex[i].x += offset.x * tile_size_;
+      tex[i].y += offset.y * tile_size_;
+
+      pos[i] = base::RectF(x * tile_size_, y * tile_size_, tile_size_ / 2.0f,
+                           tile_size_ / 2.0f);
+      autotile_subpos(pos[i], i);
+    }
+
+    process_quad(tex, pos, 4, above);
+  };
+
+  auto read_autotile_waterfall = [&](int patternID, const base::Vec2i& offset,
+                                     int x, int y, bool above) {
+    if (patternID > 0x3)
+      return;
+
+    base::RectF tex[2], pos[2];
+
+    for (size_t i = 0; i < 2; ++i) {
+      base::RectF tex_rect =
+          kAutotileSrcWaterfall[patternID * 2 + i] *
+          base::RectF(tile_size_, tile_size_, tile_size_, tile_size_);
+      tex_rect.x += 0.5f;
+      tex_rect.y += 0.5f;
+      tex_rect.width -= 1;
+      tex_rect.height -= 1;
+
+      tex[i] = tex_rect;
+      tex[i].x += offset.x * tile_size_;
+      tex[i].y += offset.y * tile_size_;
+
+      pos[i] = base::RectF(x * tile_size_, y * tile_size_, tile_size_ / 2.0f,
+                           tile_size_);
+      pos[i].x += i * (tile_size_ / 2.0f);
+    }
+
+    process_quad(tex, pos, 2, above);
+  };
+
+  auto process_tile_A1 = [&](int16_t tileID, int x, int y, bool above) {
+    tileID -= 0x0800;
+
+    int patternID = tileID % 0x30;
+    int autotileID = tileID / 0x30;
+
+    // clang-format off
+    const base::Vec2i waterfall(-1, -1);
+    const base::Vec2i src_offset[] = {
+        {0,  0},  {0,  3},
+        {12, 0},  {12, 3},
+        {6,  0},  waterfall,
+        {6,  3},  waterfall,
+
+        {0,  6},  waterfall,
+        {0,  9},  waterfall,
+        {6,  6},  waterfall,
+        {6,  9},  waterfall};
+    const base::Vec2i waterfall_offset[] = {
+        {12, 6}, {12, 9},
+        {14, 0}, {14, 3},
+        {14, 6}, {14, 9},
+    };
+    // clang-format on
+
+    const base::Vec2i src_pos = src_offset[autotileID];
+    if (src_pos.x == -1) {
+      int cID = (autotileID - 5) / 2;
+      const base::Vec2i orig = waterfall_offset[cID];
+      return read_autotile_waterfall(patternID, orig, x, y, above);
+    }
+
+    read_autotile_common(patternID, src_pos, x, y, kAutotileSrcRegular,
+                         kAutotileSrcRegularSize, above);
+  };
+
+  auto process_tile_A2 = [&](int16_t tileID, int x, int y, bool above,
+                             bool is_table) {
+    base::Vec2i offset(16, 0);
+    tileID -= 0x0B00;
+
+    int patternID = tileID % 0x30;
+    int autotileID = tileID / 0x30;
+
+    offset.x += (autotileID % 8) * 2;
+    offset.y += (autotileID / 8) * 3;
+
+    // TODO: table autotile process
+    read_autotile_common(patternID, offset, x, y, kAutotileSrcRegular,
+                         kAutotileSrcRegularSize, above);
+  };
+
+  auto process_tile_A3 = [&](int16_t tileID, int x, int y, bool above) {
+    base::Vec2i offset(0, 12);
+    tileID -= 0x1100;
+
+    int patternID = tileID % 0x30;
+    int autotileID = tileID / 0x30;
+
+    offset.x += (autotileID % 8) * 2;
+    offset.y += (autotileID / 8) * 2;
+
+    if (patternID >= 0x10)
+      return;
+
+    read_autotile_common(patternID, offset, x, y, kAutotileSrcWall,
+                         kAutotileSrcWallSize, above);
+  };
+
+  auto process_tile_A4 = [&](int16_t tileID, int x, int y, bool above) {
+    base::Vec2i offset(16, 12);
+    tileID -= 0x1700;
+
+    static const int offY[] = {0, 3, 5, 8, 10, 13};
+    int patternID = tileID % 0x30;
+    int autotileID = tileID / 0x30;
+
+    int offYI = autotileID / 8;
+    offset.x += (autotileID % 8) * 2;
+    offset.y += offY[offYI];
+
+    if ((offYI % 2) == 0) {
+      read_autotile_common(patternID, offset, x, y, kAutotileSrcRegular,
+                           kAutotileSrcRegularSize, above);
+    } else {
+      if (patternID >= 0x10)
+        return;
+
+      read_autotile_common(patternID, offset, x, y, kAutotileSrcWall,
+                           kAutotileSrcWallSize, above);
+    }
+  };
+
   auto process_tile_A5 = [&](int16_t tileID, int x, int y, bool above) {
     const base::Vec2i src_origin(0, 20);
 
@@ -741,32 +922,28 @@ void Tilemap2::ParseMapDataBufferInternal() {
 
   auto each_tile = [&](int16_t tileID, int x, int y, int z) {
     int16_t flag = TableGetFlag(flagdata, tileID);
+    // TODO: table process
     bool over_player = flag & OVER_PLAYER_FLAG;
     bool is_table = flag & TABLE_FLAG;
 
     /* B ~ E */
     if (tileID < 0x0400)
       return process_tile_bcde(tileID, x, y, over_player);
-
     /* A5 */
     if (tileID >= 0x0600 && tileID < 0x0680)
       return process_tile_A5(tileID, x, y, over_player);
-
     /* A1 */
     if (tileID >= 0x0800 && tileID < 0x0B00)
-      return;
-
+      return process_tile_A1(tileID, x, y, over_player);
     /* A2 */
     if (tileID >= 0x0B00 && tileID < 0x1100)
-      return;
-
+      return process_tile_A2(tileID, x, y, over_player, is_table);
     /* A3 */
     if (tileID < 0x1700)
-      return;
-
+      return process_tile_A3(tileID, x, y, over_player);
     /* A4 */
     if (tileID < 0x2000)
-      return;
+      return process_tile_A4(tileID, x, y, over_player);
   };
 
   auto shadow_tile = [&](int8_t shadow_id, int x, int y) {

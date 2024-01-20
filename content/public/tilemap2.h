@@ -19,6 +19,7 @@ namespace content {
 class GroundLayer;
 class AboveLayer;
 
+// Reference: https://www.tktkgame.com/tkool/memo/vx/tile_id.html
 class Tilemap2 : public base::RefCounted<Tilemap2>,
                  public GraphicElement,
                  public Disposable {

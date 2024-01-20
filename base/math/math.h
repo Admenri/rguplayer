@@ -31,17 +31,19 @@ class Vec2i {
   Vec2i(const Vec2i&) = default;
   Vec2i& operator=(const Vec2i&) = default;
 
-  bool operator==(const Vec2i& other) { return other.x == x && other.y == y; }
-  Vec2i operator+(const Vec2i& value) {
+  bool operator==(const Vec2i& other) const {
+    return other.x == x && other.y == y;
+  }
+  Vec2i operator+(const Vec2i& value) const {
     return Vec2i(x + value.x, y + value.y);
   }
-  Vec2i operator-(const Vec2i& value) {
+  Vec2i operator-(const Vec2i& value) const {
     return Vec2i(x - value.x, y - value.y);
   }
-  Vec2i operator*(const Vec2i& value) {
+  Vec2i operator*(const Vec2i& value) const {
     return Vec2i(x * value.x, y * value.y);
   }
-  Vec2i operator/(const Vec2i& value) {
+  Vec2i operator/(const Vec2i& value) const {
     return Vec2i(x / value.x, y / value.y);
   }
 
@@ -59,11 +61,21 @@ class Vec2 {
   Vec2(const Vec2&) = default;
   Vec2& operator=(const Vec2&) = default;
 
-  bool operator==(const Vec2& other) { return other.x == x && other.y == y; }
-  Vec2 operator+(const Vec2& value) { return Vec2(x + value.x, y + value.y); }
-  Vec2 operator-(const Vec2& value) { return Vec2(x - value.x, y - value.y); }
-  Vec2 operator*(const Vec2& value) { return Vec2(x * value.x, y * value.y); }
-  Vec2 operator/(const Vec2& value) { return Vec2(x / value.x, y / value.y); }
+  bool operator==(const Vec2& other) const {
+    return other.x == x && other.y == y;
+  }
+  Vec2 operator+(const Vec2& value) const {
+    return Vec2(x + value.x, y + value.y);
+  }
+  Vec2 operator-(const Vec2& value) const {
+    return Vec2(x - value.x, y - value.y);
+  }
+  Vec2 operator*(const Vec2& value) const {
+    return Vec2(x * value.x, y * value.y);
+  }
+  Vec2 operator/(const Vec2& value) const {
+    return Vec2(x / value.x, y / value.y);
+  }
 
  public:
   float x, y;
@@ -77,23 +89,23 @@ class Vec3i {
   Vec3i(const Vec3i&) = default;
   Vec3i& operator=(const Vec3i&) = default;
 
-  bool operator==(const Vec3i& other) {
+  bool operator==(const Vec3i& other) const {
     return other.x == x && other.y == y && other.z == z;
   }
 
-  Vec3i operator+(const Vec3i& value) {
+  Vec3i operator+(const Vec3i& value) const {
     return Vec3i(x + value.x, y + value.y, z + value.z);
   }
 
-  Vec3i operator-(const Vec3i& value) {
+  Vec3i operator-(const Vec3i& value) const {
     return Vec3i(x - value.x, y - value.y, z - value.z);
   }
 
-  Vec3i operator*(const Vec3i& value) {
+  Vec3i operator*(const Vec3i& value) const {
     return Vec3i(x * value.x, y * value.y, z * value.z);
   }
 
-  Vec3i operator/(const Vec3i& value) {
+  Vec3i operator/(const Vec3i& value) const {
     return Vec3i(x / value.x, y / value.y, z / value.z);
   }
 
@@ -113,23 +125,23 @@ class Vec3 {
   Vec3(const Vec3&) = default;
   Vec3& operator=(const Vec3&) = default;
 
-  bool operator==(const Vec3& other) {
+  bool operator==(const Vec3& other) const {
     return other.x == x && other.y == y && other.z == z;
   }
 
-  Vec3 operator+(const Vec3& value) {
+  Vec3 operator+(const Vec3& value) const {
     return Vec3(x + value.x, y + value.y, z + value.z);
   }
 
-  Vec3 operator-(const Vec3& value) {
+  Vec3 operator-(const Vec3& value) const {
     return Vec3(x - value.x, y - value.y, z - value.z);
   }
 
-  Vec3 operator*(const Vec3& value) {
+  Vec3 operator*(const Vec3& value) const {
     return Vec3(x * value.x, y * value.y, z * value.z);
   }
 
-  Vec3 operator/(const Vec3& value) {
+  Vec3 operator/(const Vec3& value) const {
     return Vec3(x / value.x, y / value.y, z / value.z);
   }
 
@@ -145,23 +157,23 @@ class Vec4i {
   Vec4i(const Vec4i&) = default;
   Vec4i& operator=(const Vec4i&) = default;
 
-  bool operator==(const Vec4i& other) {
+  bool operator==(const Vec4i& other) const {
     return other.x == x && other.y == y && other.z == z && other.w == w;
   }
 
-  Vec4i operator+(const Vec4i& value) {
+  Vec4i operator+(const Vec4i& value) const {
     return Vec4i(x + value.x, y + value.y, z + value.z, w + value.w);
   }
 
-  Vec4i operator-(const Vec4i& value) {
+  Vec4i operator-(const Vec4i& value) const {
     return Vec4i(x - value.x, y - value.y, z - value.z, w - value.w);
   }
 
-  Vec4i operator*(const Vec4i& value) {
+  Vec4i operator*(const Vec4i& value) const {
     return Vec4i(x * value.x, y * value.y, z * value.z, w * value.w);
   }
 
-  Vec4i operator/(const Vec4i& value) {
+  Vec4i operator/(const Vec4i& value) const {
     return Vec4i(x / value.x, y / value.y, z / value.z, w / value.w);
   }
 
@@ -182,23 +194,23 @@ class Vec4 {
   Vec4(const Vec4&) = default;
   Vec4& operator=(const Vec4&) = default;
 
-  bool operator==(const Vec4& other) {
+  bool operator==(const Vec4& other) const {
     return other.x == x && other.y == y && other.z == z && other.w == w;
   }
 
-  Vec4 operator+(const Vec4& value) {
+  Vec4 operator+(const Vec4& value) const {
     return Vec4(x + value.x, y + value.y, z + value.z, w + value.w);
   }
 
-  Vec4 operator-(const Vec4& value) {
+  Vec4 operator-(const Vec4& value) const {
     return Vec4(x - value.x, y - value.y, z - value.z, w - value.w);
   }
 
-  Vec4 operator*(const Vec4& value) {
+  Vec4 operator*(const Vec4& value) const {
     return Vec4(x * value.x, y * value.y, z * value.z, w * value.w);
   }
 
-  Vec4 operator/(const Vec4& value) {
+  Vec4 operator/(const Vec4& value) const {
     return Vec4(x / value.x, y / value.y, z / value.z, w / value.w);
   }
 
@@ -217,7 +229,7 @@ class Rect {
   Rect(const Rect&) = default;
   Rect& operator=(const Rect&) = default;
 
-  bool operator==(const Rect& other) {
+  bool operator==(const Rect& other) const {
     return other.x == x && other.y == y && other.width == width &&
            other.height == height;
   }
@@ -233,22 +245,22 @@ class Rect {
            (y + height >= other.y + other.height);
   }
 
-  Rect operator+(const Rect& value) {
+  Rect operator+(const Rect& value) const {
     return Rect(x + value.x, y + value.y, width + value.width,
                 height + value.height);
   }
 
-  Rect operator-(const Rect& value) {
+  Rect operator-(const Rect& value) const {
     return Rect(x - value.x, y - value.y, width - value.width,
                 height - value.height);
   }
 
-  Rect operator*(const Rect& value) {
+  Rect operator*(const Rect& value) const {
     return Rect(x * value.x, y * value.y, width * value.width,
                 height * value.height);
   }
 
-  Rect operator/(const Rect& value) {
+  Rect operator/(const Rect& value) const {
     return Rect(x / value.x, y / value.y, width / value.width,
                 height / value.height);
   }
@@ -274,7 +286,7 @@ class RectF {
   RectF(const RectF&) = default;
   RectF& operator=(const RectF&) = default;
 
-  bool operator==(const RectF& other) {
+  bool operator==(const RectF& other) const {
     return other.x == x && other.y == y && other.width == width &&
            other.height == height;
   }
@@ -288,22 +300,22 @@ class RectF {
            (y + height >= other.y + other.height);
   }
 
-  RectF operator+(const RectF& value) {
+  RectF operator+(const RectF& value) const {
     return RectF(x + value.x, y + value.y, width + value.width,
                  height + value.height);
   }
 
-  RectF operator-(const RectF& value) {
+  RectF operator-(const RectF& value) const {
     return RectF(x - value.x, y - value.y, width - value.width,
                  height - value.height);
   }
 
-  RectF operator*(const RectF& value) {
+  RectF operator*(const RectF& value) const {
     return RectF(x * value.x, y * value.y, width * value.width,
                  height * value.height);
   }
 
-  RectF operator/(const RectF& value) {
+  RectF operator/(const RectF& value) const {
     return RectF(x / value.x, y / value.y, width / value.width,
                  height / value.height);
   }
