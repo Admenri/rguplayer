@@ -1050,6 +1050,7 @@ void Tilemap2::ParseMapDataBufferInternal() {
   auto read_tilemap = [&]() {
     /* autotile A area */
     process_layer(0);
+
     process_layer(1);
 
     /* shadow layer */

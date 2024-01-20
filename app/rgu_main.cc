@@ -149,7 +149,7 @@ scoped_refptr<content::Table> GetTestMapData() {
   for (int z = 0; z < 4; ++z) {
     for (int y = 0; y < 13; ++y) {
       for (int x = 0; x < 17; ++x) {
-        t->Set(kTestMapData[x + y * 17][4], x, y, z);
+        t->Set(kTestMapData[x + y * 17][z], x, y, z);
       }
     }
   }
