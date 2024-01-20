@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CONTENT_PUBLIC_TILEMAP_H_
-#define CONTENT_PUBLIC_TILEMAP_H_
+#ifndef CONTENT_PUBLIC_TILEMAP2_H_
+#define CONTENT_PUBLIC_TILEMAP2_H_
 
 #include <array>
 
@@ -81,6 +81,8 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
 
   void InitTilemapInternal();
   void CreateTileAtlasInternal();
+  void UpdateTilemapViewportInternal();
+  void ParseMapDataBufferInternal();
 
   std::unique_ptr<GroundLayer> ground_;
   std::unique_ptr<AboveLayer> above_;
@@ -95,16 +97,21 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   scoped_refptr<Table> flash_data_;
   scoped_refptr<Table> flags_;
 
-  std::vector<renderer::CommonVertex> tile_vertices_;
-  renderer::VertexArray<renderer::CommonVertex> vao_;
+  std::vector<renderer::CommonVertex> ground_vertices_;
+  std::vector<renderer::CommonVertex> above_vertices_;
+  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
+      tilemap_quads_;
 
   renderer::TextureFrameBuffer atlas_tfb_;
   bool atlas_need_update_ = false;
   int tile_size_;
+  base::Rect tilemap_viewport_;
+  base::Vec2i tilemap_offset_;
+  bool buffer_need_update_ = false;
 
   base::WeakPtrFactory<Tilemap2> weak_ptr_factory_{this};
 };
 
 }  // namespace content
 
-#endif  // !CONTENT_PUBLIC_TILEMAP_H_
+#endif  // !CONTENT_PUBLIC_TILEMAP2_H_

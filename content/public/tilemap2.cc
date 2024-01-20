@@ -2,17 +2,47 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "content/public/tilemap.h"
+#include "content/public/tilemap2.h"
 
 #include "content/public/bitmap.h"
 
 #include "SDL_pixels.h"
 #include "SDL_surface.h"
+#include "tilemap2.h"
 
 namespace {
 
+#define OVER_PLAYER_FLAG (1 << 4)
+#define TABLE_FLAG (1 << 7)
+
 static const int kGroundLayerDefaultZ = 0;
 static const int kAboveLayerDefaultZ = 200;
+
+inline int vwrap(int value, int range) {
+  int res = value % range;
+  return res < 0 ? res + range : res;
+};
+
+inline base::Vec2i vwrap(const base::Vec2i& value, int range) {
+  return base::Vec2i(vwrap(value.x, range), vwrap(value.y, range));
+}
+
+inline int16_t TableGetWrapped(scoped_refptr<content::Table> t,
+                               int x,
+                               int y,
+                               int z = 0) {
+  return t->Get(vwrap(x, t->GetXSize()), vwrap(y, t->GetYSize()), z);
+}
+
+inline int16_t TableGetFlag(scoped_refptr<content::Table> t, int x) {
+  if (!t)
+    return 0;
+
+  if (x < 0 || x >= t->GetXSize())
+    return 0;
+
+  return t->At(x);
+}
 
 using TilemapBlock = struct {
   base::Vec2i pos;
@@ -247,7 +277,9 @@ class GroundLayer : public ViewportChild {
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
 
   void OnViewportRectChanged(
-      const DrawableParent::ViewportInfo& rect) override {}
+      const DrawableParent::ViewportInfo& rect) override {
+    tilemap_->buffer_need_update_ = true;
+  }
 
   base::WeakPtr<Tilemap2> tilemap_;
 };
@@ -269,7 +301,9 @@ class AboveLayer : public ViewportChild {
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
 
   void OnViewportRectChanged(
-      const DrawableParent::ViewportInfo& rect) override {}
+      const DrawableParent::ViewportInfo& rect) override {
+    tilemap_->buffer_need_update_ = true;
+  }
 
   base::WeakPtr<Tilemap2> tilemap_;
 };
@@ -316,6 +350,7 @@ void Tilemap2::SetMapData(scoped_refptr<Table> map_data) {
   if (map_data_ == map_data)
     return;
   map_data_ = map_data;
+  buffer_need_update_ = true;
 }
 
 scoped_refptr<Table> Tilemap2::GetFlashData() const {
@@ -342,6 +377,7 @@ void Tilemap2::SetFlags(scoped_refptr<Table> flags) {
   if (flags_ == flags)
     return;
   flags_ = flags;
+  buffer_need_update_ = true;
 }
 
 scoped_refptr<Viewport> Tilemap2::GetViewport() const {
@@ -404,25 +440,29 @@ void Tilemap2::OnObjectDisposed() {
 
   weak_ptr_factory_.InvalidateWeakPtrs();
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&renderer::VertexArray<renderer::CommonVertex>::Uninit,
-                     base::OwnedRef(std::move(vao_))));
+  screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
   screen()->renderer()->PostTask(
       base::BindOnce(&renderer::TextureFrameBuffer::Del,
                      base::OwnedRef(std::move(atlas_tfb_))));
 }
 
 void Tilemap2::BeforeTilemapComposite() {
+  UpdateTilemapViewportInternal();
+
   if (atlas_need_update_) {
     CreateTileAtlasInternal();
     atlas_need_update_ = false;
   }
+
+  if (buffer_need_update_) {
+    ParseMapDataBufferInternal();
+    buffer_need_update_ = false;
+  }
 }
 
 void Tilemap2::InitTilemapInternal() {
-  vao_.ibo = renderer::GSM.quad_ibo->ibo;
-  vao_.vbo = renderer::VertexBuffer::Gen();
-  renderer::VertexArray<renderer::CommonVertex>::Init(vao_);
+  tilemap_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
 
   atlas_tfb_ = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_, tile_size_);
@@ -458,6 +498,194 @@ void Tilemap2::CreateTileAtlasInternal() {
       kShadowAtlasArea.src.size.x * tile_size_,
       kShadowAtlasArea.src.size.y * tile_size_, GL_RGBA, shadow_set->pixels);
   SDL_DestroySurface(shadow_set);
+}
+
+void Tilemap2::UpdateTilemapViewportInternal() {
+  auto& viewport_rect = GetViewport()->parent_rect();
+
+  const base::Vec2i tilemap_origin = origin_ + viewport_rect.GetRealOffset();
+  const base::Vec2i viewport_size = viewport_rect.rect.Size();
+
+  base::Rect new_tilemap_viewport;
+  new_tilemap_viewport.x = tilemap_origin.x / tile_size_;
+  new_tilemap_viewport.y = tilemap_origin.y / tile_size_ - 1;
+
+  new_tilemap_viewport.width =
+      (viewport_size.x / tile_size_) + !!(viewport_size.x % tile_size_) + 1;
+  new_tilemap_viewport.height =
+      (viewport_size.y / tile_size_) + !!(viewport_size.y % tile_size_) + 2;
+
+  if (new_tilemap_viewport != tilemap_viewport_) {
+    tilemap_viewport_ = new_tilemap_viewport;
+    buffer_need_update_ = true;
+  }
+
+  tilemap_offset_ = viewport_rect.rect.Position() -
+                    vwrap(tilemap_origin, tile_size_) -
+                    base::Vec2i(0, tile_size_);
+}
+
+void Tilemap2::ParseMapDataBufferInternal() {
+  auto& viewport_rect = GetViewport()->parent_rect();
+  scoped_refptr<Table> mapdata = map_data_;
+  scoped_refptr<Table> flagdata = flags_;
+
+  auto alloc_ground = [&](int n) {
+    size_t vert_size = ground_vertices_.size();
+    ground_vertices_.resize(vert_size + n * 4);
+    return &ground_vertices_[vert_size];
+  };
+
+  auto alloc_above = [&](int n) {
+    size_t vert_size = above_vertices_.size();
+    above_vertices_.resize(vert_size + n * 4);
+    return &above_vertices_[vert_size];
+  };
+
+  auto process_quad = [&](base::RectF* texcoords, base::RectF* position,
+                          int size, bool above) {
+    auto* vert = above ? alloc_above(size) : alloc_ground(size);
+
+    for (size_t i = 0; i < size; ++i)
+      renderer::QuadSetTexPosRect(vert, texcoords[i], position[i]);
+  };
+
+  auto process_tile_A5 = [&](int16_t tileID, int x, int y, bool above) {
+    const base::Vec2i src_origin(0, 20);
+
+    tileID -= 0x0600;
+    int ox = tileID % 0x8;
+    int oy = tileID / 0x8;
+
+    /* A5 half */
+    if (oy >= 8) {
+      oy -= 8;
+      ox += 8;
+    }
+
+    base::RectF tex((src_origin.x + ox) * tile_size_ + 0.5,
+                    (src_origin.y + oy) * tile_size_ + 0.5, tile_size_ - 1,
+                    tile_size_ - 1);
+    base::RectF pos(x * tile_size_, y * tile_size_, tile_size_, tile_size_);
+
+    process_quad(&tex, &pos, 1, above);
+  };
+
+  auto process_tile_bcde = [&](int16_t tileID, int x, int y, bool above) {
+    int ox = tileID % 0x8;
+    int oy = (tileID / 0x8) % 0x10;
+    int ob = tileID / (0x8 * 0x10);
+
+    ox += (ob % 2) * 0x8;
+    oy += (ob / 2) * 0x10;
+
+    if (oy >= 48) {
+      /* E atlas */
+      oy -= 32;
+      ox += 16;
+    } else if (oy >= 32) {
+      /* D atlas */
+      oy -= 16;
+    } else if (oy >= 16) {
+      /* C atlas */
+      oy -= 16;
+      ox += 16;
+    }
+
+    base::RectF tex((32 + ox) * tile_size_ + 0.5, (0 + oy) * tile_size_ + 0.5,
+                    tile_size_ - 1, tile_size_ - 1);
+    base::RectF pos(x * tile_size_, y * tile_size_, tile_size_, tile_size_);
+
+    process_quad(&tex, &pos, 1, above);
+  };
+
+  auto each_tile = [&](int16_t tileID, int x, int y, int z) {
+    int16_t flag = TableGetFlag(flagdata, tileID);
+    bool over_player = flag & OVER_PLAYER_FLAG;
+    bool is_table = flag & TABLE_FLAG;
+
+    /* B ~ E */
+    if (tileID < 0x0400)
+      return process_tile_bcde(tileID, x, y, over_player);
+
+    /* A5 */
+    if (tileID >= 0x0600 && tileID < 0x0680)
+      return process_tile_A5(tileID, x, y, over_player);
+
+    /* A1 */
+    if (tileID >= 0x0800 && tileID < 0x0B00)
+      return;
+
+    /* A2 */
+    if (tileID >= 0x0B00 && tileID < 0x1100)
+      return;
+
+    /* A3 */
+    if (tileID < 0x1700)
+      return;
+
+    /* A4 */
+    if (tileID < 0x2000)
+      return;
+  };
+
+  auto shadow_tile = [&](int8_t shadow_id, int x, int y) {
+    if (shadow_id == 0)
+      return;
+
+    int oy = shadow_id;
+
+    base::RectF tex((kShadowAtlasArea.dst.x) * 32 + 0.5,
+                    (kShadowAtlasArea.dst.y + oy) * 32 + 0.5, 31, 31);
+    base::RectF pos(x * 32, y * 32, 32, 32);
+
+    process_quad(&tex, &pos, 1, false);
+  };
+
+  auto process_layer = [&](int z) {
+    int ox = tilemap_viewport_.x, oy = tilemap_viewport_.y;
+    int w = tilemap_viewport_.width, h = tilemap_viewport_.height;
+
+    for (int y = h - 1; y >= 0; --y) {
+      for (int x = 0; x < w; ++x) {
+        if (z <= 2) {
+          int16_t tileID = TableGetWrapped(mapdata, x + ox, y + oy, z);
+
+          if (tileID > 0)
+            each_tile(tileID, x, y, z);
+        } else {
+          int16_t value = TableGetWrapped(mapdata, x + ox, y + oy, 3);
+          shadow_tile(value & 0xF, x, y);
+        }
+      }
+    }
+  };
+
+  auto read_tilemap = [&]() {
+    /* autotile A area */
+    process_layer(0);
+    process_layer(1);
+
+    /* shadow layer */
+    process_layer(3);
+
+    /* BCDE area */
+    process_layer(2);
+  };
+
+  /* Process tilemap data */
+  read_tilemap();
+
+  /* Process quad array */
+  tilemap_quads_->Resize(ground_vertices_.size() + above_vertices_.size());
+
+  memcpy(&tilemap_quads_->vertices()[0], &ground_vertices_[0],
+         ground_vertices_.size() * sizeof(renderer::CommonVertex));
+  memcpy(&tilemap_quads_->vertices()[0] + ground_vertices_.size(),
+         &above_vertices_[0],
+         above_vertices_.size() * sizeof(renderer::CommonVertex));
+
+  tilemap_quads_->Update();
 }
 
 }  // namespace content

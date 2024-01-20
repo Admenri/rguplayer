@@ -22,14 +22,14 @@ set(CORE_CONTENT_SRC
   public/sprite.h
   public/table.cc
   public/table.h
-  public/tilemap.cc
-  public/tilemap.h
+  public/tilemap2.cc
+  public/tilemap2.h
   public/tilequad.h
   public/utility.h
   public/viewport.cc
   public/viewport.h
-  public/window.cc
-  public/window.h
+  public/window2.cc
+  public/window2.h
   worker/binding_worker.cc
   worker/binding_worker.h
   worker/content_compositor.cc

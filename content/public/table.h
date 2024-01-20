@@ -32,11 +32,11 @@ class Table final : public base::RefCounted<Table> {
   void Resize(int x, int y, int z);
 
   // Internal
-  inline int16_t& At(int x, int y, int z) {
+  inline int16_t& At(int x, int y = 0, int z = 0) {
     return data_[x + y * x_size_ + z * y_size_ * x_size_];
   }
 
-  inline const int16_t& At(int x, int y, int z) const {
+  inline const int16_t& At(int x, int y = 0, int z = 0) const {
     return data_[x + y * x_size_ + z * y_size_ * x_size_];
   }
 

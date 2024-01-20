@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "content/public/window.h"
+#include "content/public/window2.h"
 
 #include "content/public/tilequad.h"
 
