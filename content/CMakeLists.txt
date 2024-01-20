@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.18.0)
 #--------------------------------------------------------------------------------
 
 set(CORE_CONTENT_SRC
+  common/tilemap_common.cc
+  common/tilemap_common.h
   public/bitmap.cc
   public/bitmap.h
   public/disposable.h

@@ -19,12 +19,14 @@ namespace shader {
 #include "renderer/shader/glsl/basealpha.vert.xxd"
 #include "renderer/shader/glsl/basecolor.frag.xxd"
 #include "renderer/shader/glsl/basecolor.vert.xxd"
+#include "renderer/shader/glsl/flashtile.frag.xxd"
 #include "renderer/shader/glsl/flat.frag.xxd"
 #include "renderer/shader/glsl/gray.frag.xxd"
 #include "renderer/shader/glsl/minimum.vert.xxd"
 #include "renderer/shader/glsl/plane.frag.xxd"
 #include "renderer/shader/glsl/sprite.frag.xxd"
 #include "renderer/shader/glsl/texblt.frag.xxd"
+#include "renderer/shader/glsl/tilemap2.vert.xxd"
 #include "renderer/shader/glsl/transform.vert.xxd"
 #include "renderer/shader/glsl/vaguetrans.frag.xxd"
 
@@ -478,6 +480,56 @@ void VagueTransShader::SetProgress(float progress) {
 
 void VagueTransShader::SetVague(float vague) {
   GL.Uniform1f(u_vague_, vague);
+}
+
+FlashTileShader::FlashTileShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::basecolor_vert, shader::basecolor_vert_len),
+      "basecolor_vert",
+      shader::FromRawData(shader::flashtile_frag, shader::flashtile_frag_len),
+      "flashtile_frag");
+
+  u_alpha_ = GL.GetUniformLocation(program(), "u_alpha");
+}
+
+void FlashTileShader::SetAlpha(float alpha) {
+  GL.Uniform1f(u_alpha_, alpha);
+}
+
+Tilemap2Shader::Tilemap2Shader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::tilemap2_vert, shader::tilemap2_vert_len),
+      "tilemap2_vert",
+      shader::FromRawData(shader::base_frag, shader::base_frag_len),
+      "base_frag");
+
+  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
+  u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
+  u_texture_ = GL.GetUniformLocation(program(), "u_texture");
+
+  u_autotileAnimationOffset_ =
+      GL.GetUniformLocation(program(), "u_autotileAnimationOffset");
+  u_tileSize_ = GL.GetUniformLocation(program(), "u_tileSize");
+}
+
+void Tilemap2Shader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void Tilemap2Shader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void Tilemap2Shader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+void Tilemap2Shader::SetAnimationOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_autotileAnimationOffset_, offset.x, offset.y);
+}
+
+void Tilemap2Shader::SetTileSize(float size) {
+  GL.Uniform1f(u_tileSize_, size);
 }
 
 }  // namespace renderer

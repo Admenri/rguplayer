@@ -8,6 +8,7 @@
 #include <array>
 
 #include "base/memory/ref_counted.h"
+#include "content/common/tilemap_common.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
 #include "content/public/table.h"
@@ -84,6 +85,8 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   void CreateTileAtlasInternal();
   void UpdateTilemapViewportInternal();
   void ParseMapDataBufferInternal();
+  void DrawFlashLayerInternal();
+  void SetAtlasUpdateInternal();
 
   std::unique_ptr<GroundLayer> ground_;
   std::unique_ptr<AboveLayer> above_;
@@ -109,6 +112,13 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   base::Rect tilemap_viewport_;
   base::Vec2i tilemap_offset_;
   bool buffer_need_update_ = false;
+
+  std::unique_ptr<TilemapFlashLayer> flash_layer_;
+  int frame_index_ = 0;
+  int flash_alpha_index_ = 0;
+  base::Vec2 animation_offset_;
+
+  base::CallbackListSubscription observers_[9];
 
   base::WeakPtrFactory<Tilemap2> weak_ptr_factory_{this};
 };

@@ -5,6 +5,7 @@
 #include "content/public/tilemap2.h"
 
 #include "content/public/bitmap.h"
+#include "renderer/thread/thread_manager.h"
 
 #include "SDL_pixels.h"
 #include "SDL_surface.h"
@@ -17,32 +18,6 @@ namespace {
 
 static const int kGroundLayerDefaultZ = 0;
 static const int kAboveLayerDefaultZ = 200;
-
-inline int vwrap(int value, int range) {
-  int res = value % range;
-  return res < 0 ? res + range : res;
-};
-
-inline base::Vec2i vwrap(const base::Vec2i& value, int range) {
-  return base::Vec2i(vwrap(value.x, range), vwrap(value.y, range));
-}
-
-inline int16_t TableGetWrapped(scoped_refptr<content::Table> t,
-                               int x,
-                               int y,
-                               int z = 0) {
-  return t->Get(vwrap(x, t->GetXSize()), vwrap(y, t->GetYSize()), z);
-}
-
-inline int16_t TableGetFlag(scoped_refptr<content::Table> t, int x) {
-  if (!t)
-    return 0;
-
-  if (x < 0 || x >= t->GetXSize())
-    return 0;
-
-  return t->At(x);
-}
 
 using AutotileSubPos = enum {
   TopLeft = 0,
@@ -61,6 +36,20 @@ using TilemapVXAtlasBlock = struct {
   TilemapBlock src;
   base::Vec2i dst;
 };
+
+const uint8_t kAniIndicesRegular[3 * 4] = {0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1};
+const uint8_t kAniIndicesWaterfall[3 * 4] = {0, 1, 2, 0, 1, 2,
+                                             0, 1, 2, 0, 1, 2};
+
+const uint8_t kflashAlpha[] = {
+    /* Fade in */
+    0x78, 0x78, 0x78, 0x78, 0x96, 0x96, 0x96, 0x96, 0xB4, 0xB4, 0xB4, 0xB4,
+    0xD2, 0xD2, 0xD2, 0xD2,
+    /* Fade out */
+    0xF0, 0xF0, 0xF0, 0xF0, 0xD2, 0xD2, 0xD2, 0xD2, 0xB4, 0xB4, 0xB4, 0xB4,
+    0x96, 0x96, 0x96, 0x96};
+
+const int kflashAlphaSize = sizeof(kflashAlpha) / sizeof(kflashAlpha[0]);
 
 const base::RectF kAutotileSrcRegular[] = {
     {1.0f, 2.0f, 0.5f, 0.5f}, {0.5f, 2.0f, 0.5f, 0.5f},
@@ -427,7 +416,38 @@ class GroundLayer : public ViewportChild {
 
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
-  void Composite() override {}
+  void Composite() override {
+    scoped_refptr<Bitmap> tilemap_a1 =
+        tilemap_->bitmaps_[Tilemap2::TilemapBitmapID::TileA1];
+
+    if (!tilemap_a1 || tilemap_a1->IsDisposed()) {
+      auto& shader = renderer::GSM.shaders->base;
+      shader.Bind();
+      shader.SetProjectionMatrix(
+          renderer::GSM.states.viewport.Current().Size());
+      shader.SetTextureSize(
+          base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
+      shader.SetTexture(tilemap_->atlas_tfb_.tex);
+      shader.SetTransOffset(tilemap_->tilemap_offset_);
+    } else {
+      auto& shader = renderer::GSM.shaders->tilemap2;
+      shader.Bind();
+      shader.SetProjectionMatrix(
+          renderer::GSM.states.viewport.Current().Size());
+      shader.SetTextureSize(
+          base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
+      shader.SetTexture(tilemap_->atlas_tfb_.tex);
+      shader.SetTransOffset(tilemap_->tilemap_offset_);
+
+      shader.SetAnimationOffset(tilemap_->animation_offset_);
+      shader.SetTileSize(tilemap_->tile_size_);
+    }
+
+    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
+    tilemap_->tilemap_quads_->Draw(0, ground_quad_size);
+
+    tilemap_->DrawFlashLayerInternal();
+  }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
 
@@ -451,7 +471,21 @@ class AboveLayer : public ViewportChild {
 
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
-  void Composite() override {}
+  void Composite() override {
+    auto& shader = renderer::GSM.shaders->base;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTextureSize(
+        base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
+    shader.SetTexture(tilemap_->atlas_tfb_.tex);
+    shader.SetTransOffset(tilemap_->tilemap_offset_);
+
+    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
+    tilemap_->tilemap_quads_->Draw(ground_quad_size,
+                                   tilemap_->above_vertices_.size() / 4);
+
+    tilemap_->DrawFlashLayerInternal();
+  }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
 
@@ -479,7 +513,20 @@ Tilemap2::~Tilemap2() {
   Dispose();
 }
 
-void Tilemap2::Update() {}
+void Tilemap2::Update() {
+  CheckIsDisposed();
+
+  if (++frame_index_ >= 30 * 3 * 4)
+    frame_index_ = 0;
+
+  uint8_t aniIdxA = kAniIndicesRegular[frame_index_ / 30];
+  uint8_t aniIdxC = kAniIndicesWaterfall[frame_index_ / 30];
+  animation_offset_ =
+      base::Vec2(aniIdxA * 2 * tile_size_, aniIdxC * tile_size_);
+
+  if (++flash_alpha_index_ >= kflashAlphaSize)
+    flash_alpha_index_ = 0;
+}
 
 scoped_refptr<Bitmap> Tilemap2::GetBitmap(int index) const {
   CheckIsDisposed();
@@ -492,6 +539,12 @@ void Tilemap2::SetBitmap(int index, scoped_refptr<Bitmap> bitmap) {
   if (bitmaps_[index] == bitmap)
     return;
   bitmaps_[index] = bitmap;
+
+  if (bitmap->IsDisposed())
+    return;
+
+  observers_[index] = bitmap->AddBitmapObserver(base::BindRepeating(
+      &Tilemap2::SetAtlasUpdateInternal, base::Unretained(this)));
 }
 
 scoped_refptr<Table> Tilemap2::GetMapData() const {
@@ -542,6 +595,9 @@ scoped_refptr<Viewport> Tilemap2::GetViewport() const {
 
 void Tilemap2::SetViewport(scoped_refptr<Viewport> viewport) {
   CheckIsDisposed();
+
+  if (viewport->IsDisposed())
+    return;
 
   if (viewport_ == viewport)
     return;
@@ -596,12 +652,15 @@ void Tilemap2::OnObjectDisposed() {
   weak_ptr_factory_.InvalidateWeakPtrs();
 
   screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
+  screen()->renderer()->DeleteSoon(std::move(flash_layer_));
   screen()->renderer()->PostTask(
       base::BindOnce(&renderer::TextureFrameBuffer::Del,
                      base::OwnedRef(std::move(atlas_tfb_))));
 }
 
 void Tilemap2::BeforeTilemapComposite() {
+  flash_layer_->BeforeComposite();
+
   UpdateTilemapViewportInternal();
 
   if (atlas_need_update_) {
@@ -619,6 +678,8 @@ void Tilemap2::InitTilemapInternal() {
   tilemap_quads_ =
       std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
 
+  flash_layer_ = std::make_unique<TilemapFlashLayer>();
+
   atlas_tfb_ = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_, tile_size_);
   renderer::TextureFrameBuffer::LinkFrameBuffer(atlas_tfb_);
@@ -632,6 +693,9 @@ void Tilemap2::CreateTileAtlasInternal() {
   for (int i = 0; i < kTilemapAtlasSize; ++i) {
     auto& atlas_info = kTilemapAtlas[i];
     scoped_refptr<Bitmap> atlas_bitmap = bitmaps_[atlas_info.tile_id];
+
+    if (!atlas_bitmap || atlas_bitmap->IsDisposed())
+      continue;
 
     base::Rect src_rect(
         atlas_info.src.pos.x * tile_size_, atlas_info.src.pos.y * tile_size_,
@@ -673,6 +737,8 @@ void Tilemap2::UpdateTilemapViewportInternal() {
   if (new_tilemap_viewport != tilemap_viewport_) {
     tilemap_viewport_ = new_tilemap_viewport;
     buffer_need_update_ = true;
+
+    flash_layer_->SetViewport(tilemap_viewport_);
   }
 
   tilemap_offset_ = viewport_rect.rect.Position() -
@@ -993,7 +1059,8 @@ void Tilemap2::ParseMapDataBufferInternal() {
   read_tilemap();
 
   /* Process quad array */
-  tilemap_quads_->Resize(ground_vertices_.size() + above_vertices_.size());
+  int quad_size = (ground_vertices_.size() + above_vertices_.size()) / 4;
+  tilemap_quads_->Resize(quad_size);
 
   memcpy(&tilemap_quads_->vertices()[0], &ground_vertices_[0],
          ground_vertices_.size() * sizeof(renderer::CommonVertex));
@@ -1002,6 +1069,16 @@ void Tilemap2::ParseMapDataBufferInternal() {
          above_vertices_.size() * sizeof(renderer::CommonVertex));
 
   tilemap_quads_->Update();
+  renderer::GSM.quad_ibo->EnsureSize(quad_size);
+}
+
+void Tilemap2::DrawFlashLayerInternal() {
+  float alpha = (kflashAlpha[flash_alpha_index_] / 255.0f) / 2;
+  flash_layer_->Composite(tilemap_offset_, alpha);
+}
+
+void Tilemap2::SetAtlasUpdateInternal() {
+  atlas_need_update_ = true;
 }
 
 }  // namespace content

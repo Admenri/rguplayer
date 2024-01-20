@@ -241,6 +241,36 @@ class VagueTransShader : public GLES2ShaderBase {
   GLint u_vague_;
 };
 
+class FlashTileShader : public GLES2ShaderBase {
+ public:
+  FlashTileShader();
+
+  void SetAlpha(float alpha);
+
+ private:
+  GLint u_alpha_;
+};
+
+class Tilemap2Shader : public GLES2ShaderBase {
+ public:
+  Tilemap2Shader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetTexture(GLID<Texture> tex);
+
+  void SetAnimationOffset(const base::Vec2& offset);
+  void SetTileSize(float size);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transOffset_;
+  GLint u_texture_;
+
+  GLint u_autotileAnimationOffset_;
+  GLint u_tileSize_;
+};
+
 }  // namespace renderer
 
 #endif  // !RENDERER_SHADER_GLES2_SHADERS_H_

@@ -6,6 +6,7 @@
 #define RENDERER_QUAD_QUAD_ARRAY_H_
 
 #include "renderer/quad/quad_drawable.h"
+#include "renderer/thread/thread_manager.h"
 
 namespace renderer {
 

@@ -22,7 +22,7 @@
 #include "content/public/bitmap.h"
 #include "content/public/sprite.h"
 #include "content/public/plane.h"
-#include "content/public/window.h"
+#include "content/public/window2.h"
 
 #include "physfs.h"
 
