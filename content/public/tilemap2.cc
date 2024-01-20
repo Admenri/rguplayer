@@ -7,6 +7,7 @@
 #include "content/public/bitmap.h"
 #include "renderer/thread/thread_manager.h"
 
+#include "SDL_image.h"
 #include "SDL_pixels.h"
 #include "SDL_surface.h"
 #include "tilemap2.h"
@@ -507,6 +508,9 @@ Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
   ground_ =
       std::make_unique<GroundLayer>(screen, weak_ptr_factory_.GetWeakPtr());
   above_ = std::make_unique<AboveLayer>(screen, weak_ptr_factory_.GetWeakPtr());
+
+  screen->renderer()->PostTask(base::BindOnce(&Tilemap2::InitTilemapInternal,
+                                              weak_ptr_factory_.GetWeakPtr()));
 }
 
 Tilemap2::~Tilemap2() {
@@ -539,6 +543,7 @@ void Tilemap2::SetBitmap(int index, scoped_refptr<Bitmap> bitmap) {
   if (bitmaps_[index] == bitmap)
     return;
   bitmaps_[index] = bitmap;
+  atlas_need_update_ = true;
 
   if (bitmap->IsDisposed())
     return;
@@ -720,7 +725,7 @@ void Tilemap2::CreateTileAtlasInternal() {
 }
 
 void Tilemap2::UpdateTilemapViewportInternal() {
-  auto& viewport_rect = GetViewport()->parent_rect();
+  auto& viewport_rect = ground_->parent_rect();
 
   const base::Vec2i tilemap_origin = origin_ + viewport_rect.GetRealOffset();
   const base::Vec2i viewport_size = viewport_rect.rect.Size();
@@ -747,7 +752,7 @@ void Tilemap2::UpdateTilemapViewportInternal() {
 }
 
 void Tilemap2::ParseMapDataBufferInternal() {
-  auto& viewport_rect = GetViewport()->parent_rect();
+  auto& viewport_rect = ground_->parent_rect();
   scoped_refptr<Table> mapdata = map_data_;
   scoped_refptr<Table> flagdata = flags_;
 
@@ -768,23 +773,23 @@ void Tilemap2::ParseMapDataBufferInternal() {
     auto* vert = above ? alloc_above(size) : alloc_ground(size);
 
     for (size_t i = 0; i < size; ++i)
-      renderer::QuadSetTexPosRect(vert, texcoords[i], position[i]);
+      renderer::QuadSetTexPosRect(vert + i * 4, texcoords[i], position[i]);
   };
 
   auto autotile_subpos = [&](base::RectF& pos, int i) {
     switch (i) {
       case TopLeft:
-        return;
+        break;
       case TopRight:
-        pos.x += 16;
-        return;
+        pos.x += tile_size_ / 2.0f;
+        break;
       case BottomLeft:
-        pos.y += 16;
-        return;
+        pos.y += tile_size_ / 2.0f;
+        break;
       case BottomRight:
-        pos.x += 16;
-        pos.y += 16;
-        return;
+        pos.x += tile_size_ / 2.0f;
+        pos.y += tile_size_ / 2.0f;
+        break;
       default:
         break;
     }
@@ -794,7 +799,6 @@ void Tilemap2::ParseMapDataBufferInternal() {
                                   int x, int y, const base::RectF rect_src[],
                                   int rect_src_size, bool above) {
     base::RectF tex[4], pos[4];
-
     for (int i = 0; i < 4; ++i) {
       base::RectF tex_rect =
           rect_src[patternID * 4 + i] *
@@ -822,7 +826,6 @@ void Tilemap2::ParseMapDataBufferInternal() {
       return;
 
     base::RectF tex[2], pos[2];
-
     for (size_t i = 0; i < 2; ++i) {
       base::RectF tex_rect =
           kAutotileSrcWaterfall[patternID * 2 + i] *
@@ -1015,9 +1018,10 @@ void Tilemap2::ParseMapDataBufferInternal() {
   auto shadow_tile = [&](int8_t shadow_id, int x, int y) {
     int oy = shadow_id;
 
-    base::RectF tex((kShadowAtlasArea.dst.x) * 32 + 0.5,
-                    (kShadowAtlasArea.dst.y + oy) * 32 + 0.5, 31, 31);
-    base::RectF pos(x * 32, y * 32, 32, 32);
+    base::RectF tex((kShadowAtlasArea.dst.x) * tile_size_ + 0.5,
+                    (kShadowAtlasArea.dst.y + oy) * tile_size_ + 0.5,
+                    tile_size_ - 1, tile_size_ - 1);
+    base::RectF pos(x * tile_size_, y * tile_size_, tile_size_, tile_size_);
 
     process_quad(&tex, &pos, 1, false);
   };
@@ -1062,11 +1066,17 @@ void Tilemap2::ParseMapDataBufferInternal() {
   int quad_size = (ground_vertices_.size() + above_vertices_.size()) / 4;
   tilemap_quads_->Resize(quad_size);
 
-  memcpy(&tilemap_quads_->vertices()[0], &ground_vertices_[0],
-         ground_vertices_.size() * sizeof(renderer::CommonVertex));
-  memcpy(&tilemap_quads_->vertices()[0] + ground_vertices_.size(),
-         &above_vertices_[0],
-         above_vertices_.size() * sizeof(renderer::CommonVertex));
+  auto* base_addr = &tilemap_quads_->vertices()[0];
+
+  if (!ground_vertices_.empty()) {
+    memcpy(base_addr, &ground_vertices_[0],
+           ground_vertices_.size() * sizeof(renderer::CommonVertex));
+  }
+
+  if (!above_vertices_.empty()) {
+    memcpy(base_addr + ground_vertices_.size(), &above_vertices_[0],
+           above_vertices_.size() * sizeof(renderer::CommonVertex));
+  }
 
   tilemap_quads_->Update();
   renderer::GSM.quad_ibo->EnsureSize(quad_size);
