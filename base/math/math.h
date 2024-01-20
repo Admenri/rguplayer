@@ -233,6 +233,26 @@ class Rect {
            (y + height >= other.y + other.height);
   }
 
+  Rect operator+(const Rect& value) {
+    return Rect(x + value.x, y + value.y, width + value.width,
+                height + value.height);
+  }
+
+  Rect operator-(const Rect& value) {
+    return Rect(x - value.x, y - value.y, width - value.width,
+                height - value.height);
+  }
+
+  Rect operator*(const Rect& value) {
+    return Rect(x * value.x, y * value.y, width * value.width,
+                height * value.height);
+  }
+
+  Rect operator/(const Rect& value) {
+    return Rect(x / value.x, y / value.y, width / value.width,
+                height / value.height);
+  }
+
  public:
   int x, y, width, height;
 };
@@ -266,6 +286,26 @@ class RectF {
     return x <= other.x && y <= other.y &&
            (x + width >= other.x + other.width) &&
            (y + height >= other.y + other.height);
+  }
+
+  RectF operator+(const RectF& value) {
+    return RectF(x + value.x, y + value.y, width + value.width,
+                 height + value.height);
+  }
+
+  RectF operator-(const RectF& value) {
+    return RectF(x - value.x, y - value.y, width - value.width,
+                 height - value.height);
+  }
+
+  RectF operator*(const RectF& value) {
+    return RectF(x * value.x, y * value.y, width * value.width,
+                 height * value.height);
+  }
+
+  RectF operator/(const RectF& value) {
+    return RectF(x / value.x, y / value.y, width / value.width,
+                 height / value.height);
   }
 
  public:
