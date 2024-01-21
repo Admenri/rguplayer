@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "base/third_party/concurrentqueue/concurrentqueue.h"
-#include "base/third_party/concurrentqueue/lightweightsemaphore.h"
+#include "concurrentqueue/concurrentqueue.h"
+#include "concurrentqueue/lightweightsemaphore.h"
 
 #include <type_traits>
 #include <cerrno>

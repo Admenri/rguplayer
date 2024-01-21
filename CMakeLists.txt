@@ -34,6 +34,7 @@ endif()
 #--------------------------------------------------------------------------------
 
 ## Third party include
+include_directories(base/third_party)
 include_directories(third_party)
 
 ## SDL
