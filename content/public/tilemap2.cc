@@ -7,7 +7,6 @@
 #include "content/public/bitmap.h"
 #include "renderer/thread/thread_manager.h"
 
-#include "SDL_image.h"
 #include "SDL_pixels.h"
 #include "SDL_surface.h"
 #include "tilemap2.h"
@@ -383,8 +382,6 @@ SDL_Surface* CreateShadowSet(int tilesize) {
   /* Fill rects with half opacity black */
   uint32_t color = (0x80808080 & surf->format->Amask);
   SDL_FillSurfaceRects(surf, rects.data(), rects.size(), color);
-
-  IMG_SavePNG(surf, "D:/Desktop/shadowset.png");
 
   return surf;
 }

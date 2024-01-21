@@ -51,7 +51,7 @@ DrawableParent::~DrawableParent() {
 void DrawableParent::InsertDrawable(Drawable* drawable) {
   for (auto it = drawables_.head(); it != drawables_.end(); it = it->next()) {
     // TODO: RGSS 1/2/3 specific process
-    if (it->value()->z_ < drawable->z_) {
+    if (it->value()->z_ <= drawable->z_) {
       return drawables_.InsertBefore(it, drawable);
     }
   }
