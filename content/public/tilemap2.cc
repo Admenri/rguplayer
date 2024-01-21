@@ -336,60 +336,46 @@ const TilemapVXAtlasBlock kTilemapAtlas[] = {
 const size_t kTilemapAtlasSize =
     sizeof(kTilemapAtlas) / sizeof(kTilemapAtlas[0]);
 
-const TilemapVXAtlasBlock kShadowAtlasArea = {
-    content::Tilemap2::TilemapBitmapID(),
-    {
-        base::Vec2i{0, 0},
-        base::Vec2i{16, 1},
-    },
-    base::Vec2i{16, 27},
-};
+const base::RectF kShadowAtlasArea = {16.0f, 27.0f, 16.0f, 1.0f};
 
-const TilemapVXAtlasBlock kFreeAtlasArea = {
-    content::Tilemap2::TilemapBitmapID(),
-    {
-        base::Vec2i{0, 0},
-        base::Vec2i{16, 4},
-    },
-    base::Vec2i{0, 28},
-};
+const base::RectF kFreeAtlasArea = {0.0f, 28.0f, 16.0f, 4.0f};
 
 SDL_Surface* CreateShadowSet(int tilesize) {
-  SDL_Surface* surf = SDL_CreateSurface(kShadowAtlasArea.src.size.x * tilesize,
-                                        kShadowAtlasArea.src.size.y * tilesize,
+  SDL_Surface* surf = SDL_CreateSurface(kShadowAtlasArea.width * tilesize,
+                                        kShadowAtlasArea.height * tilesize,
                                         SDL_PIXELFORMAT_ABGR8888);
 
   std::vector<SDL_Rect> rects;
   SDL_Rect rect = {0, 0, tilesize / 2, tilesize / 2};
 
   for (int val = 0; val < 16; ++val) {
-    int origY = val * tilesize;
+    int offsetX = val * tilesize;
 
     /* Top left */
     if (val & (1 << 0)) {
-      rect.x = 0;
-      rect.y = origY;
+      rect.x = offsetX;
+      rect.y = 0;
       rects.push_back(rect);
     }
 
     /* Top Right */
     if (val & (1 << 1)) {
-      rect.x = tilesize / 2;
-      rect.y = origY;
+      rect.x = offsetX + tilesize / 2;
+      rect.y = 0;
       rects.push_back(rect);
     }
 
     /* Bottom left */
     if (val & (1 << 2)) {
-      rect.x = 0;
-      rect.y = origY + tilesize / 2;
+      rect.x = offsetX;
+      rect.y = tilesize / 2;
       rects.push_back(rect);
     }
 
     /* Bottom right */
     if (val & (1 << 3)) {
-      rect.x = tilesize / 2;
-      rect.y = origY + tilesize / 2;
+      rect.x = offsetX + tilesize / 2;
+      rect.y = tilesize / 2;
       rects.push_back(rect);
     }
   }
@@ -397,6 +383,8 @@ SDL_Surface* CreateShadowSet(int tilesize) {
   /* Fill rects with half opacity black */
   uint32_t color = (0x80808080 & surf->format->Amask);
   SDL_FillSurfaceRects(surf, rects.data(), rects.size(), color);
+
+  IMG_SavePNG(surf, "D:/Desktop/shadowset.png");
 
   return surf;
 }
@@ -718,9 +706,9 @@ void Tilemap2::CreateTileAtlasInternal() {
   SDL_Surface* shadow_set = CreateShadowSet(tile_size_);
   renderer::Texture::Bind(atlas_tfb_.tex);
   renderer::Texture::TexSubImage2D(
-      kShadowAtlasArea.dst.x * tile_size_, kShadowAtlasArea.dst.y * tile_size_,
-      kShadowAtlasArea.src.size.x * tile_size_,
-      kShadowAtlasArea.src.size.y * tile_size_, GL_RGBA, shadow_set->pixels);
+      kShadowAtlasArea.x * tile_size_, kShadowAtlasArea.y * tile_size_,
+      kShadowAtlasArea.width * tile_size_, kShadowAtlasArea.height * tile_size_,
+      GL_RGBA, shadow_set->pixels);
   SDL_DestroySurface(shadow_set);
 }
 
@@ -1016,20 +1004,26 @@ void Tilemap2::ParseMapDataBufferInternal() {
   };
 
   auto shadow_tile = [&](int8_t shadow_id, int x, int y) {
-    int oy = shadow_id;
+    int ox = shadow_id;
 
-    base::RectF tex((kShadowAtlasArea.dst.x) * tile_size_ + 0.5,
-                    (kShadowAtlasArea.dst.y + oy) * tile_size_ + 0.5,
-                    tile_size_ - 1, tile_size_ - 1);
+    base::RectF tex((kShadowAtlasArea.x + ox) * tile_size_ + 0.5,
+                    (kShadowAtlasArea.y) * tile_size_ + 0.5, tile_size_ - 1,
+                    tile_size_ - 1);
     base::RectF pos(x * tile_size_, y * tile_size_, tile_size_, tile_size_);
 
     process_quad(&tex, &pos, 1, false);
   };
 
-  auto process_layer = [&](int z) {
-    int ox = tilemap_viewport_.x, oy = tilemap_viewport_.y;
-    int w = tilemap_viewport_.width, h = tilemap_viewport_.height;
+  auto process_shadow_layer = [&](int ox, int oy, int w, int h) {
+    for (int y = 0; y < h; ++y) {
+      for (int x = 0; x < w; ++x) {
+        int16_t value = TableGetWrapped(mapdata, x + ox, y + oy, 3);
+        shadow_tile(value & 0xF, x, y);
+      }
+    }
+  };
 
+  auto process_layer = [&](int ox, int oy, int w, int h, int z) {
     for (int y = h - 1; y >= 0; --y) {
       for (int x = 0; x < w; ++x) {
         if (z <= 2) {
@@ -1047,21 +1041,24 @@ void Tilemap2::ParseMapDataBufferInternal() {
     }
   };
 
-  auto read_tilemap = [&]() {
-    /* autotile A area */
-    process_layer(0);
+  auto read_tilemap = [&](const base::Rect& viewport) {
+    int ox = viewport.x, oy = viewport.y;
+    int w = viewport.width, h = viewport.height;
 
-    process_layer(1);
+    /* autotile A area */
+    process_layer(ox, oy, w, h, 0);
+
+    process_layer(ox, oy, w, h, 1);
 
     /* shadow layer */
-    process_layer(3);
+    process_shadow_layer(ox, oy, w, h);
 
     /* BCDE area */
-    process_layer(2);
+    process_layer(ox, oy, w, h, 2);
   };
 
   /* Process tilemap data */
-  read_tilemap();
+  read_tilemap(tilemap_viewport_);
 
   /* Process quad array */
   int quad_size = (ground_vertices_.size() + above_vertices_.size()) / 4;
