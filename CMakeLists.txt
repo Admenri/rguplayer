@@ -1,11 +1,10 @@
 # Main build file of rgu project
 cmake_minimum_required(VERSION 3.18.0)
 
-# base::jthread required
-set(CMAKE_CXX_STANDARD 20)
-
 project(rgu_player VERSION 1.0.0)
 include_directories("${PROJECT_SOURCE_DIR}")
+
+set(CMAKE_CXX_STANDARD 20)
 
 option(CORE_ENABLE_VIDEO "Enable Core Video Decode Functions" false)
 

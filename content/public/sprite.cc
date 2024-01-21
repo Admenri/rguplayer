@@ -127,8 +127,8 @@ void Sprite::Composite() {
           : color);
 
   shader.SetTone(tone_->AsBase());
-  shader.SetBushDepth(src_rect_->GetY() + src_rect_->GetHeight() -
-                      bush_.depth_);
+  shader.SetBushDepth(static_cast<float>(
+      src_rect_->GetY() + src_rect_->GetHeight() - bush_.depth_));
   shader.SetBushOpacity(bush_.opacity_ / 255.0f);
 
   renderer::GSM.states.blend.Push(true);
@@ -180,9 +180,11 @@ void Sprite::UpdateWaveQuadsInternal() {
     float wavePos = phase + (chunkY / (float)wave_.length_) * (float)(M_PI * 2);
     float chunkX = std::sin(wavePos) * wave_.amp_;
 
-    base::Rect tex(src_rect_->GetX(), src_rect_->GetY() + chunkY / zoomY, width,
-                   chunkLength / zoomY);
-    base::Rect pos = tex;
+    base::RectF tex(static_cast<float>(src_rect_->GetX()),
+                    static_cast<float>(src_rect_->GetY() + chunkY / zoomY),
+                    static_cast<float>(width),
+                    static_cast<float>(chunkLength / zoomY));
+    base::RectF pos = tex;
     pos.x = chunkX;
 
     renderer::QuadSetTexPosRect(vert, tex, pos);

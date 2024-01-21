@@ -14,7 +14,7 @@
 - 未实现RGSS1版本，未测试RGSS2兼容
 
 * Tilemap
-- 未实现RGSS1版本，未测试RGSS2兼容
+- 未实现RGSS1版本，未测试RGSS2兼容，桌子绘制问题未解决
 
 * Graphics
 - playmovie未完成

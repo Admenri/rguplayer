@@ -50,8 +50,8 @@ int BuildTileH(Vertex* vertex,
   if (part_size) {
     Vertex* vert = &vertex[full_size * 4];
 
-    process_src_rect.width = static_cast<float>(part_size);
-    dest_rect.width = static_cast<float>(part_size);
+    process_src_rect.width = part_size;
+    dest_rect.width = part_size;
 
     renderer::QuadSetTexCoordRect(vert, process_src_rect);
     renderer::QuadSetPositionRect(vert, dest_rect);
@@ -86,8 +86,8 @@ int BuildTileV(Vertex* vertex,
   if (part_size) {
     Vertex* vert = &vertex[full_size * 4];
 
-    process_src_rect.height = static_cast<float>(part_size);
-    dest_rect.height = static_cast<float>(part_size);
+    process_src_rect.height = part_size;
+    dest_rect.height = part_size;
 
     renderer::QuadSetTexCoordRect(vert, process_src_rect);
     renderer::QuadSetPositionRect(vert, dest_rect);

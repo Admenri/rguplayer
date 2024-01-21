@@ -72,7 +72,7 @@ class QuadDrawableArray final {
 
  private:
   std::vector<VertexType> vertices_;
-  int quad_size_ = 0;
+  size_t quad_size_ = 0;
   VertexArray<VertexType> vao_;
   size_t vbo_size_ = 0;
 };

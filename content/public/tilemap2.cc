@@ -668,7 +668,7 @@ void Tilemap2::InitTilemapInternal() {
   tilemap_quads_ =
       std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
 
-  flash_layer_ = std::make_unique<TilemapFlashLayer>();
+  flash_layer_ = std::make_unique<TilemapFlashLayer>(tile_size_);
 
   atlas_tfb_ = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_, tile_size_);
@@ -938,9 +938,9 @@ void Tilemap2::ParseMapDataBufferInternal() {
       ox += 8;
     }
 
-    base::RectF tex((src_origin.x + ox) * tile_size_ + 0.5,
-                    (src_origin.y + oy) * tile_size_ + 0.5, tile_size_ - 1,
-                    tile_size_ - 1);
+    base::RectF tex((src_origin.x + ox) * tile_size_ + 0.5f,
+                    (src_origin.y + oy) * tile_size_ + 0.5f, tile_size_ - 1.0f,
+                    tile_size_ - 1.0f);
     base::RectF pos(x * tile_size_, y * tile_size_, tile_size_, tile_size_);
 
     process_quad(&tex, &pos, 1, above);
@@ -967,8 +967,8 @@ void Tilemap2::ParseMapDataBufferInternal() {
       ox += 16;
     }
 
-    base::RectF tex((32 + ox) * tile_size_ + 0.5, (0 + oy) * tile_size_ + 0.5,
-                    tile_size_ - 1, tile_size_ - 1);
+    base::RectF tex((32 + ox) * tile_size_ + 0.5f, (0 + oy) * tile_size_ + 0.5f,
+                    tile_size_ - 1.0f, tile_size_ - 1.0f);
     base::RectF pos(x * tile_size_, y * tile_size_, tile_size_, tile_size_);
 
     process_quad(&tex, &pos, 1, above);
@@ -1003,9 +1003,9 @@ void Tilemap2::ParseMapDataBufferInternal() {
   auto shadow_tile = [&](int8_t shadow_id, int x, int y) {
     int ox = shadow_id;
 
-    base::RectF tex((kShadowAtlasArea.x + ox) * tile_size_ + 0.5,
-                    (kShadowAtlasArea.y) * tile_size_ + 0.5, tile_size_ - 1,
-                    tile_size_ - 1);
+    base::RectF tex((kShadowAtlasArea.x + ox) * tile_size_ + 0.5f,
+                    (kShadowAtlasArea.y) * tile_size_ + 0.5f, tile_size_ - 1.0f,
+                    tile_size_ - 1.0f);
     base::RectF pos(x * tile_size_, y * tile_size_, tile_size_, tile_size_);
 
     process_quad(&tex, &pos, 1, false);
@@ -1058,7 +1058,7 @@ void Tilemap2::ParseMapDataBufferInternal() {
   read_tilemap(tilemap_viewport_);
 
   /* Process quad array */
-  int quad_size = (ground_vertices_.size() + above_vertices_.size()) / 4;
+  size_t quad_size = (ground_vertices_.size() + above_vertices_.size()) / 4;
   tilemap_quads_->Resize(quad_size);
 
   auto* base_addr = &tilemap_quads_->vertices()[0];

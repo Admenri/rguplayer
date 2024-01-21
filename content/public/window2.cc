@@ -633,7 +633,7 @@ void Window2::UpdateBaseTextureInternal() {
 void Window2::UpdateBaseQuadInternal() {
   const float openness = openness_ / 255.0f;
   const base::Rect tex(0, 0, rect_.width, rect_.height);
-  const base::Rect pos(0, (rect_.height / 2.0f) * (1.0 - openness), rect_.width,
+  const base::Rect pos(0, (rect_.height / 2.0f) * (1.0f - openness), rect_.width,
                        rect_.height * openness);
 
   base_quad_->SetTexCoordRect(tex);
