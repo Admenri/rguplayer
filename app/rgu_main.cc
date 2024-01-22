@@ -941,150 +941,157 @@ int main(int argc, char* argv[]) {
   SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
   SDL_EGL_SetEGLAttributeCallbacks(GetAttribArray, nullptr, nullptr);
 
-  SDL_Window* win = SDL_CreateWindow("RGU Window", 800, 600,
-                                     SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  std::unique_ptr<ui::Widget> win = std::make_unique<ui::Widget>();
+  ui::Widget::InitParams win_params;
 
-  content::WorkerTreeCompositor cc;
-  content::WorkerTreeCompositor::InitParams params;
+  win_params.size = base::Vec2i(800, 600);
+  win_params.title = "RGU Widget";
 
-  params.binding_params.binding_boot =
-      base::BindRepeating([](scoped_refptr<content::BindingRunner> binding) {
-        scoped_refptr<content::Graphics> screen = binding->graphics();
+  win->Init(std::move(win_params));
 
-        screen->ResizeScreen(base::Vec2i(1024, 768));
+  {
+    content::WorkerTreeCompositor cc;
+    content::ContentInitParams params;
 
-        scoped_refptr<content::Bitmap> bmp = new content::Bitmap(
-            screen, "D:\\Desktop\\rgu\\app\\test\\example.png");
+    params.binding_boot =
+        base::BindRepeating([](scoped_refptr<content::BindingRunner> binding) {
+          scoped_refptr<content::Graphics> screen = binding->graphics();
 
-        scoped_refptr<content::Bitmap> sampler = new content::Bitmap(
-            screen, "D:\\Desktop\\rgu\\app\\test\\test.png");
+          screen->ResizeScreen(base::Vec2i(1024, 768));
 
-        bmp->ClearRect(base::Rect(20, 20, 50, 50));
-        bmp->Blt(100, 100, sampler, sampler->GetRect()->AsBase(), 255);
+          scoped_refptr<content::Bitmap> bmp = new content::Bitmap(
+              screen, "D:\\Desktop\\rgu\\app\\test\\example.png");
 
-        bmp->GradientFillRect(base::Rect(50, 100, 100, 50),
-                              new content::Color(0, 255, 0, 125),
-                              new content::Color(0, 0, 255, 125));
+          scoped_refptr<content::Bitmap> sampler = new content::Bitmap(
+              screen, "D:\\Desktop\\rgu\\app\\test\\test.png");
 
-        /* Sync method test */
-        // SDL_Surface* surf = bmp->SurfaceRequired();
-        // IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+          bmp->ClearRect(base::Rect(20, 20, 50, 50));
+          bmp->Blt(100, 100, sampler, sampler->GetRect()->AsBase(), 255);
 
-        scoped_refptr<content::Sprite> sp = new content::Sprite(screen);
-        sp->SetBitmap(bmp);
-        sp->GetTransform().SetOrigin(
-            base::Vec2i(sp->GetWidth() / 2, sp->GetHeight() / 2));
-        sp->GetTransform().SetPosition(
-            base::Vec2i(screen->GetWidth() / 2, screen->GetHeight() / 2));
+          bmp->GradientFillRect(base::Rect(50, 100, 100, 50),
+                                new content::Color(0, 255, 0, 125),
+                                new content::Color(0, 0, 255, 125));
 
-        sp->SetBushDepth(100);
-        sp->SetBushOpacity(128);
+          /* Sync method test */
+          // SDL_Surface* surf = bmp->SurfaceRequired();
+          // IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
 
-        sp->SetWaveAmp(20);
-        sp->GetSrcRect()->Set(base::Rect(100, 100, 100, 100));
+          scoped_refptr<content::Sprite> sp = new content::Sprite(screen);
+          sp->SetBitmap(bmp);
+          sp->GetTransform().SetOrigin(
+              base::Vec2i(sp->GetWidth() / 2, sp->GetHeight() / 2));
+          sp->GetTransform().SetPosition(
+              base::Vec2i(screen->GetWidth() / 2, screen->GetHeight() / 2));
 
-        scoped_refptr<content::Plane> pl = new content::Plane(screen);
-        pl->SetBitmap(
-            new content::Bitmap(screen, "D:\\Desktop\\rgu\\app\\test\\bg.png"));
+          sp->SetBushDepth(100);
+          sp->SetBushOpacity(128);
 
-        scoped_refptr<content::Tilemap2> tilemap =
-            new content::Tilemap2(screen);
-        tilemap->SetBitmap(
-            content::Tilemap2::TilemapBitmapID::TileA1,
-            new content::Bitmap(screen,
-                                "D:\\Desktop\\rgu\\app\\test\\Inside_A1.png"));
-        tilemap->SetBitmap(
-            content::Tilemap2::TilemapBitmapID::TileA2,
-            new content::Bitmap(screen,
-                                "D:\\Desktop\\rgu\\app\\test\\Inside_A2.png"));
-        tilemap->SetBitmap(
-            content::Tilemap2::TilemapBitmapID::TileA4,
-            new content::Bitmap(screen,
-                                "D:\\Desktop\\rgu\\app\\test\\Inside_A4.png"));
-        tilemap->SetBitmap(
-            content::Tilemap2::TilemapBitmapID::TileA5,
-            new content::Bitmap(screen,
-                                "D:\\Desktop\\rgu\\app\\test\\Inside_A5.png"));
-        tilemap->SetBitmap(
-            content::Tilemap2::TilemapBitmapID::TileB,
-            new content::Bitmap(screen,
-                                "D:\\Desktop\\rgu\\app\\test\\Inside_B.png"));
-        tilemap->SetBitmap(
-            content::Tilemap2::TilemapBitmapID::TileC,
-            new content::Bitmap(screen,
-                                "D:\\Desktop\\rgu\\app\\test\\Inside_C.png"));
+          sp->SetWaveAmp(20);
+          sp->GetSrcRect()->Set(base::Rect(100, 100, 100, 100));
 
-        tilemap->SetMapData(GetTestMapData());
-        tilemap->SetFlags(GetMapFlags());
+          scoped_refptr<content::Plane> pl = new content::Plane(screen);
+          pl->SetBitmap(new content::Bitmap(
+              screen, "D:\\Desktop\\rgu\\app\\test\\bg.png"));
 
-        for (int i = 0; i < 120; ++i) {
-          screen->Update();
-        }
+          scoped_refptr<content::Tilemap2> tilemap =
+              new content::Tilemap2(screen);
+          tilemap->SetBitmap(
+              content::Tilemap2::TilemapBitmapID::TileA1,
+              new content::Bitmap(
+                  screen, "D:\\Desktop\\rgu\\app\\test\\Inside_A1.png"));
+          tilemap->SetBitmap(
+              content::Tilemap2::TilemapBitmapID::TileA2,
+              new content::Bitmap(
+                  screen, "D:\\Desktop\\rgu\\app\\test\\Inside_A2.png"));
+          tilemap->SetBitmap(
+              content::Tilemap2::TilemapBitmapID::TileA4,
+              new content::Bitmap(
+                  screen, "D:\\Desktop\\rgu\\app\\test\\Inside_A4.png"));
+          tilemap->SetBitmap(
+              content::Tilemap2::TilemapBitmapID::TileA5,
+              new content::Bitmap(
+                  screen, "D:\\Desktop\\rgu\\app\\test\\Inside_A5.png"));
+          tilemap->SetBitmap(
+              content::Tilemap2::TilemapBitmapID::TileB,
+              new content::Bitmap(screen,
+                                  "D:\\Desktop\\rgu\\app\\test\\Inside_B.png"));
+          tilemap->SetBitmap(
+              content::Tilemap2::TilemapBitmapID::TileC,
+              new content::Bitmap(screen,
+                                  "D:\\Desktop\\rgu\\app\\test\\Inside_C.png"));
 
-        screen->Freeze();
+          tilemap->SetMapData(GetTestMapData());
+          tilemap->SetFlags(GetMapFlags());
 
-        scoped_refptr<content::Viewport> viewp =
-            new content::Viewport(screen, base::Rect(0, 0, 300, 300));
-        viewp->SetZ(100);
+          for (int i = 0; i < 120; ++i) {
+            screen->Update();
+          }
 
-        scoped_refptr<content::Window2> vx_win =
-            new content::Window2(screen, 100, 100, 300, 300);
+          screen->Freeze();
 
-        vx_win->SetViewport(viewp);
+          scoped_refptr<content::Viewport> viewp =
+              new content::Viewport(screen, base::Rect(0, 0, 300, 300));
+          viewp->SetZ(100);
 
-        vx_win->SetWindowskin(new content::Bitmap(
-            screen, "D:\\Desktop\\rgu\\app\\test\\Window.png"));
-        vx_win->SetZ(100);
-        vx_win->GetTone()->Set(-68, -68, 68, 0);
-        vx_win->SetPause(true);
+          scoped_refptr<content::Window2> vx_win =
+              new content::Window2(screen, 100, 100, 300, 300);
 
-        vx_win->SetContents(bmp);
+          vx_win->SetViewport(viewp);
 
-        vx_win->SetActive(true);
-        vx_win->SetCursorRect(
-            new content::Rect(base::Rect(110, 110, 100, 100)));
+          vx_win->SetWindowskin(new content::Bitmap(
+              screen, "D:\\Desktop\\rgu\\app\\test\\Window.png"));
+          vx_win->SetZ(100);
+          vx_win->GetTone()->Set(-68, -68, 68, 0);
+          vx_win->SetPause(true);
 
-        vx_win->SetArrowsVisible(true);
+          vx_win->SetContents(bmp);
 
-        viewp->SetTone(new content::Tone(68, 68, 0, 0));
+          vx_win->SetActive(true);
+          vx_win->SetCursorRect(
+              new content::Rect(base::Rect(110, 110, 100, 100)));
 
-        screen->SetBrightness(125);
+          vx_win->SetArrowsVisible(true);
 
-        scoped_refptr<content::Bitmap> snapshot = screen->SnapToBitmap();
-        auto* surf = snapshot->SurfaceRequired();
-        IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+          viewp->SetTone(new content::Tone(68, 68, 0, 0));
 
-        screen->Transition(
-            120, new content::Bitmap(
-                     screen, "D:\\Desktop\\rgu\\app\\test\\BattleStart.png"));
+          screen->SetBrightness(125);
 
-        scoped_refptr<content::Bitmap> snapshot2 =
-            new content::Bitmap(screen, 800, 600);
-        viewp->SnapToBitmap(snapshot2);
-        auto* surf2 = snapshot2->SurfaceRequired();
-        IMG_SavePNG(surf2, "D:\\Desktop\\snap2.png");
+          scoped_refptr<content::Bitmap> snapshot = screen->SnapToBitmap();
+          auto* surf = snapshot->SurfaceRequired();
+          IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
 
-        float xxx = 0;
-        while (!binding->quit_required()) {
-          tilemap->Update();
+          screen->Transition(
+              120, new content::Bitmap(
+                       screen, "D:\\Desktop\\rgu\\app\\test\\BattleStart.png"));
 
-          sp->Update();
-          sp->GetTransform().SetRotation(++xxx);
+          scoped_refptr<content::Bitmap> snapshot2 =
+              new content::Bitmap(screen, 800, 600);
+          viewp->SnapToBitmap(snapshot2);
+          auto* surf2 = snapshot2->SurfaceRequired();
+          IMG_SavePNG(surf2, "D:\\Desktop\\snap2.png");
 
-          screen->Update();
+          float xxx = 0;
+          while (!binding->quit_required()) {
+            tilemap->Update();
 
-          if (!vx_win->IsDisposed())
-            vx_win->Update();
-        }
-      });
+            sp->Update();
+            sp->GetTransform().SetRotation(++xxx);
 
-  params.binding_params.initial_resolution = base::Vec2i(800, 600);
-  params.renderer_params.target_window = win;
+            screen->Update();
 
-  cc.InitCC(params);
-  cc.ContentMain();
+            if (!vx_win->IsDisposed())
+              vx_win->Update();
+          }
+        });
 
-  SDL_DestroyWindow(win);
+    params.initial_resolution = base::Vec2i(800, 600);
+    params.host_window = win->AsWeakPtr();
+
+    cc.InitCC(params);
+    cc.ContentMain();
+  }
+
+  win.reset();
 
   TTF_Quit();
   IMG_Quit();

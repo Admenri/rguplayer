@@ -14,16 +14,15 @@ WorkerTreeCompositor::~WorkerTreeCompositor() {
   render_runner_.reset();
 }
 
-void WorkerTreeCompositor::InitCC(const InitParams& params) {
+void WorkerTreeCompositor::InitCC(const ContentInitParams& params) {
   event_runner_ = new EventRunner();
   render_runner_ = new RenderRunner(params.sync_renderer);
   binding_runner_ = new BindingRunner();
 
-  event_runner_->InitEventDispatcher();
+  event_runner_->InitEventDispatcher(params.host_window);
 
   // Init renderer in binding thread for sync mode
-  binding_runner_->InitBindingComponents(params.binding_params, render_runner_,
-                                         params.renderer_params);
+  binding_runner_->InitBindingComponents(params, render_runner_);
 }
 
 void WorkerTreeCompositor::ContentMain() {

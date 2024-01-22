@@ -124,6 +124,9 @@ include_directories("${RGU_AUTOGEN_DIR}")
 ## Base components import
 add_subdirectory(base)
 
+## UI Wrapper
+add_subdirectory(ui)
+
 ## GLESRenderer
 add_subdirectory(renderer)
 

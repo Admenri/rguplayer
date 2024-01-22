@@ -20,6 +20,8 @@ set(CORE_CONTENT_SRC
   public/font.h
   public/graphics.cc
   public/graphics.h
+  public/input.cc
+  public/input.h
   public/plane.cc
   public/plane.h
   public/sprite.cc
@@ -38,6 +40,7 @@ set(CORE_CONTENT_SRC
   worker/binding_worker.h
   worker/content_compositor.cc
   worker/content_compositor.h
+  worker/content_params.h
   worker/event_runner.cc
   worker/event_runner.h
   worker/renderer_worker.cc

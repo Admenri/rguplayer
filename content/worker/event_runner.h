@@ -7,6 +7,7 @@
 
 #include "base/memory/ref_counted.h"
 #include "base/worker/run_loop.h"
+#include "ui/widget/widget.h"
 
 #include "SDL_events.h"
 
@@ -20,7 +21,7 @@ class EventRunner : public base::RefCounted<EventRunner> {
   EventRunner(const EventRunner&) = delete;
   EventRunner& operator=(const EventRunner&) = delete;
 
-  void InitEventDispatcher();
+  void InitEventDispatcher(base::WeakPtr<ui::Widget> input_widget);
   void EventMain();
 
   scoped_refptr<base::SequencedTaskRunner> task_runner() {
@@ -28,9 +29,9 @@ class EventRunner : public base::RefCounted<EventRunner> {
   }
 
  private:
-  void EventFilter(const SDL_Event& sdl_event);
+  void OnWidgetDestroying();
+  base::CallbackListSubscription quit_observer_;
 
-  base::CallbackListSubscription dispatcher_binding_;
   std::unique_ptr<base::RunLoop> loop_runner_;
 
   base::WeakPtrFactory<EventRunner> weak_ptr_factory_{this};

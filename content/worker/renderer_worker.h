@@ -10,26 +10,19 @@
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
 #include "base/worker/thread_worker.h"
-
-#include "SDL_video.h"
+#include "ui/widget/widget.h"
 
 namespace content {
 
 class RenderRunner : public base::SequencedTaskRunner {
  public:
-  struct InitParams {
-    SDL_Window* target_window = nullptr;
-
-    InitParams() = default;
-  };
-
   RenderRunner(bool sync_worker = false);
   ~RenderRunner();
 
   RenderRunner(const RenderRunner&) = delete;
   RenderRunner& operator=(const RenderRunner) = delete;
 
-  void InitRenderer(const InitParams& params);
+  void InitRenderer(base::WeakPtr<ui::Widget> host_window);
 
   // base::SequencedTaskRunner methods:
   void PostTask(base::OnceClosure task) override;
@@ -39,15 +32,15 @@ class RenderRunner : public base::SequencedTaskRunner {
     return weak_ptr_factory_.GetWeakPtr();
   }
 
-  SDL_Window* window() { return host_window_; }
+  SDL_Window* window() { return host_window_->AsSDLWindow(); }
 
  private:
-  void InitGLContextInternal(InitParams params);
+  void InitGLContextInternal();
   void QuitGLContextInternal();
 
   std::unique_ptr<base::ThreadWorker> worker_;
 
-  SDL_Window* host_window_;
+  base::WeakPtr<ui::Widget> host_window_;
   SDL_GLContext glcontext_;
 
   base::WeakPtrFactory<RenderRunner> weak_ptr_factory_{this};

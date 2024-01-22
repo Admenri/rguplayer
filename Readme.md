@@ -25,6 +25,7 @@ binding文件夹中存放与cruby，mruby等第三方解释器进行绑定的代
 buildtools中存放所有的python自动化代码
 renderer文件夹存放了GLES2.0的封装版本代码
 third_party中为使用的第三方代码库，base/third_party中也有部分第三方库
+ui文件夹存放了SDL窗口的封装代码，用于与input模块进行配合操作
 
 ## 开发中截图
 

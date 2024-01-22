@@ -9,30 +9,19 @@
 #include "content/worker/event_runner.h"
 #include "content/worker/renderer_worker.h"
 
+#include "content/worker/content_params.h"
+
 namespace content {
 
 class WorkerTreeCompositor {
  public:
-  struct InitParams {
-    bool sync_renderer = false;
-
-    content::RenderRunner::InitParams renderer_params;
-
-    content::BindingRunner::InitParams binding_params;
-
-    InitParams() = default;
-    InitParams(const InitParams&) = delete;
-    InitParams& operator=(const InitParams&) = delete;
-    InitParams(InitParams&&) = default;
-  };
-
   WorkerTreeCompositor();
   ~WorkerTreeCompositor();
 
   WorkerTreeCompositor(const WorkerTreeCompositor&) = delete;
   WorkerTreeCompositor& operator=(const WorkerTreeCompositor&) = delete;
 
-  void InitCC(const InitParams& params);
+  void InitCC(const ContentInitParams& params);
   void ContentMain();
 
  private:

@@ -7,6 +7,8 @@
 
 #include "base/memory/ref_counted.h"
 #include "content/public/graphics.h"
+#include "content/public/input.h"
+#include "content/worker/content_params.h"
 #include "content/worker/renderer_worker.h"
 
 #include <thread>
@@ -15,38 +17,34 @@ namespace content {
 
 class BindingRunner : public base::RefCounted<BindingRunner> {
  public:
-  struct InitParams {
-    base::Vec2i initial_resolution;
-
-    base::RepeatingCallback<void(scoped_refptr<BindingRunner>)> binding_boot;
-
-    InitParams() = default;
-  };
-
   BindingRunner();
   ~BindingRunner();
 
   BindingRunner(const BindingRunner&) = delete;
   BindingRunner& operator=(const BindingRunner&) = delete;
 
-  void InitBindingComponents(const InitParams& params,
-                             scoped_refptr<RenderRunner> renderer,
-                             const RenderRunner::InitParams& renderer_params);
+  void InitBindingComponents(const ContentInitParams& params,
+                             scoped_refptr<RenderRunner> renderer);
   void BindingMain();
-
   bool quit_required() { return quit_req_ && quit_req_->stop_requested(); }
-  scoped_refptr<Graphics> graphics() { return graphics_; }
+
+  scoped_refptr<Graphics> graphics() const { return graphics_; }
+  scoped_refptr<Input> input() const { return input_; }
 
  private:
   static void BindingFuncMain(std::stop_token token,
                               base::WeakPtr<BindingRunner> self);
 
+  std::unique_ptr<std::jthread> runner_thread_;
+
   scoped_refptr<RenderRunner> renderer_;
   scoped_refptr<Graphics> graphics_;
-  std::unique_ptr<std::jthread> runner_thread_;
-  InitParams params_;
-  RenderRunner::InitParams renderer_params_;
+  scoped_refptr<Input> input_;
+
+  base::Vec2i initial_resolution_;
+  base::WeakPtr<ui::Widget> window_;
   std::stop_token* quit_req_ = nullptr;
+  base::OnceCallback<void(scoped_refptr<BindingRunner>)> binding_main_;
 
   base::WeakPtrFactory<BindingRunner> weak_ptr_factory_{this};
 };

@@ -14,12 +14,12 @@ BindingRunner::~BindingRunner() {
 }
 
 void BindingRunner::InitBindingComponents(
-    const InitParams& params,
-    scoped_refptr<RenderRunner> renderer,
-    const RenderRunner::InitParams& renderer_params) {
+    const ContentInitParams& params,
+    scoped_refptr<RenderRunner> renderer) {
   renderer_ = renderer;
-  params_ = params;
-  renderer_params_ = renderer_params;
+  window_ = params.host_window;
+  initial_resolution_ = params.initial_resolution;
+  binding_main_ = std::move(params.binding_boot);
 }
 
 void BindingRunner::BindingMain() {
@@ -31,12 +31,13 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
                                     base::WeakPtr<BindingRunner> self) {
   // Init binding thread runner
   self->quit_req_ = &token;
-  self->renderer_->InitRenderer(self->renderer_params_);
-  self->graphics_ =
-      new Graphics(self->renderer_, self->params_.initial_resolution);
+  self->renderer_->InitRenderer(self->window_);
+
+  self->graphics_ = new Graphics(self->renderer_, self->initial_resolution_);
+  self->input_ = new Input(self->window_);
 
   // Boot binding external components
-  self->params_.binding_boot.Run(self.get());
+  std::move(self->binding_main_).Run(self.get());
 }
 
 }  // namespace content

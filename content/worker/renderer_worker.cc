@@ -19,12 +19,12 @@ RenderRunner::~RenderRunner() {
   WaitForSync();
 }
 
-void RenderRunner::InitRenderer(const InitParams& params) {
+void RenderRunner::InitRenderer(base::WeakPtr<ui::Widget> host_window) {
   worker_->Start(base::RunLoop::MessagePumpType::Worker);
   worker_->WaitUntilStart();
+  host_window_ = host_window;
 
-  PostTask(base::BindOnce(&RenderRunner::InitGLContextInternal, AsWeakptr(),
-                          base::OwnedRef(params)));
+  PostTask(base::BindOnce(&RenderRunner::InitGLContextInternal, AsWeakptr()));
   WaitForSync();
 }
 
@@ -38,17 +38,16 @@ void RenderRunner::WaitForSync() {
   worker_->task_runner()->WaitForSync();
 }
 
-void RenderRunner::InitGLContextInternal(InitParams params) {
-  host_window_ = params.target_window;
-  glcontext_ = SDL_GL_CreateContext(host_window_);
-  SDL_GL_MakeCurrent(host_window_, glcontext_);
+void RenderRunner::InitGLContextInternal() {
+  glcontext_ = SDL_GL_CreateContext(host_window_->AsSDLWindow());
+  SDL_GL_MakeCurrent(host_window_->AsSDLWindow(), glcontext_);
   SDL_GL_SetSwapInterval(0);
 
   renderer::GLES2Context::CreateForCurrentThread();
   renderer::GSM.InitStates();
 
   renderer::GL.Clear(GL_COLOR_BUFFER_BIT);
-  SDL_GL_SwapWindow(host_window_);
+  SDL_GL_SwapWindow(host_window_->AsSDLWindow());
 }
 
 void RenderRunner::QuitGLContextInternal() {
