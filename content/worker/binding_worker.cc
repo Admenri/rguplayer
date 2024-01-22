@@ -4,6 +4,8 @@
 
 #include "content/worker/binding_worker.h"
 
+#include "content/public/font.h"
+
 namespace content {
 
 BindingRunner::BindingRunner() {}
@@ -35,6 +37,9 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
 
   self->graphics_ = new Graphics(self->renderer_, self->initial_resolution_);
   self->input_ = new Input(self->window_);
+
+  // Init font attributes
+  Font::InitStaticFont();
 
   // Boot binding external components
   std::move(self->binding_main_).Run(self.get());

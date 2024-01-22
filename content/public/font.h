@@ -17,13 +17,53 @@ namespace content {
 
 class Font : public base::RefCounted<Font> {
  public:
-  Font(const std::vector<std::string>& name, int size = 24);
-  ~Font();
+  static void InitStaticFont();
 
   static bool Existed(const std::string& name);
 
+  static void SetDefaultName(const std::vector<std::string>& name);
+  static std::vector<std::string> GetDefaultName();
+  static void SetDefaultSize(int size);
+  static int GetDefaultSize();
+  static void SetDefaultBold(bool bold);
+  static bool GetDefaultBold();
+  static void SetDefaultItalic(bool italic);
+  static bool GetDefaultItalic();
+  static void SetDefaultShadow(bool shadow);
+  static bool GetDefaultShadow();
+  static void SetDefaultOutline(bool outline);
+  static bool GetDefaultOutline();
+  static void SetDefaultColor(scoped_refptr<Color> color);
+  static scoped_refptr<Color> GetDefaultColor();
+  static void SetDefaultOutColor(scoped_refptr<Color> color);
+  static scoped_refptr<Color> GetDefaultOutColor();
+
+  Font();
+  Font(const std::vector<std::string>& name);
+  Font(const std::vector<std::string>& name, int size);
+  ~Font();
+
   Font(const Font&) = delete;
   Font& operator=(const Font&) = delete;
+
+  void SetName(const std::vector<std::string>& name);
+  std::vector<std::string> GetName() const;
+  void SetSize(int size);
+  int GetSize() const;
+  void SetBold(bool bold);
+  bool GetBold() const;
+  void SetItalic(bool italic);
+  bool GetItalic() const;
+  void SetShadow(bool shadow);
+  bool GetShadow() const;
+  void SetOutline(bool outline);
+  bool GetOutline() const;
+  void SetColor(scoped_refptr<Color> color);
+  scoped_refptr<Color> GetColor() const;
+  void SetOutColor(scoped_refptr<Color> color);
+  scoped_refptr<Color> GetOutColor() const;
+
+  TTF_Font* AsSDLFont();
 
  private:
   std::vector<std::string> name_;
@@ -35,7 +75,7 @@ class Font : public base::RefCounted<Font> {
   scoped_refptr<Color> color_;
   scoped_refptr<Color> out_color_;
 
-  TTF_Font* sdl_font_;
+  TTF_Font* sdl_font_ = nullptr;
 };
 
 }  // namespace content

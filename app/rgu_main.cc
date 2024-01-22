@@ -918,7 +918,7 @@ scoped_refptr<content::Table> GetMapFlags() {
 
 SDL_EGLAttrib kAttrib[] = {
     EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-    EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
+    EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE,
     // EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
     // EGL_PLATFORM_ANGLE_DEVICE_TYPE_SWIFTSHADER_ANGLE,
     EGL_NONE,
@@ -931,7 +931,7 @@ SDL_EGLAttrib* SDLCALL GetAttribArray() {
 int main(int argc, char* argv[]) {
   PHYSFS_init(argv[0]);
 
-  SDL_Init(SDL_INIT_EVERYTHING);
+  SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   TTF_Init();
 
