@@ -6,6 +6,7 @@
 #define CONTENT_PUBLIC_INPUT_H_
 
 #include <array>
+#include <list>
 
 #include "base/memory/ref_counted.h"
 #include "ui/widget/widget.h"
@@ -14,13 +15,19 @@ namespace content {
 
 class Input final : public base::RefCounted<Input> {
  public:
-  using KeySymMap = std::array<std::string, SDL_NUM_SCANCODES>;
+  using KeyBinding = struct {
+    std::string sym;
+    SDL_Scancode scancode;
+  };
+
   using KeyState = struct {
     bool pressed;
     bool trigger;
     bool repeat;
     int repeat_count;
   };
+
+  using KeySymMap = std::list<KeyBinding>;
 
   Input(base::WeakPtr<ui::Widget> input_device);
   ~Input();

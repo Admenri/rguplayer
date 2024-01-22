@@ -6,10 +6,41 @@
 
 namespace content {
 
+namespace {
+
+const Input::KeyBinding kDefaultKeyboardBindings[] = {
+    {"DOWN", SDL_SCANCODE_DOWN},    {"LEFT", SDL_SCANCODE_LEFT},
+    {"RIGHT", SDL_SCANCODE_RIGHT},  {"UP", SDL_SCANCODE_UP},
+
+    {"F5", SDL_SCANCODE_F5},        {"F6", SDL_SCANCODE_F6},
+    {"F7", SDL_SCANCODE_F7},        {"F8", SDL_SCANCODE_F8},
+    {"F9", SDL_SCANCODE_F9},
+
+    {"SHIFT", SDL_SCANCODE_LSHIFT}, {"SHIFT", SDL_SCANCODE_RSHIFT},
+    {"CTRL", SDL_SCANCODE_LCTRL},   {"CTRL", SDL_SCANCODE_RCTRL},
+    {"ALT", SDL_SCANCODE_LALT},     {"ALT", SDL_SCANCODE_RALT},
+
+    {"A", SDL_SCANCODE_LSHIFT},     {"B", SDL_SCANCODE_ESCAPE},
+    {"B", SDL_SCANCODE_KP_0},       {"B", SDL_SCANCODE_X},
+    {"C", SDL_SCANCODE_SPACE},      {"C", SDL_SCANCODE_RETURN},
+    {"C", SDL_SCANCODE_Z},          {"X", SDL_SCANCODE_A},
+    {"Y", SDL_SCANCODE_S},          {"Z", SDL_SCANCODE_D},
+};
+
+const int kDefaultKeyboardBindingsSize =
+    sizeof(kDefaultKeyboardBindings) / sizeof(kDefaultKeyboardBindings[0]);
+
+}  // namespace
+
 Input::Input(base::WeakPtr<ui::Widget> input_device) : window_(input_device) {
   memset(key_states_.data(), 0, key_states_.size() * sizeof(KeyState));
   memset(recent_key_states_.data(), 0,
          recent_key_states_.size() * sizeof(KeyState));
+
+  /* Apply default keyboard bindings */
+  for (int i = 0; i < kDefaultKeyboardBindingsSize; ++i) {
+    key_bindings_.push_back(kDefaultKeyboardBindings[i]);
+  }
 }
 
 Input::~Input() {}
@@ -51,27 +82,27 @@ void Input::Update() {
 }
 
 bool Input::IsPressed(const std::string& keysym) {
-  for (int i = 0; i < key_bindings_.size(); ++i) {
-    if (key_bindings_[i] == keysym)
-      return key_states_[i].pressed;
+  for (auto& it : key_bindings_) {
+    if (it.sym == keysym)
+      return key_states_[it.scancode].pressed;
   }
 
   return false;
 }
 
 bool Input::IsTriggered(const std::string& keysym) {
-  for (int i = 0; i < key_bindings_.size(); ++i) {
-    if (key_bindings_[i] == keysym)
-      return key_states_[i].trigger;
+  for (auto& it : key_bindings_) {
+    if (it.sym == keysym)
+      return key_states_[it.scancode].trigger;
   }
 
   return false;
 }
 
 bool Input::IsRepeated(const std::string& keysym) {
-  for (int i = 0; i < key_bindings_.size(); ++i) {
-    if (key_bindings_[i] == keysym)
-      return key_states_[i].repeat;
+  for (auto& it : key_bindings_) {
+    if (it.sym == keysym)
+      return key_states_[it.scancode].repeat;
   }
 
   return false;
@@ -97,17 +128,26 @@ std::string Input::GetKeyName(int scancode) {
 void Input::GetKeysFromFlag(const std::string& flag, std::vector<int>& out) {
   out.clear();
 
-  for (int i = 0; i < key_bindings_.size(); ++i) {
-    if (key_bindings_[i] == flag) {
-      out.push_back(i);
+  for (auto& it : key_bindings_) {
+    if (it.sym == flag) {
+      out.push_back(it.scancode);
     }
   }
 }
 
 void Input::SetKeysFromFlag(const std::string& flag,
                             const std::vector<int>& keys) {
+  auto iter = std::remove_if(
+      key_bindings_.begin(), key_bindings_.end(),
+      [&](const KeyBinding& binding) { return binding.sym == flag; });
+  key_bindings_.erase(iter, key_bindings_.end());
+
   for (const auto& i : keys) {
-    key_bindings_[i] = flag;
+    KeyBinding binding;
+    binding.sym = flag;
+    binding.scancode = static_cast<SDL_Scancode>(i);
+
+    key_bindings_.push_back(std::move(binding));
   }
 }
 
