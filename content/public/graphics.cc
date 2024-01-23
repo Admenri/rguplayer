@@ -18,7 +18,8 @@ Graphics::Graphics(scoped_refptr<RenderRunner> renderer,
     : renderer_(renderer),
       resolution_(initial_resolution),
       brightness_(255),
-      frozen_(false) {
+      frozen_(false),
+      default_font_(new Font()) {
   viewport_rect().rect = initial_resolution;
 
   renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,

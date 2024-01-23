@@ -25,6 +25,12 @@ class Bitmap : public base::RefCounted<Bitmap>,
                public GraphicElement,
                public Disposable {
  public:
+  using TextAlign = enum {
+    Left = 0,
+    Center,
+    Right,
+  };
+
   Bitmap(scoped_refptr<Graphics> host, int width, int height);
   Bitmap(scoped_refptr<Graphics> host, const std::string& filename);
   ~Bitmap() override;
@@ -67,8 +73,13 @@ class Bitmap : public base::RefCounted<Bitmap>,
   void Blur();
   void RadialBlur(int angle, int division);
 
-  void DrawText(const base::Rect& rect, const std::string& str, int align = 0);
+  void DrawText(const base::Rect& rect,
+                const std::string& str,
+                TextAlign align = TextAlign::Left);
   scoped_refptr<Rect> TextSize(const std::string& str);
+
+  scoped_refptr<Font> GetFont() const;
+  void SetFont(scoped_refptr<Font> font);
 
   /* Sync Method */
   SDL_Surface* SurfaceRequired();
@@ -98,9 +109,13 @@ class Bitmap : public base::RefCounted<Bitmap>,
                                 bool vertical);
   void GetSurfaceInternal();
   void SetPixelInternal(int x, int y, const base::Vec4i& color);
+  void DrawTextInternal(const base::Rect& rect,
+                        const std::string& str,
+                        TextAlign align);
   void NeedUpdateSurface();
 
   renderer::TextureFrameBuffer tex_fbo_;
+  scoped_refptr<Font> font_;
 
   SDL_Surface* surface_buffer_;
   bool surface_need_update_ = false;

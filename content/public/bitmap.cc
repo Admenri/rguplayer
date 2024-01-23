@@ -11,9 +11,48 @@
 
 namespace content {
 
+namespace {
+
+uint16_t utf8_to_ucs2(const char* _input, const char** end_ptr) {
+  const unsigned char* input = reinterpret_cast<const unsigned char*>(_input);
+  *end_ptr = _input;
+
+  if (input[0] == 0)
+    return -1;
+
+  if (input[0] < 0x80) {
+    *end_ptr = _input + 1;
+
+    return input[0];
+  }
+
+  if ((input[0] & 0xE0) == 0xE0) {
+    if (input[1] == 0 || input[2] == 0)
+      return -1;
+
+    *end_ptr = _input + 3;
+
+    return (input[0] & 0x0F) << 12 | (input[1] & 0x3F) << 6 | (input[2] & 0x3F);
+  }
+
+  if ((input[0] & 0xC0) == 0xC0) {
+    if (input[1] == 0)
+      return -1;
+
+    *end_ptr = _input + 2;
+
+    return (input[0] & 0x1F) << 6 | (input[1] & 0x3F);
+  }
+
+  return -1;
+}
+
+}  // namespace
+
 Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
     : GraphicElement(host),
       Disposable(host),
+      font_(host->default_font()),
       pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
   width = std::abs(width);
   height = std::abs(height);
@@ -29,6 +68,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
     : GraphicElement(host),
       Disposable(host),
+      font_(host->default_font()),
       pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
   surface_buffer_ = IMG_Load(filename.c_str());
 
@@ -223,10 +263,12 @@ void Bitmap::RadialBlur(int angle, int division) {
 
 void Bitmap::DrawText(const base::Rect& rect,
                       const std::string& str,
-                      int align) {
+                      TextAlign align) {
   CheckIsDisposed();
 
-  // TODO:
+  screen()->renderer()->PostTask(base::BindOnce(&Bitmap::DrawTextInternal,
+                                                weak_ptr_factory_.GetWeakPtr(),
+                                                rect, str, align));
 
   NeedUpdateSurface();
 }
@@ -234,9 +276,33 @@ void Bitmap::DrawText(const base::Rect& rect,
 scoped_refptr<Rect> Bitmap::TextSize(const std::string& str) {
   CheckIsDisposed();
 
-  // TODO:
+  TTF_Font* font = font_->AsSDLFont();
+  std::string src_text = font_->FixupString(str);
 
-  return nullptr;
+  int w, h;
+  TTF_SizeUTF8(font, src_text.c_str(), &w, &h);
+
+  const char* end_char = nullptr;
+  uint16_t ucs2 = utf8_to_ucs2(str.c_str(), &end_char);
+  if (font_->GetItalic() && *end_char == '\0')
+    TTF_GlyphMetrics(font, ucs2, 0, 0, 0, 0, &w);
+
+  return new Rect(base::Rect(0, 0, w, h));
+}
+
+scoped_refptr<Font> Bitmap::GetFont() const {
+  CheckIsDisposed();
+
+  return font_;
+}
+
+void Bitmap::SetFont(scoped_refptr<Font> font) {
+  CheckIsDisposed();
+
+  if (font_ == font)
+    return;
+
+  font_ = font;
 }
 
 SDL_Surface* Bitmap::SurfaceRequired() {
@@ -258,6 +324,9 @@ SDL_Surface* Bitmap::SurfaceRequired() {
 }
 
 void Bitmap::OnObjectDisposed() {
+  // Dispose notify
+  observers_.Notify();
+
   weak_ptr_factory_.InvalidateWeakPtrs();
 
   SDL_DestroyPixelFormat(pixel_format_);
@@ -405,6 +474,34 @@ void Bitmap::GetSurfaceInternal() {
   renderer::GL.ReadPixels(0, 0, size_.x, size_.y, GL_RGBA, GL_UNSIGNED_BYTE,
                           surface_buffer_->pixels);
   renderer::GSM.states.viewport.Pop();
+}
+
+void Bitmap::DrawTextInternal(const base::Rect& rect,
+                              const std::string& str,
+                              TextAlign align) {
+  SDL_Surface* txt_surf = font_->RenderText(str);
+
+  int align_x = rect.x, align_y = rect.y + (rect.height - txt_surf->h) / 2;
+
+  switch (align) {
+    default:
+    case TextAlign::Left:
+      break;
+    case TextAlign::Center:
+      align_x += (rect.width - txt_surf->w) / 2;
+      break;
+    case TextAlign::Right:
+      align_x += rect.width - txt_surf->w;
+      break;
+  }
+
+  float zoom_x = static_cast<float>(rect.width) / txt_surf->w;
+  zoom_x = std::min(zoom_x, 1.0f);
+  base::Rect pos(align_x, align_y, txt_surf->w * zoom_x, txt_surf->h);
+
+  base::Vec2i tex_size;
+  renderer::GSM.EnsureGenericTex(txt_surf->w, txt_surf->h, tex_size);
+  // TODO:
 }
 
 void Bitmap::NeedUpdateSurface() {

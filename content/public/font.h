@@ -64,8 +64,13 @@ class Font : public base::RefCounted<Font> {
   scoped_refptr<Color> GetOutColor() const;
 
   TTF_Font* AsSDLFont();
+  std::string FixupString(const std::string& text);
+  SDL_Surface* RenderText(const std::string& text);
 
  private:
+  void LoadFontInternal();
+  void ResetFontInternal();
+
   std::vector<std::string> name_;
   int size_ = 24;
   bool bold_ = false;

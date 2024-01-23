@@ -50,4 +50,20 @@ void GlobalStateManager::EnsureGenericTex(int width, int height) {
   TextureFrameBuffer::Alloc(common_tfb, width, height);
 }
 
+void GlobalStateManager::EnsureGenericTex(int width,
+                                          int height,
+                                          base::Vec2i& out_size) {
+  if (common_tfb.width >= width && common_tfb.height >= height) {
+    out_size.x = common_tfb.width;
+    out_size.y = common_tfb.height;
+    return;
+  }
+
+  width = std::max(width, common_tfb.width);
+  height = std::max(height, common_tfb.height);
+
+  TextureFrameBuffer::Alloc(common_tfb, width, height);
+  out_size = base::Vec2i(width, height);
+}
+
 }  // namespace renderer

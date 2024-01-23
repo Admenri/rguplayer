@@ -7,6 +7,7 @@
 
 #include "base/memory/weak_ptr.h"
 #include "content/public/drawable.h"
+#include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/thread/thread_manager.h"
 
@@ -47,7 +48,8 @@ class Graphics final : public base::RefCounted<Graphics>,
                   scoped_refptr<Bitmap> trans_bitmap = nullptr,
                   int vague = 40);
 
-  scoped_refptr<RenderRunner> renderer() { return renderer_; }
+  scoped_refptr<RenderRunner> renderer() const { return renderer_; }
+  scoped_refptr<Font> default_font() const { return default_font_; }
 
  private:
   friend class Viewport;
@@ -97,6 +99,8 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   uint64_t frame_count_ = 0;
   double frame_rate_ = 60.0;
+
+  scoped_refptr<Font> default_font_;
 
   base::WeakPtrFactory<Graphics> weak_ptr_factory_{this};
 };

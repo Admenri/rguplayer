@@ -918,7 +918,7 @@ scoped_refptr<content::Table> GetMapFlags() {
 
 SDL_EGLAttrib kAttrib[] = {
     EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-    EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE,
+    EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
     // EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
     // EGL_PLATFORM_ANGLE_DEVICE_TYPE_SWIFTSHADER_ANGLE,
     EGL_NONE,
@@ -1069,6 +1069,10 @@ int main(int argc, char* argv[]) {
           viewp->SnapToBitmap(snapshot2);
           auto* surf2 = snapshot2->SurfaceRequired();
           IMG_SavePNG(surf2, "D:\\Desktop\\snap2.png");
+
+          scoped_refptr<content::Font> font = new content::Font();
+          auto* textsurf = font->RenderText("Test String for Render Test");
+          IMG_SavePNG(textsurf, "D:\\Desktop\\text.png");
 
           float xxx = 0;
           while (!binding->quit_required()) {

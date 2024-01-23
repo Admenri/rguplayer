@@ -213,6 +213,11 @@ class Color : public base::RefCounted<Rect>, public ValueNotification {
   }
 
   base::Vec4i& AsNormal() { return data_; }
+  SDL_Color AsSDLColor() {
+    return SDL_Color{
+        static_cast<uint8_t>(data_.x), static_cast<uint8_t>(data_.y),
+        static_cast<uint8_t>(data_.z), static_cast<uint8_t>(data_.w)};
+  }
 
   bool IsValid() { return data_.w != 0; }
 

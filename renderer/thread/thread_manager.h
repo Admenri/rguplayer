@@ -42,6 +42,7 @@ class GlobalStateManager final {
   void QuitStates();
 
   void EnsureGenericTex(int width, int height);
+  void EnsureGenericTex(int width, int height, base::Vec2i& out_size);
 
   struct {
     GLViewport viewport;
