@@ -19,6 +19,8 @@ void rb_call_builtin_inits();
 
 namespace binding {
 
+void InitUtilityBinding();
+
 BindingEngineMri::BindingEngineMri() {}
 
 BindingEngineMri::~BindingEngineMri() {}
@@ -53,6 +55,8 @@ void BindingEngineMri::InitializeBinding(
     default:
       break;
   }
+
+  InitUtilityBinding();
 
   LOG(INFO) << "Mri binding initialized.";
 }
