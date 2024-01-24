@@ -8,6 +8,8 @@ cmake_minimum_required(VERSION 3.18.0)
 set(CORE_CONTENT_SRC
   common/tilemap_common.cc
   common/tilemap_common.h
+  common/serializable.cc
+  common/serializable.h
   config/core_config.cc
   config/core_config.h
   engine/binding_engine.cc
@@ -33,6 +35,7 @@ set(CORE_CONTENT_SRC
   public/tilemap2.cc
   public/tilemap2.h
   public/tilequad.h
+  public/utility.cc
   public/utility.h
   public/viewport.cc
   public/viewport.h

@@ -10,6 +10,7 @@
 #include "base/bind/callback_list.h"
 #include "base/math/math.h"
 #include "base/memory/ref_counted.h"
+#include "content/common/serializable.h"
 
 namespace content {
 
@@ -29,7 +30,9 @@ class ValueNotification {
   base::RepeatingClosureList observers_;
 };
 
-class Rect : public base::RefCounted<Rect>, public ValueNotification {
+class Rect : public base::RefCounted<Rect>,
+             public Serializable,
+             public ValueNotification {
  public:
   Rect() {}
   Rect(const base::Rect& rect) : data_(rect) {}
@@ -86,11 +89,16 @@ class Rect : public base::RefCounted<Rect>, public ValueNotification {
 
   void SetBase(const base::Rect& rect) { data_ = rect; }
 
+  std::unique_ptr<ByteType> Serialize() override;
+  static scoped_refptr<Rect> Deserialize(std::unique_ptr<ByteType> data);
+
  private:
   base::Rect data_;
 };
 
-class Tone : public base::RefCounted<Rect>, public ValueNotification {
+class Tone : public base::RefCounted<Rect>,
+             public Serializable,
+             public ValueNotification {
  public:
   Tone() {}
   Tone(int red, int green, int blue, int gray = 255)
@@ -152,11 +160,16 @@ class Tone : public base::RefCounted<Rect>, public ValueNotification {
     return data_.x != 0 || data_.y != 0 || data_.z != 0 || data_.w != 0;
   }
 
+  std::unique_ptr<ByteType> Serialize() override;
+  static scoped_refptr<Tone> Deserialize(std::unique_ptr<ByteType> data);
+
  private:
   base::Vec4i data_;
 };
 
-class Color : public base::RefCounted<Rect>, public ValueNotification {
+class Color : public base::RefCounted<Rect>,
+              public Serializable,
+              public ValueNotification {
  public:
   Color() {}
   Color(int red, int green, int blue, int alpha = 255)
@@ -220,6 +233,9 @@ class Color : public base::RefCounted<Rect>, public ValueNotification {
   }
 
   bool IsValid() { return data_.w != 0; }
+
+  std::unique_ptr<ByteType> Serialize() override;
+  static scoped_refptr<Color> Deserialize(std::unique_ptr<ByteType> data);
 
  private:
   base::Vec4i data_;

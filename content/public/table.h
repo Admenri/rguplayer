@@ -9,10 +9,11 @@
 
 #include "base/bind/callback_list.h"
 #include "base/memory/ref_counted.h"
+#include "content/common/serializable.h"
 
 namespace content {
 
-class Table final : public base::RefCounted<Table> {
+class Table final : public base::RefCounted<Table>, public Serializable {
  public:
   Table(int x_size, int y_size = 1, int z_size = 1);
   ~Table();
@@ -30,6 +31,9 @@ class Table final : public base::RefCounted<Table> {
   void Resize(int x);
   void Resize(int x, int y);
   void Resize(int x, int y, int z);
+
+  std::unique_ptr<ByteType> Serialize() override;
+  static scoped_refptr<Table> Deserialize(std::unique_ptr<ByteType> data);
 
   // Internal
   inline int16_t& At(int x, int y = 0, int z = 0) {
