@@ -9,6 +9,8 @@
 #include <queue>
 #include <thread>
 
+#include "base/third_party/concurrentqueue/blockingconcurrentqueue.h"
+
 namespace base {
 
 namespace {
@@ -19,6 +21,10 @@ std::thread::id g_ui_thread_id;
 
 }  // namespace
 
+struct TaskQueue {
+  moodycamel::BlockingConcurrentQueue<base::OnceClosure> queue;
+};
+
 class RunnerImpl : public SequencedTaskRunner {
  public:
   RunnerImpl(base::WeakPtr<RunLoop> runner) : runner_(runner) {}
@@ -28,7 +34,8 @@ class RunnerImpl : public SequencedTaskRunner {
   RunnerImpl& operator=(const RunnerImpl&) = delete;
 
   void PostTask(base::OnceClosure task) override {
-    if (runner_) runner_->LockAddTask(std::move(task));
+    if (runner_)
+      runner_->LockAddTask(std::move(task));
   }
 
   void WaitForSync() override {
@@ -53,12 +60,19 @@ base::CallbackListSubscription RunLoop::BindEventDispatcher(
   return g_event_dispatcher.Add(std::move(callback));
 }
 
-RunLoop::RunLoop() { InitInternal(MessagePumpType::Worker); }
+RunLoop::RunLoop() {
+  InitInternal(MessagePumpType::Worker);
+}
 
 RunLoop::RunLoop(MessagePumpType type) {
-  if (type == MessagePumpType::UI) g_ui_thread_id = std::this_thread::get_id();
+  if (type == MessagePumpType::UI)
+    g_ui_thread_id = std::this_thread::get_id();
 
   InitInternal(type);
+}
+
+RunLoop::~RunLoop() {
+  delete closure_task_list_;
 }
 
 base::OnceClosure RunLoop::QuitClosure() {
@@ -71,7 +85,8 @@ scoped_refptr<SequencedTaskRunner> RunLoop::task_runner() {
 
 void RunLoop::Run() {
   for (;;) {
-    if (quit_flag_.IsSet()) return;
+    if (quit_flag_.IsSet())
+      return;
 
     // Run once
     if (!DoLoop()) {
@@ -83,7 +98,7 @@ void RunLoop::Run() {
 
 bool RunLoop::DoLoop() {
   base::OnceClosure task;
-  if (closure_task_list_.try_dequeue(task)) {
+  if (closure_task_list_->queue.try_dequeue(task)) {
     std::move(task).Run();
     return true;
   }
@@ -101,19 +116,24 @@ bool RunLoop::DoLoop() {
   return false;
 }
 
-void RunLoop::QuitWhenIdle() { RequireQuit(); }
+void RunLoop::QuitWhenIdle() {
+  RequireQuit();
+}
 
 void RunLoop::InitInternal(MessagePumpType type) {
+  closure_task_list_ = new TaskQueue();
   type_ = type;
   internal_runner_ =
       base::MakeRefCounted<RunnerImpl>(weak_ptr_factory_.GetWeakPtr());
 }
 
-void RunLoop::RequireQuit() { quit_flag_.Set(); }
+void RunLoop::RequireQuit() {
+  quit_flag_.Set();
+}
 
 void RunLoop::LockAddTask(base::OnceClosure task_closure) {
   if (!task_closure.is_null()) {
-    closure_task_list_.enqueue(std::move(task_closure));
+    closure_task_list_->queue.enqueue(std::move(task_closure));
   }
 }
 

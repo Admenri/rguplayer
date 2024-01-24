@@ -13,9 +13,10 @@
 #include "base/bind/callback_list.h"
 #include "base/memory/lock.h"
 #include "base/memory/ref_counted.h"
-#include "base/third_party/concurrentqueue/blockingconcurrentqueue.h"
 
 namespace base {
+
+struct TaskQueue;
 
 // Template helpers which use function indirection to erase T from the
 // function signature while still remembering it so we can call the
@@ -82,7 +83,8 @@ class SequencedTaskRunner : public base::RefCounted<SequencedTaskRunner> {
 
   template <class T>
   void ReleaseSoon(scoped_refptr<T>&& object) {
-    if (!object) return;
+    if (!object)
+      return;
     DeleteOrReleaseSoonInternal(&ReleaseHelper<T>::DoRelease, object.release());
   }
 
@@ -108,6 +110,7 @@ class RunLoop {
 
   RunLoop();
   explicit RunLoop(MessagePumpType type);
+  ~RunLoop();
 
   RunLoop(const RunLoop&) = delete;
   RunLoop& operator=(const RunLoop&) = delete;
@@ -123,6 +126,7 @@ class RunLoop {
 
  private:
   friend class RunnerImpl;
+
   void InitInternal(MessagePumpType type);
   void RequireQuit();
   void LockAddTask(base::OnceClosure task_closure);
@@ -130,7 +134,8 @@ class RunLoop {
 
   MessagePumpType type_;
   base::AtomicFlag quit_flag_;
-  moodycamel::BlockingConcurrentQueue<base::OnceClosure> closure_task_list_;
+
+  TaskQueue* closure_task_list_;
 
   base::WeakPtrFactory<RunLoop> weak_ptr_factory_{this};
 };

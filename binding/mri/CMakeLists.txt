@@ -6,8 +6,6 @@ cmake_minimum_required(VERSION 3.18.0)
 #--------------------------------------------------------------------------------
 
 set(BINDING_MRI_SRC
-  mri_isolate.cc
-  mri_isolate.h
   mri_main.cc
   mri_main.h
 )

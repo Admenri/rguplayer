@@ -6,6 +6,8 @@
 
 #include "SDL_image.h"
 
+#include <array>
+
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
 

@@ -6,7 +6,6 @@
 #define CONTENT_CONFIG_CORE_CONFIG_H_
 
 #include "base/memory/ref_counted.h"
-#include "nlohmann/json.hpp"
 
 namespace content {
 

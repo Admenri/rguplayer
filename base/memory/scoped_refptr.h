@@ -41,6 +41,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "base/buildflags/compiler_specific.h"
 #include "base/debug/logging.h"
 
 template <class T>
@@ -79,12 +80,15 @@ constexpr bool IsRefCountPreferenceOverridden(const T*,
 
 template <typename T, typename U, typename V>
 constexpr bool IsRefCountPreferenceOverridden(
-    const T*, const RefCountedThreadSafe<U, V>*) {
+    const T*,
+    const RefCountedThreadSafe<U, V>*) {
   return !std::is_same<std::decay_t<decltype(T::kRefCountPreference)>,
                        std::decay_t<decltype(U::kRefCountPreference)>>::value;
 }
 
-constexpr bool IsRefCountPreferenceOverridden(...) { return false; }
+constexpr bool IsRefCountPreferenceOverridden(...) {
+  return false;
+}
 
 }  // namespace subtle
 
@@ -231,8 +235,9 @@ class TRIVIAL_ABI scoped_refptr {
   scoped_refptr(const scoped_refptr& r) : scoped_refptr(r.ptr_) {}
 
   // Copy conversion constructor.
-  template <typename U, typename = typename std::enable_if<
-                            std::is_convertible<U*, T*>::value>::type>
+  template <typename U,
+            typename = typename std::enable_if<
+                std::is_convertible<U*, T*>::value>::type>
   scoped_refptr(const scoped_refptr<U>& r) : scoped_refptr(r.ptr_) {}
 
   // Move constructor. This is required in addition to the move conversion
@@ -240,8 +245,9 @@ class TRIVIAL_ABI scoped_refptr {
   scoped_refptr(scoped_refptr&& r) noexcept : ptr_(r.ptr_) { r.ptr_ = nullptr; }
 
   // Move conversion constructor.
-  template <typename U, typename = typename std::enable_if<
-                            std::is_convertible<U*, T*>::value>::type>
+  template <typename U,
+            typename = typename std::enable_if<
+                std::is_convertible<U*, T*>::value>::type>
   scoped_refptr(scoped_refptr<U>&& r) noexcept : ptr_(r.ptr_) {
     r.ptr_ = nullptr;
   }
