@@ -938,6 +938,7 @@ class BindingEngineTestImpl : public content::BindingEngine {
 
   void RunBindingMain() override {
     scoped_refptr<content::Graphics> screen = binding_->graphics();
+    scoped_refptr<content::Input> input = binding_->input();
 
     screen->ResizeScreen(base::Vec2i(1024, 768));
 
@@ -1063,7 +1064,17 @@ class BindingEngineTestImpl : public content::BindingEngine {
       sp->Update();
       sp->GetTransform().SetRotation(++xxx);
 
+      input->Update();
       screen->Update();
+
+      if (input->IsPressed("B"))
+        LOG(INFO) << "Pressed test.";
+
+      if (input->IsTriggered("A"))
+        LOG(INFO) << "Triggered test.";
+
+      if (input->IsRepeated("A"))
+        LOG(INFO) << "Repeated test.";
 
       if (!vx_win->IsDisposed())
         vx_win->Update();
@@ -1094,17 +1105,18 @@ int main(int argc, char* argv[]) {
 
   win->Init(std::move(win_params));
 
-  {
-    content::WorkerTreeCompositor cc;
-    content::ContentInitParams params;
+  std::unique_ptr<content::WorkerTreeCompositor> cc(
+      new content::WorkerTreeCompositor);
+  content::ContentInitParams params;
 
-    params.binding_engine = std::make_unique<BindingEngineTestImpl>();
-    params.initial_resolution = base::Vec2i(800, 600);
-    params.host_window = win->AsWeakPtr();
+  params.binding_engine = std::make_unique<BindingEngineTestImpl>();
+  params.initial_resolution = base::Vec2i(800, 600);
+  params.host_window = win->AsWeakPtr();
 
-    cc.InitCC(std::move(params));
-    cc.ContentMain();
-  }
+  cc->InitCC(std::move(params));
+  cc->ContentMain();
+
+  cc.reset();
 
   win.reset();
 

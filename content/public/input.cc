@@ -84,7 +84,8 @@ void Input::Update() {
 bool Input::IsPressed(const std::string& keysym) {
   for (auto& it : key_bindings_) {
     if (it.sym == keysym)
-      return key_states_[it.scancode].pressed;
+      if (key_states_[it.scancode].pressed)
+        return true;
   }
 
   return false;
@@ -93,7 +94,8 @@ bool Input::IsPressed(const std::string& keysym) {
 bool Input::IsTriggered(const std::string& keysym) {
   for (auto& it : key_bindings_) {
     if (it.sym == keysym)
-      return key_states_[it.scancode].trigger;
+      if (key_states_[it.scancode].trigger)
+        return true;
   }
 
   return false;
@@ -102,7 +104,8 @@ bool Input::IsTriggered(const std::string& keysym) {
 bool Input::IsRepeated(const std::string& keysym) {
   for (auto& it : key_bindings_) {
     if (it.sym == keysym)
-      return key_states_[it.scancode].repeat;
+      if (key_states_[it.scancode].repeat)
+        return true;
   }
 
   return false;

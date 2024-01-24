@@ -26,6 +26,7 @@ class RenderRunner : public base::SequencedTaskRunner {
 
   void InitRenderer(scoped_refptr<CoreConfigure> config,
                     base::WeakPtr<ui::Widget> host_window);
+  void QuitRequired();
 
   // base::SequencedTaskRunner methods:
   void PostTask(base::OnceClosure task) override;

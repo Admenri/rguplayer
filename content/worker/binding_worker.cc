@@ -13,8 +13,7 @@ namespace content {
 BindingRunner::BindingRunner() {}
 
 BindingRunner::~BindingRunner() {
-  if (runner_thread_)
-    runner_thread_->join();
+  QuitRequired();
 }
 
 void BindingRunner::InitBindingComponents(
@@ -30,6 +29,10 @@ void BindingRunner::InitBindingComponents(
 void BindingRunner::BindingMain() {
   runner_thread_ = std::make_unique<std::jthread>(
       BindingFuncMain, weak_ptr_factory_.GetWeakPtr());
+}
+
+void BindingRunner::QuitRequired() {
+  runner_thread_.reset();
 }
 
 void BindingRunner::BindingFuncMain(std::stop_token token,

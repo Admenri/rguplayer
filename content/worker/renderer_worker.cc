@@ -16,8 +16,7 @@ RenderRunner::RenderRunner(bool sync_worker) {
 }
 
 RenderRunner::~RenderRunner() {
-  PostTask(base::BindOnce(&RenderRunner::QuitGLContextInternal, AsWeakptr()));
-  WaitForSync();
+  QuitRequired();
 }
 
 void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
@@ -29,6 +28,14 @@ void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
 
   PostTask(base::BindOnce(&RenderRunner::InitGLContextInternal, AsWeakptr()));
   WaitForSync();
+}
+
+void RenderRunner::QuitRequired() {
+  WaitForSync();
+  PostTask(base::BindOnce(&RenderRunner::QuitGLContextInternal, AsWeakptr()));
+  WaitForSync();
+
+  worker_.reset();
 }
 
 void RenderRunner::PostTask(base::OnceClosure task) {
