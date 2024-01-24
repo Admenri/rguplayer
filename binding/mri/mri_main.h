@@ -5,6 +5,28 @@
 #ifndef BINDING_MRI_MRI_MAIN_H_
 #define BINDING_MRI_MRI_MAIN_H_
 
-namespace binding {}
+#include "content/engine/binding_engine.h"
+
+namespace binding {
+
+class BindingEngineMri : public content::BindingEngine {
+ public:
+  BindingEngineMri();
+  ~BindingEngineMri() override;
+
+  BindingEngineMri(const BindingEngineMri&) = delete;
+  BindingEngineMri& operator=(const BindingEngineMri&) = delete;
+
+  void InitializeBinding(
+      scoped_refptr<content::BindingRunner> binding_host) override;
+  void RunBindingMain() override;
+  void QuitRequired() override;
+  void FinalizeBinding() override;
+
+ private:
+  scoped_refptr<content::BindingRunner> binding_;
+};
+
+}  // namespace binding
 
 #endif  // !BINDING_MRI_MRI_MAIN_H_

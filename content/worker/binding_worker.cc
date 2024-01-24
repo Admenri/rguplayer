@@ -32,6 +32,8 @@ void BindingRunner::BindingMain() {
 }
 
 void BindingRunner::QuitRequired() {
+  if (binding_engine_)
+    binding_engine_->QuitRequired();
   runner_thread_.reset();
 }
 
