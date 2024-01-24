@@ -35,11 +35,12 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
   self->quit_req_ = &token;
   self->renderer_->InitRenderer(self->window_);
 
-  self->graphics_ = new Graphics(self->renderer_, self->initial_resolution_);
-  self->input_ = new Input(self->window_);
-
   // Init font attributes
   Font::InitStaticFont();
+
+  // Init Modules
+  self->graphics_ = new Graphics(self->renderer_, self->initial_resolution_);
+  self->input_ = new Input(self->window_);
 
   // Boot binding external components
   std::move(self->binding_main_).Run(self.get());

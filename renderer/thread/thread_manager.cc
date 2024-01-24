@@ -29,6 +29,13 @@ void GlobalStateManager::InitStates() {
   TextureFrameBuffer::LinkFrameBuffer(common_tfb);
   FrameBuffer::Unbind();
 
+  generic_tex = Texture::Gen();
+  Texture::Bind(generic_tex);
+  Texture::SetFilter();
+  Texture::SetWrap();
+  Texture::TexImage2D(64, 64, GL_RGBA);
+  generic_tex_size = base::Vec2i(64, 64);
+
   common_quad = std::make_unique<QuadDrawable>();
 }
 
@@ -38,9 +45,10 @@ void GlobalStateManager::QuitStates() {
   shaders.reset();
 
   TextureFrameBuffer::Del(common_tfb);
+  Texture::Del(generic_tex);
 }
 
-void GlobalStateManager::EnsureGenericTex(int width, int height) {
+void GlobalStateManager::EnsureCommonTFB(int width, int height) {
   if (common_tfb.width >= width && common_tfb.height >= height)
     return;
 
@@ -53,17 +61,19 @@ void GlobalStateManager::EnsureGenericTex(int width, int height) {
 void GlobalStateManager::EnsureGenericTex(int width,
                                           int height,
                                           base::Vec2i& out_size) {
-  if (common_tfb.width >= width && common_tfb.height >= height) {
-    out_size.x = common_tfb.width;
-    out_size.y = common_tfb.height;
+  if (generic_tex_size.x >= width && generic_tex_size.y >= height) {
+    out_size = generic_tex_size;
     return;
   }
 
-  width = std::max(width, common_tfb.width);
-  height = std::max(height, common_tfb.height);
+  width = std::max(width, generic_tex_size.x);
+  height = std::max(height, generic_tex_size.y);
 
-  TextureFrameBuffer::Alloc(common_tfb, width, height);
-  out_size = base::Vec2i(width, height);
+  generic_tex_size = base::Vec2i(width, height);
+  Texture::Bind(generic_tex);
+  Texture::TexImage2D(width, height, GL_RGBA);
+
+  out_size = generic_tex_size;
 }
 
 }  // namespace renderer

@@ -220,7 +220,7 @@ std::string Font::FixupString(const std::string& text) {
   return str;
 }
 
-SDL_Surface* Font::RenderText(const std::string& text) {
+SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
   auto ensure_format = [](SDL_Surface*& surf) {
     SDL_Surface* format_surf = surf;
     if (surf->format->format != SDL_PIXELFORMAT_ABGR8888) {
@@ -238,6 +238,10 @@ SDL_Surface* Font::RenderText(const std::string& text) {
   TTF_Font* font = AsSDLFont();
   SDL_Color font_color = color_->AsSDLColor();
   SDL_Color outline_color = out_color_->AsSDLColor();
+  if (font_opacity) {
+    *font_opacity = font_color.a;
+  }
+
   font_color.a = 255;
   outline_color.a = 255;
 
@@ -336,6 +340,7 @@ SDL_Surface* Font::RenderText(const std::string& text) {
 }
 
 void Font::LoadFontInternal() {
+  // TODO: Fonts cache manager
   sdl_font_ = TTF_OpenFont(name_.front().c_str(), size_);
 }
 

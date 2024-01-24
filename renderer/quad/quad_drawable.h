@@ -152,9 +152,10 @@ struct Blt {
   static void BeginScreen(const base::Rect& rect);
   static void BeginDraw(TextureFrameBuffer& dest_tfb);
   static void TexSource(TextureFrameBuffer& src_tfb);
-  static void EndDraw(const base::Rect& src_rect, const base::Rect& dest_rect);
-  static void EndDraw(const base::RectF& src_rect,
+  static void BltDraw(const base::Rect& src_rect, const base::Rect& dest_rect);
+  static void BltDraw(const base::RectF& src_rect,
                       const base::RectF& dest_rect);
+  static void EndDraw();
 };
 
 }  // namespace renderer

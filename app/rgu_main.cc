@@ -972,6 +972,8 @@ int main(int argc, char* argv[]) {
                                 new content::Color(0, 255, 0, 125),
                                 new content::Color(0, 0, 255, 125));
 
+          bmp->DrawText(base::Vec2i(100, 30), "Test String");
+
           /* Sync method test */
           // SDL_Surface* surf = bmp->SurfaceRequired();
           // IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
@@ -1071,7 +1073,8 @@ int main(int argc, char* argv[]) {
           IMG_SavePNG(surf2, "D:\\Desktop\\snap2.png");
 
           scoped_refptr<content::Font> font = new content::Font();
-          auto* textsurf = font->RenderText("Test String for Render Test");
+          auto* textsurf =
+              font->RenderText("Test String for Render Test", nullptr);
           IMG_SavePNG(textsurf, "D:\\Desktop\\text.png");
 
           float xxx = 0;

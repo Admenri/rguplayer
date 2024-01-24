@@ -70,6 +70,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
       Disposable(host),
       font_(host->default_font()),
       pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
+  // TODO: add generic filesystem interface
   surface_buffer_ = IMG_Load(filename.c_str());
 
   size_ = base::Vec2i(surface_buffer_->w, surface_buffer_->h);
@@ -365,12 +366,13 @@ void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
                                 scoped_refptr<Bitmap> src_bitmap,
                                 const base::Rect& src_rect,
                                 float opacity) {
-  renderer::GSM.EnsureGenericTex(dest_rect.width, dest_rect.height);
+  renderer::GSM.EnsureCommonTFB(dest_rect.width, dest_rect.height);
   auto& dst_tex = renderer::GSM.common_tfb;
 
   renderer::Blt::BeginDraw(dst_tex);
   renderer::Blt::TexSource(tex_fbo_);
-  renderer::Blt::EndDraw(dest_rect, dest_rect.Size());
+  renderer::Blt::BltDraw(dest_rect, dest_rect.Size());
+  renderer::Blt::EndDraw();
 
   /*
    * (texCoord - src_offset) * src_dst_factor
@@ -479,7 +481,8 @@ void Bitmap::GetSurfaceInternal() {
 void Bitmap::DrawTextInternal(const base::Rect& rect,
                               const std::string& str,
                               TextAlign align) {
-  SDL_Surface* txt_surf = font_->RenderText(str);
+  uint8_t fopacity;
+  SDL_Surface* txt_surf = font_->RenderText(str, &fopacity);
 
   int align_x = rect.x, align_y = rect.y + (rect.height - txt_surf->h) / 2;
 
@@ -499,9 +502,49 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
   zoom_x = std::min(zoom_x, 1.0f);
   base::Rect pos(align_x, align_y, txt_surf->w * zoom_x, txt_surf->h);
 
-  base::Vec2i tex_size;
-  renderer::GSM.EnsureGenericTex(txt_surf->w, txt_surf->h, tex_size);
-  // TODO:
+  renderer::GSM.EnsureCommonTFB(pos.width, pos.height);
+  base::Vec2i tex_size = base::Vec2i(renderer::GSM.common_tfb.width,
+                                     renderer::GSM.common_tfb.height);
+
+  base::Vec2i generic_tex_size;
+  renderer::GSM.EnsureGenericTex(txt_surf->w, txt_surf->h, generic_tex_size);
+
+  renderer::Blt::BeginDraw(renderer::GSM.common_tfb);
+  renderer::Blt::TexSource(AsGLType());
+  renderer::Blt::BltDraw(pos, pos.Size());
+  renderer::Blt::EndDraw();
+
+  renderer::Texture::Bind(renderer::GSM.generic_tex);
+  renderer::Texture::TexSubImage2D(0, 0, txt_surf->w, txt_surf->h, GL_RGBA,
+                                   txt_surf->pixels);
+
+  base::Vec4 offset_scale(0, 0, (generic_tex_size.x * zoom_x) / tex_size.x,
+                          static_cast<float>(generic_tex_size.y) / tex_size.y);
+
+  base::Vec2 tex_src = base::Vec2i(txt_surf->w, txt_surf->h);
+
+  renderer::GSM.states.viewport.Push(size_);
+  renderer::GSM.states.blend.Push(false);
+
+  renderer::FrameBuffer::Bind(tex_fbo_.fbo);
+
+  auto& shader = renderer::GSM.shaders->texblt;
+  shader.Bind();
+  shader.SetProjectionMatrix(size_);
+  shader.SetTransOffset(base::Vec2i());
+  shader.SetSrcTexture(renderer::GSM.generic_tex);
+  shader.SetTextureSize(generic_tex_size);
+  shader.SetDstTexture(renderer::GSM.common_tfb.tex);
+  shader.SetOffsetScale(offset_scale);
+  shader.SetOpacity(fopacity / 255.0f);
+
+  auto* quad = renderer::GSM.common_quad.get();
+  quad->SetPositionRect(pos);
+  quad->SetTexCoordRect(tex_src);
+  quad->Draw();
+
+  renderer::GSM.states.blend.Pop();
+  renderer::GSM.states.viewport.Pop();
 }
 
 void Bitmap::NeedUpdateSurface() {

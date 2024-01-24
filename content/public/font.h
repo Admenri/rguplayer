@@ -65,7 +65,7 @@ class Font : public base::RefCounted<Font> {
 
   TTF_Font* AsSDLFont();
   std::string FixupString(const std::string& text);
-  SDL_Surface* RenderText(const std::string& text);
+  SDL_Surface* RenderText(const std::string& text, uint8_t* font_opacity);
 
  private:
   void LoadFontInternal();

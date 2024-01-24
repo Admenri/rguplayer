@@ -276,7 +276,8 @@ void Graphics::PresentScreenInternal(bool* paint_raiser, bool backend) {
   renderer::FrameBuffer::Clear();
   // Flip screen for Y
   base::Rect target_rect(0, resolution_.y, resolution_.x, -resolution_.y);
-  renderer::Blt::EndDraw(resolution_, target_rect);
+  renderer::Blt::BltDraw(resolution_, target_rect);
+  renderer::Blt::EndDraw();
 
   SDL_GL_SwapWindow(renderer_->window());
 
@@ -296,7 +297,8 @@ void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
   renderer::Blt::TexSource(screen_buffer_[0]);
   renderer::GSM.states.clear_color.Set(base::Vec4());
   renderer::FrameBuffer::Clear();
-  renderer::Blt::EndDraw(resolution_, resolution_);
+  renderer::Blt::BltDraw(resolution_, resolution_);
+  renderer::Blt::EndDraw();
 }
 
 void Graphics::FreezeSceneInternal() {
@@ -306,7 +308,8 @@ void Graphics::FreezeSceneInternal() {
   renderer::Blt::TexSource(screen_buffer_[0]);
   renderer::GSM.states.clear_color.Set(base::Vec4());
   renderer::FrameBuffer::Clear();
-  renderer::Blt::EndDraw(resolution_, resolution_);
+  renderer::Blt::BltDraw(resolution_, resolution_);
+  renderer::Blt::EndDraw();
 }
 
 void Graphics::TransitionSceneInternal(int duration,
@@ -391,7 +394,8 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
     renderer::GSM.states.scissor.Push(false);
     renderer::Blt::BeginDraw(backend);
     renderer::Blt::TexSource(frontend);
-    renderer::Blt::EndDraw(screen_rect, screen_rect);
+    renderer::Blt::BltDraw(screen_rect, screen_rect);
+    renderer::Blt::EndDraw();
     renderer::GSM.states.scissor.Pop();
 
     renderer::FrameBuffer::Bind(frontend.fbo);

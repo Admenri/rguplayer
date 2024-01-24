@@ -848,7 +848,8 @@ void Tilemap2::CreateTileAtlasInternal() {
 
     renderer::Blt::BeginDraw(atlas_tfb_);
     renderer::Blt::TexSource(atlas_bitmap->AsGLType());
-    renderer::Blt::EndDraw(src_rect, dst_rect);
+    renderer::Blt::BltDraw(src_rect, dst_rect);
+    renderer::Blt::EndDraw();
   }
 
   /* shadow set atlas */
