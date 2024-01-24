@@ -14,6 +14,8 @@
 
 namespace content {
 
+class CoreConfigure;
+
 class RenderRunner : public base::SequencedTaskRunner {
  public:
   RenderRunner(bool sync_worker = false);
@@ -22,7 +24,8 @@ class RenderRunner : public base::SequencedTaskRunner {
   RenderRunner(const RenderRunner&) = delete;
   RenderRunner& operator=(const RenderRunner) = delete;
 
-  void InitRenderer(base::WeakPtr<ui::Widget> host_window);
+  void InitRenderer(scoped_refptr<CoreConfigure> config,
+                    base::WeakPtr<ui::Widget> host_window);
 
   // base::SequencedTaskRunner methods:
   void PostTask(base::OnceClosure task) override;
@@ -38,6 +41,7 @@ class RenderRunner : public base::SequencedTaskRunner {
   void InitGLContextInternal();
   void QuitGLContextInternal();
 
+  scoped_refptr<CoreConfigure> config_;
   std::unique_ptr<base::ThreadWorker> worker_;
 
   base::WeakPtr<ui::Widget> host_window_;

@@ -4,6 +4,7 @@
 
 #include "content/worker/renderer_worker.h"
 
+#include "content/config/core_config.h"
 #include "renderer/context/gles2_context.h"
 #include "renderer/states/draw_states.h"
 #include "renderer/thread/thread_manager.h"
@@ -19,7 +20,9 @@ RenderRunner::~RenderRunner() {
   WaitForSync();
 }
 
-void RenderRunner::InitRenderer(base::WeakPtr<ui::Widget> host_window) {
+void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
+                                base::WeakPtr<ui::Widget> host_window) {
+  config_ = config;
   worker_->Start(base::RunLoop::MessagePumpType::Worker);
   worker_->WaitUntilStart();
   host_window_ = host_window;

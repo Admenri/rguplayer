@@ -4,4 +4,10 @@
 
 #include "content/config/core_config.h"
 
-namespace content {}
+namespace content {
+
+CoreConfigure::CoreConfigure() {}
+
+CoreConfigure::~CoreConfigure() {}
+
+}  // namespace content

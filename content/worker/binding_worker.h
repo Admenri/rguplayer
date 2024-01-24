@@ -23,11 +23,12 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   BindingRunner(const BindingRunner&) = delete;
   BindingRunner& operator=(const BindingRunner&) = delete;
 
-  void InitBindingComponents(const ContentInitParams& params,
+  void InitBindingComponents(ContentInitParams& params,
                              scoped_refptr<RenderRunner> renderer);
   void BindingMain();
   bool quit_required() { return quit_req_ && quit_req_->stop_requested(); }
 
+  scoped_refptr<CoreConfigure> config() const { return config_; }
   scoped_refptr<Graphics> graphics() const { return graphics_; }
   scoped_refptr<Input> input() const { return input_; }
 
@@ -35,6 +36,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   static void BindingFuncMain(std::stop_token token,
                               base::WeakPtr<BindingRunner> self);
 
+  scoped_refptr<CoreConfigure> config_;
   std::unique_ptr<std::jthread> runner_thread_;
 
   scoped_refptr<RenderRunner> renderer_;
@@ -44,7 +46,8 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   base::Vec2i initial_resolution_;
   base::WeakPtr<ui::Widget> window_;
   std::stop_token* quit_req_ = nullptr;
-  base::OnceCallback<void(scoped_refptr<BindingRunner>)> binding_main_;
+
+  std::unique_ptr<BindingEngine> binding_engine_;
 
   base::WeakPtrFactory<BindingRunner> weak_ptr_factory_{this};
 };

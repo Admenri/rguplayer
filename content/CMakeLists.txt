@@ -10,6 +10,8 @@ set(CORE_CONTENT_SRC
   common/tilemap_common.h
   config/core_config.cc
   config/core_config.h
+  engine/binding_engine.cc
+  engine/binding_engine.h
   public/bitmap.cc
   public/bitmap.h
   public/disposable.h

@@ -14,7 +14,9 @@ WorkerTreeCompositor::~WorkerTreeCompositor() {
   render_runner_.reset();
 }
 
-void WorkerTreeCompositor::InitCC(const ContentInitParams& params) {
+void WorkerTreeCompositor::InitCC(ContentInitParams params) {
+  config_ = params.config;
+
   event_runner_ = new EventRunner();
   render_runner_ = new RenderRunner(params.sync_renderer);
   binding_runner_ = new BindingRunner();

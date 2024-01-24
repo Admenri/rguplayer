@@ -24,6 +24,7 @@
 #include "content/public/plane.h"
 #include "content/public/window2.h"
 #include "content/public/tilemap2.h"
+#include "content/engine/binding_engine.h"
 
 #include "physfs.h"
 
@@ -928,6 +929,150 @@ SDL_EGLAttrib* SDLCALL GetAttribArray() {
   return kAttrib;
 }
 
+class BindingEngineTestImpl : public content::BindingEngine {
+ public:
+  void InitializeBinding(
+      scoped_refptr<content::BindingRunner> binding_host) override {
+    binding_ = binding_host;
+  }
+
+  void RunBindingMain() override {
+    scoped_refptr<content::Graphics> screen = binding_->graphics();
+
+    screen->ResizeScreen(base::Vec2i(1024, 768));
+
+    scoped_refptr<content::Bitmap> bmp =
+        new content::Bitmap(screen, "D:\\Desktop\\rgu\\app\\test\\example.png");
+
+    scoped_refptr<content::Bitmap> sampler =
+        new content::Bitmap(screen, "D:\\Desktop\\rgu\\app\\test\\test.png");
+
+    bmp->ClearRect(base::Rect(20, 20, 50, 50));
+    bmp->Blt(100, 100, sampler, sampler->GetRect()->AsBase(), 255);
+
+    bmp->GradientFillRect(base::Rect(50, 100, 100, 50),
+                          new content::Color(0, 255, 0, 125),
+                          new content::Color(0, 0, 255, 125));
+
+    bmp->DrawText(base::Vec2i(100, 30), "Test String");
+
+    /* Sync method test */
+    // SDL_Surface* surf = bmp->SurfaceRequired();
+    // IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+
+    scoped_refptr<content::Sprite> sp = new content::Sprite(screen);
+    sp->SetBitmap(bmp);
+    sp->GetTransform().SetOrigin(
+        base::Vec2i(sp->GetWidth() / 2, sp->GetHeight() / 2));
+    sp->GetTransform().SetPosition(
+        base::Vec2i(screen->GetWidth() / 2, screen->GetHeight() / 2));
+
+    sp->SetBushDepth(100);
+    sp->SetBushOpacity(128);
+
+    sp->SetWaveAmp(20);
+    sp->GetSrcRect()->Set(base::Rect(100, 100, 100, 100));
+
+    scoped_refptr<content::Plane> pl = new content::Plane(screen);
+    pl->SetBitmap(
+        new content::Bitmap(screen, "D:\\Desktop\\rgu\\app\\test\\bg.png"));
+
+    scoped_refptr<content::Tilemap2> tilemap = new content::Tilemap2(screen);
+    tilemap->SetBitmap(
+        content::Tilemap2::TilemapBitmapID::TileA1,
+        new content::Bitmap(screen,
+                            "D:\\Desktop\\rgu\\app\\test\\Inside_A1.png"));
+    tilemap->SetBitmap(
+        content::Tilemap2::TilemapBitmapID::TileA2,
+        new content::Bitmap(screen,
+                            "D:\\Desktop\\rgu\\app\\test\\Inside_A2.png"));
+    tilemap->SetBitmap(
+        content::Tilemap2::TilemapBitmapID::TileA4,
+        new content::Bitmap(screen,
+                            "D:\\Desktop\\rgu\\app\\test\\Inside_A4.png"));
+    tilemap->SetBitmap(
+        content::Tilemap2::TilemapBitmapID::TileA5,
+        new content::Bitmap(screen,
+                            "D:\\Desktop\\rgu\\app\\test\\Inside_A5.png"));
+    tilemap->SetBitmap(
+        content::Tilemap2::TilemapBitmapID::TileB,
+        new content::Bitmap(screen,
+                            "D:\\Desktop\\rgu\\app\\test\\Inside_B.png"));
+    tilemap->SetBitmap(
+        content::Tilemap2::TilemapBitmapID::TileC,
+        new content::Bitmap(screen,
+                            "D:\\Desktop\\rgu\\app\\test\\Inside_C.png"));
+
+    tilemap->SetMapData(GetTestMapData());
+    tilemap->SetFlags(GetMapFlags());
+
+    for (int i = 0; i < 120; ++i) {
+      screen->Update();
+    }
+
+    screen->Freeze();
+
+    scoped_refptr<content::Viewport> viewp =
+        new content::Viewport(screen, base::Rect(0, 0, 300, 300));
+    viewp->SetZ(100);
+
+    scoped_refptr<content::Window2> vx_win =
+        new content::Window2(screen, 100, 100, 300, 300);
+
+    vx_win->SetViewport(viewp);
+
+    vx_win->SetWindowskin(
+        new content::Bitmap(screen, "D:\\Desktop\\rgu\\app\\test\\Window.png"));
+    vx_win->SetZ(100);
+    vx_win->GetTone()->Set(-68, -68, 68, 0);
+    vx_win->SetPause(true);
+
+    vx_win->SetContents(bmp);
+
+    vx_win->SetActive(true);
+    vx_win->SetCursorRect(new content::Rect(base::Rect(110, 110, 100, 100)));
+
+    vx_win->SetArrowsVisible(true);
+
+    viewp->SetTone(new content::Tone(68, 68, 0, 0));
+
+    screen->SetBrightness(125);
+
+    scoped_refptr<content::Bitmap> snapshot = screen->SnapToBitmap();
+    auto* surf = snapshot->SurfaceRequired();
+    IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
+
+    screen->Transition(
+        120, new content::Bitmap(
+                 screen, "D:\\Desktop\\rgu\\app\\test\\BattleStart.png"));
+
+    scoped_refptr<content::Bitmap> snapshot2 =
+        new content::Bitmap(screen, 800, 600);
+    viewp->SnapToBitmap(snapshot2);
+    auto* surf2 = snapshot2->SurfaceRequired();
+    IMG_SavePNG(surf2, "D:\\Desktop\\snap2.png");
+
+    scoped_refptr<content::Font> font = new content::Font();
+    auto* textsurf = font->RenderText("Test String for Render Test", nullptr);
+    IMG_SavePNG(textsurf, "D:\\Desktop\\text.png");
+
+    float xxx = 0;
+    while (!binding_->quit_required()) {
+      tilemap->Update();
+
+      sp->Update();
+      sp->GetTransform().SetRotation(++xxx);
+
+      screen->Update();
+
+      if (!vx_win->IsDisposed())
+        vx_win->Update();
+    }
+  }
+
+  scoped_refptr<content::BindingRunner> binding_;
+};
+
 int main(int argc, char* argv[]) {
   PHYSFS_init(argv[0]);
 
@@ -953,148 +1098,11 @@ int main(int argc, char* argv[]) {
     content::WorkerTreeCompositor cc;
     content::ContentInitParams params;
 
-    params.binding_boot =
-        base::BindRepeating([](scoped_refptr<content::BindingRunner> binding) {
-          scoped_refptr<content::Graphics> screen = binding->graphics();
-
-          screen->ResizeScreen(base::Vec2i(1024, 768));
-
-          scoped_refptr<content::Bitmap> bmp = new content::Bitmap(
-              screen, "D:\\Desktop\\rgu\\app\\test\\example.png");
-
-          scoped_refptr<content::Bitmap> sampler = new content::Bitmap(
-              screen, "D:\\Desktop\\rgu\\app\\test\\test.png");
-
-          bmp->ClearRect(base::Rect(20, 20, 50, 50));
-          bmp->Blt(100, 100, sampler, sampler->GetRect()->AsBase(), 255);
-
-          bmp->GradientFillRect(base::Rect(50, 100, 100, 50),
-                                new content::Color(0, 255, 0, 125),
-                                new content::Color(0, 0, 255, 125));
-
-          bmp->DrawText(base::Vec2i(100, 30), "Test String");
-
-          /* Sync method test */
-          // SDL_Surface* surf = bmp->SurfaceRequired();
-          // IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
-
-          scoped_refptr<content::Sprite> sp = new content::Sprite(screen);
-          sp->SetBitmap(bmp);
-          sp->GetTransform().SetOrigin(
-              base::Vec2i(sp->GetWidth() / 2, sp->GetHeight() / 2));
-          sp->GetTransform().SetPosition(
-              base::Vec2i(screen->GetWidth() / 2, screen->GetHeight() / 2));
-
-          sp->SetBushDepth(100);
-          sp->SetBushOpacity(128);
-
-          sp->SetWaveAmp(20);
-          sp->GetSrcRect()->Set(base::Rect(100, 100, 100, 100));
-
-          scoped_refptr<content::Plane> pl = new content::Plane(screen);
-          pl->SetBitmap(new content::Bitmap(
-              screen, "D:\\Desktop\\rgu\\app\\test\\bg.png"));
-
-          scoped_refptr<content::Tilemap2> tilemap =
-              new content::Tilemap2(screen);
-          tilemap->SetBitmap(
-              content::Tilemap2::TilemapBitmapID::TileA1,
-              new content::Bitmap(
-                  screen, "D:\\Desktop\\rgu\\app\\test\\Inside_A1.png"));
-          tilemap->SetBitmap(
-              content::Tilemap2::TilemapBitmapID::TileA2,
-              new content::Bitmap(
-                  screen, "D:\\Desktop\\rgu\\app\\test\\Inside_A2.png"));
-          tilemap->SetBitmap(
-              content::Tilemap2::TilemapBitmapID::TileA4,
-              new content::Bitmap(
-                  screen, "D:\\Desktop\\rgu\\app\\test\\Inside_A4.png"));
-          tilemap->SetBitmap(
-              content::Tilemap2::TilemapBitmapID::TileA5,
-              new content::Bitmap(
-                  screen, "D:\\Desktop\\rgu\\app\\test\\Inside_A5.png"));
-          tilemap->SetBitmap(
-              content::Tilemap2::TilemapBitmapID::TileB,
-              new content::Bitmap(screen,
-                                  "D:\\Desktop\\rgu\\app\\test\\Inside_B.png"));
-          tilemap->SetBitmap(
-              content::Tilemap2::TilemapBitmapID::TileC,
-              new content::Bitmap(screen,
-                                  "D:\\Desktop\\rgu\\app\\test\\Inside_C.png"));
-
-          tilemap->SetMapData(GetTestMapData());
-          tilemap->SetFlags(GetMapFlags());
-
-          for (int i = 0; i < 120; ++i) {
-            screen->Update();
-          }
-
-          screen->Freeze();
-
-          scoped_refptr<content::Viewport> viewp =
-              new content::Viewport(screen, base::Rect(0, 0, 300, 300));
-          viewp->SetZ(100);
-
-          scoped_refptr<content::Window2> vx_win =
-              new content::Window2(screen, 100, 100, 300, 300);
-
-          vx_win->SetViewport(viewp);
-
-          vx_win->SetWindowskin(new content::Bitmap(
-              screen, "D:\\Desktop\\rgu\\app\\test\\Window.png"));
-          vx_win->SetZ(100);
-          vx_win->GetTone()->Set(-68, -68, 68, 0);
-          vx_win->SetPause(true);
-
-          vx_win->SetContents(bmp);
-
-          vx_win->SetActive(true);
-          vx_win->SetCursorRect(
-              new content::Rect(base::Rect(110, 110, 100, 100)));
-
-          vx_win->SetArrowsVisible(true);
-
-          viewp->SetTone(new content::Tone(68, 68, 0, 0));
-
-          screen->SetBrightness(125);
-
-          scoped_refptr<content::Bitmap> snapshot = screen->SnapToBitmap();
-          auto* surf = snapshot->SurfaceRequired();
-          IMG_SavePNG(surf, "D:\\Desktop\\snap.png");
-
-          screen->Transition(
-              120, new content::Bitmap(
-                       screen, "D:\\Desktop\\rgu\\app\\test\\BattleStart.png"));
-
-          scoped_refptr<content::Bitmap> snapshot2 =
-              new content::Bitmap(screen, 800, 600);
-          viewp->SnapToBitmap(snapshot2);
-          auto* surf2 = snapshot2->SurfaceRequired();
-          IMG_SavePNG(surf2, "D:\\Desktop\\snap2.png");
-
-          scoped_refptr<content::Font> font = new content::Font();
-          auto* textsurf =
-              font->RenderText("Test String for Render Test", nullptr);
-          IMG_SavePNG(textsurf, "D:\\Desktop\\text.png");
-
-          float xxx = 0;
-          while (!binding->quit_required()) {
-            tilemap->Update();
-
-            sp->Update();
-            sp->GetTransform().SetRotation(++xxx);
-
-            screen->Update();
-
-            if (!vx_win->IsDisposed())
-              vx_win->Update();
-          }
-        });
-
+    params.binding_engine = std::make_unique<BindingEngineTestImpl>();
     params.initial_resolution = base::Vec2i(800, 600);
     params.host_window = win->AsWeakPtr();
 
-    cc.InitCC(params);
+    cc.InitCC(std::move(params));
     cc.ContentMain();
   }
 

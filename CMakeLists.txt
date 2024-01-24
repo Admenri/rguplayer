@@ -133,5 +133,8 @@ add_subdirectory(renderer)
 ## Content compositor
 add_subdirectory(content)
 
+## Script binding
+add_subdirectory(binding)
+
 ## Entry of the RGU player
 add_subdirectory(app)

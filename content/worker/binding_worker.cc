@@ -4,6 +4,8 @@
 
 #include "content/worker/binding_worker.h"
 
+#include "content/config/core_config.h"
+#include "content/engine/binding_engine.h"
 #include "content/public/font.h"
 
 namespace content {
@@ -16,12 +18,13 @@ BindingRunner::~BindingRunner() {
 }
 
 void BindingRunner::InitBindingComponents(
-    const ContentInitParams& params,
+    ContentInitParams& params,
     scoped_refptr<RenderRunner> renderer) {
+  config_ = params.config;
   renderer_ = renderer;
   window_ = params.host_window;
   initial_resolution_ = params.initial_resolution;
-  binding_main_ = std::move(params.binding_boot);
+  binding_engine_ = std::move(params.binding_engine);
 }
 
 void BindingRunner::BindingMain() {
@@ -33,7 +36,7 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
                                     base::WeakPtr<BindingRunner> self) {
   // Init binding thread runner
   self->quit_req_ = &token;
-  self->renderer_->InitRenderer(self->window_);
+  self->renderer_->InitRenderer(self->config_, self->window_);
 
   // Init font attributes
   Font::InitStaticFont();
@@ -42,8 +45,14 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
   self->graphics_ = new Graphics(self->renderer_, self->initial_resolution_);
   self->input_ = new Input(self->window_);
 
-  // Boot binding external components
-  std::move(self->binding_main_).Run(self.get());
+  // Before run main initialize
+  self->binding_engine_->InitializeBinding(self.get());
+
+  // Boot binding components
+  self->binding_engine_->RunBindingMain();
+
+  // Destroy and release resource for current worker cc
+  self->binding_engine_->FinalizeBinding();
 }
 
 }  // namespace content

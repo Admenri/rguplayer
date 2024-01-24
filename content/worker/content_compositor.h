@@ -21,10 +21,12 @@ class WorkerTreeCompositor {
   WorkerTreeCompositor(const WorkerTreeCompositor&) = delete;
   WorkerTreeCompositor& operator=(const WorkerTreeCompositor&) = delete;
 
-  void InitCC(const ContentInitParams& params);
+  void InitCC(ContentInitParams params);
   void ContentMain();
 
  private:
+  scoped_refptr<CoreConfigure> config_;
+
   scoped_refptr<EventRunner> event_runner_;
   scoped_refptr<RenderRunner> render_runner_;
   scoped_refptr<BindingRunner> binding_runner_;
