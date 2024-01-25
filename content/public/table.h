@@ -32,8 +32,8 @@ class Table final : public base::RefCounted<Table>, public Serializable {
   void Resize(int x, int y);
   void Resize(int x, int y, int z);
 
-  std::unique_ptr<ByteType> Serialize() override;
-  static scoped_refptr<Table> Deserialize(std::unique_ptr<ByteType> data);
+  std::string Serialize() override;
+  static scoped_refptr<Table> Deserialize(const std::string& data);
 
   // Internal
   inline int16_t& At(int x, int y = 0, int z = 0) {

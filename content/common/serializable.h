@@ -6,8 +6,7 @@
 #define CONTENT_COMMON_SERIALIZABLE_H_
 
 #include <stdint.h>
-#include <memory>
-#include <vector>
+#include <string>
 
 #include "base/memory/ref_counted.h"
 
@@ -15,28 +14,23 @@ namespace content {
 
 class Serializable {
  public:
-  using ByteElement = uint8_t;
-  using ByteType = std::vector<ByteElement>;
-
   Serializable();
   virtual ~Serializable();
 
   Serializable(const Serializable&) = delete;
   Serializable& operator=(const Serializable&) = delete;
 
-  virtual std::unique_ptr<ByteType> Serialize() = 0;
+  virtual std::string Serialize() = 0;
 
   template <class T>
-  static scoped_refptr<T> Deserialize(std::unique_ptr<ByteType> data) {
+  static scoped_refptr<T> Deserialize(const std::string& data) {
     return T::Deserialize(data);
   }
 
-  static ByteElement* RawData(ByteType* data);
-
-  static int32_t ReadInt32(ByteType* data, int offset);
-  static double ReadDouble(ByteType* data, int offset);
-  static void WriteInt32(ByteType* data, int offset, int32_t value);
-  static void WriteDouble(ByteType* data, int offset, double value);
+  static int32_t ReadInt32(const char* data, int offset);
+  static double ReadDouble(const char* data, int offset);
+  static void WriteInt32(char* data, int offset, int32_t value);
+  static void WriteDouble(char* data, int offset, double value);
 };
 
 }  // namespace content

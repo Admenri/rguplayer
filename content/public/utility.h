@@ -38,8 +38,9 @@ class Rect : public base::RefCounted<Rect>,
   Rect(const base::Rect& rect) : data_(rect) {}
   ~Rect() override {}
 
-  Rect(const Rect&) = default;
-  Rect& operator=(const Rect&) = default;
+  Rect(const Rect& other) { data_ = other.data_; }
+  Rect& operator=(const Rect& other) { data_ = other.data_; }
+  bool operator==(const Rect& other) { return other.data_ == data_; }
 
   void Set(const base::Rect& rect) {
     data_ = rect;
@@ -89,8 +90,8 @@ class Rect : public base::RefCounted<Rect>,
 
   void SetBase(const base::Rect& rect) { data_ = rect; }
 
-  std::unique_ptr<ByteType> Serialize() override;
-  static scoped_refptr<Rect> Deserialize(std::unique_ptr<ByteType> data);
+  std::string Serialize() override;
+  static scoped_refptr<Rect> Deserialize(const std::string& data);
 
  private:
   base::Rect data_;
@@ -108,8 +109,9 @@ class Tone : public base::RefCounted<Rect>,
               std::clamp(gray, 0, 255)) {}
   ~Tone() override {}
 
-  Tone(const Tone&) = default;
-  Tone& operator=(const Tone&) = default;
+  Tone(const Tone& other) { data_ = other.data_; }
+  Tone& operator=(const Tone& other) { data_ = other.data_; }
+  bool operator==(const Tone& other) { return other.data_ == data_; }
 
   void Set(int red, int green, int blue, int gray = 255) {
     data_.x = std::clamp(red, -255, 255);
@@ -160,8 +162,8 @@ class Tone : public base::RefCounted<Rect>,
     return data_.x != 0 || data_.y != 0 || data_.z != 0 || data_.w != 0;
   }
 
-  std::unique_ptr<ByteType> Serialize() override;
-  static scoped_refptr<Tone> Deserialize(std::unique_ptr<ByteType> data);
+  std::string Serialize() override;
+  static scoped_refptr<Tone> Deserialize(const std::string& data);
 
  private:
   base::Vec4i data_;
@@ -179,8 +181,9 @@ class Color : public base::RefCounted<Rect>,
               std::clamp(alpha, 0, 255)) {}
   ~Color() override {}
 
-  Color(const Color&) = default;
-  Color& operator=(const Color&) = default;
+  Color(const Color& other) { data_ = other.data_; }
+  Color& operator=(const Color& other) { data_ = other.data_; }
+  bool operator==(const Color& other) { return other.data_ == data_; }
 
   void Set(int red, int green, int blue, int alpha) {
     data_.x = std::clamp(red, 0, 255);
@@ -234,8 +237,8 @@ class Color : public base::RefCounted<Rect>,
 
   bool IsValid() { return data_.w != 0; }
 
-  std::unique_ptr<ByteType> Serialize() override;
-  static scoped_refptr<Color> Deserialize(std::unique_ptr<ByteType> data);
+  std::string Serialize() override;
+  static scoped_refptr<Color> Deserialize(const std::string& data);
 
  private:
   base::Vec4i data_;
