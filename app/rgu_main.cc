@@ -37,6 +37,7 @@ int main(int argc, char* argv[]) {
 
   win_params.size = base::Vec2i(800, 600);
   win_params.title = "RGU Widget";
+  win_params.resizable = true;
 
   win->Init(std::move(win_params));
 

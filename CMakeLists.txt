@@ -94,6 +94,10 @@ if (CORE_ENABLE_VIDEO)
   add_subdirectory(third_party/aom)
 endif()
 
+## Zlib
+add_subdirectory(third_party/zlib)
+include_directories(third_party/zlib)
+
 #--------------------------------------------------------------------------------
 # Components of Core
 #--------------------------------------------------------------------------------

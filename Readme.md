@@ -69,6 +69,7 @@ ui文件夹存放了SDL窗口的封装代码，用于与input模块进行配合�
 - concurrentqueue - https://github.com/cameron314/concurrentqueue
 - aom - https://aomedia.googlesource.com/aom
 - json - https://github.com/nlohmann/json
+- zlib - https://github.com/madler/zlib
 
 ## 联系方式
 

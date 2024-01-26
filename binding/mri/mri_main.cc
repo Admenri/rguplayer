@@ -13,6 +13,8 @@
 
 #include "content/worker/binding_worker.h"
 
+#include "zlib.h"
+
 extern "C" {
 void rb_call_builtin_inits();
 }
