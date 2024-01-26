@@ -24,9 +24,11 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   CoreConfigure& operator=(const CoreConfigure&) = delete;
 
   RGSSVersion version() { return rgss_version_; }
+  bool allow_frame_skip() { return allow_frame_skip_; }
 
  private:
   RGSSVersion rgss_version_ = RGSS3;
+  bool allow_frame_skip_ = false;
 };
 
 }  // namespace content

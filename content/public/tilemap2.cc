@@ -1174,7 +1174,6 @@ void Tilemap2::ParseMapDataBufferInternal() {
   auto each_tile = [&](int16_t tileID, int x, int y, int z,
                        int16_t underTileID) {
     int16_t flag = TableGetFlag(flagdata, tileID);
-    // TODO: table process
     bool over_player = flag & OVER_PLAYER_FLAG;
     bool is_table = flag & TABLE_FLAG;
 

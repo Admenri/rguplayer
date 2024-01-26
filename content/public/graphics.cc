@@ -4,8 +4,10 @@
 
 #include "content/public/graphics.h"
 
+#include "content/config/core_config.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
+#include "content/worker/binding_worker.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
 
@@ -13,14 +15,20 @@
 
 namespace content {
 
-Graphics::Graphics(scoped_refptr<RenderRunner> renderer,
+Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
+                   scoped_refptr<RenderRunner> renderer,
                    const base::Vec2i& initial_resolution)
-    : renderer_(renderer),
+    : config_(dispatcher->config()),
+      dispatcher_(dispatcher),
+      renderer_(renderer),
       resolution_(initial_resolution),
+      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>()),
       brightness_(255),
       frozen_(false),
       default_font_(new Font()) {
   viewport_rect().rect = initial_resolution;
+
+  fps_manager_->SetFrameRate(60);
 
   renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
                                      weak_ptr_factory_.GetWeakPtr()));
@@ -87,7 +95,16 @@ void Graphics::Update() {
   if (frozen_)
     return;
 
-  // TODO: fps manager required
+  if (fps_manager_->FrameSkipRequired()) {
+    if (config_->allow_frame_skip()) {
+      fps_manager_->Delay();
+      frame_count_++;
+
+      return;
+    } else {
+      fps_manager_->ResetFrameSkipCap();
+    }
+  }
 
   bool complete_flag = false;
   renderer()->PostTask(base::BindOnce(&Graphics::CompositeScreenInternal,
@@ -97,7 +114,7 @@ void Graphics::Update() {
                                       &complete_flag, false));
 
   /* Delay for desire frame rate */
-  SDL_Delay(1000 / 60);
+  fps_manager_->Delay();
 
   /* If not complete drawing */
   if (!complete_flag) {
@@ -135,7 +152,8 @@ void Graphics::Reset() {
     it->value_as_init()->Dispose();
   }
 
-  // TODO: Reset fpslimiter
+  // Reset fpslimiter
+  fps_manager_->ResetFrameSkipCap();
 }
 
 void Graphics::Freeze() {
@@ -174,7 +192,12 @@ void Graphics::Transition(int duration,
                                         weak_ptr_factory_.GetWeakPtr(), i,
                                         duration, trans_bitmap));
 
-    SDL_Delay(1000 / frame_rate_);
+    fps_manager_->Delay();
+    frame_count_++;
+
+    // Break draw loop for quit flag
+    if (dispatcher_->quit_required())
+      break;
   }
 
   renderer()->PostTask(

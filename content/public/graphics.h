@@ -6,6 +6,7 @@
 #define CONTENT_PUBLIC_GRAPHICS_H_
 
 #include "base/memory/weak_ptr.h"
+#include "components/fpslimiter/fpslimiter.h"
 #include "content/public/drawable.h"
 #include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
@@ -15,11 +16,13 @@ namespace content {
 
 class Bitmap;
 class Disposable;
+class BindingRunner;
 
 class Graphics final : public base::RefCounted<Graphics>,
                        public DrawableParent {
  public:
-  Graphics(scoped_refptr<RenderRunner> renderer,
+  Graphics(scoped_refptr<BindingRunner> dispatcher,
+           scoped_refptr<RenderRunner> renderer,
            const base::Vec2i& initial_resolution);
   ~Graphics();
 
@@ -90,9 +93,13 @@ class Graphics final : public base::RefCounted<Graphics>,
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;
   std::unique_ptr<renderer::QuadDrawable> brightness_quad_;
 
+  scoped_refptr<CoreConfigure> config_;
+  scoped_refptr<BindingRunner> dispatcher_;
   scoped_refptr<RenderRunner> renderer_;
   base::Vec2i resolution_;
   base::LinkedList<Disposable> disposable_elements_;
+
+  std::unique_ptr<fpslimiter::FPSLimiter> fps_manager_;
 
   bool frozen_ = false;
   int brightness_ = 255;

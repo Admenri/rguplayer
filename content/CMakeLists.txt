@@ -53,4 +53,4 @@ set(CORE_CONTENT_SRC
 )
 
 add_library(core_content ${CORE_CONTENT_SRC})
-target_link_libraries(core_content core_base core_renderer SDL3::SDL3-static SDL3_image::SDL3_image SDL3_ttf::SDL3_ttf)
+target_link_libraries(core_content core_base core_renderer components_fpslimiter SDL3::SDL3-static SDL3_image::SDL3_image SDL3_ttf::SDL3_ttf)

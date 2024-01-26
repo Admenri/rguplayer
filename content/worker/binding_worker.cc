@@ -47,7 +47,8 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
   Font::InitStaticFont();
 
   // Init Modules
-  self->graphics_ = new Graphics(self->renderer_, self->initial_resolution_);
+  self->graphics_ =
+      new Graphics(self.get(), self->renderer_, self->initial_resolution_);
   self->input_ = new Input(self->window_);
 
   // Before run main initialize
