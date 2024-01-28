@@ -55,6 +55,15 @@ void RenderRunner::InitGLContextInternal() {
 
   renderer::GLES2Context::CreateForCurrentThread();
   renderer::GSM.InitStates();
+  max_texture_size_ = renderer::GSM.GetMaxTextureSize();
+
+  LOG(INFO) << "[Content] GLRenderer: " << renderer::GL.GetString(GL_RENDERER);
+  LOG(INFO) << "[Content] GLVendor: " << renderer::GL.GetString(GL_VENDOR);
+  LOG(INFO) << "[Content] GLVersion: " << renderer::GL.GetString(GL_VERSION);
+  LOG(INFO) << "[Content] GLSL: "
+            << renderer::GL.GetString(GL_SHADING_LANGUAGE_VERSION);
+  LOG(INFO) << "[Content] MaxTextureSize: " << max_texture_size_ << "x"
+            << max_texture_size_;
 
   renderer::GL.Clear(GL_COLOR_BUFFER_BIT);
   SDL_GL_SwapWindow(host_window_->AsSDLWindow());

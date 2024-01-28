@@ -5,6 +5,7 @@
 #ifndef CONTENT_CONFIG_CORE_CONFIG_H_
 #define CONTENT_CONFIG_CORE_CONFIG_H_
 
+#include "base/math/math.h"
 #include "base/memory/ref_counted.h"
 
 namespace content {
@@ -23,12 +24,16 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   CoreConfigure(const CoreConfigure&) = delete;
   CoreConfigure& operator=(const CoreConfigure&) = delete;
 
-  RGSSVersion version() { return rgss_version_; }
-  bool allow_frame_skip() { return allow_frame_skip_; }
+  RGSSVersion version() const { return rgss_version_; }
+  bool allow_frame_skip() const { return allow_frame_skip_; }
+  std::string game_title() const { return game_title_; }
+  base::Vec2i initial_resolution() const { return initial_resolution_; }
 
  private:
   RGSSVersion rgss_version_ = RGSS3;
   bool allow_frame_skip_ = false;
+  std::string game_title_ = "RGU Core";
+  base::Vec2i initial_resolution_ = base::Vec2i(640, 480);
 };
 
 }  // namespace content

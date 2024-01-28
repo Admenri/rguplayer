@@ -28,34 +28,55 @@ class Sprite : public base::RefCounted<Sprite>,
   Sprite(const Sprite&) = delete;
   Sprite& operator=(const Sprite&) = delete;
 
-  int GetWidth() const { return src_rect_->GetWidth(); }
-  int GetHeight() const { return src_rect_->GetHeight(); }
+  int GetWidth() const {
+    CheckIsDisposed();
+    return src_rect_->GetWidth();
+  }
+
+  int GetHeight() const {
+    CheckIsDisposed();
+    return src_rect_->GetHeight();
+  }
 
   void SetBitmap(scoped_refptr<Bitmap> bitmap);
-  scoped_refptr<Bitmap> GetBitmap() { return bitmap_; }
+  scoped_refptr<Bitmap> GetBitmap() {
+    CheckIsDisposed();
+    return bitmap_;
+  }
 
   void SetSrcRect(scoped_refptr<Rect> rect);
-  scoped_refptr<Rect> GetSrcRect() { return src_rect_; }
+  scoped_refptr<Rect> GetSrcRect() {
+    CheckIsDisposed();
+    return src_rect_;
+  }
 
   void SetMirror(bool mirror);
-  bool GetMirror() const { return mirror_; }
+  bool GetMirror() const {
+    CheckIsDisposed();
+    return mirror_;
+  }
 
   void SetOpacity(int opacity) {
     CheckIsDisposed();
 
     opacity = std::clamp(opacity, 0, 255);
-
     opacity_ = opacity;
   }
 
-  int GetOpacity() const { return opacity_; }
+  int GetOpacity() const {
+    CheckIsDisposed();
+    return opacity_;
+  }
 
   void SetBlendMode(renderer::GLBlendType blend_type) {
     CheckIsDisposed();
     blend_mode_ = blend_type;
   }
 
-  renderer::GLBlendType GetBlendMode() const { return blend_mode_; }
+  renderer::GLBlendType GetBlendMode() const {
+    CheckIsDisposed();
+    return blend_mode_;
+  }
 
   /* Bush depth & opacity */
   void SetBushDepth(int depth) {
@@ -122,10 +143,9 @@ class Sprite : public base::RefCounted<Sprite>,
   /* Update wave flash */
   void Update() override;
 
-  /* Non-threaded safe */
+  /* Warning: Non-threaded safe */
   base::TransformMatrix& GetTransform() {
     CheckIsDisposed();
-
     return transform_;
   }
 

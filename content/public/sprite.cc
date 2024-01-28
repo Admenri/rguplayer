@@ -56,6 +56,7 @@ void Sprite::SetMirror(bool mirror) {
 }
 
 void Sprite::Update() {
+  CheckIsDisposed();
   Flashable::Update();
 
   wave_.phase_ += wave_.speed_ / 180.0f;
@@ -110,7 +111,6 @@ void Sprite::Composite() {
     return;
 
   auto& shader = renderer::GSM.shaders->sprite;
-
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());

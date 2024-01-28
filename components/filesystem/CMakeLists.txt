@@ -1,0 +1,14 @@
+# Components - filesystem
+cmake_minimum_required(VERSION 3.18.0)
+
+#--------------------------------------------------------------------------------
+# Source of filesystem
+#--------------------------------------------------------------------------------
+
+set(COMPONENTS_FILESYSTEM_SRC
+  filesystem.cc
+  filesystem.h
+)
+
+add_library(components_filesystem ${COMPONENTS_FILESYSTEM_SRC})
+target_link_libraries(components_filesystem physfs-static core_base)

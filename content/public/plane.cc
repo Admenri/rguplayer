@@ -87,12 +87,12 @@ void Plane::SetZoomY(double zoom_y) {
 void Plane::OnObjectDisposed() {
   RemoveFromList();
 
-  weak_ptr_factory_.InvalidateWeakPtrs();
-
   screen()->renderer()->DeleteSoon(std::move(quad_array_));
   screen()->renderer()->PostTask(
       base::BindOnce(renderer::TextureFrameBuffer::Del,
                      base::OwnedRef(std::move(layer_tfb_))));
+
+  weak_ptr_factory_.InvalidateWeakPtrs();
 }
 
 void Plane::BeforeComposite() {

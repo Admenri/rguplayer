@@ -42,8 +42,8 @@ class Disposable {
  protected:
   void CheckIsDisposed() const {
     if (IsDisposed())
-      throw base::Exception(base::Exception::RGSSError, "Disposed object: %s",
-                            DisposedObjectName().data());
+      throw base::Exception(base::Exception::ContentError,
+                            "Disposed object: %s", DisposedObjectName().data());
   }
 
   virtual void OnObjectDisposed() = 0;

@@ -8,6 +8,7 @@
 
 #include <array>
 
+#include "base/exceptions/exception.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
 
@@ -56,8 +57,18 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
       Disposable(host),
       font_(host->default_font()),
       pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
-  width = std::abs(width);
-  height = std::abs(height);
+  if (width <= 0 || height <= 0) {
+    throw base::Exception::Exception(base::Exception::ContentError,
+                                     "Invalid bitmap create size: (%dx%d)",
+                                     width, height);
+  }
+
+  if (width > screen()->renderer()->max_texture_size() ||
+      height > screen()->renderer()->max_texture_size()) {
+    throw base::Exception::Exception(base::Exception::OpenGLError,
+                                     "Unable to create large bitmap: (%dx%d)",
+                                     width, height);
+  }
 
   size_ = base::Vec2i(width, height);
   surface_buffer_ = nullptr;
@@ -74,6 +85,19 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
       pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
   // TODO: add generic filesystem interface
   surface_buffer_ = IMG_Load(filename.c_str());
+
+  if (!surface_buffer_) {
+    throw base::Exception::Exception(base::Exception::ContentError,
+                                     "Failed to load image: '%s': %s",
+                                     filename.c_str(), SDL_GetError());
+  }
+
+  if (surface_buffer_->w > screen()->renderer()->max_texture_size() ||
+      surface_buffer_->h > screen()->renderer()->max_texture_size()) {
+    throw base::Exception::Exception(base::Exception::OpenGLError,
+                                     "Unable to load large image: (%dx%d)",
+                                     surface_buffer_->w, surface_buffer_->h);
+  }
 
   size_ = base::Vec2i(surface_buffer_->w, surface_buffer_->h);
 
@@ -330,10 +354,7 @@ void Bitmap::OnObjectDisposed() {
   // Dispose notify
   observers_.Notify();
 
-  weak_ptr_factory_.InvalidateWeakPtrs();
-
   SDL_DestroyPixelFormat(pixel_format_);
-
   if (surface_buffer_) {
     SDL_DestroySurface(surface_buffer_);
     surface_buffer_ = nullptr;
@@ -341,6 +362,8 @@ void Bitmap::OnObjectDisposed() {
 
   screen()->renderer()->PostTask(base::BindOnce(
       &renderer::TextureFrameBuffer::Del, base::OwnedRef(tex_fbo_)));
+
+  weak_ptr_factory_.InvalidateWeakPtrs();
 }
 
 void Bitmap::InitBitmapInternal(

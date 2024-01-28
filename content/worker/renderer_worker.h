@@ -36,7 +36,8 @@ class RenderRunner : public base::SequencedTaskRunner {
     return weak_ptr_factory_.GetWeakPtr();
   }
 
-  SDL_Window* window() { return host_window_->AsSDLWindow(); }
+  int max_texture_size() const { return max_texture_size_; }
+  base::WeakPtr<ui::Widget> window() const { return host_window_; }
 
  private:
   void InitGLContextInternal();
@@ -47,6 +48,7 @@ class RenderRunner : public base::SequencedTaskRunner {
 
   base::WeakPtr<ui::Widget> host_window_;
   SDL_GLContext glcontext_;
+  int max_texture_size_;
 
   base::WeakPtrFactory<RenderRunner> weak_ptr_factory_{this};
 };

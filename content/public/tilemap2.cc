@@ -738,7 +738,7 @@ scoped_refptr<Viewport> Tilemap2::GetViewport() const {
 void Tilemap2::SetViewport(scoped_refptr<Viewport> viewport) {
   CheckIsDisposed();
 
-  if (viewport->IsDisposed())
+  if (!viewport || viewport->IsDisposed())
     return;
 
   if (viewport_ == viewport)

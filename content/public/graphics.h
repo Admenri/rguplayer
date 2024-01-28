@@ -53,6 +53,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
   scoped_refptr<Font> default_font() const { return default_font_; }
+  uint32_t average_fps() const { return average_fps_; }
 
  private:
   friend class Viewport;
@@ -86,7 +87,7 @@ class Graphics final : public base::RefCounted<Graphics>,
                            const base::Vec4& tone,
                            const base::Vec4& flash_color);
 
-  void FrameCheckInternal();
+  void UpdateAverageFPSInternal();
 
   renderer::TextureFrameBuffer screen_buffer_[2];
   renderer::TextureFrameBuffer frozen_snapshot_;
@@ -106,8 +107,14 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   uint64_t frame_count_ = 0;
   double frame_rate_ = 60.0;
+  uint32_t average_fps_ = 0;
 
   scoped_refptr<Font> default_font_;
+
+  struct {
+    uint64_t last_frame_count;
+    uint64_t last_frame_ticks;
+  } fps_display_;
 
   base::WeakPtrFactory<Graphics> weak_ptr_factory_{this};
 };

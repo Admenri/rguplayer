@@ -32,11 +32,13 @@ int main(int argc, char* argv[]) {
   SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
   SDL_EGL_SetEGLAttributeCallbacks(GetAttribArray, nullptr, nullptr);
 
+  scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
+
   std::unique_ptr<ui::Widget> win = std::make_unique<ui::Widget>();
   ui::Widget::InitParams win_params;
 
-  win_params.size = base::Vec2i(800, 600);
-  win_params.title = "RGU Widget";
+  win_params.size = config->initial_resolution();
+  win_params.title = config->game_title();
   win_params.resizable = true;
 
   win->Init(std::move(win_params));
@@ -45,9 +47,9 @@ int main(int argc, char* argv[]) {
       new content::WorkerTreeCompositor);
   content::ContentInitParams params;
 
-  params.config = new content::CoreConfigure();
+  params.config = config;
   params.binding_engine = std::make_unique<binding::BindingEngineMri>();
-  params.initial_resolution = base::Vec2i(800, 600);
+  params.initial_resolution = config->initial_resolution();
   params.host_window = win->AsWeakPtr();
 
   cc->InitCC(std::move(params));

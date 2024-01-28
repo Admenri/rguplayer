@@ -10,9 +10,9 @@ namespace base {
 
 class Exception {
  public:
-  enum Type { RGSSError, OpenGLError, SDLError };
+  enum Type { ContentError, OpenGLError, SDLError };
 
-  Exception(Type type, const char *format, ...) : type_(type) {
+  Exception(Type type, const char* format, ...) : type_(type) {
     va_list ap;
     va_start(ap, format);
 
@@ -22,7 +22,7 @@ class Exception {
     va_end(ap);
   }
 
-  Exception &operator=(const Exception) = delete;
+  Exception& operator=(const Exception) = delete;
 
   Type GetType() const { return type_; }
   std::string GetErrorMessage() const { return msg_; }

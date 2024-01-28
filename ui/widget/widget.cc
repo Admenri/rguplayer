@@ -86,7 +86,15 @@ void Widget::SetFullscreen(bool fullscreen) {
   SDL_SetWindowFullscreen(window_, fullscreen ? 0 : SDL_WINDOW_FULLSCREEN);
 }
 
-bool Widget::IsFullscreen() {
+void Widget::SetTitle(const std::string& window_title) {
+  SDL_SetWindowTitle(window_, window_title.c_str());
+}
+
+std::string Widget::GetTitle() const {
+  return std::string(SDL_GetWindowTitle(window_));
+}
+
+bool Widget::IsFullscreen() const {
   return SDL_GetWindowFlags(window_) & SDL_WINDOW_FULLSCREEN;
 }
 

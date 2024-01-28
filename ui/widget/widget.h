@@ -71,7 +71,10 @@ class Widget {
   void Init(InitParams params);
 
   void SetFullscreen(bool fullscreen);
-  bool IsFullscreen();
+  bool IsFullscreen() const;
+
+  void SetTitle(const std::string& window_title);
+  std::string GetTitle() const;
 
   SDL_Window* AsSDLWindow() const { return window_; }
   base::WeakPtr<Widget> AsWeakPtr() { return weak_ptr_factory_.GetWeakPtr(); }

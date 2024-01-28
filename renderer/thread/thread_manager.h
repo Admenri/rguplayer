@@ -44,6 +44,8 @@ class GlobalStateManager final {
   void EnsureCommonTFB(int width, int height);
   void EnsureGenericTex(int width, int height, base::Vec2i& out_size);
 
+  int GetMaxTextureSize() const { return max_texture_size; }
+
   struct {
     GLViewport viewport;
     GLProgram program;
@@ -61,6 +63,7 @@ class GlobalStateManager final {
 
   GLID<Texture> generic_tex;
   base::Vec2i generic_tex_size;
+  int max_texture_size;
 
   std::unique_ptr<QuadIndexBuffer> quad_ibo;
 };

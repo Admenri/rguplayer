@@ -21,6 +21,7 @@
 
 namespace content {
 
+/* [EXC]: Disposed object check */
 class Bitmap : public base::RefCounted<Bitmap>,
                public GraphicElement,
                public Disposable {
@@ -31,7 +32,9 @@ class Bitmap : public base::RefCounted<Bitmap>,
     Right,
   };
 
+  /* [EXC]: invalid create size */
   Bitmap(scoped_refptr<Graphics> host, int width, int height);
+  /* [EXC]: load invalid image */
   Bitmap(scoped_refptr<Graphics> host, const std::string& filename);
   ~Bitmap() override;
 

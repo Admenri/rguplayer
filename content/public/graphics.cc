@@ -8,6 +8,7 @@
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
 #include "content/worker/binding_worker.h"
+#include "content/worker/event_runner.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
 
@@ -25,7 +26,8 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
       fps_manager_(std::make_unique<fpslimiter::FPSLimiter>()),
       brightness_(255),
       frozen_(false),
-      default_font_(new Font()) {
+      default_font_(new Font()),
+      fps_display_{0, SDL_GetPerformanceCounter()} {
   viewport_rect().rect = initial_resolution;
 
   fps_manager_->SetFrameRate(60);
@@ -57,7 +59,6 @@ void Graphics::SetBrightness(int brightness) {
 }
 
 void Graphics::Wait(int duration) {
-  // Ref to RGSS document
   for (int i = 0; i < duration; ++i) {
     Update();
   }
@@ -73,6 +74,8 @@ scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
 }
 
 void Graphics::FadeOut(int duration) {
+  duration = std::max(duration, 1);
+
   int current_brightness = brightness_;
   for (int i = 0; i < duration; ++i) {
     SetBrightness(current_brightness - current_brightness * (i / duration));
@@ -81,6 +84,8 @@ void Graphics::FadeOut(int duration) {
 }
 
 void Graphics::FadeIn(int duration) {
+  duration = std::max(duration, 1);
+
   int current_brightness = brightness_;
   int diff = 255 - brightness_;
   for (int i = 0; i < duration; ++i) {
@@ -90,8 +95,6 @@ void Graphics::FadeIn(int duration) {
 }
 
 void Graphics::Update() {
-  FrameCheckInternal();
-
   if (frozen_)
     return;
 
@@ -124,41 +127,39 @@ void Graphics::Update() {
 
   /* Increase frame render count */
   ++frame_count_;
+
+  /* Update fps */
+  UpdateAverageFPSInternal();
 }
 
 void Graphics::ResizeScreen(const base::Vec2i& resolution) {
-  FrameCheckInternal();
-
   if (resolution_ == resolution)
     return;
 
   resolution_ = resolution;
-
   renderer()->PostTask(base::BindOnce(&Graphics::ResizeResolutionInternal,
                                       weak_ptr_factory_.GetWeakPtr()));
   renderer()->WaitForSync();
 }
 
 void Graphics::Reset() {
-  // Reset freeze
+  /* Reset freeze* /
   frozen_ = false;
 
-  // Reset brightness
+  /* Reset brightness */
   SetBrightness(255);
 
-  // Disposed all elements
+  /* Disposed all elements */
   for (auto it = disposable_elements_.tail(); it != disposable_elements_.end();
        it = it->previous()) {
     it->value_as_init()->Dispose();
   }
 
-  // Reset fpslimiter
+  /* Reset fpslimiter */
   fps_manager_->ResetFrameSkipCap();
 }
 
 void Graphics::Freeze() {
-  FrameCheckInternal();
-
   if (frozen_)
     return;
 
@@ -172,7 +173,8 @@ void Graphics::Freeze() {
 void Graphics::Transition(int duration,
                           scoped_refptr<Bitmap> trans_bitmap,
                           int vague) {
-  FrameCheckInternal();
+  if (trans_bitmap && trans_bitmap->IsDisposed())
+    return;
 
   if (!frozen_)
     return;
@@ -195,7 +197,7 @@ void Graphics::Transition(int duration,
     fps_manager_->Delay();
     frame_count_++;
 
-    // Break draw loop for quit flag
+    /* Break draw loop for quit flag */
     if (dispatcher_->quit_required())
       break;
   }
@@ -204,6 +206,7 @@ void Graphics::Transition(int duration,
       base::BindOnce([]() { renderer::GSM.states.blend.Pop(); }));
   renderer()->WaitForSync();
 
+  /* Transition process complete */
   frozen_ = false;
 }
 
@@ -302,7 +305,7 @@ void Graphics::PresentScreenInternal(bool* paint_raiser, bool backend) {
   renderer::Blt::BltDraw(resolution_, target_rect);
   renderer::Blt::EndDraw();
 
-  SDL_GL_SwapWindow(renderer_->window());
+  SDL_GL_SwapWindow(renderer_->window()->AsSDLWindow());
 
   if (paint_raiser)
     *paint_raiser = true;
@@ -496,6 +499,20 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
   renderer::GSM.states.blend_func.Refresh();
 }
 
-void Graphics::FrameCheckInternal() {}
+void Graphics::UpdateAverageFPSInternal() {
+  const uint64_t now_ticks = SDL_GetPerformanceCounter();
+  const uint64_t delta_ticks = now_ticks - fps_display_.last_frame_ticks;
+  const uint64_t ticks_freq = SDL_GetPerformanceFrequency();
+
+  if (static_cast<double>(delta_ticks) / ticks_freq >= 1.0) {
+    average_fps_ = frame_count_ - fps_display_.last_frame_count;
+
+    renderer()->window()->SetTitle(config_->game_title() +
+                                   " FPS: " + std::to_string(average_fps_));
+
+    fps_display_.last_frame_count = frame_count_;
+    fps_display_.last_frame_ticks = now_ticks;
+  }
+}
 
 }  // namespace content

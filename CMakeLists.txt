@@ -105,6 +105,9 @@ include_directories(third_party/zlib)
 ## FPSLimiter
 add_subdirectory(components/fpslimiter)
 
+## Filesystem
+add_subdirectory(components/filesystem)
+
 #--------------------------------------------------------------------------------
 # Auto-generated directory include path
 #--------------------------------------------------------------------------------
