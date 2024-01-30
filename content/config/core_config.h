@@ -27,12 +27,14 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   RGSSVersion version() const { return rgss_version_; }
   bool allow_frame_skip() const { return allow_frame_skip_; }
   std::string game_title() const { return game_title_; }
+  std::string game_scripts() const { return game_scripts_; }
   base::Vec2i initial_resolution() const { return initial_resolution_; }
 
  private:
   RGSSVersion rgss_version_ = RGSS3;
   bool allow_frame_skip_ = false;
   std::string game_title_ = "RGU Core";
+  std::string game_scripts_ = "Data/Scripts.rvdata2";
   base::Vec2i initial_resolution_ = base::Vec2i(640, 480);
 };
 

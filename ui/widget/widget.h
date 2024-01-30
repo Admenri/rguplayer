@@ -82,6 +82,8 @@ class Widget {
   base::Vec2i GetPosition();
   base::Vec2i GetSize();
 
+  void CloseRequired();
+
   static Widget* FromWindowID(uint32_t window_id);
   bool GetKeyState(::SDL_Scancode scancode) const;
 

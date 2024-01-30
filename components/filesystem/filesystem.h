@@ -7,6 +7,8 @@
 
 #include "base/memory/ref_counted.h"
 
+#include "SDL_rwops.h"
+
 namespace filesystem {
 
 class Filesystem : public base::RefCounted<Filesystem> {

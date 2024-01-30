@@ -10,7 +10,7 @@ namespace content {
 WorkerTreeCompositor::WorkerTreeCompositor() {}
 
 WorkerTreeCompositor::~WorkerTreeCompositor() {
-  binding_runner_->QuitRequired();
+  binding_runner_->RequestQuit();
   binding_runner_.reset();
 
   render_runner_->QuitRequired();

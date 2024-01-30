@@ -110,6 +110,11 @@ base::Vec2i Widget::GetSize() {
   return size;
 }
 
+void Widget::CloseRequired() {
+  if (!destroy_observers_.empty())
+    destroy_observers_.Notify();
+}
+
 bool Widget::GetKeyState(::SDL_Scancode scancode) const {
   return key_states_[scancode];
 }
@@ -135,8 +140,7 @@ void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
       break;
     case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
       if (sdl_event.window.windowID == window_id) {
-        if (!destroy_observers_.empty())
-          destroy_observers_.Notify();
+        CloseRequired();
       }
       break;
     default:

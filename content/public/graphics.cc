@@ -198,7 +198,7 @@ void Graphics::Transition(int duration,
     frame_count_++;
 
     /* Break draw loop for quit flag */
-    if (dispatcher_->quit_required())
+    if (dispatcher_->is_quit_required())
       break;
   }
 
@@ -208,6 +208,18 @@ void Graphics::Transition(int duration,
 
   /* Transition process complete */
   frozen_ = false;
+}
+
+uint64_t Graphics::GetWindowHandle() {
+  uint64_t window_handle = 0;
+#if defined(OS_WIN)
+  window_handle = (uint64_t)SDL_GetProperty(
+      SDL_GetWindowProperties(renderer()->window()->AsSDLWindow()),
+      "SDL.window.win32.hwnd", NULL);
+#else
+  // TODO: other platform window handle
+#endif
+  return window_handle;
 }
 
 void Graphics::InitScreenBufferInternal() {

@@ -13,7 +13,7 @@ namespace content {
 BindingRunner::BindingRunner() {}
 
 BindingRunner::~BindingRunner() {
-  QuitRequired();
+  RequestQuit();
 }
 
 void BindingRunner::InitBindingComponents(
@@ -31,7 +31,7 @@ void BindingRunner::BindingMain() {
       BindingFuncMain, weak_ptr_factory_.GetWeakPtr());
 }
 
-void BindingRunner::QuitRequired() {
+void BindingRunner::RequestQuit() {
   if (binding_engine_)
     binding_engine_->QuitRequired();
   runner_thread_.reset();
@@ -59,6 +59,9 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
 
   // Destroy and release resource for current worker cc
   self->binding_engine_->FinalizeBinding();
+
+  // Quit app required
+  self->window_->CloseRequired();
 }
 
 }  // namespace content

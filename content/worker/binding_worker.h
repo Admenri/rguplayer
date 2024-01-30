@@ -26,8 +26,8 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   void InitBindingComponents(ContentInitParams& params,
                              scoped_refptr<RenderRunner> renderer);
   void BindingMain();
-  void QuitRequired();
-  bool quit_required() { return quit_req_ && quit_req_->stop_requested(); }
+  void RequestQuit();
+  bool is_quit_required() { return quit_req_ && quit_req_->stop_requested(); }
 
   scoped_refptr<CoreConfigure> config() const { return config_; }
   scoped_refptr<Graphics> graphics() const { return graphics_; }

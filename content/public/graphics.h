@@ -51,6 +51,8 @@ class Graphics final : public base::RefCounted<Graphics>,
                   scoped_refptr<Bitmap> trans_bitmap = nullptr,
                   int vague = 40);
 
+  uint64_t GetWindowHandle();
+
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
   scoped_refptr<Font> default_font() const { return default_font_; }
   uint32_t average_fps() const { return average_fps_; }

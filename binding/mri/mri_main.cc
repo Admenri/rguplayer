@@ -4,6 +4,7 @@
 
 #include "ruby.h"
 #include "ruby/encoding.h"
+#include "ruby/version.h"
 
 #include "binding/mri/mri_main.h"
 
@@ -20,8 +21,6 @@ void rb_call_builtin_inits();
 }
 
 namespace binding {
-
-void InitUtilityBinding();
 
 BindingEngineMri::BindingEngineMri() {}
 
@@ -58,14 +57,14 @@ void BindingEngineMri::InitializeBinding(
       break;
   }
 
-  InitUtilityBinding();
-
-  LOG(INFO) << "Mri binding initialized.";
+  LOG(INFO) << "[Binding] CRuby Interpreter Version: " << RUBY_API_VERSION_CODE;
+  LOG(INFO) << "[Binding] CRuby Interpreter Platform: " << RUBY_PLATFORM;
 }
 
 void BindingEngineMri::RunBindingMain() {
-  LOG(INFO) << "Execute Mri binding main loop.";
-  while (!binding_->quit_required()) {
+  LOG(INFO) << "[Binding] Run mri binding main loop.";
+
+  while (!binding_->is_quit_required()) {
     binding_->graphics()->Update();
   }
 }
@@ -73,9 +72,9 @@ void BindingEngineMri::RunBindingMain() {
 void BindingEngineMri::QuitRequired() {}
 
 void BindingEngineMri::FinalizeBinding() {
-  ruby_cleanup(0);
+  LOG(INFO) << "[Binding] Quit mri binding engine.";
 
-  LOG(INFO) << "Quit Mri binding.";
+  ruby_cleanup(0);
 }
 
 }  // namespace binding

@@ -7,10 +7,14 @@
 
 #include "content/engine/binding_engine.h"
 
+#include <map>
+
 namespace binding {
 
 class BindingEngineMri : public content::BindingEngine {
  public:
+  using BacktraceData = std::map<std::string, std::string>;
+
   BindingEngineMri();
   ~BindingEngineMri() override;
 
@@ -25,6 +29,7 @@ class BindingEngineMri : public content::BindingEngine {
 
  private:
   scoped_refptr<content::BindingRunner> binding_;
+  BacktraceData backtrace_;
 };
 
 }  // namespace binding
