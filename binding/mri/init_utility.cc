@@ -56,7 +56,7 @@ MRI_METHOD(rect_marshal_load) {
   return obj;
 }
 
-MRI_METHOD(rect_marshal_save) {
+MRI_METHOD(rect_marshal_dump) {
   scoped_refptr<content::Rect> obj = MriGetStructData<content::Rect>(self);
 
   std::string data;
@@ -140,7 +140,7 @@ void InitRectBinding() {
   MriDefineMethod(klass, "initialize", rect_initialize);
   MriDefineMethod(klass, "initialize_copy", rect_initialize_copy);
   MriDefineClassMethod(klass, "_load", rect_marshal_load);
-  MriDefineMethod(klass, "_dump", rect_marshal_save);
+  MriDefineMethod(klass, "_dump", rect_marshal_dump);
 
   MriDefineMethod(klass, "x", rect_attr_get_X);
   MriDefineMethod(klass, "x=", rect_attr_set_X);
@@ -162,16 +162,295 @@ void InitRectBinding() {
 
 MRI_DEFINE_DATATYPE_REF(Color, "Color", content::Color);
 
+MRI_METHOD(color_initialize) {
+  scoped_refptr<content::Color> obj;
+
+  if (argc) {
+    double red, green, blue, alpha = 255.0;
+    MriParseArgsTo(argc, argv, "fff|f", &red, &green, &blue, &alpha);
+
+    obj =
+        new content::Color(static_cast<float>(red), static_cast<float>(green),
+                           static_cast<float>(blue), static_cast<float>(alpha));
+  } else {
+    obj = new content::Color();
+  }
+
+  obj->AddRef();
+  MriSetStructData(self, obj.get());
+
+  return self;
+}
+
+MRI_METHOD(color_initialize_copy) {
+  VALUE other;
+  MriParseArgsTo(argc, argv, "o", &other);
+
+  scoped_refptr<content::Color> other_obj =
+      MriGetStructData<content::Color>(other);
+
+  scoped_refptr<content::Color> obj = new content::Color(*other_obj);
+  obj->AddRef();
+  MriSetStructData(self, obj.get());
+
+  return self;
+}
+
+MRI_METHOD(color_marshal_load) {
+  std::string data;
+  MriParseArgsTo(argc, argv, "s", &data);
+
+  VALUE obj = rb_obj_alloc(self);
+
+  scoped_refptr<content::Color> ptr;
+  MRI_GUARD(ptr = content::Color::Deserialize(data););
+  ptr->AddRef();
+  MriSetStructData(obj, ptr.get());
+
+  return obj;
+}
+
+MRI_METHOD(color_marshal_dump) {
+  scoped_refptr<content::Color> obj = MriGetStructData<content::Color>(self);
+
+  std::string data;
+  MRI_GUARD(data = obj->Serialize();)
+
+  return rb_str_new(data.c_str(), data.size());
+}
+
+MRI_METHOD(color_set) {
+  scoped_refptr<content::Color> obj = MriGetStructData<content::Color>(self);
+
+  if (argc == 1) {
+    VALUE other;
+    MriParseArgsTo(argc, argv, "o", &other);
+    scoped_refptr<content::Color> other_obj =
+        MriCheckStructData<content::Color>(other, kColorDataType);
+
+    obj->Set(other_obj);
+  } else {
+    double red, green, blue, alpha = 255.0;
+    MriParseArgsTo(argc, argv, "fff|f", &red, &green, &blue, &alpha);
+
+    obj->Set(static_cast<float>(red), static_cast<float>(green),
+             static_cast<float>(blue), static_cast<float>(alpha));
+  }
+
+  return self;
+}
+
+#define COLOR_ATTR_DEFINE(name)                 \
+  MRI_METHOD(color_attr_get_##name) {           \
+    scoped_refptr<content::Color> obj =         \
+        MriGetStructData<content::Color>(self); \
+    return rb_float_new(obj->Get##name());      \
+  }                                             \
+  MRI_METHOD(color_attr_set_##name) {           \
+    scoped_refptr<content::Color> obj =         \
+        MriGetStructData<content::Color>(self); \
+    double v;                                   \
+    MriParseArgsTo(argc, argv, "f", &v);        \
+    obj->Set##name(static_cast<float>(v));      \
+    return self;                                \
+  }
+
+COLOR_ATTR_DEFINE(Red);
+COLOR_ATTR_DEFINE(Green);
+COLOR_ATTR_DEFINE(Blue);
+COLOR_ATTR_DEFINE(Alpha);
+
+MRI_METHOD(color_stringify) {
+  scoped_refptr<content::Color> obj = MriGetStructData<content::Color>(self);
+
+  return rb_sprintf("(%d, %d, %d, %d)", obj->GetRed(), obj->GetGreen(),
+                    obj->GetBlue(), obj->GetAlpha());
+}
+
+MRI_METHOD(color_equal) {
+  scoped_refptr<content::Color> obj = MriGetStructData<content::Color>(self);
+
+  VALUE other;
+  MriParseArgsTo(argc, argv, "o", &other);
+
+  if (!rb_typeddata_is_kind_of(other, &kColorDataType))
+    return Qfalse;
+
+  scoped_refptr<content::Color> other_obj =
+      MriCheckStructData<content::Color>(other, kColorDataType);
+
+  return (*other_obj == *obj) ? Qtrue : Qfalse;
+}
+
 void InitColorBinding() {
   VALUE klass = rb_define_class("Color", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kColorDataType>);
+
+  MriDefineMethod(klass, "initialize", color_initialize);
+  MriDefineMethod(klass, "initialize_copy", color_initialize_copy);
+  MriDefineClassMethod(klass, "_load", color_marshal_load);
+  MriDefineMethod(klass, "_dump", color_marshal_dump);
+
+  MriDefineMethod(klass, "red", color_attr_get_Red);
+  MriDefineMethod(klass, "red=", color_attr_set_Red);
+  MriDefineMethod(klass, "green", color_attr_get_Green);
+  MriDefineMethod(klass, "green=", color_attr_set_Green);
+  MriDefineMethod(klass, "blue", color_attr_get_Blue);
+  MriDefineMethod(klass, "blue=", color_attr_set_Blue);
+  MriDefineMethod(klass, "alpha", color_attr_get_Alpha);
+  MriDefineMethod(klass, "alpha=", color_attr_set_Alpha);
+
+  MriDefineMethod(klass, "set", color_set);
+  MriDefineMethod(klass, "inspect", color_stringify);
+  MriDefineMethod(klass, "to_s", color_stringify);
+  MriDefineMethod(klass, "==", color_equal);
+  MriDefineMethod(klass, "===", color_equal);
+  MriDefineMethod(klass, "eql?", color_equal);
 }
 
 MRI_DEFINE_DATATYPE_REF(Tone, "Tone", content::Tone);
 
+MRI_METHOD(tone_initialize) {
+  scoped_refptr<content::Tone> obj;
+
+  if (argc) {
+    double red, green, blue, gray = 0.0;
+    MriParseArgsTo(argc, argv, "fff|f", &red, &green, &blue, &gray);
+
+    obj = new content::Tone(static_cast<float>(red), static_cast<float>(green),
+                            static_cast<float>(blue), static_cast<float>(gray));
+  } else {
+    obj = new content::Tone();
+  }
+
+  obj->AddRef();
+  MriSetStructData(self, obj.get());
+
+  return self;
+}
+
+MRI_METHOD(tone_initialize_copy) {
+  VALUE other;
+  MriParseArgsTo(argc, argv, "o", &other);
+
+  scoped_refptr<content::Tone> other_obj =
+      MriGetStructData<content::Tone>(other);
+
+  scoped_refptr<content::Tone> obj = new content::Tone(*other_obj);
+  obj->AddRef();
+  MriSetStructData(self, obj.get());
+
+  return self;
+}
+
+MRI_METHOD(tone_marshal_load) {
+  std::string data;
+  MriParseArgsTo(argc, argv, "s", &data);
+
+  VALUE obj = rb_obj_alloc(self);
+
+  scoped_refptr<content::Tone> ptr;
+  MRI_GUARD(ptr = content::Tone::Deserialize(data););
+  ptr->AddRef();
+  MriSetStructData(obj, ptr.get());
+
+  return obj;
+}
+
+MRI_METHOD(tone_marshal_dump) {
+  scoped_refptr<content::Tone> obj = MriGetStructData<content::Tone>(self);
+
+  std::string data;
+  MRI_GUARD(data = obj->Serialize();)
+
+  return rb_str_new(data.c_str(), data.size());
+}
+
+MRI_METHOD(tone_set) {
+  scoped_refptr<content::Tone> obj = MriGetStructData<content::Tone>(self);
+
+  if (argc == 1) {
+    VALUE other;
+    MriParseArgsTo(argc, argv, "o", &other);
+    scoped_refptr<content::Tone> other_obj =
+        MriCheckStructData<content::Tone>(other, kToneDataType);
+
+    obj->Set(other_obj);
+  } else {
+    double red, green, blue, gray = 0.0;
+    MriParseArgsTo(argc, argv, "fff|f", &red, &green, &blue, &gray);
+
+    obj->Set(static_cast<float>(red), static_cast<float>(green),
+             static_cast<float>(blue), static_cast<float>(gray));
+  }
+
+  return self;
+}
+
+#define TONE_ATTR_DEFINE(name)                                                \
+  MRI_METHOD(tone_attr_get_##name) {                                          \
+    scoped_refptr<content::Tone> obj = MriGetStructData<content::Tone>(self); \
+    return rb_float_new(obj->Get##name());                                    \
+  }                                                                           \
+  MRI_METHOD(tone_attr_set_##name) {                                          \
+    scoped_refptr<content::Tone> obj = MriGetStructData<content::Tone>(self); \
+    double v;                                                                 \
+    MriParseArgsTo(argc, argv, "f", &v);                                      \
+    obj->Set##name(static_cast<float>(v));                                    \
+    return self;                                                              \
+  }
+
+TONE_ATTR_DEFINE(Red);
+TONE_ATTR_DEFINE(Green);
+TONE_ATTR_DEFINE(Blue);
+TONE_ATTR_DEFINE(Gray);
+
+MRI_METHOD(tone_stringify) {
+  scoped_refptr<content::Tone> obj = MriGetStructData<content::Tone>(self);
+
+  return rb_sprintf("(%d, %d, %d, %d)", obj->GetRed(), obj->GetGreen(),
+                    obj->GetBlue(), obj->GetGray());
+}
+
+MRI_METHOD(tone_equal) {
+  scoped_refptr<content::Tone> obj = MriGetStructData<content::Tone>(self);
+
+  VALUE other;
+  MriParseArgsTo(argc, argv, "o", &other);
+
+  if (!rb_typeddata_is_kind_of(other, &kToneDataType))
+    return Qfalse;
+
+  scoped_refptr<content::Tone> other_obj =
+      MriCheckStructData<content::Tone>(other, kToneDataType);
+
+  return (*other_obj == *obj) ? Qtrue : Qfalse;
+}
+
 void InitToneBinding() {
   VALUE klass = rb_define_class("Tone", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kToneDataType>);
+
+  MriDefineMethod(klass, "initialize", tone_initialize);
+  MriDefineMethod(klass, "initialize_copy", tone_initialize_copy);
+  MriDefineClassMethod(klass, "_load", tone_marshal_load);
+  MriDefineMethod(klass, "_dump", tone_marshal_dump);
+
+  MriDefineMethod(klass, "red", tone_attr_get_Red);
+  MriDefineMethod(klass, "red=", tone_attr_set_Red);
+  MriDefineMethod(klass, "green", tone_attr_get_Green);
+  MriDefineMethod(klass, "green=", tone_attr_set_Green);
+  MriDefineMethod(klass, "blue", tone_attr_get_Blue);
+  MriDefineMethod(klass, "blue=", tone_attr_set_Blue);
+  MriDefineMethod(klass, "gray", tone_attr_get_Gray);
+  MriDefineMethod(klass, "gray=", tone_attr_set_Gray);
+
+  MriDefineMethod(klass, "set", tone_set);
+  MriDefineMethod(klass, "inspect", tone_stringify);
+  MriDefineMethod(klass, "to_s", tone_stringify);
+  MriDefineMethod(klass, "==", tone_equal);
+  MriDefineMethod(klass, "===", tone_equal);
+  MriDefineMethod(klass, "eql?", tone_equal);
 }
 
 void InitUtilityBinding() {
