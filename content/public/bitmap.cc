@@ -254,7 +254,9 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
 
     auto data = color->AsNormal();
     *reinterpret_cast<uint32_t*>(pixel) =
-        SDL_MapRGBA(pixel_format_, data.x, data.y, data.z, data.w);
+        SDL_MapRGBA(pixel_format_, static_cast<uint8_t>(data.x),
+                    static_cast<uint8_t>(data.y), static_cast<uint8_t>(data.z),
+                    static_cast<uint8_t>(data.w));
   }
 
   screen()->renderer()->PostTask(base::BindOnce(&Bitmap::SetPixelInternal,
@@ -486,7 +488,7 @@ void Bitmap::GradientFillRectInternal(const base::Rect& rect,
   renderer::GSM.states.blend.Pop();
 }
 
-void Bitmap::SetPixelInternal(int x, int y, const base::Vec4i& color) {
+void Bitmap::SetPixelInternal(int x, int y, const base::Vec4& color) {
   std::array<uint8_t, 4> pixel = {
       static_cast<uint8_t>(color.x), static_cast<uint8_t>(color.y),
       static_cast<uint8_t>(color.z), static_cast<uint8_t>(color.w)};

@@ -5,7 +5,13 @@
 #ifndef BINDING_MRI_INIT_UTILITY_H_
 #define BINDING_MRI_INIT_UTILITY_H_
 
+#include "binding/mri/mri_util.h"
+
 namespace binding {
+
+MRI_DECLARE_DATATYPE(Rect);
+MRI_DECLARE_DATATYPE(Color);
+MRI_DECLARE_DATATYPE(Tone);
 
 void InitUtilityBinding();
 

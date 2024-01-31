@@ -4,7 +4,6 @@
 
 #include "binding/mri/init_utility.h"
 
-#include "binding/mri/mri_util.h"
 #include "content/public/utility.h"
 
 namespace binding {
@@ -141,7 +140,7 @@ void InitRectBinding() {
   MriDefineMethod(klass, "initialize", rect_initialize);
   MriDefineMethod(klass, "initialize_copy", rect_initialize_copy);
   MriDefineClassMethod(klass, "_load", rect_marshal_load);
-  MriDefineMethod(klass, "_save", rect_marshal_save);
+  MriDefineMethod(klass, "_dump", rect_marshal_save);
 
   MriDefineMethod(klass, "x", rect_attr_get_X);
   MriDefineMethod(klass, "x=", rect_attr_set_X);
@@ -168,9 +167,17 @@ void InitColorBinding() {
   rb_define_alloc_func(klass, MriClassAllocate<&kColorDataType>);
 }
 
+MRI_DEFINE_DATATYPE_REF(Tone, "Tone", content::Tone);
+
+void InitToneBinding() {
+  VALUE klass = rb_define_class("Tone", rb_cObject);
+  rb_define_alloc_func(klass, MriClassAllocate<&kToneDataType>);
+}
+
 void InitUtilityBinding() {
   InitRectBinding();
   InitColorBinding();
+  InitToneBinding();
 }
 
 }  // namespace binding
