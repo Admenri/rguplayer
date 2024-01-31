@@ -4,6 +4,7 @@
 
 #include "binding/mri/init_utility.h"
 
+#include "binding/mri/mri_template.h"
 #include "content/public/utility.h"
 
 namespace binding {
@@ -40,29 +41,6 @@ MRI_METHOD(rect_initialize_copy) {
   MriSetStructData(self, obj.get());
 
   return self;
-}
-
-MRI_METHOD(rect_marshal_load) {
-  std::string data;
-  MriParseArgsTo(argc, argv, "s", &data);
-
-  VALUE obj = rb_obj_alloc(self);
-
-  scoped_refptr<content::Rect> ptr;
-  MRI_GUARD(ptr = content::Rect::Deserialize(data););
-  ptr->AddRef();
-  MriSetStructData(obj, ptr.get());
-
-  return obj;
-}
-
-MRI_METHOD(rect_marshal_dump) {
-  scoped_refptr<content::Rect> obj = MriGetStructData<content::Rect>(self);
-
-  std::string data;
-  MRI_GUARD(data = obj->Serialize();)
-
-  return rb_str_new(data.c_str(), data.size());
 }
 
 MRI_METHOD(rect_set) {
@@ -139,8 +117,7 @@ void InitRectBinding() {
 
   MriDefineMethod(klass, "initialize", rect_initialize);
   MriDefineMethod(klass, "initialize_copy", rect_initialize_copy);
-  MriDefineClassMethod(klass, "_load", rect_marshal_load);
-  MriDefineMethod(klass, "_dump", rect_marshal_dump);
+  MriInitSerializableBinding<content::Rect>(klass);
 
   MriDefineMethod(klass, "x", rect_attr_get_X);
   MriDefineMethod(klass, "x=", rect_attr_set_X);
@@ -194,29 +171,6 @@ MRI_METHOD(color_initialize_copy) {
   MriSetStructData(self, obj.get());
 
   return self;
-}
-
-MRI_METHOD(color_marshal_load) {
-  std::string data;
-  MriParseArgsTo(argc, argv, "s", &data);
-
-  VALUE obj = rb_obj_alloc(self);
-
-  scoped_refptr<content::Color> ptr;
-  MRI_GUARD(ptr = content::Color::Deserialize(data););
-  ptr->AddRef();
-  MriSetStructData(obj, ptr.get());
-
-  return obj;
-}
-
-MRI_METHOD(color_marshal_dump) {
-  scoped_refptr<content::Color> obj = MriGetStructData<content::Color>(self);
-
-  std::string data;
-  MRI_GUARD(data = obj->Serialize();)
-
-  return rb_str_new(data.c_str(), data.size());
 }
 
 MRI_METHOD(color_set) {
@@ -288,8 +242,7 @@ void InitColorBinding() {
 
   MriDefineMethod(klass, "initialize", color_initialize);
   MriDefineMethod(klass, "initialize_copy", color_initialize_copy);
-  MriDefineClassMethod(klass, "_load", color_marshal_load);
-  MriDefineMethod(klass, "_dump", color_marshal_dump);
+  MriInitSerializableBinding<content::Color>(klass);
 
   MriDefineMethod(klass, "red", color_attr_get_Red);
   MriDefineMethod(klass, "red=", color_attr_set_Red);
@@ -341,29 +294,6 @@ MRI_METHOD(tone_initialize_copy) {
   MriSetStructData(self, obj.get());
 
   return self;
-}
-
-MRI_METHOD(tone_marshal_load) {
-  std::string data;
-  MriParseArgsTo(argc, argv, "s", &data);
-
-  VALUE obj = rb_obj_alloc(self);
-
-  scoped_refptr<content::Tone> ptr;
-  MRI_GUARD(ptr = content::Tone::Deserialize(data););
-  ptr->AddRef();
-  MriSetStructData(obj, ptr.get());
-
-  return obj;
-}
-
-MRI_METHOD(tone_marshal_dump) {
-  scoped_refptr<content::Tone> obj = MriGetStructData<content::Tone>(self);
-
-  std::string data;
-  MRI_GUARD(data = obj->Serialize();)
-
-  return rb_str_new(data.c_str(), data.size());
 }
 
 MRI_METHOD(tone_set) {
@@ -433,8 +363,7 @@ void InitToneBinding() {
 
   MriDefineMethod(klass, "initialize", tone_initialize);
   MriDefineMethod(klass, "initialize_copy", tone_initialize_copy);
-  MriDefineClassMethod(klass, "_load", tone_marshal_load);
-  MriDefineMethod(klass, "_dump", tone_marshal_dump);
+  MriInitSerializableBinding<content::Tone>(klass);
 
   MriDefineMethod(klass, "red", tone_attr_get_Red);
   MriDefineMethod(klass, "red=", tone_attr_set_Red);

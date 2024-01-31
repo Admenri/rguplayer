@@ -9,6 +9,7 @@
 #include "ruby/encoding.h"
 
 #include "base/exceptions/exception.h"
+#include "content/worker/binding_worker.h"
 
 #include <string>
 
@@ -54,6 +55,8 @@ template <const rb_data_type_t* DataType>
 VALUE MriClassAllocate(VALUE klass) {
   return rb_data_typed_object_wrap(klass, nullptr, DataType);
 }
+
+scoped_refptr<content::BindingRunner> MriGetGlobalRunner();
 
 /// <summary>
 /// Parse format args into pointer variable
@@ -118,6 +121,22 @@ inline void MriDefineModuleFunction(VALUE module,
 
 inline VALUE MriStringUTF8(const char* string, long length) {
   return rb_enc_str_new(string, length, rb_utf8_encoding());
+}
+
+template <typename Ty>
+VALUE MriWrapProperty(VALUE self,
+                      scoped_refptr<Ty> ptr,
+                      const std::string& name,
+                      const rb_data_type_t& type,
+                      VALUE super = rb_cObject) {
+  VALUE klass = rb_const_get(super, rb_intern(type.wrap_struct_name));
+  VALUE obj = rb_obj_alloc(klass);
+
+  ptr->AddRef();
+  MriSetStructData<Ty>(obj, ptr.get());
+
+  rb_iv_set(self, name.c_str(), obj);
+  return obj;
 }
 
 }  // namespace binding

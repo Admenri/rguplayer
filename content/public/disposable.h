@@ -39,13 +39,13 @@ class Disposable {
     return observers_.Add(std::move(observer));
   }
 
- protected:
   void CheckIsDisposed() const {
     if (IsDisposed())
       throw base::Exception(base::Exception::ContentError,
                             "Disposed object: %s", DisposedObjectName().data());
   }
 
+ protected:
   virtual void OnObjectDisposed() = 0;
   virtual std::string_view DisposedObjectName() const = 0;
 

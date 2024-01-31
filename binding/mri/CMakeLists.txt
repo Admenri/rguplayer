@@ -12,7 +12,10 @@ set(BINDING_MRI_SRC
   init_table.h
   init_utility.cc
   init_utility.h
+  init_viewport.cc
+  init_viewport.h
 
+  mri_template.h
   mri_main.cc
   mri_main.h
   mri_util.cc

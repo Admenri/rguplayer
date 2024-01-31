@@ -4,6 +4,8 @@
 
 #include "binding/mri/mri_util.h"
 
+#include "content/worker/binding_worker.h"
+
 #include <stdarg.h>
 
 namespace binding {
@@ -13,6 +15,12 @@ namespace {
 VALUE g_exception_list[MriExceptionNum];
 
 }  // namespace
+
+extern scoped_refptr<content::BindingRunner> g_mri_manager;
+
+scoped_refptr<content::BindingRunner> MriGetGlobalRunner() {
+  return g_mri_manager;
+}
 
 int MriParseArgsTo(int argc, VALUE* argv, const char* fmt, ...) {
   va_list args_iter;

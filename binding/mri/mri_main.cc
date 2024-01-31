@@ -10,6 +10,7 @@
 #include "binding/mri/init_corefile.h"
 #include "binding/mri/init_table.h"
 #include "binding/mri/init_utility.h"
+#include "binding/mri/init_viewport.h"
 #include "content/worker/binding_worker.h"
 
 #include "binding/rpg/module_rpg1.rb.xxd"
@@ -23,6 +24,8 @@ void rb_call_builtin_inits();
 }
 
 namespace binding {
+
+scoped_refptr<content::BindingRunner> g_mri_manager;
 
 namespace {
 
@@ -63,6 +66,7 @@ BindingEngineMri::~BindingEngineMri() {}
 void BindingEngineMri::InitializeBinding(
     scoped_refptr<content::BindingRunner> binding_host) {
   binding_ = binding_host;
+  g_mri_manager = binding_host;
   scoped_refptr<content::CoreConfigure> config = binding_->config();
 
   int argc = 0;
@@ -97,6 +101,7 @@ void BindingEngineMri::InitializeBinding(
   InitCoreFileBinding();
   InitUtilityBinding();
   InitTableBinding();
+  InitViewportBinding();
 
   LOG(INFO) << "[Binding] CRuby Interpreter Version: " << RUBY_API_VERSION_CODE;
   LOG(INFO) << "[Binding] CRuby Interpreter Platform: " << RUBY_PLATFORM;
@@ -116,6 +121,8 @@ void BindingEngineMri::FinalizeBinding() {
     ParseExeceptionInfo(exc, backtrace_);
 
   ruby_cleanup(0);
+
+  g_mri_manager.reset();
 
   LOG(INFO) << "[Binding] Quit mri binding engine.";
 }

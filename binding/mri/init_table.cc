@@ -4,6 +4,7 @@
 
 #include "binding/mri/init_table.h"
 
+#include "binding/mri/mri_template.h"
 #include "content/public/table.h"
 
 namespace binding {
@@ -43,29 +44,6 @@ MRI_METHOD(table_initialize_copy) {
   MriSetStructData(self, obj.get());
 
   return self;
-}
-
-MRI_METHOD(table_marshal_load) {
-  std::string data;
-  MriParseArgsTo(argc, argv, "s", &data);
-
-  VALUE obj = rb_obj_alloc(self);
-
-  scoped_refptr<content::Table> ptr;
-  MRI_GUARD(ptr = content::Table::Deserialize(data););
-  ptr->AddRef();
-  MriSetStructData(obj, ptr.get());
-
-  return obj;
-}
-
-MRI_METHOD(table_marshal_dump) {
-  scoped_refptr<content::Table> obj = MriGetStructData<content::Table>(self);
-
-  std::string data;
-  MRI_GUARD(data = obj->Serialize();)
-
-  return rb_str_new(data.c_str(), data.size());
 }
 
 MRI_METHOD(table_resize) {
@@ -164,8 +142,7 @@ void InitTableBinding() {
 
   MriDefineMethod(klass, "initialize", table_initialize);
   MriDefineMethod(klass, "initialize_copy", table_initialize_copy);
-  MriDefineClassMethod(klass, "_load", table_marshal_load);
-  MriDefineMethod(klass, "_dump", table_marshal_dump);
+  MriInitSerializableBinding<content::Table>(klass);
 
   MriDefineMethod(klass, "resize", table_resize);
   MriDefineMethod(klass, "xsize", table_xsize);
