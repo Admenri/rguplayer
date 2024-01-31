@@ -8,6 +8,8 @@ cmake_minimum_required(VERSION 3.18.0)
 set(BINDING_MRI_SRC
   init_corefile.cc
   init_corefile.h
+  init_utility.cc
+  init_utility.h
 
   mri_main.cc
   mri_main.h

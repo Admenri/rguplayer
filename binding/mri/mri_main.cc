@@ -8,10 +8,12 @@
 #include "binding/mri/mri_main.h"
 
 #include "binding/mri/init_corefile.h"
+#include "binding/mri/init_utility.h"
+#include "content/worker/binding_worker.h"
+
 #include "binding/rpg/module_rpg1.rb.xxd"
 #include "binding/rpg/module_rpg2.rb.xxd"
 #include "binding/rpg/module_rpg3.rb.xxd"
-#include "content/worker/binding_worker.h"
 
 #include "zlib.h"
 
@@ -90,7 +92,9 @@ void BindingEngineMri::InitializeBinding(
   }
 
   MriInitException(config->version() == content::CoreConfigure::RGSS3);
+
   InitCoreFileBinding();
+  InitUtilityBinding();
 
   LOG(INFO) << "[Binding] CRuby Interpreter Version: " << RUBY_API_VERSION_CODE;
   LOG(INFO) << "[Binding] CRuby Interpreter Platform: " << RUBY_PLATFORM;

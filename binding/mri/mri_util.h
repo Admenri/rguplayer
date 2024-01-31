@@ -66,7 +66,7 @@ VALUE MriClassAllocate(VALUE klass) {
 int MriParseArgsTo(int argc, VALUE* argv, const char* fmt, ...);
 
 void MriInitException(bool rgss3);
-void MriProcessException(const base::Exception* exception);
+void MriProcessException(const base::Exception& exception);
 void MriCheckArgc(int actual, int expected);
 VALUE MriGetException(MriException exception);
 

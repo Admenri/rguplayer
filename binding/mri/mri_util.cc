@@ -143,9 +143,9 @@ void MriInitException(bool rgss3) {
       rb_const_get(rb_cObject, rb_intern("Errno")), rb_intern("ENOENT"));
 }
 
-void MriProcessException(const base::Exception* exception) {
-  VALUE rb_eCustom = g_exception_list[exception->GetType()];
-  rb_raise(rb_eCustom, exception->GetErrorMessage().c_str());
+void MriProcessException(const base::Exception& exception) {
+  VALUE rb_eCustom = g_exception_list[exception.GetType()];
+  rb_raise(rb_eCustom, exception.GetErrorMessage().c_str());
 }
 
 void MriCheckArgc(int actual, int expected) {

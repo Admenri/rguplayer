@@ -16,9 +16,9 @@ int32_t Serializable::ReadInt32(const char* data, int offset) {
   return result;
 }
 
-double Serializable::ReadDouble(const char* data, int offset) {
-  double result;
-  memcpy(&result, data + offset, sizeof(double));
+float Serializable::ReadFloat(const char* data, int offset) {
+  float result;
+  memcpy(&result, data + offset, sizeof(float));
   return result;
 }
 
@@ -26,8 +26,8 @@ void Serializable::WriteInt32(char* data, int offset, int32_t value) {
   memcpy(data + offset, &value, sizeof(int32_t));
 }
 
-void Serializable::WriteDouble(char* data, int offset, double value) {
-  memcpy(data + offset, &value, sizeof(double));
+void Serializable::WriteFloat(char* data, int offset, float value) {
+  memcpy(data + offset, &value, sizeof(float));
 }
 
 }  // namespace content
