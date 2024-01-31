@@ -479,13 +479,13 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
       sub.z = -tone.z;
 
     renderer::GL.BlendFuncSeparate(GL_ONE, GL_ONE, GL_ZERO, GL_ONE);
-    if (add.x != 0 || add.y != 0 || add.z != 0) {
+    if (add.x || add.y || add.z) {
       renderer::GL.BlendEquation(GL_FUNC_ADD);
       shader.SetColor(add);
       quad.Draw();
     }
 
-    if (sub.x != 0 || sub.y != 0 || sub.z != 0) {
+    if (sub.x || sub.y || sub.z) {
       renderer::GL.BlendEquation(GL_FUNC_REVERSE_SUBTRACT);
       shader.SetColor(sub);
       quad.Draw();

@@ -6,8 +6,13 @@ cmake_minimum_required(VERSION 3.18.0)
 #--------------------------------------------------------------------------------
 
 set(BINDING_MRI_SRC
+  init_corefile.cc
+  init_corefile.h
+
   mri_main.cc
   mri_main.h
+  mri_util.cc
+  mri_util.h
 )
 
 add_library(binding_mri ${BINDING_MRI_SRC})

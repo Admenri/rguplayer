@@ -28,6 +28,8 @@ class BindingEngineMri : public content::BindingEngine {
   void FinalizeBinding() override;
 
  private:
+  void LoadPackedScripts();
+
   scoped_refptr<content::BindingRunner> binding_;
   BacktraceData backtrace_;
 };
