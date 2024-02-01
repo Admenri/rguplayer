@@ -124,16 +124,25 @@ inline VALUE MriStringUTF8(const char* string, long length) {
 }
 
 template <typename Ty>
-VALUE MriWrapProperty(VALUE self,
-                      scoped_refptr<Ty> ptr,
-                      const std::string& name,
-                      const rb_data_type_t& type,
-                      VALUE super = rb_cObject) {
+VALUE MriWrapObject(scoped_refptr<Ty> ptr,
+                    const rb_data_type_t& type,
+                    VALUE super = rb_cObject) {
   VALUE klass = rb_const_get(super, rb_intern(type.wrap_struct_name));
   VALUE obj = rb_obj_alloc(klass);
 
   ptr->AddRef();
   MriSetStructData<Ty>(obj, ptr.get());
+
+  return obj;
+}
+
+template <typename Ty>
+VALUE MriWrapProperty(VALUE self,
+                      scoped_refptr<Ty> ptr,
+                      const std::string& name,
+                      const rb_data_type_t& type,
+                      VALUE super = rb_cObject) {
+  VALUE obj = MriWrapObject<Ty>(ptr, type, super);
 
   rb_iv_set(self, name.c_str(), obj);
   return obj;
