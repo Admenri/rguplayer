@@ -37,8 +37,8 @@ MRI_METHOD(viewport_initialize) {
   MriSetStructData<content::Viewport>(self, obj.get());
 
   MriWrapProperty(self, obj->GetRect(), "_rect", kRectDataType);
-  MriWrapProperty(self, obj->GetRect(), "_rect", kRectDataType);
-  MriWrapProperty(self, obj->GetRect(), "_rect", kRectDataType);
+  MriWrapProperty(self, obj->GetColor(), "_color", kColorDataType);
+  MriWrapProperty(self, obj->GetTone(), "_tone", kToneDataType);
 
   return self;
 }
@@ -95,16 +95,11 @@ void InitViewportBinding() {
 
   MriDefineMethod(klass, "initialize", viewport_initialize);
 
-  MriDefineMethod(klass, "ox", viewport_get_OX);
-  MriDefineMethod(klass, "ox=", viewport_set_OX);
-  MriDefineMethod(klass, "oy", viewport_get_OY);
-  MriDefineMethod(klass, "oy=", viewport_set_OY);
-  MriDefineMethod(klass, "rect", viewport_get_Rect);
-  MriDefineMethod(klass, "rect=", viewport_set_Rect);
-  MriDefineMethod(klass, "color", viewport_get_Color);
-  MriDefineMethod(klass, "color=", viewport_set_Color);
-  MriDefineMethod(klass, "tone", viewport_get_Tone);
-  MriDefineMethod(klass, "tone=", viewport_set_Tone);
+  MriDefineAttr(klass, "ox", viewport, OX);
+  MriDefineAttr(klass, "oy", viewport, OY);
+  MriDefineAttr(klass, "rect", viewport, Rect);
+  MriDefineAttr(klass, "color", viewport, Color);
+  MriDefineAttr(klass, "tone", viewport, Tone);
 }
 
 }  // namespace binding

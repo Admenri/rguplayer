@@ -119,14 +119,10 @@ void InitRectBinding() {
   MriDefineMethod(klass, "initialize_copy", rect_initialize_copy);
   MriInitSerializableBinding<content::Rect>(klass);
 
-  MriDefineMethod(klass, "x", rect_attr_get_X);
-  MriDefineMethod(klass, "x=", rect_attr_set_X);
-  MriDefineMethod(klass, "y", rect_attr_get_Y);
-  MriDefineMethod(klass, "y=", rect_attr_set_Y);
-  MriDefineMethod(klass, "width", rect_attr_get_Width);
-  MriDefineMethod(klass, "width=", rect_attr_set_Width);
-  MriDefineMethod(klass, "height", rect_attr_get_Height);
-  MriDefineMethod(klass, "height=", rect_attr_set_Height);
+  MriDefineAttr(klass, "x", rect_attr, X);
+  MriDefineAttr(klass, "y", rect_attr, Y);
+  MriDefineAttr(klass, "width", rect_attr, Width);
+  MriDefineAttr(klass, "height", rect_attr, Height);
 
   MriDefineMethod(klass, "set", rect_set);
   MriDefineMethod(klass, "empty", rect_empty);
@@ -244,14 +240,10 @@ void InitColorBinding() {
   MriDefineMethod(klass, "initialize_copy", color_initialize_copy);
   MriInitSerializableBinding<content::Color>(klass);
 
-  MriDefineMethod(klass, "red", color_attr_get_Red);
-  MriDefineMethod(klass, "red=", color_attr_set_Red);
-  MriDefineMethod(klass, "green", color_attr_get_Green);
-  MriDefineMethod(klass, "green=", color_attr_set_Green);
-  MriDefineMethod(klass, "blue", color_attr_get_Blue);
-  MriDefineMethod(klass, "blue=", color_attr_set_Blue);
-  MriDefineMethod(klass, "alpha", color_attr_get_Alpha);
-  MriDefineMethod(klass, "alpha=", color_attr_set_Alpha);
+  MriDefineAttr(klass, "red", color_attr, Red);
+  MriDefineAttr(klass, "green", color_attr, Green);
+  MriDefineAttr(klass, "blue", color_attr, Blue);
+  MriDefineAttr(klass, "alpha", color_attr, Alpha);
 
   MriDefineMethod(klass, "set", color_set);
   MriDefineMethod(klass, "inspect", color_stringify);
@@ -365,14 +357,10 @@ void InitToneBinding() {
   MriDefineMethod(klass, "initialize_copy", tone_initialize_copy);
   MriInitSerializableBinding<content::Tone>(klass);
 
-  MriDefineMethod(klass, "red", tone_attr_get_Red);
-  MriDefineMethod(klass, "red=", tone_attr_set_Red);
-  MriDefineMethod(klass, "green", tone_attr_get_Green);
-  MriDefineMethod(klass, "green=", tone_attr_set_Green);
-  MriDefineMethod(klass, "blue", tone_attr_get_Blue);
-  MriDefineMethod(klass, "blue=", tone_attr_set_Blue);
-  MriDefineMethod(klass, "gray", tone_attr_get_Gray);
-  MriDefineMethod(klass, "gray=", tone_attr_set_Gray);
+  MriDefineAttr(klass, "red", tone_attr, Red);
+  MriDefineAttr(klass, "green", tone_attr, Green);
+  MriDefineAttr(klass, "blue", tone_attr, Blue);
+  MriDefineAttr(klass, "gray", tone_attr, Gray);
 
   MriDefineMethod(klass, "set", tone_set);
   MriDefineMethod(klass, "inspect", tone_stringify);

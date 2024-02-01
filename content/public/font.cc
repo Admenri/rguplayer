@@ -98,7 +98,8 @@ Font::Font()
       outline_(g_DefaultOutline),
       shadow_(g_DefaultShadow),
       color_(g_DefaultColor),
-      out_color_(g_DefaultOutColor) {}
+      out_color_(g_DefaultOutColor),
+      sdl_font_(nullptr) {}
 
 Font::Font(const std::vector<std::string>& name)
     : name_(name),
@@ -108,7 +109,8 @@ Font::Font(const std::vector<std::string>& name)
       outline_(g_DefaultOutline),
       shadow_(g_DefaultShadow),
       color_(g_DefaultColor),
-      out_color_(g_DefaultOutColor) {}
+      out_color_(g_DefaultOutColor),
+      sdl_font_(nullptr) {}
 
 Font::Font(const std::vector<std::string>& name, int size)
     : name_(name),
@@ -118,7 +120,19 @@ Font::Font(const std::vector<std::string>& name, int size)
       outline_(g_DefaultOutline),
       shadow_(g_DefaultShadow),
       color_(g_DefaultColor),
-      out_color_(g_DefaultOutColor) {}
+      out_color_(g_DefaultOutColor),
+      sdl_font_(nullptr) {}
+
+Font::Font(const Font& other)
+    : name_(other.name_),
+      size_(other.size_),
+      bold_(other.bold_),
+      italic_(other.italic_),
+      outline_(other.outline_),
+      shadow_(other.shadow_),
+      color_(other.color_),
+      out_color_(other.out_color_),
+      sdl_font_(nullptr) {}
 
 Font::~Font() {
   ResetFontInternal();

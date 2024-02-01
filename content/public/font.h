@@ -41,10 +41,8 @@ class Font : public base::RefCounted<Font> {
   Font();
   Font(const std::vector<std::string>& name);
   Font(const std::vector<std::string>& name, int size);
+  Font(const Font& other);
   ~Font();
-
-  Font(const Font&) = delete;
-  Font& operator=(const Font&) = delete;
 
   void SetName(const std::vector<std::string>& name);
   std::vector<std::string> GetName() const;
@@ -80,7 +78,7 @@ class Font : public base::RefCounted<Font> {
   scoped_refptr<Color> color_;
   scoped_refptr<Color> out_color_;
 
-  TTF_Font* sdl_font_ = nullptr;
+  TTF_Font* sdl_font_;
 };
 
 }  // namespace content

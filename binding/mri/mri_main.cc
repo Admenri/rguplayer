@@ -8,6 +8,7 @@
 #include "binding/mri/mri_main.h"
 
 #include "binding/mri/init_corefile.h"
+#include "binding/mri/init_font.h"
 #include "binding/mri/init_table.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/init_viewport.h"
@@ -102,6 +103,7 @@ void BindingEngineMri::InitializeBinding(
   InitUtilityBinding();
   InitTableBinding();
   InitViewportBinding();
+  InitFontBinding();
 
   LOG(INFO) << "[Binding] CRuby Interpreter Version: " << RUBY_API_VERSION_CODE;
   LOG(INFO) << "[Binding] CRuby Interpreter Platform: " << RUBY_PLATFORM;

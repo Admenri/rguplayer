@@ -8,6 +8,8 @@ cmake_minimum_required(VERSION 3.18.0)
 set(BINDING_MRI_SRC
   init_corefile.cc
   init_corefile.h
+  init_font.cc
+  init_font.h
   init_table.cc
   init_table.h
   init_utility.cc

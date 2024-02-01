@@ -139,6 +139,14 @@ VALUE MriWrapProperty(VALUE self,
   return obj;
 }
 
+#define MriDefineAttr(klass, rb_name, ktype, ctype)     \
+  MriDefineMethod(klass, rb_name, ktype##_get_##ctype); \
+  MriDefineMethod(klass, rb_name "=", ktype##_set_##ctype);
+
+#define MriDefineClassAttr(klass, rb_name, ktype, ctype)     \
+  MriDefineClassMethod(klass, rb_name, ktype##_get_##ctype); \
+  MriDefineClassMethod(klass, rb_name "=", ktype##_set_##ctype);
+
 }  // namespace binding
 
 #endif  // !BINDING_MRI_MRI_UTIL_H_
