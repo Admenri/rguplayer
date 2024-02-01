@@ -1,0 +1,201 @@
+// Copyright 2024 Admenri.
+// Use of this source code is governed by a BSD - style license that can be
+// found in the LICENSE file.
+
+#include "binding/mri/init_tilemap2.h"
+
+#include "binding/mri/init_bitmap.h"
+#include "binding/mri/init_table.h"
+#include "binding/mri/mri_template.h"
+#include "content/public/tilemap2.h"
+
+namespace binding {
+
+MRI_DEFINE_DATATYPE_REF(Tilemap2, "Tilemap", content::Tilemap2);
+
+MRI_METHOD(tilemap2_initialize) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  VALUE v;
+  MriParseArgsTo(argc, argv, "|o", &v);
+
+  scoped_refptr<content::Viewport> viewport;
+  if (!NIL_P(v))
+    viewport = MriCheckStructData<content::Viewport>(v, kViewportDataType);
+
+  scoped_refptr<content::Tilemap2> obj;
+  MRI_GUARD(obj = new content::Tilemap2(screen, viewport););
+  obj->AddRef();
+  MriSetStructData(self, obj.get());
+
+  VALUE ary = rb_ary_new2(9);
+  for (int i = 0; i < 9; ++i)
+    rb_ary_push(ary, Qnil);
+
+  rb_iv_set(self, "_bitmaps", ary);
+
+  return self;
+}
+
+MRI_METHOD(tilemap2_update) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+
+  MRI_GUARD(obj->Update(););
+  return self;
+}
+
+MRI_METHOD(tilemap2_get_bitmaps) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+  MRI_GUARD(obj->CheckIsDisposed(););
+
+  int i;
+  MriParseArgsTo(argc, argv, "i", &i);
+  i = std::clamp(i, 0, 8);
+
+  VALUE ary = rb_iv_get(self, "_bitmaps");
+  return rb_ary_entry(ary, i);
+}
+
+MRI_METHOD(tilemap2_set_bitmaps) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+
+  int i;
+  VALUE o;
+  MriParseArgsTo(argc, argv, "io", &i, &o);
+  i = std::clamp(i, 0, 8);
+
+  scoped_refptr<content::Bitmap> bitmap_obj =
+      MriCheckStructData<content::Bitmap>(self, kBitmapDataType);
+  obj->SetBitmap(i, bitmap_obj);
+
+  VALUE ary = rb_iv_get(self, "_bitmaps");
+  rb_ary_store(ary, i, o);
+
+  return o;
+}
+
+MRI_METHOD(tilemap2_get_ox) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+  int v;
+  MRI_GUARD(v = obj->GetOX(););
+  return rb_fix_new(v);
+}
+
+MRI_METHOD(tilemap2_set_ox) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+  int v;
+  MriParseArgsTo(argc, argv, "i", &v);
+  MRI_GUARD(obj->SetOX(v););
+  return self;
+}
+
+MRI_METHOD(tilemap2_get_oy) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+  int v;
+  MRI_GUARD(v = obj->GetOY(););
+  return rb_fix_new(v);
+}
+
+MRI_METHOD(tilemap2_set_oy) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+  int v;
+  MriParseArgsTo(argc, argv, "i", &v);
+  MRI_GUARD(obj->SetOY(v););
+  return self;
+}
+
+MRI_METHOD(tilemap2_get_visible) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+  bool v;
+  MRI_GUARD(v = obj->GetVisible(););
+  return v ? Qtrue : Qfalse;
+}
+
+MRI_METHOD(tilemap2_set_visible) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+  bool v;
+  MriParseArgsTo(argc, argv, "b", &v);
+  MRI_GUARD(obj->SetVisible(v););
+  return self;
+}
+
+#define DEFINE_TILEMAP2_ATTR_TABLE(name, iv)                     \
+  MRI_METHOD(tilemap2_get_##name) {                              \
+    scoped_refptr<content::Tilemap2> obj =                       \
+        MriGetStructData<content::Tilemap2>(self);               \
+    MRI_GUARD(obj->CheckIsDisposed(););                          \
+    return rb_iv_get(self, iv);                                  \
+  }                                                              \
+  MRI_METHOD(tilemap2_set_##name) {                              \
+    scoped_refptr<content::Tilemap2> obj =                       \
+        MriGetStructData<content::Tilemap2>(self);               \
+    VALUE v;                                                     \
+    MriParseArgsTo(argc, argv, "o", &v);                         \
+    scoped_refptr<content::Table> t;                             \
+    if (!NIL_P(v))                                               \
+      t = MriCheckStructData<content::Table>(v, kTableDataType); \
+    MRI_GUARD(obj->Set##name(t););                               \
+    rb_iv_set(self, iv, v);                                      \
+    return v;                                                    \
+  }
+
+DEFINE_TILEMAP2_ATTR_TABLE(MapData, "_map_data");
+DEFINE_TILEMAP2_ATTR_TABLE(FlashData, "_flash_data");
+DEFINE_TILEMAP2_ATTR_TABLE(Flags, "_flags");
+
+MRI_METHOD(tilemap2_get_viewport) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+
+  MRI_GUARD(obj->CheckIsDisposed(););
+
+  return rb_iv_get(self, "_viewport");
+}
+
+MRI_METHOD(tilemap2_set_viewport) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+
+  VALUE v;
+  MriParseArgsTo(argc, argv, "o", &v);
+
+  scoped_refptr<content::Viewport> viewport;
+  if (!NIL_P(v))
+    viewport = MriCheckStructData<content::Viewport>(v, kViewportDataType);
+
+  MRI_GUARD(obj->SetViewport(viewport););
+
+  rb_iv_set(self, "_viewport", v);
+
+  return v;
+}
+
+void InitTilemap2Binding() {
+  VALUE klass = rb_define_class("Tilemap", rb_cObject);
+  rb_define_alloc_func(klass, MriClassAllocate<&kTilemap2DataType>);
+
+  MriInitDisposableBinding<content::Tilemap2>(klass);
+
+  MriDefineMethod(klass, "initialize", tilemap2_initialize);
+  MriDefineMethod(klass, "update", tilemap2_update);
+
+  MriDefineAttr(klass, "bitmaps", tilemap2, bitmaps);
+  MriDefineAttr(klass, "ox", tilemap2, ox);
+  MriDefineAttr(klass, "oy", tilemap2, oy);
+  MriDefineAttr(klass, "visible", tilemap2, visible);
+  MriDefineAttr(klass, "viewport", tilemap2, viewport);
+  MriDefineAttr(klass, "map_data", tilemap2, MapData);
+  MriDefineAttr(klass, "flash_data", tilemap2, FlashData);
+  MriDefineAttr(klass, "flags", tilemap2, Flags);
+}
+
+}  // namespace binding

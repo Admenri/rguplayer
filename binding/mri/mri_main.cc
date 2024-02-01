@@ -13,6 +13,7 @@
 #include "binding/mri/init_plane.h"
 #include "binding/mri/init_sprite.h"
 #include "binding/mri/init_table.h"
+#include "binding/mri/init_tilemap2.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/init_viewport.h"
 #include "content/worker/binding_worker.h"
@@ -110,6 +111,7 @@ void BindingEngineMri::InitializeBinding(
   InitBitmapBinding();
   InitPlaneBinding();
   InitSpriteBinding();
+  InitTilemap2Binding();
 
   LOG(INFO) << "[Binding] CRuby Interpreter Version: " << RUBY_API_VERSION_CODE;
   LOG(INFO) << "[Binding] CRuby Interpreter Platform: " << RUBY_PLATFORM;

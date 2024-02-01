@@ -177,7 +177,7 @@ MRI_METHOD(viewportchild_set_viewport) {
 
   rb_iv_set(self, "_viewport", v);
 
-  return v ? Qtrue : Qfalse;
+  return v;
 }
 
 template <typename Ty>
@@ -195,6 +195,9 @@ scoped_refptr<Ty> MriInitializeViewportchild(
 
   scoped_refptr<Ty> obj;
   MRI_GUARD(obj = new Ty(screen, viewport););
+  obj->AddRef();
+  MriSetStructData(self, obj.get());
+
   rb_iv_set(self, "_viewport", v);
 
   return obj;
