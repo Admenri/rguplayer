@@ -193,7 +193,8 @@ scoped_refptr<Ty> MriInitializeViewportchild(
   if (!NIL_P(v))
     viewport = MriCheckStructData<content::Viewport>(v, kViewportDataType);
 
-  scoped_refptr<Ty> obj = new Ty(screen, viewport);
+  scoped_refptr<Ty> obj;
+  MRI_GUARD(obj = new Ty(screen, viewport););
   rb_iv_set(self, "_viewport", v);
 
   return obj;

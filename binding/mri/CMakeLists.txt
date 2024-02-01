@@ -12,6 +12,10 @@ set(BINDING_MRI_SRC
   init_corefile.h
   init_font.cc
   init_font.h
+  init_plane.cc
+  init_plane.h
+  init_sprite.cc
+  init_sprite.h
   init_table.cc
   init_table.h
   init_utility.cc

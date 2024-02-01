@@ -68,12 +68,12 @@ class Sprite : public base::RefCounted<Sprite>,
     return opacity_;
   }
 
-  void SetBlendMode(renderer::GLBlendType blend_type) {
+  void SetBlendType(renderer::GLBlendType blend_type) {
     CheckIsDisposed();
     blend_mode_ = blend_type;
   }
 
-  renderer::GLBlendType GetBlendMode() const {
+  renderer::GLBlendType GetBlendType() const {
     CheckIsDisposed();
     return blend_mode_;
   }
@@ -138,6 +138,106 @@ class Sprite : public base::RefCounted<Sprite>,
   float GetWavePhase() {
     CheckIsDisposed();
     return wave_.phase_;
+  }
+
+  scoped_refptr<Color> GetColor() const {
+    CheckIsDisposed();
+    return color_;
+  }
+
+  void SetColor(scoped_refptr<Color> color) {
+    CheckIsDisposed();
+    if (color == color_)
+      return;
+    color_ = color;
+  }
+
+  scoped_refptr<Tone> GetTone() const {
+    CheckIsDisposed();
+    return tone_;
+  }
+
+  void SetTone(scoped_refptr<Tone> tone) {
+    CheckIsDisposed();
+    if (tone_ == tone)
+      return;
+    tone_ = tone;
+  }
+
+  int GetX() const {
+    CheckIsDisposed();
+    return transform_.GetPosition().x;
+  }
+
+  void SetX(int v) {
+    CheckIsDisposed();
+    const base::Vec2 i = transform_.GetPosition();
+    transform_.SetPosition(base::Vec2((float)v, i.y));
+  }
+
+  int GetY() const {
+    CheckIsDisposed();
+    return transform_.GetPosition().x;
+  }
+
+  void SetY(int v) {
+    CheckIsDisposed();
+    const base::Vec2 i = transform_.GetPosition();
+    transform_.SetPosition(base::Vec2(i.x, (float)v));
+  }
+
+  int GetOX() const {
+    CheckIsDisposed();
+    return transform_.GetOrigin().x;
+  }
+
+  void SetOX(int v) {
+    CheckIsDisposed();
+    const base::Vec2 i = transform_.GetOrigin();
+    transform_.SetOrigin(base::Vec2((float)v, i.y));
+  }
+
+  int GetOY() const {
+    CheckIsDisposed();
+    return transform_.GetOrigin().x;
+  }
+
+  void SetOY(int v) {
+    CheckIsDisposed();
+    const base::Vec2 i = transform_.GetOrigin();
+    transform_.SetOrigin(base::Vec2(i.x, (float)v));
+  }
+
+  float GetZoomX() const {
+    CheckIsDisposed();
+    return transform_.GetScale().x;
+  }
+
+  void SetZoomX(float v) {
+    CheckIsDisposed();
+    const base::Vec2 i = transform_.GetScale();
+    transform_.SetScale(base::Vec2(v, i.y));
+  }
+
+  float GetZoomY() const {
+    CheckIsDisposed();
+    return transform_.GetScale().x;
+  }
+
+  void SetZoomY(float v) {
+    CheckIsDisposed();
+    const base::Vec2 i = transform_.GetScale();
+    transform_.SetScale(base::Vec2(i.x, v));
+  }
+
+  float GetAngle() const {
+    CheckIsDisposed();
+    return transform_.GetRotation();
+  }
+
+  void SetAngle(float v) {
+    CheckIsDisposed();
+    transform_.SetRotation(v);
   }
 
   /* Update wave flash */

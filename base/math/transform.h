@@ -39,26 +39,26 @@ class TransformMatrix {
 
   virtual ~TransformMatrix() = default;
 
-  TransformMatrix(const TransformMatrix &) = default;
-  TransformMatrix &operator=(const TransformMatrix &) = default;
+  TransformMatrix(const TransformMatrix&) = default;
+  TransformMatrix& operator=(const TransformMatrix&) = default;
 
  public:
-  const Vec2 &GetPosition() const { return position_; }
-  const Vec2 &GetOrigin() const { return origin_; }
-  const Vec2 &GetScale() const { return scale_; }
+  const Vec2& GetPosition() const { return position_; }
+  const Vec2& GetOrigin() const { return origin_; }
+  const Vec2& GetScale() const { return scale_; }
   float GetRotation() const { return rotation_; }
 
-  void SetPosition(const Vec2 &value) {
+  void SetPosition(const Vec2& value) {
     position_ = value;
     need_update_ = true;
   }
 
-  void SetOrigin(const Vec2 &value) {
+  void SetOrigin(const Vec2& value) {
     origin_ = value;
     need_update_ = true;
   }
 
-  void SetScale(const Vec2 &value) {
+  void SetScale(const Vec2& value) {
     scale_ = value;
     need_update_ = true;
   }
@@ -68,12 +68,12 @@ class TransformMatrix {
     need_update_ = true;
   }
 
-  void SetGlobalOffset(const Vec2i &value) {
+  void SetGlobalOffset(const Vec2i& value) {
     viewport_offset_ = value;
     need_update_ = true;
   }
 
-  const float *GetMatrixDataUnsafe() {
+  const float* GetMatrixDataUnsafe() {
     if (need_update_) {
       UpdateMatrix();
       need_update_ = false;
@@ -82,11 +82,14 @@ class TransformMatrix {
     return transform_matrix_;
   }
 
+  void NotifyUpdate() { need_update_ = true; }
+
  private:
   void UpdateMatrix() {
     if (rotation_ >= 360 || rotation_ < -360)
       rotation_ = std::fmod(rotation_, 360.f);
-    if (rotation_ < 0) rotation_ += 360;
+    if (rotation_ < 0)
+      rotation_ += 360;
 
     float angle = rotation_ * 3.141592654f / 180.0f;
     float cosine = std::cos(angle);
