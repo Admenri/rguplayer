@@ -28,8 +28,16 @@ class Vec2i {
   Vec2i() : x(0), y(0) {}
   Vec2i(int ix, int iy) : x(ix), y(iy) {}
 
-  Vec2i(const Vec2i&) = default;
-  Vec2i& operator=(const Vec2i&) = default;
+  Vec2i(const Vec2i& other) {
+    x = other.x;
+    y = other.y;
+  }
+
+  const Vec2i& operator=(const Vec2i& other) {
+    x = other.x;
+    y = other.y;
+    return other;
+  }
 
   bool operator==(const Vec2i& other) const {
     return other.x == x && other.y == y;
@@ -58,8 +66,16 @@ class Vec2 {
   Vec2(const Vec2i& iv)
       : x(static_cast<float>(iv.x)), y(static_cast<float>(iv.y)) {}
 
-  Vec2(const Vec2&) = default;
-  Vec2& operator=(const Vec2&) = default;
+  Vec2(const Vec2& other) {
+    x = other.x;
+    y = other.y;
+  }
+
+  const Vec2& operator=(const Vec2& other) {
+    x = other.x;
+    y = other.y;
+    return other;
+  }
 
   bool operator==(const Vec2& other) const {
     return other.x == x && other.y == y;
@@ -86,8 +102,18 @@ class Vec3i {
   Vec3i() : x(0), y(0), z(0) {}
   Vec3i(int ix, int iy, int iz) : x(ix), y(iy), z(iz) {}
 
-  Vec3i(const Vec3i&) = default;
-  Vec3i& operator=(const Vec3i&) = default;
+  Vec3i(const Vec3i& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+  }
+
+  const Vec3i& operator=(const Vec3i& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    return other;
+  }
 
   bool operator==(const Vec3i& other) const {
     return other.x == x && other.y == y && other.z == z;
@@ -122,8 +148,18 @@ class Vec3 {
         y(static_cast<float>(iv.y)),
         z(static_cast<float>(iv.z)) {}
 
-  Vec3(const Vec3&) = default;
-  Vec3& operator=(const Vec3&) = default;
+  Vec3(const Vec3& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+  }
+
+  const Vec3& operator=(const Vec3& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    return other;
+  }
 
   bool operator==(const Vec3& other) const {
     return other.x == x && other.y == y && other.z == z;
@@ -154,8 +190,20 @@ class Vec4i {
   Vec4i() : x(0), y(0), z(0), w(0) {}
   Vec4i(int ix, int iy, int iz, int iw) : x(ix), y(iy), z(iz), w(iw) {}
 
-  Vec4i(const Vec4i&) = default;
-  Vec4i& operator=(const Vec4i&) = default;
+  Vec4i(const Vec4i& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    w = other.w;
+  }
+
+  const Vec4i& operator=(const Vec4i& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    w = other.w;
+    return other;
+  }
 
   bool operator==(const Vec4i& other) const {
     return other.x == x && other.y == y && other.z == z && other.w == w;
@@ -191,8 +239,20 @@ class Vec4 {
         z(static_cast<float>(iv.z)),
         w(static_cast<float>(iv.w)) {}
 
-  Vec4(const Vec4&) = default;
-  Vec4& operator=(const Vec4&) = default;
+  Vec4(const Vec4& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    w = other.w;
+  }
+
+  const Vec4& operator=(const Vec4& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    w = other.w;
+    return other;
+  }
 
   bool operator==(const Vec4& other) const {
     return other.x == x && other.y == y && other.z == z && other.w == w;
@@ -226,8 +286,20 @@ class Rect {
   Rect(const Vec2i& pos, const Vec2i& size)
       : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
-  Rect(const Rect&) = default;
-  Rect& operator=(const Rect&) = default;
+  Rect(const Rect& other) {
+    x = other.x;
+    y = other.y;
+    width = other.width;
+    height = other.height;
+  }
+
+  const Rect& operator=(const Rect& other) {
+    x = other.x;
+    y = other.y;
+    width = other.width;
+    height = other.height;
+    return other;
+  };
 
   bool operator==(const Rect& other) const {
     return other.x == x && other.y == y && other.width == width &&
@@ -283,8 +355,20 @@ class RectF {
         width(static_cast<float>(ir.width)),
         height(static_cast<float>(ir.height)) {}
 
-  RectF(const RectF&) = default;
-  RectF& operator=(const RectF&) = default;
+  RectF(const RectF& other) {
+    x = other.x;
+    y = other.y;
+    width = other.width;
+    height = other.height;
+  }
+
+  const RectF& operator=(const RectF& other) {
+    x = other.x;
+    y = other.y;
+    width = other.width;
+    height = other.height;
+    return other;
+  }
 
   bool operator==(const RectF& other) const {
     return other.x == x && other.y == y && other.width == width &&

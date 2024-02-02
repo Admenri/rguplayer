@@ -28,11 +28,10 @@ void Sprite::SetBitmap(scoped_refptr<Bitmap> bitmap) {
     return;
 
   bitmap_ = bitmap;
-
   if (bitmap->IsDisposed())
     return;
 
-  *src_rect_ = *bitmap->GetRect();
+  src_rect_->Set(bitmap->GetSize());
   OnSrcRectChangedInternal();
 }
 

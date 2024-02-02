@@ -25,6 +25,8 @@
 #include "binding/rpg/module_rpg2.rb.xxd"
 #include "binding/rpg/module_rpg3.rb.xxd"
 
+#include "content/public/sprite.h"
+
 #include "zlib.h"
 
 extern "C" {
