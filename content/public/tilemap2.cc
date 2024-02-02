@@ -775,9 +775,6 @@ int Tilemap2::GetOX() const {
 
 void Tilemap2::SetOX(int ox) {
   CheckIsDisposed();
-
-  if (origin_.x == ox)
-    return;
   origin_.x = ox;
 }
 
@@ -788,9 +785,6 @@ int Tilemap2::GetOY() const {
 
 void Tilemap2::SetOY(int oy) {
   CheckIsDisposed();
-
-  if (origin_.y == oy)
-    return;
   origin_.y = oy;
 }
 
@@ -902,6 +896,9 @@ void Tilemap2::UpdateTilemapViewportInternal() {
 }
 
 void Tilemap2::ParseMapDataBufferInternal() {
+  ground_vertices_.clear();
+  above_vertices_.clear();
+
   auto& viewport_rect = ground_->parent_rect();
   scoped_refptr<Table> mapdata = map_data_;
   scoped_refptr<Table> flagdata = flags_;

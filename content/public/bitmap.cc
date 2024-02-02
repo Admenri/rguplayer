@@ -9,6 +9,7 @@
 #include <array>
 
 #include "base/exceptions/exception.h"
+#include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
 

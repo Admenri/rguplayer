@@ -7,6 +7,8 @@
 
 #include <SDL_rect.h>
 
+#include "base/debug/logging.h"
+
 namespace base {
 
 class Vec2;
@@ -55,6 +57,8 @@ class Vec2i {
     return Vec2i(x / value.x, y / value.y);
   }
 
+  void inspect() { LOG(INFO) << "Vec2i(" << x << ", " << y << ")"; }
+
  public:
   int x, y;
 };
@@ -92,6 +96,8 @@ class Vec2 {
   Vec2 operator/(const Vec2& value) const {
     return Vec2(x / value.x, y / value.y);
   }
+
+  void inspect() { LOG(INFO) << "Vec2(" << x << ", " << y << ")"; }
 
  public:
   float x, y;
@@ -133,6 +139,10 @@ class Vec3i {
 
   Vec3i operator/(const Vec3i& value) const {
     return Vec3i(x / value.x, y / value.y, z / value.z);
+  }
+
+  void inspect() {
+    LOG(INFO) << "Vec3i(" << x << ", " << y << ", " << z << ")";
   }
 
  public:
@@ -181,6 +191,8 @@ class Vec3 {
     return Vec3(x / value.x, y / value.y, z / value.z);
   }
 
+  void inspect() { LOG(INFO) << "Vec3(" << x << ", " << y << ", " << z << ")"; }
+
  public:
   float x, y, z;
 };
@@ -223,6 +235,10 @@ class Vec4i {
 
   Vec4i operator/(const Vec4i& value) const {
     return Vec4i(x / value.x, y / value.y, z / value.z, w / value.w);
+  }
+
+  void inspect() {
+    LOG(INFO) << "Vec4i(" << x << ", " << y << ", " << z << ", " << w << ")";
   }
 
  public:
@@ -272,6 +288,10 @@ class Vec4 {
 
   Vec4 operator/(const Vec4& value) const {
     return Vec4(x / value.x, y / value.y, z / value.z, w / value.w);
+  }
+
+  void inspect() {
+    LOG(INFO) << "Vec4(" << x << ", " << y << ", " << z << ", " << w << ")";
   }
 
  public:
@@ -335,6 +355,11 @@ class Rect {
   Rect operator/(const Rect& value) const {
     return Rect(x / value.x, y / value.y, width / value.width,
                 height / value.height);
+  }
+
+  void inspect() {
+    LOG(INFO) << "Rect(" << x << ", " << y << ", " << width << ", " << height
+              << ")";
   }
 
  public:
@@ -402,6 +427,11 @@ class RectF {
   RectF operator/(const RectF& value) const {
     return RectF(x / value.x, y / value.y, width / value.width,
                  height / value.height);
+  }
+
+  void inspect() {
+    LOG(INFO) << "RectF(" << x << ", " << y << ", " << width << ", " << height
+              << ")";
   }
 
  public:

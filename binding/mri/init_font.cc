@@ -122,9 +122,7 @@ MRI_METHOD(font_set_default_color) {
 
   scoped_refptr<content::Color> c =
       MriCheckStructData<content::Color>(o, kColorDataType);
-
   content::Font::SetDefaultColor(c);
-  rb_iv_set(self, "_color", o);
 
   return o;
 }
@@ -139,9 +137,7 @@ MRI_METHOD(font_set_default_outcolor) {
 
   scoped_refptr<content::Color> c =
       MriCheckStructData<content::Color>(o, kColorDataType);
-
   content::Font::SetDefaultOutColor(c);
-  rb_iv_set(self, "_out_color", o);
 
   return o;
 }
@@ -199,9 +195,7 @@ MRI_METHOD(font_set_color) {
 
   scoped_refptr<content::Color> c =
       MriCheckStructData<content::Color>(o, kColorDataType);
-
   obj->SetColor(c);
-  rb_iv_set(self, "_color", o);
 
   return o;
 }
@@ -218,9 +212,7 @@ MRI_METHOD(font_set_outcolor) {
 
   scoped_refptr<content::Color> c =
       MriCheckStructData<content::Color>(o, kColorDataType);
-
   obj->SetOutColor(c);
-  rb_iv_set(self, "_out_color", o);
 
   return o;
 }

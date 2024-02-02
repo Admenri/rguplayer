@@ -10,20 +10,20 @@ std::string Rect::Serialize() {
   std::string data;
 
   data.resize(4 * sizeof(int32_t));
-  Serializable::WriteInt32(data.data(), 0, data_.x);
-  Serializable::WriteInt32(data.data(), 4, data_.y);
-  Serializable::WriteInt32(data.data(), 8, data_.width);
-  Serializable::WriteInt32(data.data(), 12, data_.height);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 0, x_);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 1, y_);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 2, width_);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 3, height_);
 
   return data;
 }
 
 scoped_refptr<Rect> Rect::Deserialize(const std::string& data) {
   int x, y, w, h;
-  x = Serializable::ReadInt32(data.data(), 0);
-  y = Serializable::ReadInt32(data.data(), 4);
-  w = Serializable::ReadInt32(data.data(), 8);
-  h = Serializable::ReadInt32(data.data(), 12);
+  x = Serializable::ReadInt32(data.data(), sizeof(int32_t) * 0);
+  y = Serializable::ReadInt32(data.data(), sizeof(int32_t) * 1);
+  w = Serializable::ReadInt32(data.data(), sizeof(int32_t) * 2);
+  h = Serializable::ReadInt32(data.data(), sizeof(int32_t) * 3);
 
   return new Rect(base::Rect(x, y, w, h));
 }
@@ -31,21 +31,21 @@ scoped_refptr<Rect> Rect::Deserialize(const std::string& data) {
 std::string Tone::Serialize() {
   std::string data;
 
-  data.resize(4 * sizeof(float));
-  Serializable::WriteFloat(data.data(), 0, data_.x);
-  Serializable::WriteFloat(data.data(), 4, data_.y);
-  Serializable::WriteFloat(data.data(), 8, data_.z);
-  Serializable::WriteFloat(data.data(), 12, data_.w);
+  data.resize(4 * sizeof(double));
+  Serializable::WriteDouble(data.data(), sizeof(double) * 0, red_);
+  Serializable::WriteDouble(data.data(), sizeof(double) * 1, green_);
+  Serializable::WriteDouble(data.data(), sizeof(double) * 2, blue_);
+  Serializable::WriteDouble(data.data(), sizeof(double) * 3, gray_);
 
   return data;
 }
 
 scoped_refptr<Tone> Tone::Deserialize(const std::string& data) {
-  float x, y, z, w;
-  x = Serializable::ReadFloat(data.data(), 0);
-  y = Serializable::ReadFloat(data.data(), 4);
-  z = Serializable::ReadFloat(data.data(), 8);
-  w = Serializable::ReadFloat(data.data(), 12);
+  double x, y, z, w;
+  x = Serializable::ReadDouble(data.data(), sizeof(double) * 0);
+  y = Serializable::ReadDouble(data.data(), sizeof(double) * 1);
+  z = Serializable::ReadDouble(data.data(), sizeof(double) * 2);
+  w = Serializable::ReadDouble(data.data(), sizeof(double) * 3);
 
   return new Tone(x, y, z, w);
 }
@@ -54,20 +54,20 @@ std::string Color::Serialize() {
   std::string data;
 
   data.resize(4 * sizeof(float));
-  Serializable::WriteFloat(data.data(), 0, data_.x);
-  Serializable::WriteFloat(data.data(), 4, data_.y);
-  Serializable::WriteFloat(data.data(), 8, data_.z);
-  Serializable::WriteFloat(data.data(), 12, data_.w);
+  Serializable::WriteDouble(data.data(), sizeof(double) * 0, red_);
+  Serializable::WriteDouble(data.data(), sizeof(double) * 1, green_);
+  Serializable::WriteDouble(data.data(), sizeof(double) * 2, blue_);
+  Serializable::WriteDouble(data.data(), sizeof(double) * 3, alpha_);
 
   return data;
 }
 
 scoped_refptr<Color> Color::Deserialize(const std::string& data) {
-  float x, y, z, w;
-  x = Serializable::ReadFloat(data.data(), 0);
-  y = Serializable::ReadFloat(data.data(), 4);
-  z = Serializable::ReadFloat(data.data(), 8);
-  w = Serializable::ReadFloat(data.data(), 12);
+  double x, y, z, w;
+  x = Serializable::ReadDouble(data.data(), sizeof(double) * 0);
+  y = Serializable::ReadDouble(data.data(), sizeof(double) * 1);
+  z = Serializable::ReadDouble(data.data(), sizeof(double) * 2);
+  w = Serializable::ReadDouble(data.data(), sizeof(double) * 3);
 
   return new Color(x, y, z, w);
 }

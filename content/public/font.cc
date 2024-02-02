@@ -10,117 +10,123 @@ namespace {
 
 const int kOutlineSize = 1;
 
-std::vector<std::string> g_defaultName = {"Default.ttf"};
-int g_DefaultSize = 24;
-bool g_DefaultBold = false;
-bool g_DefaultItalic = false;
-bool g_DefaultOutline = true;
-bool g_DefaultShadow = false;
-scoped_refptr<Color> g_DefaultColor = nullptr;
-scoped_refptr<Color> g_DefaultOutColor = nullptr;
+struct DefaultFontState {
+  std::vector<std::string> default_name = {"Default.ttf"};
+  int default_size = 24;
+  bool default_bold = false;
+  bool default_italic = false;
+  bool default_outline = true;
+  bool default_shadow = false;
+  scoped_refptr<Color> default_color = nullptr;
+  scoped_refptr<Color> default_out_color = nullptr;
+};
+
+std::unique_ptr<DefaultFontState> g_default_font_state = nullptr;
 
 }  // namespace
 
 void Font::InitStaticFont() {
-  g_DefaultColor = new Color(255, 255, 255);
-  g_DefaultOutColor = new Color(0, 0, 0);
+  g_default_font_state = std::make_unique<DefaultFontState>();
+
+  g_default_font_state->default_color = new Color(255.0, 255.0, 255.0, 255.0);
+  g_default_font_state->default_out_color = new Color(0, 0, 0, 255.0);
 }
 
 void Font::SetDefaultName(const std::vector<std::string>& name) {
-  g_defaultName = name;
+  g_default_font_state->default_name = name;
 }
 
 std::vector<std::string> Font::GetDefaultName() {
-  return g_defaultName;
+  return g_default_font_state->default_name;
 }
 
 void Font::SetDefaultSize(int size) {
-  g_DefaultSize = size;
+  g_default_font_state->default_size = size;
 }
 
 int Font::GetDefaultSize() {
-  return g_DefaultSize;
+  return g_default_font_state->default_size;
 }
 
 void Font::SetDefaultBold(bool bold) {
-  g_DefaultBold = bold;
+  g_default_font_state->default_bold = bold;
 }
 
 bool Font::GetDefaultBold() {
-  return g_DefaultBold;
+  return g_default_font_state->default_bold;
 }
 
 void Font::SetDefaultItalic(bool italic) {
-  g_DefaultItalic = italic;
+  g_default_font_state->default_italic = italic;
 }
 
 bool Font::GetDefaultItalic() {
-  return g_DefaultItalic;
+  return g_default_font_state->default_italic;
 }
 
 void Font::SetDefaultShadow(bool shadow) {
-  g_DefaultShadow = shadow;
+  g_default_font_state->default_shadow = shadow;
 }
 
 bool Font::GetDefaultShadow() {
-  return g_DefaultShadow;
+  return g_default_font_state->default_shadow;
 }
 
 void Font::SetDefaultOutline(bool outline) {
-  g_DefaultOutline = outline;
+  g_default_font_state->default_outline = outline;
 }
 
 bool Font::GetDefaultOutline() {
-  return g_DefaultOutline;
+  return g_default_font_state->default_outline;
 }
 
 void Font::SetDefaultColor(scoped_refptr<Color> color) {
-  *g_DefaultColor = *color;
+  *g_default_font_state->default_color = *color;
 }
 
 scoped_refptr<Color> Font::GetDefaultColor() {
-  return g_DefaultColor;
+  return g_default_font_state->default_color;
 }
 
 void Font::SetDefaultOutColor(scoped_refptr<Color> color) {
-  *g_DefaultOutColor = *color;
+  *g_default_font_state->default_out_color = *color;
 }
 
 scoped_refptr<Color> Font::GetDefaultOutColor() {
-  return g_DefaultOutColor;
+  return g_default_font_state->default_out_color;
 }
 
 Font::Font()
-    : name_(g_defaultName),
-      size_(g_DefaultSize),
-      bold_(g_DefaultBold),
-      italic_(g_DefaultItalic),
-      outline_(g_DefaultOutline),
-      shadow_(g_DefaultShadow),
-      color_(g_DefaultColor),
-      out_color_(g_DefaultOutColor),
+    : name_(g_default_font_state->default_name),
+      size_(g_default_font_state->default_size),
+      bold_(g_default_font_state->default_bold),
+      italic_(g_default_font_state->default_italic),
+      outline_(g_default_font_state->default_outline),
+      shadow_(g_default_font_state->default_shadow),
+      color_(g_default_font_state->default_color),
+      out_color_(g_default_font_state->default_out_color),
       sdl_font_(nullptr) {}
 
 Font::Font(const std::vector<std::string>& name)
     : name_(name),
-      size_(g_DefaultSize),
-      bold_(g_DefaultBold),
-      italic_(g_DefaultItalic),
-      outline_(g_DefaultOutline),
-      shadow_(g_DefaultShadow),
-      color_(g_DefaultColor),
-      out_color_(g_DefaultOutColor),
+      size_(g_default_font_state->default_size),
+      bold_(g_default_font_state->default_bold),
+      italic_(g_default_font_state->default_italic),
+      outline_(g_default_font_state->default_outline),
+      shadow_(g_default_font_state->default_shadow),
+      color_(g_default_font_state->default_color),
+      out_color_(g_default_font_state->default_out_color),
       sdl_font_(nullptr) {}
 
 Font::Font(const std::vector<std::string>& name, int size)
     : name_(name),
       size_(size),
-      bold_(g_DefaultBold),
-      italic_(g_DefaultItalic),
-      outline_(g_DefaultOutline),
-      shadow_(g_DefaultShadow),
-      color_(g_DefaultColor),
-      out_color_(g_DefaultOutColor),
+      bold_(g_default_font_state->default_bold),
+      italic_(g_default_font_state->default_italic),
+      outline_(g_default_font_state->default_outline),
+      shadow_(g_default_font_state->default_shadow),
+      color_(g_default_font_state->default_color),
+      out_color_(g_default_font_state->default_out_color),
       sdl_font_(nullptr) {}
 
 Font::Font(const Font& other)

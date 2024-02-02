@@ -162,7 +162,7 @@ class Window2 : public base::RefCounted<Window2>,
     size_t quad_count_ = 0;
     bool quad_need_update_ = true;
 
-    renderer::CommonVertex* pause_vertex_;
+    renderer::CommonVertex* pause_vertex_ = nullptr;
     bool need_update_ = true;
 
     int pause_quad_index_ = 0;

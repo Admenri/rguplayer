@@ -35,10 +35,8 @@ MRI_METHOD(window2_initialize) {
   MriWrapProperty(self, obj->GetCursorRect(), "_cursor_rect", kRectDataType);
   MriWrapProperty(self, obj->GetTone(), "_tone", kToneDataType);
 
-  scoped_refptr<content::Bitmap> contents_obj =
-      new content::Bitmap(screen, 1, 1);
-  VALUE contents = MriWrapObject(contents_obj, kBitmapDataType);
-  bitmap_init_prop(contents_obj, contents);
+  VALUE contents = MriWrapObject(obj->GetContents(), kBitmapDataType);
+  bitmap_init_prop(obj->GetContents(), contents);
   rb_iv_set(self, "_contents", contents);
 
   return self;

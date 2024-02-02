@@ -436,7 +436,8 @@ DEFINE_CHECK_OP_IMPL(GT, >)
 #define ENABLE_DLOG 1
 #endif
 
-#if defined(NDEBUG) && !defined(DCHECK_ALWAYS_ON)
+// Disable ELOG warning
+#if !defined(DCHECK_ALWAYS_ON)
 #define DCHECK_IS_ON() 0
 #else
 #define DCHECK_IS_ON() 1

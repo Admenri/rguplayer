@@ -35,7 +35,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   bool allow_frame_skip_ = false;
   std::string game_title_ = "RGU Core";
   std::string game_scripts_ = "Data/Scripts.rvdata2";
-  base::Vec2i initial_resolution_ = base::Vec2i(640, 480);
+  base::Vec2i initial_resolution_ = base::Vec2i(544, 416);
 };
 
 }  // namespace content

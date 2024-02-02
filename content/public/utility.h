@@ -24,7 +24,9 @@ class ValueNotification {
   }
 
  protected:
-  inline void UpdateData() { observers_.Notify(); }
+  inline void UpdateData() {
+    observers_.Notify();
+  }
 
  private:
   base::RepeatingClosureList observers_;
@@ -34,227 +36,276 @@ class Rect : public base::RefCounted<Rect>,
              public Serializable,
              public ValueNotification {
  public:
-  Rect() {}
-  Rect(const base::Rect& rect) : data_(rect) {}
-  ~Rect() override {}
+  Rect() : x_(0), y_(0), width_(0), height_(0) {}
+  Rect(const base::Rect& rect)
+      : x_(rect.x), y_(rect.y), width_(rect.width), height_(rect.height) {}
 
-  Rect(const Rect& other) { data_ = other.data_; }
+  Rect(const Rect& other) {
+    x_ = other.x_;
+    y_ = other.y_;
+    width_ = other.width_;
+    height_ = other.height_;
+  }
+
   const Rect& operator=(const Rect& other) {
-    data_ = other.data_;
+    x_ = other.x_;
+    y_ = other.y_;
+    width_ = other.width_;
+    height_ = other.height_;
     return other;
   }
 
-  bool operator==(const Rect& other) { return other.data_ == data_; }
+  bool operator==(const Rect& other) {
+    return other.x_ == x_ && other.y_ == y_ && other.width_ == width_ &&
+           other.height_ == height_;
+  }
 
   void Set(const base::Rect& rect) {
-    data_ = rect;
+    x_ = rect.x;
+    y_ = rect.y;
+    width_ = rect.width;
+    height_ = rect.height;
     UpdateData();
   }
 
-  void Set(scoped_refptr<Rect> rect) { Set(rect->data_); }
+  void Set(scoped_refptr<Rect> rect) {
+    x_ = rect->x_;
+    y_ = rect->y_;
+    width_ = rect->width_;
+    height_ = rect->height_;
+    UpdateData();
+  }
+
   void Empty() { Set(base::Rect()); }
 
-  int GetX() const { return data_.x; }
+  int GetX() const { return x_; }
   void SetX(int x) {
-    data_.x = x;
+    x_ = x;
     UpdateData();
   }
 
-  int GetY() const { return data_.y; }
+  int GetY() const { return y_; }
   void SetY(int y) {
-    data_.y = y;
+    y_ = y;
     UpdateData();
   }
 
-  int GetWidth() const { return data_.width; }
+  int GetWidth() const { return width_; }
   void SetWidth(int width) {
-    data_.width = width;
+    width_ = width;
     UpdateData();
   }
 
-  int GetHeight() const { return data_.height; }
+  int GetHeight() const { return height_; }
   void SetHeight(int height) {
-    data_.height = height;
+    height_ = height;
     UpdateData();
   }
 
-  base::Rect& AsBase() {
-    if (data_.width < 0) {
-      data_.width = -data_.width;
-      data_.x -= data_.width;
+  base::Rect AsBase() {
+    if (width_ < 0) {
+      width_ = -width_;
+      x_ -= width_;
     }
 
-    if (data_.height < 0) {
-      data_.height = -data_.height;
-      data_.y -= data_.height;
+    if (height_ < 0) {
+      height_ = -height_;
+      y_ -= height_;
     }
 
-    return data_;
+    return base::Rect(x_, y_, width_, height_);
   }
-
-  void SetBase(const base::Rect& rect) { data_ = rect; }
 
   std::string Serialize() override;
   static scoped_refptr<Rect> Deserialize(const std::string& data);
 
  private:
-  base::Rect data_;
+  int x_;
+  int y_;
+  int width_;
+  int height_;
 };
 
 class Tone : public base::RefCounted<Tone>,
              public Serializable,
              public ValueNotification {
  public:
-  Tone() {}
-  Tone(float red, float green, float blue, float gray = 255.0f)
-      : data_(std::clamp(red, -255.0f, 255.0f),
-              std::clamp(green, -255.0f, 255.0f),
-              std::clamp(blue, -255.0f, 255.0f),
-              std::clamp(gray, 0.0f, 255.0f)) {}
-  ~Tone() override {}
+  Tone() : red_(0.0), green_(0.0), blue_(0.0), gray_(0.0) {}
+  Tone(double red, double green, double blue, double gray = 255.0)
+      : red_(std::clamp(red, -255.0, 255.0)),
+        green_(std::clamp(green, -255.0, 255.0)),
+        blue_(std::clamp(blue, -255.0, 255.0)),
+        gray_(std::clamp(gray, 0.0, 255.0)) {}
 
-  Tone(const Tone& other) { data_ = other.data_; }
+  Tone(const Tone& other) {
+    red_ = other.red_;
+    green_ = other.green_;
+    blue_ = other.blue_;
+    gray_ = other.gray_;
+  }
+
   const Tone& operator=(const Tone& other) {
-    data_ = other.data_;
+    red_ = other.red_;
+    green_ = other.green_;
+    blue_ = other.blue_;
+    gray_ = other.gray_;
     return other;
   }
 
-  bool operator==(const Tone& other) { return other.data_ == data_; }
+  bool operator==(const Tone& other) {
+    return other.red_ == red_ && other.green_ == green_ &&
+           other.blue_ == blue_ && other.gray_ == gray_;
+  }
 
-  void Set(float red, float green, float blue, float gray = 255.0f) {
-    data_.x = std::clamp(red, -255.0f, 255.0f);
-    data_.y = std::clamp(green, -255.0f, 255.0f);
-    data_.z = std::clamp(blue, -255.0f, 255.0f);
-    data_.w = std::clamp(gray, 0.0f, 255.0f);
+  void Set(double red, double green, double blue, double gray = 255.0f) {
+    red_ = std::clamp(red, -255.0, 255.0);
+    green_ = std::clamp(green, -255.0, 255.0);
+    blue_ = std::clamp(blue, -255.0, 255.0);
+    gray_ = std::clamp(gray, 0.0, 255.0);
 
     UpdateData();
   }
 
   void Set(scoped_refptr<Tone> tone) {
-    data_ = tone->data_;
+    Set(tone->red_, tone->green_, tone->blue_, tone->gray_);
+  }
+
+  double GetRed() const { return red_; }
+  void SetRed(double red) {
+    red_ = std::clamp(red, -255.0, 255.0);
     UpdateData();
   }
 
-  float GetRed() const { return data_.x; }
-  void SetRed(float red) {
-    data_.x = std::clamp(red, -255.0f, 255.0f);
+  double GetGreen() const { return green_; }
+  void SetGreen(double green) {
+    green_ = std::clamp(green, -255.0, 255.0);
     UpdateData();
   }
 
-  float GetGreen() const { return data_.y; }
-  void SetGreen(float green) {
-    data_.y = std::clamp(green, -255.0f, 255.0f);
+  double GetBlue() const { return blue_; }
+  void SetBlue(double blue) {
+    blue_ = std::clamp(blue, -255.0, 255.0);
     UpdateData();
   }
 
-  float GetBlue() const { return data_.z; }
-  void SetBlue(float blue) {
-    data_.z = std::clamp(blue, -255.0f, 255.0f);
-    UpdateData();
-  }
-
-  float GetGray() const { return data_.w; }
-  void SetGray(float gray) {
-    data_.w = std::clamp(gray, 0.0f, 255.0f);
+  double GetGray() const { return gray_; }
+  void SetGray(double gray) {
+    gray_ = std::clamp(gray, 0.0, 255.0);
     UpdateData();
   }
 
   base::Vec4 AsBase() {
-    return base::Vec4(data_.x / 255.0f, data_.y / 255.0f, data_.z / 255.0f,
-                      data_.w / 255.0f);
+    return base::Vec4((float)red_ / 255.0f, (float)green_ / 255.0f,
+                      (float)blue_ / 255.0f, (float)gray_ / 255.0f);
   }
 
-  base::Vec4& AsNormal() { return data_; }
-
   bool IsValid() {
-    return data_.x != 0.0f || data_.y != 0.0f || data_.z != 0.0f ||
-           data_.w != 0.0f;
+    return red_ != 0.0 || green_ != 0.0 || blue_ != 0.0 || gray_ != 0.0;
   }
 
   std::string Serialize() override;
   static scoped_refptr<Tone> Deserialize(const std::string& data);
 
  private:
-  base::Vec4 data_;
+  double red_;
+  double green_;
+  double blue_;
+  double gray_;
 };
 
 class Color : public base::RefCounted<Color>,
               public Serializable,
               public ValueNotification {
  public:
-  Color() {}
-  Color(float red, float green, float blue, float alpha = 255.0f)
-      : data_(std::clamp(red, 0.0f, 255.0f),
-              std::clamp(green, 0.0f, 255.0f),
-              std::clamp(blue, 0.0f, 255.0f),
-              std::clamp(alpha, 0.0f, 255.0f)) {}
+  Color() : red_(0.0), green_(0.0), blue_(0.0), alpha_(0.0) {}
+  Color(double red, double green, double blue, double alpha = 255.0)
+      : red_(std::clamp(red, 0.0, 255.0)),
+        green_(std::clamp(green, 0.0, 255.0)),
+        blue_(std::clamp(blue, 0.0, 255.0)),
+        alpha_(std::clamp(alpha, 0.0, 255.0)) {}
   ~Color() override {}
 
-  Color(const Color& other) { data_ = other.data_; }
+  Color(const Color& other) {
+    red_ = other.red_;
+    green_ = other.green_;
+    blue_ = other.blue_;
+    alpha_ = other.alpha_;
+  }
+
   const Color& operator=(const Color& other) {
-    data_ = other.data_;
+    red_ = other.red_;
+    green_ = other.green_;
+    blue_ = other.blue_;
+    alpha_ = other.alpha_;
     return other;
   }
 
-  bool operator==(const Color& other) { return other.data_ == data_; }
+  bool operator==(const Color& other) {
+    return other.red_ == red_ && other.green_ == green_ &&
+           other.blue_ == blue_ && other.alpha_ == alpha_;
+  }
 
-  void Set(float red, float green, float blue, float alpha) {
-    data_.x = std::clamp(red, 0.0f, 255.0f);
-    data_.y = std::clamp(green, 0.0f, 255.0f);
-    data_.z = std::clamp(blue, 0.0f, 255.0f);
-    data_.w = std::clamp(alpha, 0.0f, 255.0f);
+  void Set(double red, double green, double blue, double alpha) {
+    red_ = std::clamp(red, 0.0, 255.0);
+    green_ = std::clamp(green, 0.0, 255.0);
+    blue_ = std::clamp(blue, 0.0, 255.0);
+    alpha_ = std::clamp(alpha, 0.0, 255.0);
 
     UpdateData();
   }
 
   void Set(scoped_refptr<Color> color) {
-    data_ = color->data_;
+    Set(color->red_, color->green_, color->blue_, color->alpha_);
+  }
+
+  double GetRed() const { return red_; }
+  void SetRed(double red) {
+    red_ = std::clamp(red, 0.0, 255.0);
     UpdateData();
   }
 
-  float GetRed() const { return data_.x; }
-  void SetRed(float red) {
-    data_.x = std::clamp(red, 0.0f, 255.0f);
+  double GetGreen() const { return green_; }
+  void SetGreen(double green) {
+    green_ = std::clamp(green, 0.0, 255.0);
     UpdateData();
   }
 
-  float GetGreen() const { return data_.y; }
-  void SetGreen(float green) {
-    data_.y = std::clamp(green, 0.0f, 255.0f);
+  double GetBlue() const { return blue_; }
+  void SetBlue(double blue) {
+    blue_ = std::clamp(blue, 0.0, 255.0);
     UpdateData();
   }
 
-  float GetBlue() const { return data_.z; }
-  void SetBlue(float blue) {
-    data_.z = std::clamp(blue, 0.0f, 255.0f);
-    UpdateData();
-  }
-
-  float GetAlpha() const { return data_.w; }
-  void SetAlpha(float alpha) {
-    data_.w = std::clamp(alpha, 0.0f, 255.0f);
+  double GetAlpha() const { return alpha_; }
+  void SetAlpha(double alpha) {
+    alpha_ = std::clamp(alpha, 0.0, 255.0);
     UpdateData();
   }
 
   base::Vec4 AsBase() {
-    return base::Vec4(data_.x / 255.0f, data_.y / 255.0f, data_.z / 255.0f,
-                      data_.w / 255.0f);
+    return base::Vec4((float)red_ / 255.0f, (float)green_ / 255.0f,
+                      (float)blue_ / 255.0f, (float)alpha_ / 255.0f);
   }
 
-  base::Vec4& AsNormal() { return data_; }
+  base::Vec4 AsNormal() {
+    return base::Vec4(static_cast<float>(red_), static_cast<float>(green_),
+                      static_cast<float>(blue_), static_cast<float>(alpha_));
+  }
   SDL_Color AsSDLColor() {
-    return SDL_Color{
-        static_cast<uint8_t>(data_.x), static_cast<uint8_t>(data_.y),
-        static_cast<uint8_t>(data_.z), static_cast<uint8_t>(data_.w)};
+    return SDL_Color{static_cast<uint8_t>(red_), static_cast<uint8_t>(green_),
+                     static_cast<uint8_t>(blue_), static_cast<uint8_t>(alpha_)};
   }
 
-  bool IsValid() { return data_.w != 0.0f; }
+  bool IsValid() { return alpha_ != 0.0f; }
 
   std::string Serialize() override;
   static scoped_refptr<Color> Deserialize(const std::string& data);
 
  private:
-  base::Vec4 data_;
+  double red_;
+  double green_;
+  double blue_;
+  double alpha_;
 };
 
 }  // namespace content

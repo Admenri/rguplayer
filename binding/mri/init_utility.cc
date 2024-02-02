@@ -142,9 +142,7 @@ MRI_METHOD(color_initialize) {
     double red, green, blue, alpha = 255.0;
     MriParseArgsTo(argc, argv, "fff|f", &red, &green, &blue, &alpha);
 
-    obj =
-        new content::Color(static_cast<float>(red), static_cast<float>(green),
-                           static_cast<float>(blue), static_cast<float>(alpha));
+    obj = new content::Color(red, green, blue, alpha);
   } else {
     obj = new content::Color();
   }
@@ -183,8 +181,7 @@ MRI_METHOD(color_set) {
     double red, green, blue, alpha = 255.0;
     MriParseArgsTo(argc, argv, "fff|f", &red, &green, &blue, &alpha);
 
-    obj->Set(static_cast<float>(red), static_cast<float>(green),
-             static_cast<float>(blue), static_cast<float>(alpha));
+    obj->Set(red, green, blue, alpha);
   }
 
   return self;
@@ -201,7 +198,7 @@ MRI_METHOD(color_set) {
         MriGetStructData<content::Color>(self); \
     double v;                                   \
     MriParseArgsTo(argc, argv, "f", &v);        \
-    obj->Set##name(static_cast<float>(v));      \
+    obj->Set##name(v);                          \
     return self;                                \
   }
 
@@ -213,7 +210,7 @@ COLOR_ATTR_DEFINE(Alpha);
 MRI_METHOD(color_stringify) {
   scoped_refptr<content::Color> obj = MriGetStructData<content::Color>(self);
 
-  return rb_sprintf("(%d, %d, %d, %d)", obj->GetRed(), obj->GetGreen(),
+  return rb_sprintf("(%f, %f, %f, %f)", obj->GetRed(), obj->GetGreen(),
                     obj->GetBlue(), obj->GetAlpha());
 }
 
@@ -262,8 +259,7 @@ MRI_METHOD(tone_initialize) {
     double red, green, blue, gray = 0.0;
     MriParseArgsTo(argc, argv, "fff|f", &red, &green, &blue, &gray);
 
-    obj = new content::Tone(static_cast<float>(red), static_cast<float>(green),
-                            static_cast<float>(blue), static_cast<float>(gray));
+    obj = new content::Tone(red, green, blue, gray);
   } else {
     obj = new content::Tone();
   }
@@ -302,8 +298,7 @@ MRI_METHOD(tone_set) {
     double red, green, blue, gray = 0.0;
     MriParseArgsTo(argc, argv, "fff|f", &red, &green, &blue, &gray);
 
-    obj->Set(static_cast<float>(red), static_cast<float>(green),
-             static_cast<float>(blue), static_cast<float>(gray));
+    obj->Set(red, green, blue, gray);
   }
 
   return self;
@@ -318,7 +313,7 @@ MRI_METHOD(tone_set) {
     scoped_refptr<content::Tone> obj = MriGetStructData<content::Tone>(self); \
     double v;                                                                 \
     MriParseArgsTo(argc, argv, "f", &v);                                      \
-    obj->Set##name(static_cast<float>(v));                                    \
+    obj->Set##name(v);                                                        \
     return self;                                                              \
   }
 
@@ -330,7 +325,7 @@ TONE_ATTR_DEFINE(Gray);
 MRI_METHOD(tone_stringify) {
   scoped_refptr<content::Tone> obj = MriGetStructData<content::Tone>(self);
 
-  return rb_sprintf("(%d, %d, %d, %d)", obj->GetRed(), obj->GetGreen(),
+  return rb_sprintf("(%f, %f, %f, %f)", obj->GetRed(), obj->GetGreen(),
                     obj->GetBlue(), obj->GetGray());
 }
 

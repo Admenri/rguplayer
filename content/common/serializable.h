@@ -28,9 +28,9 @@ class Serializable {
   }
 
   static int32_t ReadInt32(const char* data, int offset);
-  static float ReadFloat(const char* data, int offset);
+  static double ReadDouble(const char* data, int offset);
   static void WriteInt32(char* data, int offset, int32_t value);
-  static void WriteFloat(char* data, int offset, float value);
+  static void WriteDouble(char* data, int offset, double value);
 };
 
 }  // namespace content

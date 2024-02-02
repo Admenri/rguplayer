@@ -470,6 +470,7 @@ void Window2::InitWindowInternal() {
   arrows_.arrows_quads_ =
       std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
   arrows_.arrows_quads_->Resize(4 + 1);
+  arrows_.pause_vertex_ = nullptr;
 
   cursor_.cursor_quads_ =
       std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();

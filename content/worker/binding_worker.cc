@@ -43,9 +43,6 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
   self->quit_req_ = &token;
   self->renderer_->InitRenderer(self->config_, self->window_);
 
-  // Init font attributes
-  Font::InitStaticFont();
-
   // Init Modules
   self->graphics_ =
       new Graphics(self.get(), self->renderer_, self->initial_resolution_);

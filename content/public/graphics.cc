@@ -26,10 +26,14 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
       fps_manager_(std::make_unique<fpslimiter::FPSLimiter>()),
       brightness_(255),
       frozen_(false),
-      default_font_(new Font()),
       fps_display_{0, SDL_GetPerformanceCounter()} {
+  // Init font attributes
+  Font::InitStaticFont();
+  default_font_ = new Font();
+
   viewport_rect().rect = initial_resolution;
 
+  // TODO: rgss1 frame rate
   fps_manager_->SetFrameRate(60);
   frame_rate_ = 60;
 
@@ -307,7 +311,7 @@ void Graphics::CompositeScreenInternal() {
 
   GLenum errcode = renderer::GL.GetError();
   if (errcode) {
-    LOG(ERROR) << "[Graphics] GLError: " << errcode;
+    LOG(INFO) << "[Graphics] GLError: " << errcode;
   }
 }
 

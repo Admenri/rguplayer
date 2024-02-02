@@ -66,7 +66,8 @@ void Input::Update() {
 
       bool repeated = false;
       // TODO: RGSS 1/2/3 specific process
-      repeated = (key_states_[i].repeat_count >= 23 &&
+      repeated = key_states_[i].repeat_count == 1 ||
+                 (key_states_[i].repeat_count >= 23 &&
                   (key_states_[i].repeat_count + 1) % 6 == 0);
 
       key_states_[i].repeat = repeated;

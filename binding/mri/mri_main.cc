@@ -105,9 +105,25 @@ MRI_METHOD(mri_rgssmain) {
 MRI_METHOD(mri_rgssstop) {
   scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
 
-  while (true)
+  while (!MriGetGlobalRunner()->is_quit_required())
     screen->Update();
 
+  return Qnil;
+}
+
+MRI_METHOD(mri_p) {
+  VALUE dispString = rb_str_buf_new(128);
+  ID conv = rb_intern("inspect");
+
+  for (int i = 0; i < argc; ++i) {
+    VALUE str = rb_funcall2(argv[i], conv, 0, NULL);
+    rb_str_buf_append(dispString, str);
+
+    if (i < argc)
+      rb_str_buf_cat2(dispString, " ");
+  }
+
+  LOG(INFO) << RSTRING_PTR(dispString);
   return Qnil;
 }
 
@@ -168,6 +184,7 @@ void BindingEngineMri::InitializeBinding(
 
   MriDefineModuleFunction(rb_mKernel, "rgss_main", mri_rgssmain);
   MriDefineModuleFunction(rb_mKernel, "rgss_stop", mri_rgssstop);
+  MriDefineModuleFunction(rb_mKernel, "p", mri_p);
 
   LOG(INFO) << "[Binding] CRuby Interpreter Version: " << RUBY_API_VERSION_CODE;
   LOG(INFO) << "[Binding] CRuby Interpreter Platform: " << RUBY_PLATFORM;
