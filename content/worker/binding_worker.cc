@@ -60,6 +60,9 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
   // Destroy and release resource for current worker cc
   self->binding_engine_->FinalizeBinding();
 
+  // Destroy renderer
+  self->renderer_->QuitRequired();
+
   // Quit app required
   self->window_->CloseRequired();
 }

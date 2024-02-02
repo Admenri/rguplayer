@@ -32,14 +32,16 @@ void Sprite::SetBitmap(scoped_refptr<Bitmap> bitmap) {
   if (bitmap->IsDisposed())
     return;
 
-  src_rect_ = bitmap->GetRect();
+  *src_rect_ = *bitmap->GetRect();
   OnSrcRectChangedInternal();
 }
 
 void Sprite::SetSrcRect(scoped_refptr<Rect> rect) {
   CheckIsDisposed();
+
   if (*src_rect_ == *rect)
     return;
+
   *src_rect_ = *rect;
   OnSrcRectChangedInternal();
 }
@@ -63,18 +65,17 @@ void Sprite::Update() {
 }
 
 void Sprite::InitAttributeInternal() {
-  src_rect_ = new Rect();
-
   color_ = new Color();
   tone_ = new Tone();
 
+  src_rect_ = new Rect();
   src_rect_observer_ = src_rect_->AddChangedObserver(base::BindRepeating(
       &Sprite::OnSrcRectChangedInternal, weak_ptr_factory_.GetWeakPtr()));
 
   screen()->renderer()->PostTask(base::BindOnce(
       &Sprite::InitSpriteInternal, weak_ptr_factory_.GetWeakPtr()));
 
-  if (auto* viewport = GetViewport().get())
+  if (GetViewport())
     OnViewportRectChanged(parent_rect());
 }
 

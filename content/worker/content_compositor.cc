@@ -12,8 +12,6 @@ WorkerTreeCompositor::WorkerTreeCompositor() {}
 WorkerTreeCompositor::~WorkerTreeCompositor() {
   binding_runner_->RequestQuit();
   binding_runner_.reset();
-
-  render_runner_->QuitRequired();
   render_runner_.reset();
 }
 
