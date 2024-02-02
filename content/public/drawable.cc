@@ -65,7 +65,8 @@ void DrawableParent::NotifyPrepareComposite() {
 
   for (auto it = drawables_.tail(); it != drawables_.end();
        it = it->previous()) {
-    it->value()->BeforeComposite();
+    if (it->value()->GetVisible())
+      it->value()->BeforeComposite();
   }
 }
 
@@ -75,7 +76,8 @@ void DrawableParent::CompositeChildren() {
 
   for (auto it = drawables_.tail(); it != drawables_.end();
        it = it->previous()) {
-    it->value()->Composite();
+    if (it->value()->GetVisible())
+      it->value()->Composite();
   }
 }
 

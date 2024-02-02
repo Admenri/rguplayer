@@ -51,7 +51,7 @@ template <typename Ty>
 MRI_METHOD(disposable_dispose) {
   content::Disposable* obj = MriGetStructData<Ty>(self);
 
-  if (!obj || obj->IsDisposed())
+  if (!obj)
     return Qnil;
 
   obj->Dispose();
