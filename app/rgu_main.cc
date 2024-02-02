@@ -47,6 +47,9 @@ int main(int argc, char* argv[]) {
       new content::WorkerTreeCompositor);
   content::ContentInitParams params;
 
+  config->version() = content::CoreConfigure::RGSS3;
+  config->game_scripts() = "D:/Desktop/Project1/Data/Scripts.rvdata2";
+
   params.config = config;
   params.binding_engine = std::make_unique<binding::BindingEngineMri>();
   params.initial_resolution = config->initial_resolution();

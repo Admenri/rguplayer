@@ -10,12 +10,15 @@
 #include "binding/mri/init_bitmap.h"
 #include "binding/mri/init_corefile.h"
 #include "binding/mri/init_font.h"
+#include "binding/mri/init_graphics.h"
+#include "binding/mri/init_input.h"
 #include "binding/mri/init_plane.h"
 #include "binding/mri/init_sprite.h"
 #include "binding/mri/init_table.h"
 #include "binding/mri/init_tilemap2.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/init_viewport.h"
+#include "binding/mri/init_window2.h"
 #include "content/worker/binding_worker.h"
 
 #include "binding/rpg/module_rpg1.rb.xxd"
@@ -62,7 +65,49 @@ static void ParseExeceptionInfo(VALUE exc,
   LOG(INFO) << "[Binding] " << StringValueCStr(ds);
 }
 
+static VALUE RgssMainCb(VALUE block) {
+  rb_funcall2(block, rb_intern("call"), 0, 0);
+  return Qnil;
+}
+
+static VALUE RgssMainRescue(VALUE arg, VALUE exc) {
+  VALUE* excRet = (VALUE*)arg;
+
+  *excRet = exc;
+
+  return Qnil;
+}
+
 }  // namespace
+
+MRI_METHOD(mri_rgssmain) {
+  while (true) {
+    VALUE exc = Qnil;
+
+    rb_rescue2((VALUE(*)(ANYARGS))RgssMainCb, rb_block_proc(),
+               (VALUE(*)(ANYARGS))RgssMainRescue, (VALUE)&exc, rb_eException,
+               (VALUE)0);
+
+    if (NIL_P(exc))
+      break;
+
+    if (rb_obj_class(exc) == MriGetException(MriException::RGSSReset))
+      LOG(INFO) << "Reset";
+    else
+      rb_exc_raise(exc);
+  }
+
+  return Qnil;
+}
+
+MRI_METHOD(mri_rgssstop) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  while (true)
+    screen->Update();
+
+  return Qnil;
+}
 
 BindingEngineMri::BindingEngineMri() {}
 
@@ -89,12 +134,15 @@ void BindingEngineMri::InitializeBinding(
 
   switch (config->version()) {
     case content::CoreConfigure::RGSS1:
+      LOG(INFO) << "[Binding] Content Version: RGSS1";
       rb_eval_string(module_rpg1);
       break;
     case content::CoreConfigure::RGSS2:
+      LOG(INFO) << "[Binding] Content Version: RGSS2";
       rb_eval_string(module_rpg2);
       break;
     case content::CoreConfigure::RGSS3:
+      LOG(INFO) << "[Binding] Content Version: RGSS3";
       rb_eval_string(module_rpg3);
       break;
     default:
@@ -112,6 +160,12 @@ void BindingEngineMri::InitializeBinding(
   InitPlaneBinding();
   InitSpriteBinding();
   InitTilemap2Binding();
+  InitWindow2Binding();
+  InitGraphicsBinding();
+  InitInputBinding();
+
+  MriDefineModuleFunction(rb_mKernel, "rgss_main", mri_rgssmain);
+  MriDefineModuleFunction(rb_mKernel, "rgss_stop", mri_rgssstop);
 
   LOG(INFO) << "[Binding] CRuby Interpreter Version: " << RUBY_API_VERSION_CODE;
   LOG(INFO) << "[Binding] CRuby Interpreter Platform: " << RUBY_PLATFORM;

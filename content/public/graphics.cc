@@ -31,6 +31,7 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
   viewport_rect().rect = initial_resolution;
 
   fps_manager_->SetFrameRate(60);
+  frame_rate_ = 60;
 
   renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
                                      weak_ptr_factory_.GetWeakPtr()));
@@ -208,6 +209,28 @@ void Graphics::Transition(int duration,
 
   /* Transition process complete */
   frozen_ = false;
+}
+
+void Graphics::SetFrameRate(int rate) {
+  rate = std::max(rate, 10);
+  fps_manager_->SetFrameRate(rate);
+  frame_rate_ = rate;
+}
+
+int Graphics::GetFrameRate() const {
+  return frame_rate_;
+}
+
+void Graphics::SetFrameCount(int64_t count) {
+  frame_count_ = count;
+}
+
+int Graphics::GetFrameCount() const {
+  return frame_count_;
+}
+
+void Graphics::FrameReset() {
+  fps_manager_->ResetFrameSkipCap();
 }
 
 uint64_t Graphics::GetWindowHandle() {

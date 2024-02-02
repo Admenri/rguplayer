@@ -13,6 +13,8 @@ namespace binding {
 
 MRI_DEFINE_DATATYPE_REF(Tilemap2, "Tilemap", content::Tilemap2);
 
+MRI_DEFINE_DATATYPE(BitmapArray, "BitmapArray", RUBY_NEVER_FREE);
+
 MRI_METHOD(tilemap2_initialize) {
   scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
 
@@ -28,11 +30,16 @@ MRI_METHOD(tilemap2_initialize) {
   obj->AddRef();
   MriSetStructData(self, obj.get());
 
+  VALUE klass = rb_const_get(rb_cObject, rb_intern("BitmapArray"));
+  VALUE bitmap_array = rb_obj_alloc(klass);
+  MriSetStructData(bitmap_array, obj.get());
+
   VALUE ary = rb_ary_new2(9);
   for (int i = 0; i < 9; ++i)
     rb_ary_push(ary, Qnil);
+  rb_iv_set(bitmap_array, "_bitmaps", ary);
 
-  rb_iv_set(self, "_bitmaps", ary);
+  rb_iv_set(self, "_bitmap_array", bitmap_array);
 
   return self;
 }
@@ -45,36 +52,12 @@ MRI_METHOD(tilemap2_update) {
   return self;
 }
 
-MRI_METHOD(tilemap2_get_bitmaps) {
+MRI_METHOD(tilemap2_bitmap_array) {
   scoped_refptr<content::Tilemap2> obj =
       MriGetStructData<content::Tilemap2>(self);
   MRI_GUARD(obj->CheckIsDisposed(););
 
-  int i;
-  MriParseArgsTo(argc, argv, "i", &i);
-  i = std::clamp(i, 0, 8);
-
-  VALUE ary = rb_iv_get(self, "_bitmaps");
-  return rb_ary_entry(ary, i);
-}
-
-MRI_METHOD(tilemap2_set_bitmaps) {
-  scoped_refptr<content::Tilemap2> obj =
-      MriGetStructData<content::Tilemap2>(self);
-
-  int i;
-  VALUE o;
-  MriParseArgsTo(argc, argv, "io", &i, &o);
-  i = std::clamp(i, 0, 8);
-
-  scoped_refptr<content::Bitmap> bitmap_obj =
-      MriCheckStructData<content::Bitmap>(self, kBitmapDataType);
-  obj->SetBitmap(i, bitmap_obj);
-
-  VALUE ary = rb_iv_get(self, "_bitmaps");
-  rb_ary_store(ary, i, o);
-
-  return o;
+  return rb_iv_get(self, "_bitmap_array");
 }
 
 MRI_METHOD(tilemap2_get_ox) {
@@ -179,6 +162,38 @@ MRI_METHOD(tilemap2_set_viewport) {
   return v;
 }
 
+MRI_METHOD(bitmaparray_get_bitmaps) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+  MRI_GUARD(obj->CheckIsDisposed(););
+
+  int i;
+  MriParseArgsTo(argc, argv, "i", &i);
+  i = std::clamp(i, 0, 8);
+
+  VALUE ary = rb_iv_get(self, "_bitmaps");
+  return rb_ary_entry(ary, i);
+}
+
+MRI_METHOD(bitmaparray_set_bitmaps) {
+  scoped_refptr<content::Tilemap2> obj =
+      MriGetStructData<content::Tilemap2>(self);
+
+  int i;
+  VALUE o;
+  MriParseArgsTo(argc, argv, "io", &i, &o);
+  i = std::clamp(i, 0, 8);
+
+  scoped_refptr<content::Bitmap> bitmap_obj =
+      MriCheckStructData<content::Bitmap>(o, kBitmapDataType);
+  obj->SetBitmap(i, bitmap_obj);
+
+  VALUE ary = rb_iv_get(self, "_bitmaps");
+  rb_ary_store(ary, i, o);
+
+  return o;
+}
+
 void InitTilemap2Binding() {
   VALUE klass = rb_define_class("Tilemap", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kTilemap2DataType>);
@@ -188,7 +203,7 @@ void InitTilemap2Binding() {
   MriDefineMethod(klass, "initialize", tilemap2_initialize);
   MriDefineMethod(klass, "update", tilemap2_update);
 
-  MriDefineAttr(klass, "bitmaps", tilemap2, bitmaps);
+  MriDefineMethod(klass, "bitmaps", tilemap2_bitmap_array);
   MriDefineAttr(klass, "ox", tilemap2, ox);
   MriDefineAttr(klass, "oy", tilemap2, oy);
   MriDefineAttr(klass, "visible", tilemap2, visible);
@@ -196,6 +211,11 @@ void InitTilemap2Binding() {
   MriDefineAttr(klass, "map_data", tilemap2, MapData);
   MriDefineAttr(klass, "flash_data", tilemap2, FlashData);
   MriDefineAttr(klass, "flags", tilemap2, Flags);
+
+  VALUE bitmaps = rb_define_class("BitmapArray", rb_cObject);
+  rb_define_alloc_func(bitmaps, MriClassAllocate<&kBitmapArrayDataType>);
+
+  MriDefineAttr(bitmaps, "[]", bitmaparray, bitmaps);
 }
 
 }  // namespace binding

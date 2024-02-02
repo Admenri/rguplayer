@@ -51,6 +51,14 @@ class Graphics final : public base::RefCounted<Graphics>,
                   scoped_refptr<Bitmap> trans_bitmap = nullptr,
                   int vague = 40);
 
+  void SetFrameRate(int rate);
+  int GetFrameRate() const;
+
+  void SetFrameCount(int64_t count);
+  int GetFrameCount() const;
+
+  void FrameReset();
+
   uint64_t GetWindowHandle();
 
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
@@ -108,7 +116,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   int brightness_ = 255;
 
   uint64_t frame_count_ = 0;
-  double frame_rate_ = 60.0;
+  int frame_rate_ = 60;
   uint32_t average_fps_ = 0;
 
   scoped_refptr<Font> default_font_;

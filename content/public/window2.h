@@ -48,13 +48,13 @@ class Window2 : public base::RefCounted<Window2>,
   scoped_refptr<Rect> GetCursorRect() const { return cursor_rect_; }
   void SetCursorRect(scoped_refptr<Rect> cursor_rect);
 
-  bool IsActive() const { return active_; }
+  bool GetActive() const { return active_; }
   void SetActive(bool active);
 
-  bool IsArrowsVisible() const { return arrows_visible_; }
+  bool GetArrowsVisible() const { return arrows_visible_; }
   void SetArrowsVisible(bool arrows_visible);
 
-  bool IsPause() const { return pause_; }
+  bool GetPause() const { return pause_; }
   void SetPause(bool pause);
 
   int GetX() const { return rect_.x; }

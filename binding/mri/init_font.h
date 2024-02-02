@@ -11,6 +11,8 @@ namespace binding {
 
 MRI_DECLARE_DATATYPE(Font);
 
+void font_init_prop(scoped_refptr<content::Font> font, VALUE self);
+
 void InitFontBinding();
 
 }  // namespace binding

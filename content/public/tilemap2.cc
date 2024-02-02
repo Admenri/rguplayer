@@ -555,6 +555,9 @@ class GroundLayer : public ViewportChild {
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
+    if (!tilemap_->init_internal_)
+      return;
+
     scoped_refptr<Bitmap> tilemap_a1 =
         tilemap_->bitmaps_[Tilemap2::TilemapBitmapID::TileA1];
 
@@ -610,6 +613,9 @@ class AboveLayer : public ViewportChild {
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
+    if (!tilemap_->init_internal_)
+      return;
+
     auto& shader = renderer::GSM.shaders->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
@@ -641,13 +647,14 @@ Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
     : GraphicElement(screen),
       Disposable(screen),
       viewport_(viewport),
-      tile_size_(tilesize) {
+      tile_size_(tilesize),
+      init_internal_(false) {
+  screen->renderer()->PostTask(base::BindOnce(&Tilemap2::InitTilemapInternal,
+                                              weak_ptr_factory_.GetWeakPtr()));
+
   ground_ =
       std::make_unique<GroundLayer>(screen, weak_ptr_factory_.GetWeakPtr());
   above_ = std::make_unique<AboveLayer>(screen, weak_ptr_factory_.GetWeakPtr());
-
-  screen->renderer()->PostTask(base::BindOnce(&Tilemap2::InitTilemapInternal,
-                                              weak_ptr_factory_.GetWeakPtr()));
 }
 
 Tilemap2::~Tilemap2() {
@@ -801,6 +808,9 @@ void Tilemap2::OnObjectDisposed() {
 }
 
 void Tilemap2::BeforeTilemapComposite() {
+  if (!init_internal_)
+    return;
+
   flash_layer_->BeforeComposite();
 
   UpdateTilemapViewportInternal();
@@ -825,6 +835,8 @@ void Tilemap2::InitTilemapInternal() {
   atlas_tfb_ = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_, tile_size_);
   renderer::TextureFrameBuffer::LinkFrameBuffer(atlas_tfb_);
+
+  init_internal_ = true;
 }
 
 void Tilemap2::CreateTileAtlasInternal() {

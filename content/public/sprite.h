@@ -147,9 +147,7 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void SetColor(scoped_refptr<Color> color) {
     CheckIsDisposed();
-    if (color == color_)
-      return;
-    color_ = color;
+    *color_ = *color;
   }
 
   scoped_refptr<Tone> GetTone() const {
@@ -159,9 +157,7 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void SetTone(scoped_refptr<Tone> tone) {
     CheckIsDisposed();
-    if (tone_ == tone)
-      return;
-    tone_ = tone;
+    *tone_ = *tone;
   }
 
   int GetX() const {

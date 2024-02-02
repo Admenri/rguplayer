@@ -141,6 +141,7 @@ void InitPlaneBinding() {
 
   MriDefineMethod(klass, "initialize", plane_initialize);
 
+  MriDefineAttr(klass, "bitmap", plane, bitmap);
   MriDefineAttr(klass, "color", plane, Color);
   MriDefineAttr(klass, "tone", plane, Tone);
   MriDefineAttr(klass, "ox", plane, OX);

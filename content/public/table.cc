@@ -4,6 +4,8 @@
 
 #include "content/public/table.h"
 
+#include "base/exceptions/exception.h"
+
 namespace content {
 
 Table::Table(int x_size, int y_size, int z_size)
@@ -96,7 +98,8 @@ std::string Table::Serialize() {
 
 scoped_refptr<Table> Table::Deserialize(const std::string& data) {
   if (data.size() < 20)
-    return nullptr;
+    throw base::Exception::Exception(base::Exception::ContentError,
+                                     "incorrect table serialize data");
 
   int xsize, ysize, zsize, size;
   xsize = Serializable::ReadInt32(data.data(), 4);
@@ -105,13 +108,16 @@ scoped_refptr<Table> Table::Deserialize(const std::string& data) {
   size = Serializable::ReadInt32(data.data(), 16);
 
   if (size != xsize * ysize * zsize)
-    return nullptr;
+    throw base::Exception::Exception(base::Exception::ContentError,
+                                     "incorrect table serialize data");
   if (data.size() != sizeof(int32_t) * 5 + sizeof(int16_t) * size)
-    return nullptr;
+    throw base::Exception::Exception(base::Exception::ContentError,
+                                     "incorrect table serialize data");
 
   scoped_refptr<Table> obj = new Table(xsize, ysize, zsize);
-  memcpy(&obj->data_[0], data.data() + sizeof(int32_t) * 5,
-         size * sizeof(int16_t));
+  if (size)
+    memcpy(&obj->data_[0], data.data() + sizeof(int32_t) * 5,
+           size * sizeof(int16_t));
 
   return obj;
 }

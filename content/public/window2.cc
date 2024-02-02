@@ -142,10 +142,10 @@ void Window2::SetContents(scoped_refptr<Bitmap> contents) {
 void Window2::SetCursorRect(scoped_refptr<Rect> cursor_rect) {
   CheckIsDisposed();
 
-  if (cursor_rect_ == cursor_rect)
+  if (*cursor_rect_ == *cursor_rect)
     return;
 
-  cursor_rect_ = cursor_rect;
+  *cursor_rect_ = *cursor_rect;
   cursor_.need_update_ = true;
 }
 
@@ -311,10 +311,10 @@ void Window2::SetOpenness(int openness) {
 void Window2::SetTone(scoped_refptr<Tone> tone) {
   CheckIsDisposed();
 
-  if (tone_ == tone)
+  if (*tone_ == *tone)
     return;
 
-  tone_ = tone;
+  *tone_ = *tone;
   base_layer_.base_tex_updated_ = true;
 }
 
@@ -633,8 +633,8 @@ void Window2::UpdateBaseTextureInternal() {
 void Window2::UpdateBaseQuadInternal() {
   const float openness = openness_ / 255.0f;
   const base::Rect tex(0, 0, rect_.width, rect_.height);
-  const base::Rect pos(0, (rect_.height / 2.0f) * (1.0f - openness), rect_.width,
-                       rect_.height * openness);
+  const base::Rect pos(0, (rect_.height / 2.0f) * (1.0f - openness),
+                       rect_.width, rect_.height * openness);
 
   base_quad_->SetTexCoordRect(tex);
   base_quad_->SetPositionRect(pos);

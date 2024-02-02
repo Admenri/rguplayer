@@ -43,32 +43,27 @@ class Viewport : public base::RefCounted<Viewport>,
 
   scoped_refptr<Color> GetColor() {
     CheckIsDisposed();
-
     return color_;
   }
 
   void SetColor(scoped_refptr<Color> color) {
     CheckIsDisposed();
-
-    color_ = color;
+    *color_ = *color;
   }
 
   scoped_refptr<Tone> GetTone() {
     CheckIsDisposed();
-
     return tone_;
   }
 
   void SetTone(scoped_refptr<Tone> tone) {
     CheckIsDisposed();
-
-    tone_ = tone;
+    *tone_ = *tone;
   }
 
   void SetRect(scoped_refptr<Rect> rect);
   scoped_refptr<Rect> GetRect() {
     CheckIsDisposed();
-
     return rect_;
   }
 

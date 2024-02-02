@@ -31,6 +31,11 @@ void CollectStrings(VALUE obj, std::vector<std::string>& out) {
 
 MRI_DEFINE_DATATYPE_REF(Font, "Font", content::Font);
 
+void font_init_prop(scoped_refptr<content::Font> font, VALUE self) {
+  MriWrapProperty(self, font->GetColor(), "_color", kColorDataType);
+  MriWrapProperty(self, font->GetOutColor(), "_out_color", kColorDataType);
+}
+
 MRI_METHOD(font_initialize) {
   scoped_refptr<content::Font> font_obj;
   switch (argc) {
@@ -59,8 +64,7 @@ MRI_METHOD(font_initialize) {
     } break;
   }
 
-  MriWrapProperty(self, font_obj->GetColor(), "_color", kColorDataType);
-  MriWrapProperty(self, font_obj->GetOutColor(), "_out_color", kColorDataType);
+  font_init_prop(font_obj, self);
 
   font_obj->AddRef();
   MriSetStructData(self, font_obj.get());
@@ -81,8 +85,7 @@ MRI_METHOD(font_initialize_copy) {
   obj->AddRef();
   MriSetStructData(self, obj.get());
 
-  MriWrapProperty(self, obj->GetColor(), "_color", kColorDataType);
-  MriWrapProperty(self, obj->GetOutColor(), "_out_color", kColorDataType);
+  font_init_prop(obj, self);
 
   return self;
 }
@@ -142,8 +145,6 @@ MRI_METHOD(font_set_default_outcolor) {
 
   return o;
 }
-
-#define MRI_BOOL_NEW(x) ((x) ? Qtrue : Qfalse)
 
 #define FONT_DEFAULT_ATTR(name, type, p, f)                             \
   MRI_METHOD(font_get_##name) { return f(content::Font::Get##name()); } \

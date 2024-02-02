@@ -39,7 +39,11 @@ class Rect : public base::RefCounted<Rect>,
   ~Rect() override {}
 
   Rect(const Rect& other) { data_ = other.data_; }
-  Rect& operator=(const Rect& other) { data_ = other.data_; }
+  const Rect& operator=(const Rect& other) {
+    data_ = other.data_;
+    return other;
+  }
+
   bool operator==(const Rect& other) { return other.data_ == data_; }
 
   void Set(const base::Rect& rect) {
@@ -110,7 +114,11 @@ class Tone : public base::RefCounted<Tone>,
   ~Tone() override {}
 
   Tone(const Tone& other) { data_ = other.data_; }
-  Tone& operator=(const Tone& other) { data_ = other.data_; }
+  const Tone& operator=(const Tone& other) {
+    data_ = other.data_;
+    return other;
+  }
+
   bool operator==(const Tone& other) { return other.data_ == data_; }
 
   void Set(float red, float green, float blue, float gray = 255.0f) {
@@ -183,7 +191,11 @@ class Color : public base::RefCounted<Color>,
   ~Color() override {}
 
   Color(const Color& other) { data_ = other.data_; }
-  Color& operator=(const Color& other) { data_ = other.data_; }
+  const Color& operator=(const Color& other) {
+    data_ = other.data_;
+    return other;
+  }
+
   bool operator==(const Color& other) { return other.data_ == data_; }
 
   void Set(float red, float green, float blue, float alpha) {

@@ -186,7 +186,7 @@ scoped_refptr<Ty> MriInitializeViewportchild(
     int argc,
     VALUE* argv,
     VALUE self) {
-  VALUE v;
+  VALUE v = Qnil;
   MriParseArgsTo(argc, argv, "|o", &v);
 
   scoped_refptr<content::Viewport> viewport;

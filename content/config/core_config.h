@@ -24,11 +24,11 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   CoreConfigure(const CoreConfigure&) = delete;
   CoreConfigure& operator=(const CoreConfigure&) = delete;
 
-  RGSSVersion version() const { return rgss_version_; }
-  bool allow_frame_skip() const { return allow_frame_skip_; }
-  std::string game_title() const { return game_title_; }
-  std::string game_scripts() const { return game_scripts_; }
-  base::Vec2i initial_resolution() const { return initial_resolution_; }
+  RGSSVersion& version() { return rgss_version_; }
+  bool& allow_frame_skip() { return allow_frame_skip_; }
+  std::string& game_title() { return game_title_; }
+  std::string& game_scripts() { return game_scripts_; }
+  base::Vec2i& initial_resolution() { return initial_resolution_; }
 
  private:
   RGSSVersion rgss_version_ = RGSS3;

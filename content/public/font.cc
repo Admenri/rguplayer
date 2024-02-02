@@ -75,7 +75,7 @@ bool Font::GetDefaultOutline() {
 }
 
 void Font::SetDefaultColor(scoped_refptr<Color> color) {
-  g_DefaultColor = color;
+  *g_DefaultColor = *color;
 }
 
 scoped_refptr<Color> Font::GetDefaultColor() {
@@ -83,7 +83,7 @@ scoped_refptr<Color> Font::GetDefaultColor() {
 }
 
 void Font::SetDefaultOutColor(scoped_refptr<Color> color) {
-  g_DefaultOutColor = color;
+  *g_DefaultOutColor = *color;
 }
 
 scoped_refptr<Color> Font::GetDefaultOutColor() {
@@ -193,7 +193,7 @@ bool Font::GetOutline() const {
 }
 
 void Font::SetColor(scoped_refptr<Color> color) {
-  color_ = color;
+  *color_ = *color;
 }
 
 scoped_refptr<Color> Font::GetColor() const {
@@ -201,7 +201,7 @@ scoped_refptr<Color> Font::GetColor() const {
 }
 
 void Font::SetOutColor(scoped_refptr<Color> color) {
-  out_color_ = color;
+  *out_color_ = *color;
 }
 
 scoped_refptr<Color> Font::GetOutColor() const {

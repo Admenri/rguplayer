@@ -84,7 +84,9 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
       font_(host->default_font()),
       pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
   // TODO: add generic filesystem interface
-  surface_buffer_ = IMG_Load(filename.c_str());
+  std::string tmp_name(filename);
+  tmp_name += ".png";
+  surface_buffer_ = IMG_Load(tmp_name.c_str());
 
   if (!surface_buffer_) {
     throw base::Exception::Exception(base::Exception::ContentError,

@@ -30,83 +30,70 @@ class Plane : public base::RefCounted<Plane>,
   void SetBitmap(scoped_refptr<Bitmap> bitmap);
   scoped_refptr<Bitmap> GetBitmap() const {
     CheckIsDisposed();
-
     return bitmap_;
   }
 
   void SetOX(int ox);
   int GetOX() const {
     CheckIsDisposed();
-
     return ox_;
   }
 
   void SetOY(int oy);
   int GetOY() const {
     CheckIsDisposed();
-
     return oy_;
   }
 
   void SetZoomX(double zoom_x);
   double GetZoomX() const {
     CheckIsDisposed();
-
     return zoom_x_;
   }
 
   void SetZoomY(double zoom_y);
   double GetZoomY() const {
     CheckIsDisposed();
-
     return zoom_y_;
   }
 
   void SetOpacity(int opacity) {
     CheckIsDisposed();
-
     opacity_ = opacity;
   }
 
   int GetOpacity() const {
     CheckIsDisposed();
-
     return opacity_;
   }
 
   void SetBlendType(renderer::GLBlendType blend_type) {
     CheckIsDisposed();
-
     blend_type_ = blend_type;
   }
 
   renderer::GLBlendType GetBlendType() const {
     CheckIsDisposed();
-
     return blend_type_;
   }
 
   void SetColor(scoped_refptr<Color> color) {
     CheckIsDisposed();
-
-    color_ = color;
+    *color_ = *color;
   }
 
   scoped_refptr<Color> GetColor() const {
     CheckIsDisposed();
-
     return color_;
   }
 
   void SetTone(scoped_refptr<Tone> tone) {
     CheckIsDisposed();
-
-    tone_ = tone;
+    *tone_ = *tone;
   }
 
   scoped_refptr<Tone> GetTone() const {
     CheckIsDisposed();
-
     return tone_;
   }
 

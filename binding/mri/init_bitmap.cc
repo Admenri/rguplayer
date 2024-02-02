@@ -7,11 +7,21 @@
 #include "binding/mri/init_font.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/mri_template.h"
-#include "content/public/bitmap.h"
 
 namespace binding {
 
+static std::string AsString(VALUE obj) {
+  VALUE str = rb_obj_as_string(obj);
+  return std::string(RSTRING_PTR(str), RSTRING_LEN(str));
+}
+
 MRI_DEFINE_DATATYPE_REF(Bitmap, "Bitmap", content::Bitmap);
+
+void bitmap_init_prop(scoped_refptr<content::Bitmap> bitmap, VALUE self) {
+  VALUE font = MriWrapProperty(self, bitmap->GetFont(), "_font", kFontDataType);
+
+  font_init_prop(bitmap->GetFont(), font);
+}
 
 MRI_METHOD(bitmap_initialize) {
   scoped_refptr<content::Bitmap> bitmap;
@@ -40,7 +50,7 @@ MRI_METHOD(bitmap_initialize) {
   bitmap->AddRef();
   MriSetStructData(self, bitmap.get());
 
-  MriWrapProperty(self, bitmap->GetFont(), "_font", kFontDataType);
+  bitmap_init_prop(bitmap, self);
 
   return self;
 }
@@ -260,22 +270,22 @@ MRI_METHOD(bitmap_draw_text) {
 
   if (argc <= 3) {
     VALUE rect;
-    std::string str;
+    VALUE str;
     int align = 0;
-    MriParseArgsTo(argc, argv, "osi", &rect, &str, &align);
+    MriParseArgsTo(argc, argv, "oo|i", &rect, &str, &align);
 
     scoped_refptr<content::Rect> rect_obj =
         MriCheckStructData<content::Rect>(rect, kRectDataType);
 
-    MRI_GUARD(obj->DrawText(rect_obj->AsBase(), str,
+    MRI_GUARD(obj->DrawText(rect_obj->AsBase(), AsString(str),
                             (content::Bitmap::TextAlign)align););
   } else {
     int x, y, w, h;
-    std::string str;
+    VALUE str;
     int align = 0;
-    MriParseArgsTo(argc, argv, "iiiisi", &x, &y, &w, &h, &str, &align);
+    MriParseArgsTo(argc, argv, "iiiio|i", &x, &y, &w, &h, &str, &align);
 
-    MRI_GUARD(obj->DrawText(base::Rect(x, y, w, h), str,
+    MRI_GUARD(obj->DrawText(base::Rect(x, y, w, h), AsString(str),
                             (content::Bitmap::TextAlign)align););
   }
 

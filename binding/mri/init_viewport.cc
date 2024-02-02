@@ -34,6 +34,7 @@ MRI_METHOD(viewport_initialize) {
     obj = new content::Viewport(screen, base::Rect(x, y, width, height));
   }
 
+  obj->AddRef();
   MriSetStructData<content::Viewport>(self, obj.get());
 
   MriWrapProperty(self, obj->GetRect(), "_rect", kRectDataType);

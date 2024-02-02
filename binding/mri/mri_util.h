@@ -156,6 +156,8 @@ VALUE MriWrapProperty(VALUE self,
   MriDefineClassMethod(klass, rb_name, ktype##_get_##ctype); \
   MriDefineClassMethod(klass, rb_name "=", ktype##_set_##ctype);
 
+#define MRI_BOOL_NEW(x) ((x) ? Qtrue : Qfalse)
+
 }  // namespace binding
 
 #endif  // !BINDING_MRI_MRI_UTIL_H_
