@@ -83,11 +83,11 @@ void QuadDrawable::SetPositionRect(const base::RectF& pos) {
   if (position_cache_ == pos)
     return;
 
-  int i = -1;
-  vertex_[++i].position = base::Vec2(pos.x, pos.y);
-  vertex_[++i].position = base::Vec2(pos.x + pos.width, pos.y);
-  vertex_[++i].position = base::Vec2(pos.x + pos.width, pos.y + pos.height);
-  vertex_[++i].position = base::Vec2(pos.x, pos.y + pos.height);
+  int i = 0;
+  vertex_[i++].position = base::Vec2(pos.x, pos.y);
+  vertex_[i++].position = base::Vec2(pos.x + pos.width, pos.y);
+  vertex_[i++].position = base::Vec2(pos.x + pos.width, pos.y + pos.height);
+  vertex_[i++].position = base::Vec2(pos.x, pos.y + pos.height);
   need_update_ = true;
 
   position_cache_ = pos;
@@ -97,12 +97,12 @@ void QuadDrawable::SetTexCoordRect(const base::RectF& texcoord) {
   if (texCoord_cache_ == texcoord)
     return;
 
-  int i = -1;
-  vertex_[++i].texCoord = base::Vec2(texcoord.x, texcoord.y);
-  vertex_[++i].texCoord = base::Vec2(texcoord.x + texcoord.width, texcoord.y);
-  vertex_[++i].texCoord =
+  int i = 0;
+  vertex_[i++].texCoord = base::Vec2(texcoord.x, texcoord.y);
+  vertex_[i++].texCoord = base::Vec2(texcoord.x + texcoord.width, texcoord.y);
+  vertex_[i++].texCoord =
       base::Vec2(texcoord.x + texcoord.width, texcoord.y + texcoord.height);
-  vertex_[++i].texCoord = base::Vec2(texcoord.x, texcoord.y + texcoord.height);
+  vertex_[i++].texCoord = base::Vec2(texcoord.x, texcoord.y + texcoord.height);
   need_update_ = true;
 
   texCoord_cache_ = texcoord;
@@ -110,11 +110,12 @@ void QuadDrawable::SetTexCoordRect(const base::RectF& texcoord) {
 
 void QuadDrawable::SetColor(int index, const base::Vec4& color) {
   if (index == -1) {
-    int i = -1;
-    vertex_[++i].color = color;
-    vertex_[++i].color = color;
-    vertex_[++i].color = color;
-    vertex_[++i].color = color;
+    int i = 0;
+    vertex_[i++].color = color;
+    vertex_[i++].color = color;
+    vertex_[i++].color = color;
+    vertex_[i++].color = color;
+    need_update_ = true;
     return;
   }
 

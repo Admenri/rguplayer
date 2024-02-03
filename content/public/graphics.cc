@@ -65,11 +65,7 @@ int Graphics::GetBrightness() const {
 void Graphics::SetBrightness(int brightness) {
   brightness = std::clamp<int>(brightness, 0, 255);
 
-  if (brightness_ == brightness)
-    return;
-
   brightness_ = brightness;
-  brightness_need_update_ = true;
 }
 
 void Graphics::Wait(int duration) {
@@ -284,9 +280,6 @@ void Graphics::InitScreenBufferInternal() {
   screen_quad_ = std::make_unique<renderer::QuadDrawable>();
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
-
-  brightness_quad_ = std::make_unique<renderer::QuadDrawable>();
-  brightness_quad_->SetColor();
 }
 
 void Graphics::DestroyBufferInternal() {
@@ -295,18 +288,9 @@ void Graphics::DestroyBufferInternal() {
   renderer::TextureFrameBuffer::Del(frozen_snapshot_);
 
   screen_quad_.reset();
-  brightness_quad_.reset();
 }
 
 void Graphics::CompositeScreenInternal() {
-  if (brightness_need_update_) {
-    brightness_need_update_ = false;
-
-    brightness_quad_->SetPositionRect(base::Vec2(resolution_));
-    brightness_quad_->SetColor(
-        -1, base::Vec4(0.0f, 0.0f, 0.0f, (255.0f - brightness_) / 255.0f));
-  }
-
   /* Prepare composite notify */
   DrawableParent::NotifyPrepareComposite();
 
@@ -321,12 +305,12 @@ void Graphics::CompositeScreenInternal() {
   DrawableParent::CompositeChildren();
 
   if (brightness_ < 255) {
-    auto& shader = renderer::GSM.shaders->color;
+    auto& shader = renderer::GSM.shaders->flat;
     shader.Bind();
     shader.SetProjectionMatrix(resolution_);
-    shader.SetTransOffset(base::Vec2());
+    shader.SetColor(base::Vec4(0, 0, 0, (255 - brightness_) / 255.0f));
 
-    brightness_quad_->Draw();
+    screen_quad_->Draw();
   }
 }
 

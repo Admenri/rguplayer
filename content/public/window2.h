@@ -35,65 +35,148 @@ class Window2 : public base::RefCounted<Window2>,
   void Update();
   void Move(int x, int y, int width, int height);
 
-  bool IsOpened() const { return openness_ == 255; }
-  bool IsClosed() const { return openness_ == 0; }
+  bool IsOpened() const {
+    CheckIsDisposed();
+    return openness_ == 255;
+  }
+
+  bool IsClosed() const {
+    CheckIsDisposed();
+    return openness_ == 0;
+  }
 
   /* Attribute */
-  scoped_refptr<Bitmap> GetWindowskin() const { return windowskin_; }
+  scoped_refptr<Bitmap> GetWindowskin() const {
+    CheckIsDisposed();
+    return windowskin_;
+  }
+
   void SetWindowskin(scoped_refptr<Bitmap> windowskin);
 
-  scoped_refptr<Bitmap> GetContents() const { return contents_; }
+  scoped_refptr<Bitmap> GetContents() const {
+    CheckIsDisposed();
+    return contents_;
+  }
+
   void SetContents(scoped_refptr<Bitmap> contents);
 
-  scoped_refptr<Rect> GetCursorRect() const { return cursor_rect_; }
+  scoped_refptr<Rect> GetCursorRect() const {
+    CheckIsDisposed();
+    return cursor_rect_;
+  }
+
   void SetCursorRect(scoped_refptr<Rect> cursor_rect);
 
-  bool GetActive() const { return active_; }
+  bool GetActive() const {
+    CheckIsDisposed();
+    return active_;
+  }
+
   void SetActive(bool active);
 
-  bool GetArrowsVisible() const { return arrows_visible_; }
+  bool GetArrowsVisible() const {
+    CheckIsDisposed();
+    return arrows_visible_;
+  }
+
   void SetArrowsVisible(bool arrows_visible);
 
-  bool GetPause() const { return pause_; }
+  bool GetPause() const {
+    CheckIsDisposed();
+    return pause_;
+  }
+
   void SetPause(bool pause);
 
-  int GetX() const { return rect_.x; }
+  int GetX() const {
+    CheckIsDisposed();
+    return rect_.x;
+  }
+
   void SetX(int x);
 
-  int GetY() const { return rect_.y; }
+  int GetY() const {
+    CheckIsDisposed();
+    return rect_.y;
+  }
+
   void SetY(int y);
 
-  int GetWidth() const { return rect_.width; }
+  int GetWidth() const {
+    CheckIsDisposed();
+    return rect_.width;
+  }
+
   void SetWidth(int width);
 
-  int GetHeight() const { return rect_.height; }
+  int GetHeight() const {
+    CheckIsDisposed();
+    return rect_.height;
+  }
+
   void SetHeight(int height);
 
-  int GetOX() const { return ox_; }
+  int GetOX() const {
+    CheckIsDisposed();
+    return ox_;
+  }
+
   void SetOX(int ox);
 
-  int GetOY() const { return oy_; }
+  int GetOY() const {
+    CheckIsDisposed();
+    return oy_;
+  }
+
   void SetOY(int oy);
 
-  int GetPadding() const { return padding_; }
+  int GetPadding() const {
+    CheckIsDisposed();
+    return padding_;
+  }
+
   void SetPadding(int padding);
 
-  int GetPaddingBottom() const { return padding_bottom_; }
+  int GetPaddingBottom() const {
+    CheckIsDisposed();
+    return padding_bottom_;
+  }
+
   void SetPaddingBottom(int padding_bottom);
 
-  int GetOpacity() const { return opacity_; }
+  int GetOpacity() const {
+    CheckIsDisposed();
+    return opacity_;
+  }
+
   void SetOpacity(int opacity);
 
-  int GetBackOpacity() const { return back_opacity_; }
+  int GetBackOpacity() const {
+    CheckIsDisposed();
+    return back_opacity_;
+  }
+
   void SetBackOpacity(int back_opacity);
 
-  int GetContentsOpacity() const { return contents_opacity_; }
+  int GetContentsOpacity() const {
+    CheckIsDisposed();
+    return contents_opacity_;
+  }
+
   void SetContentsOpacity(int contents_opacity);
 
-  int GetOpenness() const { return openness_; }
+  int GetOpenness() const {
+    CheckIsDisposed();
+    return openness_;
+  }
+
   void SetOpenness(int openness);
 
-  scoped_refptr<Tone> GetTone() const { return tone_; }
+  scoped_refptr<Tone> GetTone() const {
+    CheckIsDisposed();
+    return tone_;
+  }
+
   void SetTone(scoped_refptr<Tone> tone);
 
  private:

@@ -103,7 +103,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   renderer::TextureFrameBuffer screen_buffer_[2];
   renderer::TextureFrameBuffer frozen_snapshot_;
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;
-  std::unique_ptr<renderer::QuadDrawable> brightness_quad_;
 
   scoped_refptr<CoreConfigure> config_;
   scoped_refptr<BindingRunner> dispatcher_;
@@ -115,7 +114,6 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   bool frozen_ = false;
   int brightness_ = 255;
-  bool brightness_need_update_ = false;
 
   uint64_t frame_count_ = 0;
   int frame_rate_ = 60;

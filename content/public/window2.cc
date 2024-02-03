@@ -285,6 +285,8 @@ void Window2::SetBackOpacity(int back_opacity) {
 void Window2::SetContentsOpacity(int contents_opacity) {
   CheckIsDisposed();
 
+  contents_opacity = std::clamp(contents_opacity, 0, 255);
+
   if (contents_opacity_ == contents_opacity)
     return;
 
@@ -390,8 +392,9 @@ void Window2::UpdateRendererParameters() {
 
   if (content_opacity_need_update_) {
     content_opacity_need_update_ = false;
-    content_quad_->SetColor(-1,
-                            base::Vec4(0, 0, 0, contents_opacity_ / 255.0f));
+    content_quad_->SetColor(
+        -1,
+        base::Vec4(0, 0, 0, static_cast<float>(contents_opacity_) / 255.0f));
   }
 }
 
@@ -435,8 +438,8 @@ void Window2::BeforeComposite() {
 }
 
 void Window2::Composite() {
-  bool windowskin_valid = !(!windowskin_ || windowskin_->IsDisposed());
-  bool contents_valid = !(!contents_ || contents_->IsDisposed());
+  bool windowskin_valid = windowskin_ && !windowskin_->IsDisposed();
+  bool contents_valid = contents_ && !contents_->IsDisposed();
 
   base::Vec2i trans_offset = rect_.Position() + parent_rect().GetRealOffset();
 
@@ -484,7 +487,7 @@ void Window2::Composite() {
   }
 
   /* Window contents */
-  if (contents_valid) {
+  if (contents_valid && contents_opacity_) {
     base::Vec2i content_trans = padding_trans_rect.Position();
     content_trans = content_trans - base::Vec2i(ox_, oy_);
 
