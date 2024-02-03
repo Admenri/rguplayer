@@ -7,7 +7,11 @@
 namespace content {
 
 Drawable::Drawable(DrawableParent* parent, int z, bool visible)
-    : base::LinkNode<Drawable>(), parent_(parent), z_(z), visible_(visible) {
+    : base::LinkNode<Drawable>(),
+      init_data_complete_(false),
+      parent_(parent),
+      z_(z),
+      visible_(visible) {
   parent_->InsertDrawable(this);
 }
 
@@ -65,8 +69,20 @@ void DrawableParent::NotifyPrepareComposite() {
 
   for (auto it = drawables_.tail(); it != drawables_.end();
        it = it->previous()) {
-    if (it->value()->GetVisible())
-      it->value()->BeforeComposite();
+    auto* child = it->value();
+    if (child->GetVisible()) {
+      // Init once for renderer data on RenderRunner
+      if (!child->init_data_complete_) {
+        child->InitDrawableData();
+        child->init_data_complete_ = true;
+      }
+
+      // Update renderer params on RenderRunner
+      child->UpdateRendererParameters();
+
+      // Prepare for render composite
+      child->BeforeComposite();
+    }
   }
 }
 

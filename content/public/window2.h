@@ -100,13 +100,14 @@ class Window2 : public base::RefCounted<Window2>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Window2"; }
 
+  void InitDrawableData() override;
+  void UpdateRendererParameters() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override;
   void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;
 
   void InitWindow();
-  void InitWindowInternal();
   void CalcBaseQuadArrayInternal();
   void UpdateBaseTextureInternal();
   void UpdateBaseQuadInternal();
@@ -117,12 +118,8 @@ class Window2 : public base::RefCounted<Window2>,
   void CursorRectChangedInternal();
   void WindowskinChangedInternal();
 
-  void UpdateCursorStepInternal();
   void UpdatePauseStepInternal();
   void UpdateCursorQuadsInternal();
-
-  void UpdateContentsQuadInternal();
-  void UpdateContentsOpacityInternal();
 
   scoped_refptr<Bitmap> windowskin_;
   base::CallbackListSubscription windowskin_observer_;
@@ -187,7 +184,10 @@ class Window2 : public base::RefCounted<Window2>,
   std::unique_ptr<renderer::QuadDrawable> base_quad_;
   bool base_quad_updated_ = true;
 
-  base::WeakPtrFactory<Window2> weak_ptr_factory_{this};
+  bool update_required_ = false;
+  bool contents_quad_need_update_ = false;
+  bool cursor_step_need_update_ = false;
+  bool content_opacity_need_update_ = false;
 };
 
 }  // namespace content

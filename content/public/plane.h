@@ -101,12 +101,13 @@ class Plane : public base::RefCounted<Plane>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Plane"; }
 
+  void InitDrawableData() override;
+  void UpdateRendererParameters() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const { CheckIsDisposed(); }
   void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;
 
-  void InitPlaneInternal();
   void UpdateQuadArray();
 
   scoped_refptr<Bitmap> bitmap_;
@@ -122,8 +123,6 @@ class Plane : public base::RefCounted<Plane>,
       quad_array_;
   renderer::TextureFrameBuffer layer_tfb_;
   bool quad_array_dirty_ = false;
-
-  base::WeakPtrFactory<Plane> weak_ptr_factory_{this};
 };
 
 }  // namespace content

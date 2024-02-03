@@ -79,9 +79,9 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Tilemap2"; }
 
+  void InitDrawableData();
   void BeforeTilemapComposite();
 
-  void InitTilemapInternal();
   void CreateTileAtlasInternal();
   void UpdateTilemapViewportInternal();
   void ParseMapDataBufferInternal();

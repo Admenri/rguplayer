@@ -73,6 +73,9 @@ class Viewport : public base::RefCounted<Viewport>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Viewport"; }
 
+  void InitDrawableData() override;
+  void UpdateRendererParameters() override;
+
   void BeforeComposite() override { DrawableParent::NotifyPrepareComposite(); }
 
   void Composite() override;
@@ -83,9 +86,6 @@ class Viewport : public base::RefCounted<Viewport>,
   void OnRectChangedInternal();
   void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
 
-  void InitViewportBufferInternal();
-  void OnViewportBufferSizeChangedInternal();
-
   scoped_refptr<Rect> rect_;
   scoped_refptr<Color> color_;
   scoped_refptr<Tone> tone_;
@@ -94,7 +94,7 @@ class Viewport : public base::RefCounted<Viewport>,
   std::unique_ptr<renderer::QuadDrawable> viewport_quad_;
   renderer::TextureFrameBuffer viewport_buffer_;
 
-  base::WeakPtrFactory<Viewport> weak_ptr_factory_{this};
+  bool viewport_rect_need_update_ = false;
 };
 
 class ViewportChild : public Drawable {

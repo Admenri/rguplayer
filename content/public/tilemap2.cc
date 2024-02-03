@@ -552,6 +552,10 @@ class GroundLayer : public ViewportChild {
   GroundLayer(const GroundLayer&) = delete;
   GroundLayer& operator=(const GroundLayer&) = delete;
 
+  void InitDrawableData() override { tilemap_->InitDrawableData(); }
+
+  void UpdateRendererParameters() override {}
+
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
@@ -610,6 +614,9 @@ class AboveLayer : public ViewportChild {
   AboveLayer(const AboveLayer&) = delete;
   AboveLayer& operator=(const AboveLayer&) = delete;
 
+  void InitDrawableData() override {}
+  void UpdateRendererParameters() override {}
+
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
@@ -649,9 +656,6 @@ Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
       viewport_(viewport),
       tile_size_(tilesize),
       init_internal_(false) {
-  screen->renderer()->PostTask(base::BindOnce(&Tilemap2::InitTilemapInternal,
-                                              weak_ptr_factory_.GetWeakPtr()));
-
   ground_ =
       std::make_unique<GroundLayer>(screen, weak_ptr_factory_.GetWeakPtr());
   above_ = std::make_unique<AboveLayer>(screen, weak_ptr_factory_.GetWeakPtr());
@@ -818,19 +822,6 @@ void Tilemap2::BeforeTilemapComposite() {
     ParseMapDataBufferInternal();
     buffer_need_update_ = false;
   }
-}
-
-void Tilemap2::InitTilemapInternal() {
-  tilemap_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-
-  flash_layer_ = std::make_unique<TilemapFlashLayer>(tile_size_);
-
-  atlas_tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_, tile_size_);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(atlas_tfb_);
-
-  init_internal_ = true;
 }
 
 void Tilemap2::CreateTileAtlasInternal() {
@@ -1292,6 +1283,19 @@ void Tilemap2::DrawFlashLayerInternal() {
 
 void Tilemap2::SetAtlasUpdateInternal() {
   atlas_need_update_ = true;
+}
+
+void Tilemap2::InitDrawableData() {
+  tilemap_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+
+  flash_layer_ = std::make_unique<TilemapFlashLayer>(tile_size_);
+
+  atlas_tfb_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_, tile_size_);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(atlas_tfb_);
+
+  init_internal_ = true;
 }
 
 }  // namespace content

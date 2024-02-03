@@ -239,28 +239,19 @@ class Sprite : public base::RefCounted<Sprite>,
   /* Update wave flash */
   void Update() override;
 
-  /* Warning: Non-threaded safe */
-  base::TransformMatrix& GetTransform() {
-    CheckIsDisposed();
-    return transform_;
-  }
-
  private:
   void InitAttributeInternal();
-  void InitSpriteInternal();
 
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Sprite"; }
 
+  void InitDrawableData() override;
+  void UpdateRendererParameters() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override { CheckIsDisposed(); }
   void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;
-
   void OnSrcRectChangedInternal();
-  void AsyncSrcRectChangedInternal();
-  void OnViewportRectChangedInternal(const DrawableParent::ViewportInfo& rect);
-
   void UpdateWaveQuadsInternal();
 
   scoped_refptr<Bitmap> bitmap_;
@@ -298,7 +289,7 @@ class Sprite : public base::RefCounted<Sprite>,
 
   base::CallbackListSubscription src_rect_observer_;
 
-  base::WeakPtrFactory<Sprite> weak_ptr_factory_{this};
+  bool src_rect_need_update_ = false;
 };
 
 }  // namespace content

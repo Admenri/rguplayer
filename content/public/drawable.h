@@ -86,6 +86,8 @@ class Drawable : public base::LinkNode<Drawable> {
   }
 
  protected:
+  virtual void InitDrawableData() = 0;
+  virtual void UpdateRendererParameters() = 0;
   virtual void BeforeComposite() {}
   virtual void Composite() = 0;
   virtual void CheckDisposed() const = 0;
@@ -94,6 +96,7 @@ class Drawable : public base::LinkNode<Drawable> {
 
  private:
   friend class DrawableParent;
+  bool init_data_complete_;
   DrawableParent* parent_;
   int z_;
   bool visible_;

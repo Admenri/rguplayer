@@ -97,8 +97,7 @@ Window2::~Window2() {
 void Window2::Update() {
   CheckIsDisposed();
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&Window2::UpdateInternal, weak_ptr_factory_.GetWeakPtr()));
+  update_required_ = true;
 }
 
 void Window2::Move(int x, int y, int width, int height) {
@@ -136,9 +135,7 @@ void Window2::SetContents(scoped_refptr<Bitmap> contents) {
 
   contents_ = contents;
   arrows_.quad_need_update_ = true;
-
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Window2::UpdateContentsQuadInternal, weak_ptr_factory_.GetWeakPtr()));
+  contents_quad_need_update_ = true;
 }
 
 void Window2::SetCursorRect(scoped_refptr<Rect> cursor_rect) {
@@ -159,9 +156,7 @@ void Window2::SetActive(bool active) {
 
   active_ = active;
   cursor_.cursor_alpha_index_ = cursor_alpha_reset;
-
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Window2::UpdateCursorStepInternal, weak_ptr_factory_.GetWeakPtr()));
+  cursor_step_need_update_ = true;
 }
 
 void Window2::SetArrowsVisible(bool arrows_visible) {
@@ -294,8 +289,7 @@ void Window2::SetContentsOpacity(int contents_opacity) {
     return;
 
   contents_opacity_ = contents_opacity;
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Window2::UpdateContentsOpacityInternal, weak_ptr_factory_.GetWeakPtr()));
+  content_opacity_need_update_ = true;
 }
 
 void Window2::SetOpenness(int openness) {
@@ -323,8 +317,6 @@ void Window2::SetTone(scoped_refptr<Tone> tone) {
 void Window2::OnObjectDisposed() {
   RemoveFromList();
 
-  weak_ptr_factory_.InvalidateWeakPtrs();
-
   screen()->renderer()->DeleteSoon(std::move(base_layer_.quad_array_));
   screen()->renderer()->DeleteSoon(std::move(arrows_.arrows_quads_));
   screen()->renderer()->DeleteSoon(std::move(cursor_.cursor_quads_));
@@ -335,6 +327,72 @@ void Window2::OnObjectDisposed() {
   screen()->renderer()->PostTask(
       base::BindOnce(&renderer::TextureFrameBuffer::Del,
                      base::OwnedRef(std::move(base_layer_.tfb_))));
+}
+
+void Window2::InitDrawableData() {
+  base_layer_.quad_array_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  base_quad_ = std::make_unique<renderer::QuadDrawable>();
+  arrows_.arrows_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  arrows_.arrows_quads_->Resize(4 + 1);
+  arrows_.pause_vertex_ = nullptr;
+
+  cursor_.cursor_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  cursor_.cursor_quads_->Resize(1);
+
+  content_quad_ = std::make_unique<renderer::QuadDrawable>();
+
+  base_layer_.tfb_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(base_layer_.tfb_, rect_.width,
+                                      rect_.height);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(base_layer_.tfb_);
+
+  contents_quad_need_update_ = true;
+  content_opacity_need_update_ = true;
+
+  /*
+   * Stretch layer
+   * Frame layer
+   * Cursor layer
+   * Control layer
+   * Contents layer
+   */
+}
+
+void Window2::UpdateRendererParameters() {
+  if (update_required_) {
+    update_required_ = false;
+    UpdateInternal();
+  }
+
+  if (contents_quad_need_update_) {
+    contents_quad_need_update_ = false;
+    base::Rect contents_rect = contents_->GetSize();
+    content_quad_->SetTexCoordRect(contents_rect);
+    content_quad_->SetPositionRect(contents_rect);
+  }
+
+  if (cursor_step_need_update_) {
+    cursor_step_need_update_ = false;
+    if (cursor_.cursor_quads_->count() > 0) {
+      base::Vec4 color(0, 0, 0,
+                       cursor_alpha[cursor_.cursor_alpha_index_] / 255.0f);
+
+      for (size_t i = 0; i < cursor_.cursor_quads_->count(); ++i)
+        renderer::QuadSetColor(&cursor_.cursor_quads_->vertices()[i * 4], -1,
+                               color);
+
+      cursor_.need_cursor_update_ = true;
+    }
+  }
+
+  if (content_opacity_need_update_) {
+    content_opacity_need_update_ = false;
+    content_quad_->SetColor(-1,
+                            base::Vec4(0, 0, 0, contents_opacity_ / 255.0f));
+  }
 }
 
 void Window2::BeforeComposite() {
@@ -365,7 +423,8 @@ void Window2::BeforeComposite() {
 
   if (cursor_.need_update_) {
     UpdateCursorQuadsInternal();
-    UpdateCursorStepInternal();
+    cursor_step_need_update_ = true;
+    UpdateRendererParameters();
     cursor_.need_update_ = false;
   }
 
@@ -460,41 +519,6 @@ void Window2::InitWindow() {
   cursor_rect_ = new Rect();
   cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(
       &Window2::CursorRectChangedInternal, base::Unretained(this)));
-
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Window2::InitWindowInternal, weak_ptr_factory_.GetWeakPtr()));
-}
-
-void Window2::InitWindowInternal() {
-  base_layer_.quad_array_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-  base_quad_ = std::make_unique<renderer::QuadDrawable>();
-  arrows_.arrows_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-  arrows_.arrows_quads_->Resize(4 + 1);
-  arrows_.pause_vertex_ = nullptr;
-
-  cursor_.cursor_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-  cursor_.cursor_quads_->Resize(1);
-
-  content_quad_ = std::make_unique<renderer::QuadDrawable>();
-
-  base_layer_.tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(base_layer_.tfb_, rect_.width,
-                                      rect_.height);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(base_layer_.tfb_);
-
-  UpdateContentsQuadInternal();
-  UpdateContentsOpacityInternal();
-
-  /*
-   * Stretch layer
-   * Frame layer
-   * Cursor layer
-   * Control layer
-   * Contents layer
-   */
 }
 
 void Window2::CalcBaseQuadArrayInternal() {
@@ -704,7 +728,8 @@ void Window2::UpdateInternal() {
   }
 
   UpdatePauseStepInternal();
-  UpdateCursorStepInternal();
+  cursor_step_need_update_ = true;
+  UpdateRendererParameters();
 }
 
 void Window2::ToneChangedInternal() {
@@ -717,19 +742,6 @@ void Window2::CursorRectChangedInternal() {
 
 void Window2::WindowskinChangedInternal() {
   base_layer_.base_tex_updated_ = true;
-}
-
-void Window2::UpdateCursorStepInternal() {
-  if (cursor_.cursor_quads_->count() > 0) {
-    base::Vec4 color(0, 0, 0,
-                     cursor_alpha[cursor_.cursor_alpha_index_] / 255.0f);
-
-    for (size_t i = 0; i < cursor_.cursor_quads_->count(); ++i)
-      renderer::QuadSetColor(&cursor_.cursor_quads_->vertices()[i * 4], -1,
-                             color);
-
-    cursor_.need_cursor_update_ = true;
-  }
 }
 
 void Window2::UpdatePauseStepInternal() {
@@ -820,16 +832,6 @@ void Window2::UpdateCursorQuadsInternal() {
 
   if (drawBg)
     renderer::QuadSetTexPosRect(&vert[i * 4], src.background, bgPos);
-}
-
-void Window2::UpdateContentsQuadInternal() {
-  base::Rect contents_rect = contents_->GetSize();
-  content_quad_->SetTexCoordRect(contents_rect);
-  content_quad_->SetPositionRect(contents_rect);
-}
-
-void Window2::UpdateContentsOpacityInternal() {
-  content_quad_->SetColor(-1, base::Vec4(0, 0, 0, contents_opacity_ / 255.0f));
 }
 
 }  // namespace content

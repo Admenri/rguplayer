@@ -23,9 +23,6 @@ Plane::Plane(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
       ViewportChild(screen, viewport),
       color_(new Color()),
       tone_(new Tone()) {
-  screen->renderer()->PostTask(base::BindOnce(&Plane::InitPlaneInternal,
-                                              weak_ptr_factory_.GetWeakPtr()));
-
   if (auto* viewport = GetViewport().get())
     OnViewportRectChanged(parent_rect());
 }
@@ -91,9 +88,19 @@ void Plane::OnObjectDisposed() {
   screen()->renderer()->PostTask(
       base::BindOnce(renderer::TextureFrameBuffer::Del,
                      base::OwnedRef(std::move(layer_tfb_))));
-
-  weak_ptr_factory_.InvalidateWeakPtrs();
 }
+
+void Plane::InitDrawableData() {
+  quad_array_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  quad_array_->Resize(1);
+
+  layer_tfb_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(layer_tfb_, 16, 16);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(layer_tfb_);
+}
+
+void Plane::UpdateRendererParameters() {}
 
 void Plane::BeforeComposite() {
   if (quad_array_dirty_) {
@@ -130,16 +137,6 @@ void Plane::Composite() {
 
 void Plane::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
   quad_array_dirty_ = true;
-}
-
-void Plane::InitPlaneInternal() {
-  quad_array_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-  quad_array_->Resize(1);
-
-  layer_tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(layer_tfb_, 16, 16);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(layer_tfb_);
 }
 
 void Plane::UpdateQuadArray() {

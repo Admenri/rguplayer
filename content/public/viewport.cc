@@ -63,7 +63,7 @@ void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   CheckIsDisposed();
 
   screen()->renderer()->PostTask(base::BindOnce(
-      &Viewport::SnapToBitmapInternal, weak_ptr_factory_.GetWeakPtr(), target));
+      &Viewport::SnapToBitmapInternal, base::RetainedRef(this), target));
 }
 
 void Viewport::OnObjectDisposed() {
@@ -73,6 +73,32 @@ void Viewport::OnObjectDisposed() {
   screen()->renderer()->PostTask(
       base::BindOnce(renderer::TextureFrameBuffer::Del,
                      base::OwnedRef(std::move(viewport_buffer_))));
+}
+
+void Viewport::InitDrawableData() {
+  viewport_buffer_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
+                                      viewport_rect().rect.width,
+                                      viewport_rect().rect.height);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(viewport_buffer_);
+
+  viewport_quad_ = std::make_unique<renderer::QuadDrawable>();
+  auto rect = base::Rect(viewport_rect().rect.Size());
+  viewport_quad_->SetPositionRect(rect);
+  viewport_quad_->SetTexCoordRect(rect);
+}
+
+void Viewport::UpdateRendererParameters() {
+  if (viewport_rect_need_update_) {
+    viewport_rect_need_update_ = false;
+    auto rect = base::Rect(viewport_rect().rect.Size());
+    viewport_quad_->SetPositionRect(rect);
+    viewport_quad_->SetTexCoordRect(rect);
+
+    renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
+                                        viewport_rect().rect.width,
+                                        viewport_rect().rect.height);
+  }
 }
 
 void Viewport::Composite() {
@@ -104,18 +130,13 @@ void Viewport::InitViewportInternal() {
 
   color_ = new Color();
   tone_ = new Tone();
-
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Viewport::InitViewportBufferInternal, weak_ptr_factory_.GetWeakPtr()));
 }
 
 void Viewport::OnRectChangedInternal() {
   viewport_rect().rect = rect_->AsBase();
   NotifyViewportChanged();
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&Viewport::OnViewportBufferSizeChangedInternal,
-                     weak_ptr_factory_.GetWeakPtr()));
+  viewport_rect_need_update_ = true;
 }
 
 void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
@@ -137,29 +158,6 @@ void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
 
   renderer::GSM.states.scissor_rect.Pop();
   renderer::GSM.states.scissor.Pop();
-}
-
-void Viewport::InitViewportBufferInternal() {
-  viewport_buffer_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
-                                      viewport_rect().rect.width,
-                                      viewport_rect().rect.height);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(viewport_buffer_);
-
-  viewport_quad_ = std::make_unique<renderer::QuadDrawable>();
-  auto rect = base::Rect(viewport_rect().rect.Size());
-  viewport_quad_->SetPositionRect(rect);
-  viewport_quad_->SetTexCoordRect(rect);
-}
-
-void Viewport::OnViewportBufferSizeChangedInternal() {
-  auto rect = base::Rect(viewport_rect().rect.Size());
-  viewport_quad_->SetPositionRect(rect);
-  viewport_quad_->SetTexCoordRect(rect);
-
-  renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
-                                      viewport_rect().rect.width,
-                                      viewport_rect().rect.height);
 }
 
 ViewportChild::ViewportChild(scoped_refptr<Graphics> screen,

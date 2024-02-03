@@ -71,26 +71,36 @@ void Sprite::InitAttributeInternal() {
   src_rect_observer_ = src_rect_->AddChangedObserver(base::BindRepeating(
       &Sprite::OnSrcRectChangedInternal, base::Unretained(this)));
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Sprite::InitSpriteInternal, weak_ptr_factory_.GetWeakPtr()));
-
   if (GetViewport())
     OnViewportRectChanged(parent_rect());
-}
-
-void Sprite::InitSpriteInternal() {
-  quad_ = std::make_unique<renderer::QuadDrawable>();
-  wave_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
 }
 
 void Sprite::OnObjectDisposed() {
   RemoveFromList();
 
-  weak_ptr_factory_.InvalidateWeakPtrs();
-
   screen()->renderer()->DeleteSoon(std::move(quad_));
   screen()->renderer()->DeleteSoon(std::move(wave_quads_));
+}
+
+void Sprite::InitDrawableData() {
+  quad_ = std::make_unique<renderer::QuadDrawable>();
+  wave_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+}
+
+void Sprite::UpdateRendererParameters() {
+  if (src_rect_need_update_) {
+    src_rect_need_update_ = false;
+    auto bitmap_size = bitmap_->GetSize();
+    auto rect = src_rect_->AsBase();
+
+    rect.width = std::clamp(rect.width, 0, bitmap_size.x - rect.x);
+    rect.height = std::clamp(rect.height, 0, bitmap_size.y - rect.y);
+
+    quad_->SetPositionRect(base::Vec2(static_cast<float>(rect.width),
+                                      static_cast<float>(rect.height)));
+    quad_->SetTexCoordRect(rect);
+  }
 }
 
 void Sprite::BeforeComposite() {
@@ -143,31 +153,11 @@ void Sprite::Composite() {
 }
 
 void Sprite::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
-  screen()->renderer()->PostTask(
-      base::BindOnce(&Sprite::OnViewportRectChangedInternal,
-                     weak_ptr_factory_.GetWeakPtr(), rect));
+  transform_.SetGlobalOffset(rect.GetRealOffset());
 }
 
 void Sprite::OnSrcRectChangedInternal() {
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Sprite::AsyncSrcRectChangedInternal, weak_ptr_factory_.GetWeakPtr()));
-}
-
-void Sprite::AsyncSrcRectChangedInternal() {
-  auto bitmap_size = bitmap_->GetSize();
-  auto rect = src_rect_->AsBase();
-
-  rect.width = std::clamp(rect.width, 0, bitmap_size.x - rect.x);
-  rect.height = std::clamp(rect.height, 0, bitmap_size.y - rect.y);
-
-  quad_->SetPositionRect(base::Vec2(static_cast<float>(rect.width),
-                                    static_cast<float>(rect.height)));
-  quad_->SetTexCoordRect(rect);
-}
-
-void Sprite::OnViewportRectChangedInternal(
-    const DrawableParent::ViewportInfo& rect) {
-  transform_.SetGlobalOffset(rect.GetRealOffset());
+  src_rect_need_update_ = true;
 }
 
 void Sprite::UpdateWaveQuadsInternal() {
