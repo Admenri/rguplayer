@@ -74,7 +74,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   void CompositeScreenInternal();
   void ResizeResolutionInternal();
   void PresentScreenInternal(bool* paint_raiser, bool backend = false);
-  void SetBrightnessInternal();
   void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
   void FreezeSceneInternal();
   void TransitionSceneInternal(int duration,
@@ -114,6 +113,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   bool frozen_ = false;
   int brightness_ = 255;
+  bool brightness_need_update_ = false;
 
   uint64_t frame_count_ = 0;
   int frame_rate_ = 60;

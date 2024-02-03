@@ -15,12 +15,34 @@
 
 namespace content {
 
+class FontCache : public base::RefCounted<FontCache> {
+ public:
+  FontCache(TTF_Font* font_ptr, int size) : font_(font_ptr), size_(size) {}
+  ~FontCache() { TTF_CloseFont(font_); }
+
+  FontCache(const FontCache&) = delete;
+  FontCache& operator=(const FontCache&) = delete;
+
+  TTF_Font* font(int size) {
+    // Update font size cache
+    if (size != size_) {
+      size_ = size;
+      TTF_SetFontSize(font_, size_);
+    }
+
+    return font_;
+  }
+
+ private:
+  TTF_Font* font_;
+  int size_;
+};
+
 class Font : public base::RefCounted<Font> {
  public:
   static void InitStaticFont();
 
   static bool Existed(const std::string& name);
-
   static void SetDefaultName(const std::vector<std::string>& name);
   static std::vector<std::string> GetDefaultName();
   static void SetDefaultSize(int size);
@@ -42,7 +64,8 @@ class Font : public base::RefCounted<Font> {
   Font(const std::vector<std::string>& name);
   Font(const std::vector<std::string>& name, int size);
   Font(const Font& other);
-  ~Font();
+
+  const Font& operator=(const Font& other);
 
   void SetName(const std::vector<std::string>& name);
   std::vector<std::string> GetName() const;
@@ -61,24 +84,23 @@ class Font : public base::RefCounted<Font> {
   void SetOutColor(scoped_refptr<Color> color);
   scoped_refptr<Color> GetOutColor() const;
 
+  void EnsureLoadFont();
   TTF_Font* AsSDLFont();
   std::string FixupString(const std::string& text);
   SDL_Surface* RenderText(const std::string& text, uint8_t* font_opacity);
 
  private:
   void LoadFontInternal();
-  void ResetFontInternal();
-
   std::vector<std::string> name_;
-  int size_ = 24;
-  bool bold_ = false;
-  bool italic_ = false;
-  bool outline_ = true;
-  bool shadow_ = false;
+  int size_;
+  bool bold_;
+  bool italic_;
+  bool outline_;
+  bool shadow_;
   scoped_refptr<Color> color_;
   scoped_refptr<Color> out_color_;
 
-  TTF_Font* sdl_font_;
+  scoped_refptr<FontCache> cache_;
 };
 
 }  // namespace content

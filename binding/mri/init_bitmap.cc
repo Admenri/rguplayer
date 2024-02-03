@@ -351,7 +351,6 @@ MRI_METHOD(bitmap_set_font) {
       MriCheckStructData<content::Font>(f, kFontDataType);
 
   MRI_GUARD(obj->SetFont(font_obj););
-  rb_iv_set(self, "_font", f);
 
   return self;
 }

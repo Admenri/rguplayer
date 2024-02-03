@@ -27,18 +27,30 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
       brightness_(255),
       frozen_(false),
       fps_display_{0, SDL_GetPerformanceCounter()} {
+  // Initial resolution
+  viewport_rect().rect = initial_resolution;
+
   // Init font attributes
   Font::InitStaticFont();
   default_font_ = new Font();
 
-  viewport_rect().rect = initial_resolution;
-
-  // TODO: rgss1 frame rate
-  fps_manager_->SetFrameRate(60);
-  frame_rate_ = 60;
+  // Init version specific frame rate
+  switch (config_->version()) {
+    case CoreConfigure::RGSS1:
+      fps_manager_->SetFrameRate(40);
+      frame_rate_ = 40;
+      break;
+    default:
+    case CoreConfigure::RGSS2:
+    case CoreConfigure::RGSS3:
+      fps_manager_->SetFrameRate(60);
+      frame_rate_ = 60;
+      break;
+  }
 
   renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
                                      weak_ptr_factory_.GetWeakPtr()));
+  renderer_->WaitForSync();
 }
 
 Graphics::~Graphics() {
@@ -58,9 +70,7 @@ void Graphics::SetBrightness(int brightness) {
     return;
 
   brightness_ = brightness;
-
-  renderer()->PostTask(base::BindOnce(&Graphics::SetBrightnessInternal,
-                                      weak_ptr_factory_.GetWeakPtr()));
+  brightness_need_update_ = true;
 }
 
 void Graphics::Wait(int duration) {
@@ -83,7 +93,8 @@ void Graphics::FadeOut(int duration) {
 
   int current_brightness = brightness_;
   for (int i = 0; i < duration; ++i) {
-    SetBrightness(current_brightness - current_brightness * (i / duration));
+    SetBrightness(current_brightness -
+                  current_brightness * (i / static_cast<float>(duration)));
     Update();
   }
 }
@@ -94,7 +105,8 @@ void Graphics::FadeIn(int duration) {
   int current_brightness = brightness_;
   int diff = 255 - brightness_;
   for (int i = 0; i < duration; ++i) {
-    SetBrightness(current_brightness + diff * (i / duration));
+    SetBrightness(current_brightness +
+                  diff * (i / static_cast<float>(duration)));
     Update();
   }
 }
@@ -103,6 +115,7 @@ void Graphics::Update() {
   if (frozen_)
     return;
 
+  // Frame skip cap adjudication
   if (fps_manager_->FrameSkipRequired()) {
     if (config_->allow_frame_skip()) {
       fps_manager_->Delay();
@@ -202,6 +215,8 @@ void Graphics::Transition(int duration,
     fps_manager_->Delay();
     frame_count_++;
 
+    UpdateAverageFPSInternal();
+
     /* Break draw loop for quit flag */
     if (dispatcher_->is_quit_required())
       break;
@@ -219,6 +234,8 @@ void Graphics::SetFrameRate(int rate) {
   rate = std::max(rate, 10);
   fps_manager_->SetFrameRate(rate);
   frame_rate_ = rate;
+
+  fps_manager_->ResetFrameSkipCap();
 }
 
 int Graphics::GetFrameRate() const {
@@ -270,9 +287,7 @@ void Graphics::InitScreenBufferInternal() {
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
 
   brightness_quad_ = std::make_unique<renderer::QuadDrawable>();
-  screen_quad_->SetPositionRect(base::Vec2(resolution_));
-  screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
-  screen_quad_->SetColor();
+  brightness_quad_->SetColor();
 }
 
 void Graphics::DestroyBufferInternal() {
@@ -285,8 +300,13 @@ void Graphics::DestroyBufferInternal() {
 }
 
 void Graphics::CompositeScreenInternal() {
-  if (!brightness_)
-    return;
+  if (brightness_need_update_) {
+    brightness_need_update_ = false;
+
+    brightness_quad_->SetPositionRect(base::Vec2(resolution_));
+    brightness_quad_->SetColor(
+        -1, base::Vec4(0.0f, 0.0f, 0.0f, (255.0f - brightness_) / 255.0f));
+  }
 
   /* Prepare composite notify */
   DrawableParent::NotifyPrepareComposite();
@@ -298,20 +318,16 @@ void Graphics::CompositeScreenInternal() {
   renderer::GSM.states.scissor_rect.Set(resolution_);
   renderer::GSM.states.viewport.Set(resolution_);
 
+  /* Composite screen to screen buffer */
   DrawableParent::CompositeChildren();
 
-  if (brightness_ != 255) {
+  if (brightness_ < 255) {
     auto& shader = renderer::GSM.shaders->color;
     shader.Bind();
     shader.SetProjectionMatrix(resolution_);
     shader.SetTransOffset(base::Vec2());
 
     brightness_quad_->Draw();
-  }
-
-  GLenum errcode = renderer::GL.GetError();
-  if (errcode) {
-    LOG(INFO) << "[Graphics] GLError: " << errcode;
   }
 }
 
@@ -325,9 +341,6 @@ void Graphics::ResizeResolutionInternal() {
 
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
-
-  brightness_quad_->SetPositionRect(base::Vec2(resolution_));
-  brightness_quad_->SetTexCoordRect(base::Vec2(resolution_));
 
   viewport_rect().rect = resolution_;
   NotifyViewportChanged();
@@ -348,11 +361,6 @@ void Graphics::PresentScreenInternal(bool* paint_raiser, bool backend) {
 
   if (paint_raiser)
     *paint_raiser = true;
-}
-
-void Graphics::SetBrightnessInternal() {
-  brightness_quad_->SetColor(-1,
-                             base::Vec4(0, 0, 0, (255 - brightness_) / 255.0f));
 }
 
 void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {

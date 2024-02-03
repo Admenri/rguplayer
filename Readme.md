@@ -50,11 +50,11 @@ ui文件夹存放了SDL窗口的封装代码，用于与input模块进行配合�
 
 ## 思路来源
 
-- SDL
+- Chromium
 - RGM
 - MKXP
+- SDL
 - SFML
-- Chromium
 
 ## 第三方库使用
 
@@ -64,13 +64,12 @@ ui文件夹存放了SDL窗口的封装代码，用于与input模块进行配合�
 - SDL_ttf - https://github.com/libsdl-org/SDL_ttf
 - ANGLE - https://chromium.googlesource.com/angle/angle
 - CRuby - https://www.ruby-lang.org/zh_cn/
-- Physfs - https://github.com/icculus/physfs
 - MRuby - https://mruby.org/
+- Physfs - https://github.com/icculus/physfs
 - concurrentqueue - https://github.com/cameron314/concurrentqueue
 - aom - https://aomedia.googlesource.com/aom
 - json - https://github.com/nlohmann/json
 - zlib - https://github.com/madler/zlib
-- rice - https://github.com/jasonroelofs/rice
 
 ## 联系方式
 

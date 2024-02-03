@@ -4,13 +4,16 @@
 
 #include "content/public/font.h"
 
+#include <map>
+
+#include "base/exceptions/exception.h"
 #include "content/public/utility.h"
+
+#define OutlineSize 1
 
 namespace content {
 
 namespace {
-
-const int kOutlineSize = 1;
 
 struct DefaultFontState {
   std::vector<std::string> default_name = {"Default.ttf"};
@@ -24,6 +27,8 @@ struct DefaultFontState {
 };
 
 std::unique_ptr<DefaultFontState> g_default_font_state = nullptr;
+
+std::map<std::string, scoped_refptr<FontCache>> g_font_cache;
 
 }  // namespace
 
@@ -106,8 +111,7 @@ Font::Font()
       outline_(g_default_font_state->default_outline),
       shadow_(g_default_font_state->default_shadow),
       color_(g_default_font_state->default_color),
-      out_color_(g_default_font_state->default_out_color),
-      sdl_font_(nullptr) {}
+      out_color_(g_default_font_state->default_out_color) {}
 
 Font::Font(const std::vector<std::string>& name)
     : name_(name),
@@ -117,8 +121,7 @@ Font::Font(const std::vector<std::string>& name)
       outline_(g_default_font_state->default_outline),
       shadow_(g_default_font_state->default_shadow),
       color_(g_default_font_state->default_color),
-      out_color_(g_default_font_state->default_out_color),
-      sdl_font_(nullptr) {}
+      out_color_(g_default_font_state->default_out_color) {}
 
 Font::Font(const std::vector<std::string>& name, int size)
     : name_(name),
@@ -128,8 +131,7 @@ Font::Font(const std::vector<std::string>& name, int size)
       outline_(g_default_font_state->default_outline),
       shadow_(g_default_font_state->default_shadow),
       color_(g_default_font_state->default_color),
-      out_color_(g_default_font_state->default_out_color),
-      sdl_font_(nullptr) {}
+      out_color_(g_default_font_state->default_out_color) {}
 
 Font::Font(const Font& other)
     : name_(other.name_),
@@ -140,14 +142,27 @@ Font::Font(const Font& other)
       shadow_(other.shadow_),
       color_(other.color_),
       out_color_(other.out_color_),
-      sdl_font_(nullptr) {}
+      cache_(other.cache_) {}
 
-Font::~Font() {
-  ResetFontInternal();
+const Font& Font::operator=(const Font& other) {
+  name_ = other.name_;
+  size_ = other.size_;
+  bold_ = other.bold_;
+  italic_ = other.italic_;
+  outline_ = other.outline_;
+  shadow_ = other.shadow_;
+  color_ = other.color_;
+  out_color_ = other.out_color_;
+  cache_ = other.cache_;
+  return other;
 }
 
 bool Font::Existed(const std::string& name) {
-  return false;
+  // TODO: filesystem required
+  auto* f = SDL_RWFromFile(name.c_str(), "r+");
+  SDL_RWclose(f);
+
+  return !!f;
 }
 
 void Font::SetName(const std::vector<std::string>& name) {
@@ -160,8 +175,6 @@ std::vector<std::string> Font::GetName() const {
 
 void Font::SetSize(int size) {
   size_ = size;
-
-  ResetFontInternal();
 }
 
 int Font::GetSize() const {
@@ -216,20 +229,25 @@ scoped_refptr<Color> Font::GetOutColor() const {
   return out_color_;
 }
 
-TTF_Font* Font::AsSDLFont() {
-  if (!sdl_font_)
+void Font::EnsureLoadFont() {
+  if (!cache_)
     LoadFontInternal();
+}
+
+TTF_Font* Font::AsSDLFont() {
+  EnsureLoadFont();
+
+  auto* font = cache_->font(size_);
 
   int font_style = TTF_STYLE_NORMAL;
-
   if (bold_)
     font_style |= TTF_STYLE_BOLD;
   if (italic_)
     font_style |= TTF_STYLE_ITALIC;
 
-  TTF_SetFontStyle(sdl_font_, font_style);
+  TTF_SetFontStyle(font, font_style);
 
-  return sdl_font_;
+  return font;
 }
 
 std::string Font::FixupString(const std::string& text) {
@@ -347,10 +365,10 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
 
   if (outline_) {
     SDL_Surface* outline;
-    TTF_SetFontOutline(font, kOutlineSize);
+    TTF_SetFontOutline(font, OutlineSize);
     outline = TTF_RenderUTF8_Blended(font, src_text.c_str(), outline_color);
     ensure_format(outline);
-    SDL_Rect outRect = {kOutlineSize, kOutlineSize, raw_surf->w, raw_surf->h};
+    SDL_Rect outRect = {OutlineSize, OutlineSize, raw_surf->w, raw_surf->h};
     SDL_SetSurfaceBlendMode(raw_surf, SDL_BLENDMODE_BLEND);
     SDL_BlitSurface(raw_surf, NULL, outline, &outRect);
     SDL_DestroySurface(raw_surf);
@@ -362,13 +380,31 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
 }
 
 void Font::LoadFontInternal() {
-  // TODO: Fonts cache manager
-  sdl_font_ = TTF_OpenFont(name_.front().c_str(), size_);
-}
+  // Find in global cache
+  for (auto& name : name_) {
+    auto it = g_font_cache.find(name);
+    if (it != g_font_cache.end()) {
+      cache_ = it->second;
+      return;
+    }
+  }
 
-void Font::ResetFontInternal() {
-  TTF_CloseFont(sdl_font_);
-  sdl_font_ = nullptr;
+  // Load from file
+  for (auto& name : name_) {
+    auto* font_obj = TTF_OpenFont(name.c_str(), size_);
+    if (font_obj) {
+      cache_ = new FontCache(font_obj, size_);
+
+      // Storage in global cache
+      g_font_cache.insert(std::make_pair(name, cache_));
+
+      return;
+    }
+  }
+
+  // Failed to load font
+  throw base::Exception::Exception(base::Exception::ContentError,
+                                   "Failed to load Font.");
 }
 
 }  // namespace content
