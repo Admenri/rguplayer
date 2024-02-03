@@ -100,7 +100,7 @@ void Viewport::OnViewportRectChanged(const ViewportInfo& rect) {
 void Viewport::InitViewportInternal() {
   rect_ = new Rect();
   rect_observer_ = rect_->AddChangedObserver(base::BindRepeating(
-      &Viewport::OnRectChangedInternal, weak_ptr_factory_.GetWeakPtr()));
+      &Viewport::OnRectChangedInternal, base::Unretained(this)));
 
   color_ = new Color();
   tone_ = new Tone();

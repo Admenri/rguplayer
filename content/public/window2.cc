@@ -123,6 +123,8 @@ void Window2::SetWindowskin(scoped_refptr<Bitmap> windowskin) {
     return;
 
   windowskin_ = windowskin;
+  windowskin_observer_ = windowskin_->AddBitmapObserver(base::BindRepeating(
+      &Window2::WindowskinChangedInternal, base::Unretained(this)));
   base_layer_.base_tex_updated_ = true;
 }
 
@@ -451,13 +453,13 @@ void Window2::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
 void Window2::InitWindow() {
   tone_ = new Tone();
   tone_observer_ = tone_->AddChangedObserver(base::BindRepeating(
-      &Window2::ToneChangedInternal, weak_ptr_factory_.GetWeakPtr()));
+      &Window2::ToneChangedInternal, base::Unretained(this)));
 
   contents_ = new Bitmap(screen(), 1, 1);
 
   cursor_rect_ = new Rect();
-  cursor_rect_->AddChangedObserver(base::BindRepeating(
-      &Window2::CursorRectChangedInternal, weak_ptr_factory_.GetWeakPtr()));
+  cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(
+      &Window2::CursorRectChangedInternal, base::Unretained(this)));
 
   screen()->renderer()->PostTask(base::BindOnce(
       &Window2::InitWindowInternal, weak_ptr_factory_.GetWeakPtr()));
@@ -711,6 +713,10 @@ void Window2::ToneChangedInternal() {
 
 void Window2::CursorRectChangedInternal() {
   cursor_.need_update_ = true;
+}
+
+void Window2::WindowskinChangedInternal() {
+  base_layer_.base_tex_updated_ = true;
 }
 
 void Window2::UpdateCursorStepInternal() {

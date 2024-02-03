@@ -23,9 +23,8 @@ Widget* Widget::FromWindowID(uint32_t window_id) {
 }
 
 Widget::Widget() : window_(nullptr) {
-  ui_dispatcher_binding_ =
-      base::RunLoop::BindEventDispatcher(base::BindRepeating(
-          &Widget::UIEventDispatcher, weak_ptr_factory_.GetWeakPtr()));
+  ui_dispatcher_binding_ = base::RunLoop::BindEventDispatcher(
+      base::BindRepeating(&Widget::UIEventDispatcher, base::Unretained(this)));
 }
 
 Widget::~Widget() {

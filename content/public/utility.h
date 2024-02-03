@@ -24,9 +24,7 @@ class ValueNotification {
   }
 
  protected:
-  inline void UpdateData() {
-    observers_.Notify();
-  }
+  inline void UpdateData() { observers_.Notify(); }
 
  private:
   base::RepeatingClosureList observers_;
@@ -61,43 +59,71 @@ class Rect : public base::RefCounted<Rect>,
   }
 
   void Set(const base::Rect& rect) {
+    bool changed = false;
+    if (x_ == rect.x)
+      changed = true;
     x_ = rect.x;
+    if (y_ == rect.y)
+      changed = true;
     y_ = rect.y;
+    if (width_ == rect.width)
+      changed = true;
     width_ = rect.width;
+    if (height_ == rect.height)
+      changed = true;
     height_ = rect.height;
-    UpdateData();
+    if (changed)
+      UpdateData();
   }
 
   void Set(scoped_refptr<Rect> rect) {
+    bool changed = false;
+    if (x_ != rect->x_)
+      changed = true;
     x_ = rect->x_;
+    if (y_ != rect->y_)
+      changed = true;
     y_ = rect->y_;
+    if (width_ != rect->width_)
+      changed = true;
     width_ = rect->width_;
+    if (height_ != rect->height_)
+      changed = true;
     height_ = rect->height_;
-    UpdateData();
+    if (changed)
+      UpdateData();
   }
 
   void Empty() { Set(base::Rect()); }
 
   int GetX() const { return x_; }
   void SetX(int x) {
+    if (x_ == x)
+      return;
     x_ = x;
     UpdateData();
   }
 
   int GetY() const { return y_; }
   void SetY(int y) {
+    if (y_ == y)
+      return;
     y_ = y;
     UpdateData();
   }
 
   int GetWidth() const { return width_; }
   void SetWidth(int width) {
+    if (width_ == width)
+      return;
     width_ = width;
     UpdateData();
   }
 
   int GetHeight() const { return height_; }
   void SetHeight(int height) {
+    if (height_ == height)
+      return;
     height_ = height;
     UpdateData();
   }
@@ -158,12 +184,28 @@ class Tone : public base::RefCounted<Tone>,
   }
 
   void Set(double red, double green, double blue, double gray = 255.0f) {
-    red_ = std::clamp(red, -255.0, 255.0);
-    green_ = std::clamp(green, -255.0, 255.0);
-    blue_ = std::clamp(blue, -255.0, 255.0);
-    gray_ = std::clamp(gray, 0.0, 255.0);
+    bool changed = false;
+    double tmp;
 
-    UpdateData();
+    tmp = std::clamp(red, -255.0, 255.0);
+    if (red_ != tmp)
+      changed = true;
+    red_ = tmp;
+    tmp = std::clamp(green, -255.0, 255.0);
+    if (green_ != tmp)
+      changed = true;
+    green_ = tmp;
+    tmp = std::clamp(blue, -255.0, 255.0);
+    if (blue_ != tmp)
+      changed = true;
+    blue_ = tmp;
+    tmp = std::clamp(gray, -255.0, 255.0);
+    if (gray_ != tmp)
+      changed = true;
+    gray_ = tmp;
+
+    if (changed)
+      UpdateData();
   }
 
   void Set(scoped_refptr<Tone> tone) {
@@ -172,25 +214,37 @@ class Tone : public base::RefCounted<Tone>,
 
   double GetRed() const { return red_; }
   void SetRed(double red) {
-    red_ = std::clamp(red, -255.0, 255.0);
+    double tmp = std::clamp(red, -255.0, 255.0);
+    if (tmp == red_)
+      return;
+    red_ = tmp;
     UpdateData();
   }
 
   double GetGreen() const { return green_; }
   void SetGreen(double green) {
-    green_ = std::clamp(green, -255.0, 255.0);
+    double tmp = std::clamp(green, -255.0, 255.0);
+    if (tmp == green_)
+      return;
+    green_ = tmp;
     UpdateData();
   }
 
   double GetBlue() const { return blue_; }
   void SetBlue(double blue) {
-    blue_ = std::clamp(blue, -255.0, 255.0);
+    double tmp = std::clamp(blue, -255.0, 255.0);
+    if (tmp == blue_)
+      return;
+    blue_ = tmp;
     UpdateData();
   }
 
   double GetGray() const { return gray_; }
   void SetGray(double gray) {
-    gray_ = std::clamp(gray, 0.0, 255.0);
+    double tmp = std::clamp(gray, 0.0, 255.0);
+    if (tmp == gray_)
+      return;
+    gray_ = tmp;
     UpdateData();
   }
 
@@ -246,12 +300,31 @@ class Color : public base::RefCounted<Color>,
   }
 
   void Set(double red, double green, double blue, double alpha) {
-    red_ = std::clamp(red, 0.0, 255.0);
-    green_ = std::clamp(green, 0.0, 255.0);
-    blue_ = std::clamp(blue, 0.0, 255.0);
-    alpha_ = std::clamp(alpha, 0.0, 255.0);
+    bool changed = false;
+    double tmp;
 
-    UpdateData();
+    tmp = std::clamp(red, 0.0, 255.0);
+    if (tmp != red_)
+      changed = true;
+    red_ = tmp;
+
+    tmp = std::clamp(green, 0.0, 255.0);
+    if (tmp != green_)
+      changed = true;
+    green_ = tmp;
+
+    tmp = std::clamp(blue, 0.0, 255.0);
+    if (tmp != blue_)
+      changed = true;
+    blue_ = tmp;
+
+    tmp = std::clamp(alpha, 0.0, 255.0);
+    if (tmp != alpha_)
+      changed = true;
+    alpha_ = tmp;
+
+    if (changed)
+      UpdateData();
   }
 
   void Set(scoped_refptr<Color> color) {
@@ -260,25 +333,37 @@ class Color : public base::RefCounted<Color>,
 
   double GetRed() const { return red_; }
   void SetRed(double red) {
-    red_ = std::clamp(red, 0.0, 255.0);
+    double tmp = std::clamp(red, 0.0, 255.0);
+    if (tmp == red_)
+      return;
+    red_ = tmp;
     UpdateData();
   }
 
   double GetGreen() const { return green_; }
   void SetGreen(double green) {
-    green_ = std::clamp(green, 0.0, 255.0);
+    double tmp = std::clamp(green, 0.0, 255.0);
+    if (tmp == green_)
+      return;
+    green_ = tmp;
     UpdateData();
   }
 
   double GetBlue() const { return blue_; }
   void SetBlue(double blue) {
-    blue_ = std::clamp(blue, 0.0, 255.0);
+    double tmp = std::clamp(blue, 0.0, 255.0);
+    if (tmp == blue_)
+      return;
+    blue_ = tmp;
     UpdateData();
   }
 
   double GetAlpha() const { return alpha_; }
   void SetAlpha(double alpha) {
-    alpha_ = std::clamp(alpha, 0.0, 255.0);
+    double tmp = std::clamp(alpha, 0.0, 255.0);
+    if (tmp == alpha_)
+      return;
+    alpha_ = tmp;
     UpdateData();
   }
 

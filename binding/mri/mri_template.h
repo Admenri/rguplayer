@@ -155,7 +155,7 @@ void MriInitDrawableBinding(VALUE klass) {
 
 template <typename Ty>
 MRI_METHOD(viewportchild_get_viewport) {
-  content::ViewportChild* obj = MriGetStructData<Ty>(self);
+  Ty* obj = MriGetStructData<Ty>(self);
 
   MRI_GUARD(obj->CheckIsDisposed(););
 
@@ -207,7 +207,7 @@ template <typename Ty>
 void MriInitViewportChildBinding(VALUE klass) {
   MriInitDrawableBinding<Ty>(klass);
   MriDefineMethod(klass, "viewport", viewportchild_set_viewport<Ty>);
-  MriDefineMethod(klass, "viewport=", drawable_set_visible<Ty>);
+  MriDefineMethod(klass, "viewport=", viewportchild_get_viewport<Ty>);
 }
 
 }  // namespace binding

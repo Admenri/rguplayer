@@ -115,6 +115,7 @@ class Window2 : public base::RefCounted<Window2>,
 
   void ToneChangedInternal();
   void CursorRectChangedInternal();
+  void WindowskinChangedInternal();
 
   void UpdateCursorStepInternal();
   void UpdatePauseStepInternal();
@@ -124,8 +125,10 @@ class Window2 : public base::RefCounted<Window2>,
   void UpdateContentsOpacityInternal();
 
   scoped_refptr<Bitmap> windowskin_;
+  base::CallbackListSubscription windowskin_observer_;
   scoped_refptr<Bitmap> contents_;
   scoped_refptr<Rect> cursor_rect_;
+  base::CallbackListSubscription cursor_rect_observer_;
   bool active_ = true;
   bool visible_ = true;
   bool arrows_visible_ = true;
@@ -180,10 +183,9 @@ class Window2 : public base::RefCounted<Window2>,
 
   base::Rect padding_rect_;
 
+  std::unique_ptr<renderer::QuadDrawable> content_quad_;
   std::unique_ptr<renderer::QuadDrawable> base_quad_;
   bool base_quad_updated_ = true;
-
-  std::unique_ptr<renderer::QuadDrawable> content_quad_;
 
   base::WeakPtrFactory<Window2> weak_ptr_factory_{this};
 };

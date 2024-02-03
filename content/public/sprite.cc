@@ -69,7 +69,7 @@ void Sprite::InitAttributeInternal() {
 
   src_rect_ = new Rect();
   src_rect_observer_ = src_rect_->AddChangedObserver(base::BindRepeating(
-      &Sprite::OnSrcRectChangedInternal, weak_ptr_factory_.GetWeakPtr()));
+      &Sprite::OnSrcRectChangedInternal, base::Unretained(this)));
 
   screen()->renderer()->PostTask(base::BindOnce(
       &Sprite::InitSpriteInternal, weak_ptr_factory_.GetWeakPtr()));
