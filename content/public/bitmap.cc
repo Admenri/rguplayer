@@ -75,7 +75,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
   surface_buffer_ = nullptr;
 
   screen()->renderer()->PostTask(base::BindOnce(&Bitmap::InitBitmapInternal,
-                                                weak_ptr_factory_.GetWeakPtr(),
+                                                base::RetainedRef(this),
                                                 base::Vec2i(width, height)));
 }
 
@@ -110,9 +110,8 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
     surface_buffer_ = conv;
   }
 
-  screen()->renderer()->PostTask(base::BindOnce(&Bitmap::InitBitmapInternal,
-                                                weak_ptr_factory_.GetWeakPtr(),
-                                                surface_buffer_));
+  screen()->renderer()->PostTask(base::BindOnce(
+      &Bitmap::InitBitmapInternal, base::RetainedRef(this), surface_buffer_));
 }
 
 Bitmap::~Bitmap() {
@@ -171,9 +170,9 @@ void Bitmap::StretchBlt(const base::Rect& dest_rect,
   if (src_bitmap->IsDisposed() || !opacity)
     return;
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Bitmap::StretchBltInternal, weak_ptr_factory_.GetWeakPtr(), dest_rect,
-      src_bitmap, src_rect, opacity / 255.0f));
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Bitmap::StretchBltInternal, base::RetainedRef(this),
+                     dest_rect, src_bitmap, src_rect, opacity / 255.0f));
 
   NeedUpdateSurface();
 }
@@ -185,8 +184,8 @@ void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
     return;
 
   screen()->renderer()->PostTask(base::BindOnce(&Bitmap::FillRectInternal,
-                                                weak_ptr_factory_.GetWeakPtr(),
-                                                rect, color->AsBase()));
+                                                base::RetainedRef(this), rect,
+                                                color->AsBase()));
 
   NeedUpdateSurface();
 }
@@ -200,9 +199,9 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
   if (rect.width <= 0 || rect.height <= 0)
     return;
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Bitmap::GradientFillRectInternal, weak_ptr_factory_.GetWeakPtr(), rect,
-      color1->AsBase(), color2->AsBase(), vertical));
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Bitmap::GradientFillRectInternal, base::RetainedRef(this),
+                     rect, color1->AsBase(), color2->AsBase(), vertical));
 
   NeedUpdateSurface();
 }
@@ -210,9 +209,8 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
 void Bitmap::Clear() {
   CheckIsDisposed();
 
-  screen()->renderer()->PostTask(base::BindOnce(&Bitmap::FillRectInternal,
-                                                weak_ptr_factory_.GetWeakPtr(),
-                                                size_, base::Vec4()));
+  screen()->renderer()->PostTask(base::BindOnce(
+      &Bitmap::FillRectInternal, base::RetainedRef(this), size_, base::Vec4()));
 
   NeedUpdateSurface();
 }
@@ -220,9 +218,8 @@ void Bitmap::Clear() {
 void Bitmap::ClearRect(const base::Rect& rect) {
   CheckIsDisposed();
 
-  screen()->renderer()->PostTask(base::BindOnce(&Bitmap::FillRectInternal,
-                                                weak_ptr_factory_.GetWeakPtr(),
-                                                rect, base::Vec4()));
+  screen()->renderer()->PostTask(base::BindOnce(
+      &Bitmap::FillRectInternal, base::RetainedRef(this), rect, base::Vec4()));
 
   NeedUpdateSurface();
 }
@@ -263,8 +260,8 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
   }
 
   screen()->renderer()->PostTask(base::BindOnce(&Bitmap::SetPixelInternal,
-                                                weak_ptr_factory_.GetWeakPtr(),
-                                                x, y, color->AsNormal()));
+                                                base::RetainedRef(this), x, y,
+                                                color->AsNormal()));
 
   NeedUpdateSurface();
 }
@@ -298,9 +295,8 @@ void Bitmap::DrawText(const base::Rect& rect,
                       TextAlign align) {
   CheckIsDisposed();
 
-  screen()->renderer()->PostTask(base::BindOnce(&Bitmap::DrawTextInternal,
-                                                weak_ptr_factory_.GetWeakPtr(),
-                                                rect, str, align));
+  screen()->renderer()->PostTask(base::BindOnce(
+      &Bitmap::DrawTextInternal, base::RetainedRef(this), rect, str, align));
 
   NeedUpdateSurface();
 }
@@ -347,8 +343,8 @@ SDL_Surface* Bitmap::SurfaceRequired() {
 
   surface_buffer_ = SDL_CreateSurface(size_.x, size_.y, pixel_format_->format);
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Bitmap::GetSurfaceInternal, weak_ptr_factory_.GetWeakPtr()));
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Bitmap::GetSurfaceInternal, base::RetainedRef(this)));
   /* Sync for surface get pixels */
   screen()->renderer()->WaitForSync();
 
@@ -367,8 +363,6 @@ void Bitmap::OnObjectDisposed() {
 
   screen()->renderer()->PostTask(base::BindOnce(
       &renderer::TextureFrameBuffer::Del, base::OwnedRef(tex_fbo_)));
-
-  weak_ptr_factory_.InvalidateWeakPtrs();
 }
 
 void Bitmap::InitBitmapInternal(

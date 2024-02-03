@@ -4,6 +4,8 @@
 
 #include "content/public/font.h"
 
+#include "content/public/utility.h"
+
 namespace content {
 
 namespace {

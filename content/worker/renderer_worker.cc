@@ -54,6 +54,10 @@ void RenderRunner::InitGLContextInternal() {
   SDL_GL_SetSwapInterval(0);
 
   renderer::GLES2Context::CreateForCurrentThread();
+
+  if (config_->renderer_debug_output())
+    renderer::GLES2Context::EnableDebugOutputForCurrentThread();
+
   renderer::GSM.InitStates();
   max_texture_size_ = renderer::GSM.GetMaxTextureSize();
 

@@ -29,13 +29,15 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   std::string& game_title() { return game_title_; }
   std::string& game_scripts() { return game_scripts_; }
   base::Vec2i& initial_resolution() { return initial_resolution_; }
+  bool& renderer_debug_output() { return renderer_debug_output_; }
 
  private:
   RGSSVersion rgss_version_ = RGSS3;
   bool allow_frame_skip_ = false;
-  std::string game_title_ = "RGU Core";
+  std::string game_title_ = "RGU Widget";
   std::string game_scripts_ = "Data/Scripts.rvdata2";
   base::Vec2i initial_resolution_ = base::Vec2i(544, 416);
+  bool renderer_debug_output_ = true;
 };
 
 }  // namespace content

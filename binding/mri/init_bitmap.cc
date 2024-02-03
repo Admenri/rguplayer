@@ -18,9 +18,9 @@ static std::string AsString(VALUE obj) {
 MRI_DEFINE_DATATYPE_REF(Bitmap, "Bitmap", content::Bitmap);
 
 void bitmap_init_prop(scoped_refptr<content::Bitmap> bitmap, VALUE self) {
-  VALUE font = MriWrapProperty(self, bitmap->GetFont(), "_font", kFontDataType);
-
-  font_init_prop(bitmap->GetFont(), font);
+  scoped_refptr<content::Font> f = bitmap->GetFont();
+  VALUE font = MriWrapProperty(self, f, "_font", kFontDataType);
+  font_init_prop(f, font);
 }
 
 MRI_METHOD(bitmap_initialize) {

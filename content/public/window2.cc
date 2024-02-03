@@ -603,6 +603,9 @@ void Window2::UpdateBaseTextureInternal() {
   if (!windowskin_ || windowskin_->IsDisposed())
     return;
 
+  if (rect_.width <= 0 || rect_.height <= 0)
+    return;
+
   CalcBaseQuadArrayInternal();
 
   renderer::TextureFrameBuffer::Alloc(base_layer_.tfb_, rect_.width,

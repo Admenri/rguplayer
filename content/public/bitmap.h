@@ -126,8 +126,6 @@ class Bitmap : public base::RefCounted<Bitmap>,
   base::Vec2i size_;
   base::RepeatingClosureList observers_;
   SDL_PixelFormat* pixel_format_;
-
-  base::WeakPtrFactory<Bitmap> weak_ptr_factory_{this};
 };
 
 }  // namespace content
