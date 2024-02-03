@@ -19,7 +19,10 @@ struct CoreFileInfo {
 VALUE CreateCoreFileFrom(const std::string& filename, bool mri_exc) {
   CoreFileInfo* info = new CoreFileInfo;
 
-  info->ops = SDL_RWFromFile(filename.c_str(), "r+");
+  // TODO: filesystem required
+  std::string path(MriGetGlobalRunner()->config()->base_path());
+  path += filename;
+  info->ops = SDL_RWFromFile(path.c_str(), "r+");
   info->closed = false;
   info->free = false;
 

@@ -442,11 +442,10 @@ void Window2::Composite() {
 
   /* Stretch background & frame */
   auto& shader = renderer::GSM.shaders->base_alpha;
+  shader.Bind();
+  shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
 
   if (windowskin_valid && opacity_) {
-    shader.Bind();
-    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-
     shader.SetTransOffset(trans_offset);
     shader.SetTexture(base_layer_.tfb_.tex);
     shader.SetTextureSize(rect_.Size());

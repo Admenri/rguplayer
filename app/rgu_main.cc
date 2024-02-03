@@ -48,13 +48,13 @@ int main(int argc, char* argv[]) {
   content::ContentInitParams params;
 
   config->version() = content::CoreConfigure::RGSS3;
-  config->game_scripts() = "D:/Desktop/Project1/Data/Scripts.rvdata2";
+  config->base_path() = "D:/Desktop/Project1/";
 
   params.config = config;
   params.binding_engine = std::make_unique<binding::BindingEngineMri>();
   params.initial_resolution = config->initial_resolution();
   params.host_window = win->AsWeakPtr();
-  params.sync_renderer = false;
+  params.sync_renderer = true;
 
   cc->InitCC(std::move(params));
   cc->ContentMain();

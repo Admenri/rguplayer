@@ -7,6 +7,7 @@
 
 #include "base/memory/weak_ptr.h"
 #include "components/fpslimiter/fpslimiter.h"
+#include "content/config/core_config.h"
 #include "content/public/drawable.h"
 #include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
@@ -61,6 +62,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   uint64_t GetWindowHandle();
 
+  scoped_refptr<CoreConfigure> config() { return config_; }
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
   scoped_refptr<Font> default_font() const { return default_font_; }
   uint32_t average_fps() const { return average_fps_; }

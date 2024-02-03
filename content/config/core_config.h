@@ -24,6 +24,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   CoreConfigure(const CoreConfigure&) = delete;
   CoreConfigure& operator=(const CoreConfigure&) = delete;
 
+  std::string& base_path() { return base_path_; }
   RGSSVersion& version() { return rgss_version_; }
   bool& allow_frame_skip() { return allow_frame_skip_; }
   std::string& game_title() { return game_title_; }
@@ -32,6 +33,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   bool& renderer_debug_output() { return renderer_debug_output_; }
 
  private:
+  std::string base_path_;
   RGSSVersion rgss_version_ = RGSS3;
   bool allow_frame_skip_ = false;
   std::string game_title_ = "RGU Widget";

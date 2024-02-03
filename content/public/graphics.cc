@@ -4,7 +4,6 @@
 
 #include "content/public/graphics.h"
 
-#include "content/config/core_config.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
 #include "content/worker/binding_worker.h"

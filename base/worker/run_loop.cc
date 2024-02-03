@@ -22,7 +22,9 @@ std::thread::id g_ui_thread_id;
 }  // namespace
 
 struct TaskQueue {
-  moodycamel::BlockingConcurrentQueue<base::OnceClosure> queue;
+  using Queue = moodycamel::BlockingConcurrentQueue<base::OnceClosure>;
+
+  Queue queue;
 };
 
 class RunnerImpl : public SequencedTaskRunner {

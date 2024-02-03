@@ -9,6 +9,7 @@
 #include <array>
 
 #include "base/exceptions/exception.h"
+#include "content/config/core_config.h"
 #include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
@@ -85,7 +86,8 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
       font_(new Font(*host->default_font())),
       pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
   // TODO: add generic filesystem interface
-  std::string tmp_name(filename);
+  std::string tmp_name(host->config()->base_path());
+  tmp_name += filename;
   tmp_name += ".png";
   surface_buffer_ = IMG_Load(tmp_name.c_str());
 
