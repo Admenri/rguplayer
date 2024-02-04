@@ -21,7 +21,6 @@ class Flashable {
     if (duration <= 0)
       return;
 
-    is_empty_ = !!flash_color;
     flash_color_ = flash_color ? flash_color->AsBase() : base::Vec4();
     flash_alpha_ = flash_color_.w;
     flash_duration_ = duration;
@@ -36,10 +35,8 @@ class Flashable {
     if (++count_ > flash_duration_) {
       is_flashing_ = false;
       flash_color_ = base::Vec4();
-    }
-
-    if (is_empty_)
       return;
+    }
 
     flash_color_.w =
         flash_alpha_ * (1.0f - static_cast<float>(count_) / flash_duration_);
@@ -48,14 +45,12 @@ class Flashable {
  protected:
   base::Vec4& GetFlashColor() { return flash_color_; }
   bool IsFlashing() { return is_flashing_; }
-  bool IsFlashEmpty() { return is_empty_; }
 
  private:
   bool is_flashing_ = false;
   base::Vec4 flash_color_;
   int flash_duration_ = 0;
   int count_ = 0;
-  bool is_empty_ = false;
   float flash_alpha_ = 0.0f;
 };
 

@@ -99,8 +99,7 @@ void Viewport::UpdateRendererParameters() {
 }
 
 void Viewport::Composite() {
-  if (DrawableParent::link().empty() || Flashable::IsFlashEmpty() ||
-      !Drawable::GetVisible())
+  if (DrawableParent::link().empty())
     return;
 
   renderer::GSM.states.scissor.Push(true);

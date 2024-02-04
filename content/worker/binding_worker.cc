@@ -22,7 +22,7 @@ void BindingRunner::InitBindingComponents(ContentInitParams& params) {
 }
 
 void BindingRunner::BindingMain() {
-  runner_thread_ = std::make_unique<std::thread>(
+  runner_thread_ = std::make_unique<std::jthread>(
       BindingFuncMain, weak_ptr_factory_.GetWeakPtr());
 }
 
