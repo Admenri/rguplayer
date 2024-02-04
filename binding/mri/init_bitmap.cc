@@ -233,8 +233,6 @@ MRI_METHOD(bitmap_clear_rect) {
     } break;
   }
 
-  MRI_GUARD(obj->Clear(););
-
   return self;
 }
 
