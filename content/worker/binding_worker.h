@@ -16,14 +16,13 @@ namespace content {
 
 class BindingRunner : public base::RefCounted<BindingRunner> {
  public:
-  BindingRunner();
-  ~BindingRunner();
+  BindingRunner() = default;
 
   BindingRunner(const BindingRunner&) = delete;
   BindingRunner& operator=(const BindingRunner&) = delete;
 
   void InitBindingComponents(ContentInitParams& params);
-  void BindingMain();
+  void BindingMain(uint32_t event_id);
   void RequestQuit();
   bool CheckQuitFlag();
 
@@ -44,6 +43,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   base::Vec2i initial_resolution_;
   base::WeakPtr<ui::Widget> window_;
   base::AtomicFlag quit_atomic_;
+  uint32_t user_event_id_;
 
   std::unique_ptr<BindingEngine> binding_engine_;
 

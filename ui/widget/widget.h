@@ -82,12 +82,8 @@ class Widget {
   base::Vec2i GetPosition();
   base::Vec2i GetSize();
 
-  void CloseRequired();
-
   static Widget* FromWindowID(uint32_t window_id);
   bool GetKeyState(::SDL_Scancode scancode) const;
-
-  base::CallbackListSubscription AddDestroyObserver(base::OnceClosure observer);
 
  private:
   void UIEventDispatcher(const SDL_Event& sdl_event);
@@ -95,8 +91,6 @@ class Widget {
   SDL_Window* window_;
   base::CallbackListSubscription ui_dispatcher_binding_;
   bool key_states_[SDL_NUM_SCANCODES]{0};
-
-  base::OnceClosureList destroy_observers_;
 
   base::WeakPtrFactory<Widget> weak_ptr_factory_{this};
 };

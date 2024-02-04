@@ -7,12 +7,9 @@
 #include "content/config/core_config.h"
 #include "content/engine/binding_engine.h"
 #include "content/public/font.h"
+#include "content/worker/event_runner.h"
 
 namespace content {
-
-BindingRunner::BindingRunner() {}
-
-BindingRunner::~BindingRunner() {}
 
 void BindingRunner::InitBindingComponents(ContentInitParams& params) {
   config_ = params.config;
@@ -21,7 +18,8 @@ void BindingRunner::InitBindingComponents(ContentInitParams& params) {
   binding_engine_ = std::move(params.binding_engine);
 }
 
-void BindingRunner::BindingMain() {
+void BindingRunner::BindingMain(uint32_t event_id) {
+  user_event_id_ = event_id;
   runner_thread_ = std::make_unique<std::jthread>(
       BindingFuncMain, weak_ptr_factory_.GetWeakPtr());
 }
@@ -60,7 +58,9 @@ void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
   self->renderer_->DestroyRenderer();
 
   // Quit app required
-  self->window_->CloseRequired();
+  SDL_Event quit_event;
+  quit_event.type = self->user_event_id_ + EventRunner::QUIT_SYSTEM_EVENT;
+  SDL_PushEvent(&quit_event);
 }
 
 }  // namespace content

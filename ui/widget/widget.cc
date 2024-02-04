@@ -109,20 +109,8 @@ base::Vec2i Widget::GetSize() {
   return size;
 }
 
-void Widget::CloseRequired() {
-  SDL_Event close_event;
-  close_event.type = SDL_EVENT_WINDOW_CLOSE_REQUESTED;
-  close_event.window.windowID = SDL_GetWindowID(window_);
-  SDL_PushEvent(&close_event);
-}
-
 bool Widget::GetKeyState(::SDL_Scancode scancode) const {
   return key_states_[scancode];
-}
-
-base::CallbackListSubscription Widget::AddDestroyObserver(
-    base::OnceClosure observer) {
-  return destroy_observers_.Add(std::move(observer));
 }
 
 void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
@@ -137,12 +125,6 @@ void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
     case SDL_EVENT_KEY_UP:
       if (sdl_event.key.windowID == window_id) {
         key_states_[sdl_event.key.keysym.scancode] = false;
-      }
-      break;
-    case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-      if (sdl_event.window.windowID == window_id) {
-        if (!destroy_observers_.empty())
-          destroy_observers_.Notify();
       }
       break;
     default:

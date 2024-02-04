@@ -100,7 +100,12 @@ void Sprite::UpdateRendererParameters() {
 
       quad_->SetPositionRect(base::Vec2(static_cast<float>(rect.width),
                                         static_cast<float>(rect.height)));
-      quad_->SetTexCoordRect(rect);
+      if (mirror_) {
+        quad_->SetTexCoordRect(
+            base::Rect(rect.x + rect.width, rect.y, -rect.width, rect.height));
+      } else {
+        quad_->SetTexCoordRect(rect);
+      }
     }
   }
 }

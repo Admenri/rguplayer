@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
   win_params.size = config->initial_resolution();
   win_params.title = config->game_title();
   win_params.resizable = true;
+  win_params.hpixeldensity = false;
 
   win->Init(std::move(win_params));
 

@@ -20,6 +20,7 @@ void WorkerTreeCompositor::InitCC(ContentInitParams params) {
   event_runner_ = new EventRunner();
   binding_runner_ = new BindingRunner();
 
+  // Init event runner on main thread
   event_runner_->InitEventDispatcher(params.host_window);
 
   // Init renderer in binding thread for sync mode
@@ -28,7 +29,7 @@ void WorkerTreeCompositor::InitCC(ContentInitParams params) {
 
 void WorkerTreeCompositor::ContentMain() {
   // Launch script thread
-  binding_runner_->BindingMain();
+  binding_runner_->BindingMain(event_runner_->user_event_id());
 
   // Launch event loop
   event_runner_->EventMain();

@@ -753,6 +753,7 @@ void Tilemap2::SetViewport(scoped_refptr<Viewport> viewport) {
   if (viewport_ == viewport)
     return;
 
+  viewport_ = viewport;
   ground_->SetViewport(viewport_);
   above_->SetViewport(viewport_);
   above_->SetZ(kAboveLayerDefaultZ);
