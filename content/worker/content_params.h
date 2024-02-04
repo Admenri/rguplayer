@@ -16,8 +16,6 @@
 namespace content {
 
 struct ContentInitParams {
-  bool sync_renderer = false;
-
   base::WeakPtr<ui::Widget> host_window = nullptr;
   base::Vec2i initial_resolution;
 

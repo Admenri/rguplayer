@@ -105,7 +105,7 @@ MRI_METHOD(mri_rgssmain) {
 MRI_METHOD(mri_rgssstop) {
   scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
 
-  while (!MriGetGlobalRunner()->is_quit_required())
+  while (true)
     screen->Update();
 
   return Qnil;
@@ -196,7 +196,9 @@ void BindingEngineMri::RunBindingMain() {
   LoadPackedScripts();
 }
 
-void BindingEngineMri::QuitRequired() {}
+void BindingEngineMri::QuitRequired() {
+  rb_raise(rb_eSystemExit, "");
+}
 
 void BindingEngineMri::FinalizeBinding() {
   VALUE exc = rb_errinfo();

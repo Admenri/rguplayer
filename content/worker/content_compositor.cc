@@ -12,20 +12,18 @@ WorkerTreeCompositor::WorkerTreeCompositor() {}
 WorkerTreeCompositor::~WorkerTreeCompositor() {
   binding_runner_->RequestQuit();
   binding_runner_.reset();
-  render_runner_.reset();
 }
 
 void WorkerTreeCompositor::InitCC(ContentInitParams params) {
   config_ = params.config;
 
   event_runner_ = new EventRunner();
-  render_runner_ = new RenderRunner(params.sync_renderer);
   binding_runner_ = new BindingRunner();
 
   event_runner_->InitEventDispatcher(params.host_window);
 
   // Init renderer in binding thread for sync mode
-  binding_runner_->InitBindingComponents(params, render_runner_);
+  binding_runner_->InitBindingComponents(params);
 }
 
 void WorkerTreeCompositor::ContentMain() {

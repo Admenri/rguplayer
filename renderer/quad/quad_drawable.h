@@ -150,8 +150,8 @@ static int QuadSetTexPosRect(V* vert,
 
 struct Blt {
   static void BeginScreen(const base::Rect& rect);
-  static void BeginDraw(TextureFrameBuffer& dest_tfb);
-  static void TexSource(TextureFrameBuffer& src_tfb);
+  static void BeginDraw(const TextureFrameBuffer& dest_tfb);
+  static void TexSource(const TextureFrameBuffer& src_tfb);
   static void BltDraw(const base::Rect& src_rect, const base::Rect& dest_rect);
   static void BltDraw(const base::RectF& src_rect,
                       const base::RectF& dest_rect);

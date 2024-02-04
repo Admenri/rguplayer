@@ -84,10 +84,8 @@ void Plane::SetZoomY(double zoom_y) {
 void Plane::OnObjectDisposed() {
   RemoveFromList();
 
-  screen()->renderer()->DeleteSoon(std::move(quad_array_));
-  screen()->renderer()->PostTask(
-      base::BindOnce(renderer::TextureFrameBuffer::Del,
-                     base::OwnedRef(std::move(layer_tfb_))));
+  quad_array_.reset();
+  renderer::TextureFrameBuffer::Del(layer_tfb_);
 }
 
 void Plane::InitDrawableData() {

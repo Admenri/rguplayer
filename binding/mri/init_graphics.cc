@@ -12,9 +12,6 @@ namespace binding {
 MRI_METHOD(graphics_update) {
   scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
 
-  if (MriGetGlobalRunner()->is_quit_required())
-    rb_raise(rb_eSystemExit, "");
-
   screen->Update();
 
   return Qnil;
@@ -37,7 +34,6 @@ MRI_METHOD(graphics_transition) {
   MriParseArgsTo(argc, argv, "|izi", &duration, &filename, &vague);
 
   scoped_refptr<content::Bitmap> transmap;
-
   if (!filename.empty())
     transmap = new content::Bitmap(screen, filename);
 

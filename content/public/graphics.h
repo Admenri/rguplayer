@@ -75,7 +75,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   void DestroyBufferInternal();
   void CompositeScreenInternal();
   void ResizeResolutionInternal();
-  void PresentScreenInternal(bool* paint_raiser, bool backend = false);
+  void PresentScreenInternal(const renderer::TextureFrameBuffer& screen_buffer);
   void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
   void FreezeSceneInternal();
   void TransitionSceneInternal(int duration,

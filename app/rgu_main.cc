@@ -54,7 +54,6 @@ int main(int argc, char* argv[]) {
   params.binding_engine = std::make_unique<binding::BindingEngineMri>();
   params.initial_resolution = config->initial_resolution();
   params.host_window = win->AsWeakPtr();
-  params.sync_renderer = false;
 
   cc->InitCC(std::move(params));
   cc->ContentMain();

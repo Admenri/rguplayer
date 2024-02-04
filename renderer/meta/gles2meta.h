@@ -27,11 +27,11 @@ struct Buffer {
     return id;
   }
 
-  inline static void Del(GLID<Buffer<target>>& id) {
+  inline static void Del(const GLID<Buffer<target>>& id) {
     GL.DeleteBuffers(1, &id.gl);
   }
 
-  inline static void Bind(GLID<Buffer<target>>& id) {
+  inline static void Bind(const GLID<Buffer<target>>& id) {
     GL.BindBuffer(target, id.gl);
   }
 
@@ -57,9 +57,11 @@ struct Texture {
     return tex;
   }
 
-  inline static void Del(GLID<Texture>& id) { GL.DeleteTextures(1, &id.gl); }
+  inline static void Del(const GLID<Texture>& id) {
+    GL.DeleteTextures(1, &id.gl);
+  }
 
-  inline static void Bind(GLID<Texture>& id) {
+  inline static void Bind(const GLID<Texture>& id) {
     GL.BindTexture(GL_TEXTURE_2D, id.gl);
   }
   inline static void Unbind() { GL.BindTexture(GL_TEXTURE_2D, 0); }
@@ -104,17 +106,18 @@ struct FrameBuffer {
     return id;
   }
 
-  inline static void Del(GLID<FrameBuffer>& id) {
+  inline static void Del(const GLID<FrameBuffer>& id) {
     GL.DeleteFramebuffers(1, &id.gl);
   }
 
-  inline static void Bind(GLID<FrameBuffer>& id) {
+  inline static void Bind(const GLID<FrameBuffer>& id) {
     GL.BindFramebuffer(GL_FRAMEBUFFER, id.gl);
   }
 
   inline static void Unbind() { GL.BindFramebuffer(GL_FRAMEBUFFER, 0); }
 
-  inline static void SetTexture(GLID<Texture>& tex, uint16_t attachment = 0) {
+  inline static void SetTexture(const GLID<Texture>& tex,
+                                uint16_t attachment = 0) {
     GL.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachment,
                             GL_TEXTURE_2D, tex.gl, 0);
   }
@@ -149,7 +152,7 @@ struct TextureFrameBuffer {
     return tfb;
   }
 
-  inline static void Del(TextureFrameBuffer& tfb) {
+  inline static void Del(const TextureFrameBuffer& tfb) {
     Texture::Del(tfb.tex);
     FrameBuffer::Del(tfb.fbo);
   }
@@ -166,7 +169,7 @@ struct TextureFrameBuffer {
     tfb.height = height;
   }
 
-  inline static void LinkFrameBuffer(TextureFrameBuffer& tfb) {
+  inline static void LinkFrameBuffer(const TextureFrameBuffer& tfb) {
     FrameBuffer::Bind(tfb.fbo);
     FrameBuffer::SetTexture(tfb.tex);
   }

@@ -319,16 +319,14 @@ void Window2::SetTone(scoped_refptr<Tone> tone) {
 void Window2::OnObjectDisposed() {
   RemoveFromList();
 
-  screen()->renderer()->DeleteSoon(std::move(base_layer_.quad_array_));
-  screen()->renderer()->DeleteSoon(std::move(arrows_.arrows_quads_));
-  screen()->renderer()->DeleteSoon(std::move(cursor_.cursor_quads_));
+  base_layer_.quad_array_.reset();
+  arrows_.arrows_quads_.reset();
+  cursor_.cursor_quads_.reset();
 
-  screen()->renderer()->DeleteSoon(std::move(base_quad_));
-  screen()->renderer()->DeleteSoon(std::move(content_quad_));
+  base_quad_.reset();
+  content_quad_.reset();
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&renderer::TextureFrameBuffer::Del,
-                     base::OwnedRef(std::move(base_layer_.tfb_))));
+  renderer::TextureFrameBuffer::Del(base_layer_.tfb_);
 }
 
 void Window2::InitDrawableData() {

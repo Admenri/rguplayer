@@ -78,8 +78,8 @@ void Sprite::InitAttributeInternal() {
 void Sprite::OnObjectDisposed() {
   RemoveFromList();
 
-  screen()->renderer()->DeleteSoon(std::move(quad_));
-  screen()->renderer()->DeleteSoon(std::move(wave_quads_));
+  quad_.reset();
+  wave_quads_.reset();
 }
 
 void Sprite::InitDrawableData() {

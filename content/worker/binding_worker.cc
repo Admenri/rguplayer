@@ -12,35 +12,34 @@ namespace content {
 
 BindingRunner::BindingRunner() {}
 
-BindingRunner::~BindingRunner() {
-  RequestQuit();
-}
+BindingRunner::~BindingRunner() {}
 
-void BindingRunner::InitBindingComponents(
-    ContentInitParams& params,
-    scoped_refptr<RenderRunner> renderer) {
+void BindingRunner::InitBindingComponents(ContentInitParams& params) {
   config_ = params.config;
-  renderer_ = renderer;
   window_ = params.host_window;
   initial_resolution_ = params.initial_resolution;
   binding_engine_ = std::move(params.binding_engine);
 }
 
 void BindingRunner::BindingMain() {
-  runner_thread_ = std::make_unique<std::jthread>(
+  runner_thread_ = std::make_unique<std::thread>(
       BindingFuncMain, weak_ptr_factory_.GetWeakPtr());
 }
 
 void BindingRunner::RequestQuit() {
-  if (binding_engine_)
-    binding_engine_->QuitRequired();
-  runner_thread_.reset();
+  quit_atomic_.Set();
 }
 
-void BindingRunner::BindingFuncMain(std::stop_token token,
-                                    base::WeakPtr<BindingRunner> self) {
-  // Init binding thread runner
-  self->quit_req_ = &token;
+bool BindingRunner::CheckQuitFlag() {
+  bool quit_required = quit_atomic_.IsSet();
+  if (quit_required && binding_engine_)
+    binding_engine_->QuitRequired();
+  return quit_required;
+}
+
+void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
+  // Attach renderer to binding thread
+  self->renderer_ = new RenderRunner();
   self->renderer_->InitRenderer(self->config_, self->window_);
 
   // Init Modules
@@ -57,8 +56,8 @@ void BindingRunner::BindingFuncMain(std::stop_token token,
   // Destroy and release resource for current worker cc
   self->binding_engine_->FinalizeBinding();
 
-  // Destroy renderer
-  self->renderer_->QuitRequired();
+  // Destroy renderer on binding thread
+  self->renderer_->DestroyRenderer();
 
   // Quit app required
   self->window_->CloseRequired();

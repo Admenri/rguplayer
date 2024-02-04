@@ -798,11 +798,9 @@ void Tilemap2::OnObjectDisposed() {
 
   weak_ptr_factory_.InvalidateWeakPtrs();
 
-  screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
-  screen()->renderer()->DeleteSoon(std::move(flash_layer_));
-  screen()->renderer()->PostTask(
-      base::BindOnce(&renderer::TextureFrameBuffer::Del,
-                     base::OwnedRef(std::move(atlas_tfb_))));
+  tilemap_quads_.reset();
+  flash_layer_.reset();
+  renderer::TextureFrameBuffer::Del(atlas_tfb_);
 }
 
 void Tilemap2::BeforeTilemapComposite() {

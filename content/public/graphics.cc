@@ -47,15 +47,11 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
       break;
   }
 
-  renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
-                                     weak_ptr_factory_.GetWeakPtr()));
-  renderer_->WaitForSync();
+  InitScreenBufferInternal();
 }
 
 Graphics::~Graphics() {
-  renderer()->PostTask(base::BindOnce(&Graphics::DestroyBufferInternal,
-                                      weak_ptr_factory_.GetWeakPtr()));
-  renderer()->WaitForSync();
+  DestroyBufferInternal();
 }
 
 int Graphics::GetBrightness() const {
@@ -77,8 +73,7 @@ void Graphics::Wait(int duration) {
 scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
   scoped_refptr<Bitmap> snap = new Bitmap(this, resolution_.x, resolution_.y);
 
-  renderer()->PostTask(base::BindOnce(&Graphics::SnapToBitmapInternal,
-                                      weak_ptr_factory_.GetWeakPtr(), snap));
+  SnapToBitmapInternal(snap);
 
   return snap;
 }
@@ -102,7 +97,11 @@ void Graphics::FadeIn(int duration) {
   for (int i = 0; i < duration; ++i) {
     SetBrightness(current_brightness +
                   diff * (i / static_cast<float>(duration)));
-    Update();
+
+    if (frozen_) {
+    } else {
+      Update();
+    }
   }
 }
 
@@ -123,26 +122,14 @@ void Graphics::Update() {
   }
 
   bool complete_flag = false;
-  renderer()->PostTask(base::BindOnce(&Graphics::CompositeScreenInternal,
-                                      weak_ptr_factory_.GetWeakPtr()));
-  renderer()->PostTask(base::BindOnce(&Graphics::PresentScreenInternal,
-                                      weak_ptr_factory_.GetWeakPtr(),
-                                      &complete_flag, false));
+  CompositeScreenInternal();
+  PresentScreenInternal(screen_buffer_[0]);
 
   /* Delay for desire frame rate */
   fps_manager_->Delay();
 
-  /* If not complete drawing */
-  if (!complete_flag) {
-    /* Drawtime > expect drawtime, sync for draw complete */
-    renderer()->WaitForSync();
-  }
-
-  /* Increase frame render count */
-  ++frame_count_;
-
-  /* Update fps */
-  UpdateAverageFPSInternal();
+  /* Check quit flag */
+  dispatcher_->CheckQuitFlag();
 }
 
 void Graphics::ResizeScreen(const base::Vec2i& resolution) {
@@ -150,9 +137,7 @@ void Graphics::ResizeScreen(const base::Vec2i& resolution) {
     return;
 
   resolution_ = resolution;
-  renderer()->PostTask(base::BindOnce(&Graphics::ResizeResolutionInternal,
-                                      weak_ptr_factory_.GetWeakPtr()));
-  renderer()->WaitForSync();
+  ResizeResolutionInternal();
 }
 
 void Graphics::Reset() {
@@ -176,9 +161,7 @@ void Graphics::Freeze() {
   if (frozen_)
     return;
 
-  renderer()->PostTask(base::BindOnce(&Graphics::FreezeSceneInternal,
-                                      weak_ptr_factory_.GetWeakPtr()));
-  renderer()->WaitForSync();
+  FreezeSceneInternal();
 
   frozen_ = true;
 }
@@ -195,31 +178,21 @@ void Graphics::Transition(int duration,
   SetBrightness(255);
   vague = std::clamp<int>(vague, 1, 256);
 
-  renderer()->PostTask(base::BindOnce(&Graphics::TransitionSceneInternal,
-                                      weak_ptr_factory_.GetWeakPtr(), duration,
-                                      trans_bitmap, vague));
+  TransitionSceneInternal(duration, trans_bitmap, vague);
 
-  renderer()->PostTask(
-      base::BindOnce([]() { renderer::GSM.states.blend.Push(false); }));
+  renderer::GSM.states.blend.Push(false);
 
   for (int i = 0; i < duration; ++i) {
-    renderer()->PostTask(base::BindOnce(&Graphics::TransitionSceneInternalLoop,
-                                        weak_ptr_factory_.GetWeakPtr(), i,
-                                        duration, trans_bitmap));
+    TransitionSceneInternalLoop(i, duration, trans_bitmap);
 
     fps_manager_->Delay();
-    frame_count_++;
-
-    UpdateAverageFPSInternal();
 
     /* Break draw loop for quit flag */
-    if (dispatcher_->is_quit_required())
+    if (dispatcher_->CheckQuitFlag())
       break;
   }
 
-  renderer()->PostTask(
-      base::BindOnce([]() { renderer::GSM.states.blend.Pop(); }));
-  renderer()->WaitForSync();
+  renderer::GSM.states.blend.Pop();
 
   /* Transition process complete */
   frozen_ = false;
@@ -329,10 +302,11 @@ void Graphics::ResizeResolutionInternal() {
   NotifyViewportChanged();
 }
 
-void Graphics::PresentScreenInternal(bool* paint_raiser, bool backend) {
+void Graphics::PresentScreenInternal(
+    const renderer::TextureFrameBuffer& screen_buffer) {
   // TODO: incorrect content position
   renderer::Blt::BeginScreen(resolution_);
-  renderer::Blt::TexSource(screen_buffer_[backend ? 1 : 0]);
+  renderer::Blt::TexSource(screen_buffer);
   renderer::GSM.states.clear_color.Set(base::Vec4());
   renderer::FrameBuffer::Clear();
   // Flip screen for Y
@@ -342,8 +316,11 @@ void Graphics::PresentScreenInternal(bool* paint_raiser, bool backend) {
 
   SDL_GL_SwapWindow(renderer_->window()->AsSDLWindow());
 
-  if (paint_raiser)
-    *paint_raiser = true;
+  /* Increase frame render count */
+  ++frame_count_;
+
+  /* Update average fps */
+  UpdateAverageFPSInternal();
 }
 
 void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
@@ -418,7 +395,7 @@ void Graphics::TransitionSceneInternalLoop(int i,
   screen_quad_->Draw();
 
   // present with backend buffer
-  PresentScreenInternal(nullptr, true);
+  PresentScreenInternal(screen_buffer_[1]);
 }
 
 void Graphics::AddDisposable(Disposable* disp) {

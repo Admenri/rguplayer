@@ -11,41 +11,16 @@
 
 namespace content {
 
-RenderRunner::RenderRunner(bool sync_worker) {
-  worker_ = std::make_unique<base::ThreadWorker>(sync_worker);
-}
-
-RenderRunner::~RenderRunner() {
-  QuitRequired();
-}
-
 void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
                                 base::WeakPtr<ui::Widget> host_window) {
   config_ = config;
-  worker_->Start(base::RunLoop::MessagePumpType::Worker);
-  worker_->WaitUntilStart();
   host_window_ = host_window;
 
-  PostTask(base::BindOnce(&RenderRunner::InitGLContextInternal, AsWeakptr()));
-  WaitForSync();
+  InitGLContextInternal();
 }
 
-void RenderRunner::QuitRequired() {
-  WaitForSync();
-  PostTask(base::BindOnce(&RenderRunner::QuitGLContextInternal, AsWeakptr()));
-  WaitForSync();
-
-  worker_.reset();
-}
-
-void RenderRunner::PostTask(base::OnceClosure task) {
-  worker_->task_runner()->PostTask(std::move(task));
-}
-
-void RenderRunner::WaitForSync() {
-  if (worker_->IsSyncMode())
-    return;
-  worker_->task_runner()->WaitForSync();
+void RenderRunner::DestroyRenderer() {
+  QuitGLContextInternal();
 }
 
 void RenderRunner::InitGLContextInternal() {

@@ -16,25 +16,16 @@ namespace content {
 
 class CoreConfigure;
 
-class RenderRunner : public base::SequencedTaskRunner {
+class RenderRunner : public base::RefCounted<RenderRunner> {
  public:
-  RenderRunner(bool sync_worker = false);
-  ~RenderRunner();
+  RenderRunner() = default;
 
   RenderRunner(const RenderRunner&) = delete;
   RenderRunner& operator=(const RenderRunner) = delete;
 
   void InitRenderer(scoped_refptr<CoreConfigure> config,
                     base::WeakPtr<ui::Widget> host_window);
-  void QuitRequired();
-
-  // base::SequencedTaskRunner methods:
-  void PostTask(base::OnceClosure task) override;
-  void WaitForSync() override;
-
-  base::WeakPtr<RenderRunner> AsWeakptr() {
-    return weak_ptr_factory_.GetWeakPtr();
-  }
+  void DestroyRenderer();
 
   int max_texture_size() const { return max_texture_size_; }
   base::WeakPtr<ui::Widget> window() const { return host_window_; }
@@ -44,7 +35,6 @@ class RenderRunner : public base::SequencedTaskRunner {
   void QuitGLContextInternal();
 
   scoped_refptr<CoreConfigure> config_;
-  std::unique_ptr<base::ThreadWorker> worker_;
 
   base::WeakPtr<ui::Widget> host_window_;
   SDL_GLContext glcontext_;

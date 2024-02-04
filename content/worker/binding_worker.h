@@ -9,7 +9,6 @@
 #include "content/public/graphics.h"
 #include "content/public/input.h"
 #include "content/worker/content_params.h"
-#include "content/worker/renderer_worker.h"
 
 #include <thread>
 
@@ -23,22 +22,20 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   BindingRunner(const BindingRunner&) = delete;
   BindingRunner& operator=(const BindingRunner&) = delete;
 
-  void InitBindingComponents(ContentInitParams& params,
-                             scoped_refptr<RenderRunner> renderer);
+  void InitBindingComponents(ContentInitParams& params);
   void BindingMain();
   void RequestQuit();
-  bool is_quit_required() { return quit_req_ && quit_req_->stop_requested(); }
+  bool CheckQuitFlag();
 
   scoped_refptr<CoreConfigure> config() const { return config_; }
   scoped_refptr<Graphics> graphics() const { return graphics_; }
   scoped_refptr<Input> input() const { return input_; }
 
  private:
-  static void BindingFuncMain(std::stop_token token,
-                              base::WeakPtr<BindingRunner> self);
+  static void BindingFuncMain(base::WeakPtr<BindingRunner> self);
 
   scoped_refptr<CoreConfigure> config_;
-  std::unique_ptr<std::jthread> runner_thread_;
+  std::unique_ptr<std::thread> runner_thread_;
 
   scoped_refptr<RenderRunner> renderer_;
   scoped_refptr<Graphics> graphics_;
@@ -46,7 +43,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
 
   base::Vec2i initial_resolution_;
   base::WeakPtr<ui::Widget> window_;
-  std::stop_token* quit_req_ = nullptr;
+  base::AtomicFlag quit_atomic_;
 
   std::unique_ptr<BindingEngine> binding_engine_;
 

@@ -62,17 +62,14 @@ void Viewport::SetRect(scoped_refptr<Rect> rect) {
 void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   CheckIsDisposed();
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Viewport::SnapToBitmapInternal, base::RetainedRef(this), target));
+  SnapToBitmapInternal(target);
 }
 
 void Viewport::OnObjectDisposed() {
   RemoveFromList();
 
-  screen()->renderer()->DeleteSoon(std::move(viewport_quad_));
-  screen()->renderer()->PostTask(
-      base::BindOnce(renderer::TextureFrameBuffer::Del,
-                     base::OwnedRef(std::move(viewport_buffer_))));
+  viewport_quad_.reset();
+  renderer::TextureFrameBuffer::Del(viewport_buffer_);
 }
 
 void Viewport::InitDrawableData() {

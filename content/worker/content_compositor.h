@@ -6,10 +6,8 @@
 #define CONTENT_WORKER_CONTENT_COMPOSITOR_H_
 
 #include "content/worker/binding_worker.h"
-#include "content/worker/event_runner.h"
-#include "content/worker/renderer_worker.h"
-
 #include "content/worker/content_params.h"
+#include "content/worker/event_runner.h"
 
 namespace content {
 
@@ -26,9 +24,7 @@ class WorkerTreeCompositor {
 
  private:
   scoped_refptr<CoreConfigure> config_;
-
   scoped_refptr<EventRunner> event_runner_;
-  scoped_refptr<RenderRunner> render_runner_;
   scoped_refptr<BindingRunner> binding_runner_;
 };
 

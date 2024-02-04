@@ -147,7 +147,7 @@ void Blt::BeginScreen(const base::Rect& rect) {
   shader.SetTransOffset(base::Vec2i());
 }
 
-void Blt::BeginDraw(TextureFrameBuffer& dest_tfb) {
+void Blt::BeginDraw(const TextureFrameBuffer& dest_tfb) {
   FrameBuffer::Bind(dest_tfb.fbo);
 
   auto size = base::Vec2i(dest_tfb.width, dest_tfb.height);
@@ -161,7 +161,7 @@ void Blt::BeginDraw(TextureFrameBuffer& dest_tfb) {
   shader.SetTransOffset(base::Vec2i());
 }
 
-void Blt::TexSource(TextureFrameBuffer& src_tfb) {
+void Blt::TexSource(const TextureFrameBuffer& src_tfb) {
   auto& shader = GSM.shaders->base;
 
   shader.SetTexture(src_tfb.tex);
