@@ -34,7 +34,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   static void BindingFuncMain(base::WeakPtr<BindingRunner> self);
 
   scoped_refptr<CoreConfigure> config_;
-  std::unique_ptr<std::jthread> runner_thread_;
+  std::unique_ptr<std::thread> runner_thread_;
 
   scoped_refptr<RenderRunner> renderer_;
   scoped_refptr<Graphics> graphics_;

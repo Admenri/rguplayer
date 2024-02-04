@@ -6,31 +6,12 @@
 #include "binding/mri/mri_main.h"
 #include "content/worker/content_compositor.h"
 
-#include "EGL/egl.h"
-#include "EGL/eglext.h"
-
-SDL_EGLAttrib kAttrib[] = {
-    EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-    EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
-    // EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
-    // EGL_PLATFORM_ANGLE_DEVICE_TYPE_SWIFTSHADER_ANGLE,
-    EGL_NONE,
-};
-
-SDL_EGLAttrib* SDLCALL GetAttribArray() {
-  return kAttrib;
-}
-
 int main(int argc, char* argv[]) {
   SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   TTF_Init();
 
   SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-  SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
-  SDL_EGL_SetEGLAttributeCallbacks(GetAttribArray, nullptr, nullptr);
 
   scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
 
@@ -48,6 +29,7 @@ int main(int argc, char* argv[]) {
       new content::WorkerTreeCompositor);
   content::ContentInitParams params;
 
+  config->renderer_debug_output() = false;
   config->version() = content::CoreConfigure::RGSS3;
   config->base_path() = "D:/Desktop/Project1/";
 

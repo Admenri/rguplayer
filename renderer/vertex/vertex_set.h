@@ -9,6 +9,7 @@
 
 #include "base/math/math.h"
 #include "renderer/shader/gles2_shaders.h"
+#include "renderer/thread/thread_manager.h"
 
 namespace renderer {
 
@@ -38,7 +39,7 @@ struct VertexArray {
   using Type = VertexType;
 
   // ARB_vertex_arrays
-  GLID<VertexArray> id;
+  GLID<VertexAttrib> id;
 
   GLID<VertexBuffer> vbo;
   GLID<IndexBuffer> ibo;
@@ -75,7 +76,7 @@ struct VertexArray {
 
   inline static void Bind(VertexArray& vao) {
     if (GL.GenVertexArraysOES) {
-      GL.BindVertexArrayOES(vao.id.gl);
+      GSM.states.vertex_attrib.Set(vao.id);
     } else {
       SetAttrib(vao);
     }
@@ -83,7 +84,6 @@ struct VertexArray {
 
   inline static void Unbind() {
     if (GL.GenVertexArraysOES) {
-      GL.BindVertexArrayOES(0);
     } else {
       for (size_t i = 0; i < VertexInfo<Type>::attr_size; i++) {
         GL.DisableVertexAttribArray(VertexInfo<Type>::attrs[i].index);

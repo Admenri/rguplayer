@@ -109,18 +109,6 @@ void Graphics::Update() {
   if (frozen_)
     return;
 
-  // Frame skip cap adjudication
-  if (fps_manager_->FrameSkipRequired()) {
-    if (config_->allow_frame_skip()) {
-      fps_manager_->Delay();
-      frame_count_++;
-
-      return;
-    } else {
-      fps_manager_->ResetFrameSkipCap();
-    }
-  }
-
   bool complete_flag = false;
   CompositeScreenInternal();
   PresentScreenInternal(screen_buffer_[0]);
@@ -141,7 +129,7 @@ void Graphics::ResizeScreen(const base::Vec2i& resolution) {
 }
 
 void Graphics::Reset() {
-  /* Reset freeze* /
+  /* Reset freeze */
   frozen_ = false;
 
   /* Reset brightness */

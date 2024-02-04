@@ -20,12 +20,15 @@ void BindingRunner::InitBindingComponents(ContentInitParams& params) {
 
 void BindingRunner::BindingMain(uint32_t event_id) {
   user_event_id_ = event_id;
-  runner_thread_ = std::make_unique<std::jthread>(
+  runner_thread_ = std::make_unique<std::thread>(
       BindingFuncMain, weak_ptr_factory_.GetWeakPtr());
 }
 
 void BindingRunner::RequestQuit() {
   quit_atomic_.Set();
+  runner_thread_->join();
+
+  runner_thread_.reset();
 }
 
 bool BindingRunner::CheckQuitFlag() {

@@ -173,12 +173,17 @@ void Sprite::UpdateWaveQuadsInternal() {
     float wavePos = phase + (chunkY / (float)wave_.length_) * (float)(M_PI * 2);
     float chunkX = std::sin(wavePos) * wave_.amp_;
 
+    float chunkOffset = chunkY / zoomY;
     base::RectF tex(static_cast<float>(src_rect_->GetX()),
-                    static_cast<float>(src_rect_->GetY() + chunkY / zoomY),
+                    static_cast<float>(src_rect_->GetY() + chunkOffset),
                     static_cast<float>(width),
                     static_cast<float>(chunkLength / zoomY));
-    base::RectF pos = tex;
-    pos.x = chunkX;
+    base::RectF pos(base::Vec2(chunkX, chunkOffset), tex.Size());
+
+    if (mirror_) {
+      tex.x += tex.width;
+      tex.width = -tex.width;
+    }
 
     renderer::QuadSetTexPosRect(vert, tex, pos);
     vert += 4;

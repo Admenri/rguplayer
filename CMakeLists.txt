@@ -51,9 +51,6 @@ set(SDL3TTF_BUILD_SHARED_LIBS off)
 add_subdirectory(third_party/SDL_ttf)
 include_directories(third_party/SDL_ttf/include/SDL3_ttf)
 
-## Google ANGLE
-include_directories(third_party/angle/include)
-
 ## CRuby-Mri
 add_library(mri_ruby UNKNOWN IMPORTED)
 if(CMAKE_SIZEOF_VOID_P EQUAL 4)

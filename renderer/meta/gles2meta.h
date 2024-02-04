@@ -175,6 +175,8 @@ struct TextureFrameBuffer {
   }
 };
 
+struct VertexAttrib {};
+
 }  // namespace renderer
 
 #endif  // !RENDERER_META_GLES2META_H_
