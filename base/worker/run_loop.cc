@@ -21,12 +21,6 @@ std::thread::id g_ui_thread_id;
 
 }  // namespace
 
-struct TaskQueue {
-  using Queue = moodycamel::BlockingConcurrentQueue<base::OnceClosure>;
-
-  Queue queue;
-};
-
 class RunnerImpl : public SequencedTaskRunner {
  public:
   RunnerImpl(base::WeakPtr<RunLoop> runner) : runner_(runner) {}
@@ -49,7 +43,9 @@ class RunnerImpl : public SequencedTaskRunner {
   }
 
  private:
+  friend class RunLoop;
   base::WeakPtr<RunLoop> runner_;
+  moodycamel::BlockingConcurrentQueue<base::OnceClosure> task_queue_;
   moodycamel::LightweightSemaphore semaphore_;
 };
 
@@ -73,9 +69,7 @@ RunLoop::RunLoop(MessagePumpType type) {
   InitInternal(type);
 }
 
-RunLoop::~RunLoop() {
-  delete closure_task_list_;
-}
+RunLoop::~RunLoop() {}
 
 base::OnceClosure RunLoop::QuitClosure() {
   return base::BindOnce(&RunLoop::RequireQuit, weak_ptr_factory_.GetWeakPtr());
@@ -100,7 +94,8 @@ void RunLoop::Run() {
 
 bool RunLoop::DoLoop() {
   base::OnceClosure task;
-  if (closure_task_list_->queue.try_dequeue(task)) {
+  if (static_cast<RunnerImpl*>(internal_runner_.get())
+          ->task_queue_.try_dequeue(task)) {
     std::move(task).Run();
     return true;
   }
@@ -123,7 +118,6 @@ void RunLoop::QuitWhenIdle() {
 }
 
 void RunLoop::InitInternal(MessagePumpType type) {
-  closure_task_list_ = new TaskQueue();
   type_ = type;
   internal_runner_ =
       base::MakeRefCounted<RunnerImpl>(weak_ptr_factory_.GetWeakPtr());
@@ -135,7 +129,8 @@ void RunLoop::RequireQuit() {
 
 void RunLoop::LockAddTask(base::OnceClosure task_closure) {
   if (!task_closure.is_null()) {
-    closure_task_list_->queue.enqueue(std::move(task_closure));
+    static_cast<RunnerImpl*>(internal_runner_.get())
+        ->task_queue_.enqueue(std::move(task_closure));
   }
 }
 

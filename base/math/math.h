@@ -57,7 +57,7 @@ class Vec2i {
     return Vec2i(x / value.x, y / value.y);
   }
 
-  void inspect() { LOG(INFO) << "Vec2i(" << x << ", " << y << ")"; }
+  void inspect() const { LOG(INFO) << "Vec2i(" << x << ", " << y << ")"; }
 
  public:
   int x, y;
@@ -97,7 +97,7 @@ class Vec2 {
     return Vec2(x / value.x, y / value.y);
   }
 
-  void inspect() { LOG(INFO) << "Vec2(" << x << ", " << y << ")"; }
+  void inspect() const { LOG(INFO) << "Vec2(" << x << ", " << y << ")"; }
 
  public:
   float x, y;
@@ -141,7 +141,7 @@ class Vec3i {
     return Vec3i(x / value.x, y / value.y, z / value.z);
   }
 
-  void inspect() {
+  void inspect() const {
     LOG(INFO) << "Vec3i(" << x << ", " << y << ", " << z << ")";
   }
 
@@ -191,7 +191,9 @@ class Vec3 {
     return Vec3(x / value.x, y / value.y, z / value.z);
   }
 
-  void inspect() { LOG(INFO) << "Vec3(" << x << ", " << y << ", " << z << ")"; }
+  void inspect() const {
+    LOG(INFO) << "Vec3(" << x << ", " << y << ", " << z << ")";
+  }
 
  public:
   float x, y, z;
@@ -237,7 +239,7 @@ class Vec4i {
     return Vec4i(x / value.x, y / value.y, z / value.z, w / value.w);
   }
 
-  void inspect() {
+  void inspect() const {
     LOG(INFO) << "Vec4i(" << x << ", " << y << ", " << z << ", " << w << ")";
   }
 
@@ -290,7 +292,7 @@ class Vec4 {
     return Vec4(x / value.x, y / value.y, z / value.z, w / value.w);
   }
 
-  void inspect() {
+  void inspect() const {
     LOG(INFO) << "Vec4(" << x << ", " << y << ", " << z << ", " << w << ")";
   }
 
@@ -357,7 +359,7 @@ class Rect {
                 height / value.height);
   }
 
-  void inspect() {
+  void inspect() const {
     LOG(INFO) << "Rect(" << x << ", " << y << ", " << width << ", " << height
               << ")";
   }
@@ -429,7 +431,7 @@ class RectF {
                  height / value.height);
   }
 
-  void inspect() {
+  void inspect() const {
     LOG(INFO) << "RectF(" << x << ", " << y << ", " << width << ", " << height
               << ")";
   }

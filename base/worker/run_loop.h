@@ -7,6 +7,7 @@
 
 #include <SDL_events.h>
 
+#include <mutex>
 #include <queue>
 
 #include "base/bind/callback.h"
@@ -15,8 +16,6 @@
 #include "base/memory/ref_counted.h"
 
 namespace base {
-
-struct TaskQueue;
 
 // Template helpers which use function indirection to erase T from the
 // function signature while still remembering it so we can call the
@@ -130,12 +129,11 @@ class RunLoop {
   void InitInternal(MessagePumpType type);
   void RequireQuit();
   void LockAddTask(base::OnceClosure task_closure);
+
   scoped_refptr<SequencedTaskRunner> internal_runner_;
 
   MessagePumpType type_;
   base::AtomicFlag quit_flag_;
-
-  TaskQueue* closure_task_list_;
 
   base::WeakPtrFactory<RunLoop> weak_ptr_factory_{this};
 };
