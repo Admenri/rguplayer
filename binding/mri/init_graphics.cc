@@ -31,7 +31,7 @@ MRI_METHOD(graphics_transition) {
   int duration = 8;
   std::string filename;
   int vague = 40;
-  MriParseArgsTo(argc, argv, "|izi", &duration, &filename, &vague);
+  MriParseArgsTo(argc, argv, "|isi", &duration, &filename, &vague);
 
   scoped_refptr<content::Bitmap> transmap;
   if (!filename.empty())

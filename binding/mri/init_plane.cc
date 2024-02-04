@@ -95,8 +95,9 @@ MRI_METHOD(plane_set_bitmap) {
   MriCheckArgc(argc, 1);
   scoped_refptr<content::Plane> obj = MriGetStructData<content::Plane>(self);
   VALUE propObj = *argv;
-  scoped_refptr<content::Bitmap> prop =
-      MriCheckStructData<content::Bitmap>(propObj, kBitmapDataType);
+  scoped_refptr<content::Bitmap> prop;
+  if (!NIL_P(propObj))
+    prop = MriCheckStructData<content::Bitmap>(propObj, kBitmapDataType);
   MRI_GUARD(obj->SetBitmap(prop););
   rb_iv_set(self, "_bitmap", *argv);
   return propObj;

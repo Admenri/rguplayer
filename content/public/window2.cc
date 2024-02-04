@@ -120,10 +120,11 @@ void Window2::SetWindowskin(scoped_refptr<Bitmap> windowskin) {
 
   if (windowskin_ == windowskin)
     return;
-
   windowskin_ = windowskin;
-  windowskin_observer_ = windowskin_->AddBitmapObserver(base::BindRepeating(
-      &Window2::WindowskinChangedInternal, base::Unretained(this)));
+
+  if (windowskin_ && !windowskin_->IsDisposed())
+    windowskin_observer_ = windowskin_->AddBitmapObserver(base::BindRepeating(
+        &Window2::WindowskinChangedInternal, base::Unretained(this)));
   base_layer_.base_tex_updated_ = true;
 }
 
@@ -132,8 +133,8 @@ void Window2::SetContents(scoped_refptr<Bitmap> contents) {
 
   if (contents_ == contents)
     return;
-
   contents_ = contents;
+
   arrows_.quad_need_update_ = true;
   contents_quad_need_update_ = true;
 }
@@ -369,9 +370,12 @@ void Window2::UpdateRendererParameters() {
 
   if (contents_quad_need_update_) {
     contents_quad_need_update_ = false;
-    base::Rect contents_rect = contents_->GetSize();
-    content_quad_->SetTexCoordRect(contents_rect);
-    content_quad_->SetPositionRect(contents_rect);
+
+    if (contents_ && !contents_->IsDisposed()) {
+      base::Rect contents_rect = contents_->GetSize();
+      content_quad_->SetTexCoordRect(contents_rect);
+      content_quad_->SetPositionRect(contents_rect);
+    }
   }
 
   if (cursor_step_need_update_) {
@@ -600,9 +604,6 @@ void Window2::CalcBaseQuadArrayInternal() {
 }
 
 void Window2::UpdateBaseTextureInternal() {
-  if (!windowskin_ || windowskin_->IsDisposed())
-    return;
-
   if (rect_.width <= 0 || rect_.height <= 0)
     return;
 
@@ -615,6 +616,9 @@ void Window2::UpdateBaseTextureInternal() {
   renderer::GSM.states.clear_color.Push(base::Vec4());
   renderer::FrameBuffer::Clear();
   renderer::GSM.states.clear_color.Pop();
+
+  if (!windowskin_ || windowskin_->IsDisposed())
+    return;
 
   renderer::GSM.states.viewport.Push(rect_.Size());
   renderer::GSM.states.blend.Push(false);

@@ -184,9 +184,10 @@ MRI_METHOD(bitmaparray_set_bitmaps) {
   MriParseArgsTo(argc, argv, "io", &i, &o);
   i = std::clamp(i, 0, 8);
 
-  scoped_refptr<content::Bitmap> bitmap_obj =
-      MriCheckStructData<content::Bitmap>(o, kBitmapDataType);
-  obj->SetBitmap(i, bitmap_obj);
+  scoped_refptr<content::Bitmap> prop;
+  if (!NIL_P(o))
+    prop = MriCheckStructData<content::Bitmap>(o, kBitmapDataType);
+  obj->SetBitmap(i, prop);
 
   VALUE ary = rb_iv_get(self, "_bitmaps");
   rb_ary_store(ary, i, o);

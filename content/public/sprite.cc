@@ -26,13 +26,12 @@ void Sprite::SetBitmap(scoped_refptr<Bitmap> bitmap) {
 
   if (bitmap == bitmap_)
     return;
-
   bitmap_ = bitmap;
-  if (bitmap->IsDisposed())
-    return;
 
-  src_rect_->Set(bitmap->GetSize());
-  OnSrcRectChangedInternal();
+  if (bitmap_ && !bitmap_->IsDisposed()) {
+    src_rect_->Set(bitmap_->GetSize());
+    OnSrcRectChangedInternal();
+  }
 }
 
 void Sprite::SetSrcRect(scoped_refptr<Rect> rect) {
@@ -91,15 +90,18 @@ void Sprite::InitDrawableData() {
 void Sprite::UpdateRendererParameters() {
   if (src_rect_need_update_) {
     src_rect_need_update_ = false;
-    auto bitmap_size = bitmap_->GetSize();
-    auto rect = src_rect_->AsBase();
 
-    rect.width = std::clamp(rect.width, 0, bitmap_size.x - rect.x);
-    rect.height = std::clamp(rect.height, 0, bitmap_size.y - rect.y);
+    if (bitmap_ && !bitmap_->IsDisposed()) {
+      auto bitmap_size = bitmap_->GetSize();
+      auto rect = src_rect_->AsBase();
 
-    quad_->SetPositionRect(base::Vec2(static_cast<float>(rect.width),
-                                      static_cast<float>(rect.height)));
-    quad_->SetTexCoordRect(rect);
+      rect.width = std::clamp(rect.width, 0, bitmap_size.x - rect.x);
+      rect.height = std::clamp(rect.height, 0, bitmap_size.y - rect.y);
+
+      quad_->SetPositionRect(base::Vec2(static_cast<float>(rect.width),
+                                        static_cast<float>(rect.height)));
+      quad_->SetTexCoordRect(rect);
+    }
   }
 }
 

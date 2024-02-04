@@ -181,7 +181,6 @@ void Graphics::Transition(int duration,
   TransitionSceneInternal(duration, trans_bitmap, vague);
 
   renderer::GSM.states.blend.Push(false);
-
   for (int i = 0; i < duration; ++i) {
     TransitionSceneInternalLoop(i, duration, trans_bitmap);
 
@@ -191,7 +190,6 @@ void Graphics::Transition(int duration,
     if (dispatcher_->CheckQuitFlag())
       break;
   }
-
   renderer::GSM.states.blend.Pop();
 
   /* Transition process complete */

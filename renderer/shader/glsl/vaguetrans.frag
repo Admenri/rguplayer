@@ -15,5 +15,5 @@ void main() {
 	transSample = clamp(transSample, u_progress, u_progress + u_vague);
 	float mixAlpha = (transSample - u_progress) / u_vague;
 
-	gl_FragColor = mix(frozenFrag, currentFrag, mixAlpha);
+	gl_FragColor = mix(currentFrag, frozenFrag, mixAlpha);
 }

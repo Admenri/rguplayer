@@ -36,9 +36,10 @@ void Plane::SetBitmap(scoped_refptr<Bitmap> bitmap) {
 
   if (bitmap_ == bitmap)
     return;
-
   bitmap_ = bitmap;
-  quad_array_dirty_ = true;
+
+  if (bitmap_ && !bitmap_->IsDisposed())
+    quad_array_dirty_ = true;
 }
 
 void Plane::SetOX(int ox) {

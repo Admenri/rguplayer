@@ -693,11 +693,9 @@ void Tilemap2::SetBitmap(int index, scoped_refptr<Bitmap> bitmap) {
   bitmaps_[index] = bitmap;
   atlas_need_update_ = true;
 
-  if (bitmap->IsDisposed())
-    return;
-
-  observers_[index] = bitmap->AddBitmapObserver(base::BindRepeating(
-      &Tilemap2::SetAtlasUpdateInternal, base::Unretained(this)));
+  if (bitmap && !bitmap->IsDisposed())
+    observers_[index] = bitmap->AddBitmapObserver(base::BindRepeating(
+        &Tilemap2::SetAtlasUpdateInternal, base::Unretained(this)));
 }
 
 scoped_refptr<Table> Tilemap2::GetMapData() const {

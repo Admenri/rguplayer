@@ -121,7 +121,7 @@ void Viewport::OnViewportRectChanged(const ViewportInfo& rect) {
 }
 
 void Viewport::InitViewportInternal() {
-  rect_ = new Rect();
+  rect_ = new Rect(viewport_rect().rect);
   rect_observer_ = rect_->AddChangedObserver(base::BindRepeating(
       &Viewport::OnRectChangedInternal, base::Unretained(this)));
 

@@ -107,23 +107,24 @@ WINDOW2_DEFINE_ATTR(BackOpacity, int, rb_fix_new, "i");
 WINDOW2_DEFINE_ATTR(ContentsOpacity, int, rb_fix_new, "i");
 WINDOW2_DEFINE_ATTR(Openness, int, rb_fix_new, "i");
 
-#define WINDOW2_DEFINE_REF_ATTR(name, iv, ty)                      \
-  MRI_METHOD(window2_get_##name) {                                 \
-    scoped_refptr<content::Window2> obj =                          \
-        MriGetStructData<content::Window2>(self);                  \
-    MRI_GUARD(obj->CheckIsDisposed(););                            \
-    return rb_iv_get(self, iv);                                    \
-  }                                                                \
-  MRI_METHOD(window2_set_##name) {                                 \
-    MriCheckArgc(argc, 1);                                         \
-    scoped_refptr<content::Window2> obj =                          \
-        MriGetStructData<content::Window2>(self);                  \
-    VALUE propObj = *argv;                                         \
-    scoped_refptr<content::ty> prop =                              \
-        MriCheckStructData<content::ty>(propObj, k##ty##DataType); \
-    MRI_GUARD(obj->Set##name(prop););                              \
-    rb_iv_set(self, iv, *argv);                                    \
-    return propObj;                                                \
+#define WINDOW2_DEFINE_REF_ATTR(name, iv, ty)                           \
+  MRI_METHOD(window2_get_##name) {                                      \
+    scoped_refptr<content::Window2> obj =                               \
+        MriGetStructData<content::Window2>(self);                       \
+    MRI_GUARD(obj->CheckIsDisposed(););                                 \
+    return rb_iv_get(self, iv);                                         \
+  }                                                                     \
+  MRI_METHOD(window2_set_##name) {                                      \
+    MriCheckArgc(argc, 1);                                              \
+    scoped_refptr<content::Window2> obj =                               \
+        MriGetStructData<content::Window2>(self);                       \
+    VALUE propObj = *argv;                                              \
+    scoped_refptr<content::ty> prop;                                    \
+    if (!NIL_P(propObj))                                                \
+      prop = MriCheckStructData<content::ty>(propObj, k##ty##DataType); \
+    MRI_GUARD(obj->Set##name(prop););                                   \
+    rb_iv_set(self, iv, *argv);                                         \
+    return propObj;                                                     \
   }
 
 #define WINDOW2_DEFINE_VAL_ATTR(name, iv, ty)                      \

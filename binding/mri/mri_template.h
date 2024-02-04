@@ -206,8 +206,8 @@ scoped_refptr<Ty> MriInitializeViewportchild(
 template <typename Ty>
 void MriInitViewportChildBinding(VALUE klass) {
   MriInitDrawableBinding<Ty>(klass);
-  MriDefineMethod(klass, "viewport", viewportchild_set_viewport<Ty>);
-  MriDefineMethod(klass, "viewport=", viewportchild_get_viewport<Ty>);
+  MriDefineMethod(klass, "viewport", viewportchild_get_viewport<Ty>);
+  MriDefineMethod(klass, "viewport=", viewportchild_set_viewport<Ty>);
 }
 
 }  // namespace binding
