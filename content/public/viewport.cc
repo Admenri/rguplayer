@@ -158,11 +158,13 @@ void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
 
 ViewportChild::ViewportChild(scoped_refptr<Graphics> screen,
                              scoped_refptr<Viewport> viewport,
-                             int z)
+                             int z,
+                             int sprite_y)
     : Drawable(viewport ? static_cast<DrawableParent*>(viewport.get())
                         : screen.get(),
                z,
-               true) {}
+               true,
+               sprite_y) {}
 
 void ViewportChild::SetViewport(scoped_refptr<Viewport> viewport) {
   CheckDisposed();

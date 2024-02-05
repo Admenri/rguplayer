@@ -101,7 +101,8 @@ class ViewportChild : public Drawable {
  public:
   ViewportChild(scoped_refptr<Graphics> screen,
                 scoped_refptr<Viewport> viewport,
-                int z = 0);
+                int z = 0,
+                int sprite_y = 0);
 
   ViewportChild(const ViewportChild&) = delete;
   ViewportChild& operator=(const ViewportChild&) = delete;

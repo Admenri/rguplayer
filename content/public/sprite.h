@@ -167,7 +167,9 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void SetX(int v) {
     CheckIsDisposed();
-    const base::Vec2 i = transform_.GetPosition();
+    const base::Vec2& i = transform_.GetPosition();
+    if (i.x == v)
+      return;
     transform_.SetPosition(base::Vec2((float)v, i.y));
   }
 
@@ -178,8 +180,11 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void SetY(int v) {
     CheckIsDisposed();
-    const base::Vec2 i = transform_.GetPosition();
+    const base::Vec2& i = transform_.GetPosition();
+    if (i.y == v)
+      return;
     transform_.SetPosition(base::Vec2(i.x, (float)v));
+    Drawable::SetSpriteY(v);
   }
 
   int GetOX() const {
@@ -189,7 +194,9 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void SetOX(int v) {
     CheckIsDisposed();
-    const base::Vec2 i = transform_.GetOrigin();
+    const base::Vec2& i = transform_.GetOrigin();
+    if (i.x == v)
+      return;
     transform_.SetOrigin(base::Vec2((float)v, i.y));
   }
 
@@ -200,7 +207,9 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void SetOY(int v) {
     CheckIsDisposed();
-    const base::Vec2 i = transform_.GetOrigin();
+    const base::Vec2& i = transform_.GetOrigin();
+    if (i.y == v)
+      return;
     transform_.SetOrigin(base::Vec2(i.x, (float)v));
   }
 
@@ -211,7 +220,9 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void SetZoomX(float v) {
     CheckIsDisposed();
-    const base::Vec2 i = transform_.GetScale();
+    const base::Vec2& i = transform_.GetScale();
+    if (i.x == v)
+      return;
     transform_.SetScale(base::Vec2(v, i.y));
   }
 
@@ -222,7 +233,9 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void SetZoomY(float v) {
     CheckIsDisposed();
-    const base::Vec2 i = transform_.GetScale();
+    const base::Vec2& i = transform_.GetScale();
+    if (i.y == v)
+      return;
     transform_.SetScale(base::Vec2(i.x, v));
   }
 
@@ -233,6 +246,8 @@ class Sprite : public base::RefCounted<Sprite>,
 
   void SetAngle(float v) {
     CheckIsDisposed();
+    if (transform_.GetRotation() == v)
+      return;
     transform_.SetRotation(v);
   }
 

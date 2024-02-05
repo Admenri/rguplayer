@@ -6,12 +6,18 @@
 
 namespace content {
 
-Drawable::Drawable(DrawableParent* parent, int z, bool visible)
+namespace {
+uint64_t g_creation_stamp = 0;
+}  // namespace
+
+Drawable::Drawable(DrawableParent* parent, int z, bool visible, int sprite_y)
     : base::LinkNode<Drawable>(),
       init_data_complete_(false),
       parent_(parent),
       z_(z),
-      visible_(visible) {
+      visible_(visible),
+      creation_stamp_(++g_creation_stamp),
+      sprite_y_(sprite_y) {
   parent_->InsertDrawable(this);
 }
 
@@ -44,6 +50,12 @@ void Drawable::SetZ(int z) {
   parent_->InsertDrawable(this);
 }
 
+void Drawable::SetSpriteY(int y) {
+  sprite_y_ = y;
+  RemoveFromList();
+  parent_->InsertDrawable(this);
+}
+
 DrawableParent::DrawableParent() {}
 
 DrawableParent::~DrawableParent() {
@@ -55,7 +67,7 @@ DrawableParent::~DrawableParent() {
 void DrawableParent::InsertDrawable(Drawable* drawable) {
   for (auto it = drawables_.head(); it != drawables_.end(); it = it->next()) {
     // TODO: RGSS 1/2/3 specific process
-    if (it->value()->z_ <= drawable->z_) {
+    if (CalcDrawableOrder(it->value(), drawable)) {
       return drawables_.InsertBefore(it, drawable);
     }
   }
@@ -101,6 +113,21 @@ void DrawableParent::NotifyViewportChanged() {
   for (auto it = drawables_.head(); it != drawables_.end(); it = it->next()) {
     it->value()->OnViewportRectChanged(viewport_rect_);
   }
+}
+
+bool DrawableParent::CalcDrawableOrder(Drawable* self, Drawable* other) {
+  if (self->z_ < other->z_) {
+    return true;
+  }
+
+  if (self->z_ == other->z_) {
+    if (self->sprite_y_ == other->sprite_y_)
+      return (self->creation_stamp_ < other->creation_stamp_);
+    else
+      return (self->sprite_y_ < other->sprite_y_);
+  }
+
+  return false;
 }
 
 }  // namespace content

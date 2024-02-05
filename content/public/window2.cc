@@ -85,7 +85,7 @@ Window2::Window2(scoped_refptr<Graphics> screen,
                  int height)
     : GraphicElement(screen),
       Disposable(screen),
-      ViewportChild(screen, nullptr),
+      ViewportChild(screen, nullptr, 100, std::numeric_limits<int>::max()),
       rect_(x, y, width, height) {
   InitWindow();
 }

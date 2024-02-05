@@ -41,13 +41,18 @@ class DrawableParent {
   base::LinkedList<Drawable>& link() { return drawables_; }
 
  private:
+  bool CalcDrawableOrder(Drawable* self, Drawable* other);
+
   ViewportInfo viewport_rect_;
   base::LinkedList<Drawable> drawables_;
 };
 
 class Drawable : public base::LinkNode<Drawable> {
  public:
-  Drawable(DrawableParent* parent, int z = 0, bool visible = true);
+  Drawable(DrawableParent* parent,
+           int z = 0,
+           bool visible = true,
+           int sprite_y = 0);
   virtual ~Drawable();
 
   Drawable(const Drawable&) = delete;
@@ -94,12 +99,16 @@ class Drawable : public base::LinkNode<Drawable> {
   virtual void OnViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) = 0;
 
+  void SetSpriteY(int y);
+
  private:
   friend class DrawableParent;
   bool init_data_complete_;
   DrawableParent* parent_;
   int z_;
   bool visible_;
+  uint64_t creation_stamp_;
+  int sprite_y_;
 };
 
 }  // namespace content
