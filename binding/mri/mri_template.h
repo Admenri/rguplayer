@@ -38,7 +38,7 @@ MRI_METHOD(serializable_marshal_dump) {
   std::string data;
   MRI_GUARD(data = obj->Serialize();)
 
-  return rb_str_new(data.c_str(), data.size());
+  return rb_str_new(data.data(), data.size());
 }
 
 template <typename Ty>

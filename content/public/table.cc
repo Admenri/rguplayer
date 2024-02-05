@@ -76,7 +76,9 @@ void Table::Resize(int x, int y, int z) {
 std::string Table::Serialize() {
   std::string data;
 
-  int dim = 1;
+  int dim = 0;
+  if (x_size_ >= 1)
+    dim++;
   if (y_size_ > 1)
     dim++;
   if (z_size_ > 1)
@@ -85,13 +87,13 @@ std::string Table::Serialize() {
   int size = x_size_ * y_size_ * z_size_;
   data.resize(sizeof(int32_t) * 5 + sizeof(int16_t) * size);
 
-  Serializable::WriteInt32(data.data(), 0, dim);
-  Serializable::WriteInt32(data.data(), 4, x_size_);
-  Serializable::WriteInt32(data.data(), 8, y_size_);
-  Serializable::WriteInt32(data.data(), 12, z_size_);
-  Serializable::WriteInt32(data.data(), 16, size);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 0, dim);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 1, x_size_);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 2, y_size_);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 3, z_size_);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 4, size);
 
-  memcpy(data.data(), &data_[0], sizeof(int16_t) * size);
+  memcpy(data.data() + sizeof(int32_t) * 5, &data_[0], sizeof(int16_t) * size);
 
   return data;
 }
