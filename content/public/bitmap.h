@@ -116,15 +116,14 @@ class Bitmap : public base::RefCounted<Bitmap>,
                         TextAlign align);
   void NeedUpdateSurface();
 
+  base::Vec2i size_;
   renderer::TextureFrameBuffer tex_fbo_;
   scoped_refptr<Font> font_;
 
   SDL_Surface* surface_buffer_;
-  bool surface_need_update_ = false;
+  bool surface_need_update_;
 
-  base::Vec2i size_;
   base::RepeatingClosureList observers_;
-  SDL_PixelFormat* pixel_format_;
 
   base::WeakPtrFactory<Bitmap> weak_ptr_factory_{this};
 };

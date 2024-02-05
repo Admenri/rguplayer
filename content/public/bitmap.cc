@@ -57,8 +57,7 @@ uint16_t utf8_to_ucs2(const char* _input, const char** end_ptr) {
 Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
     : GraphicElement(host),
       Disposable(host),
-      font_(new Font(*host->default_font())),
-      pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
+      font_(new Font(*host->default_font())) {
   if (width <= 0 || height <= 0) {
     throw base::Exception::Exception(base::Exception::ContentError,
                                      "Invalid bitmap create size: (%dx%d)",
@@ -74,6 +73,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
 
   size_ = base::Vec2i(width, height);
   surface_buffer_ = nullptr;
+  surface_need_update_ = true;
 
   InitBitmapInternal(size_);
 }
@@ -81,13 +81,13 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
     : GraphicElement(host),
       Disposable(host),
-      font_(new Font(*host->default_font())),
-      pixel_format_(SDL_CreatePixelFormat(SDL_PIXELFORMAT_ABGR8888)) {
+      font_(new Font(*host->default_font())) {
   // TODO: add generic filesystem interface
   std::string tmp_name(host->config()->base_path());
   tmp_name += filename;
   tmp_name += ".png";
   surface_buffer_ = IMG_Load(tmp_name.c_str());
+  surface_need_update_ = false;
 
   if (!surface_buffer_) {
     throw base::Exception::Exception(base::Exception::ContentError,
@@ -104,8 +104,9 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
 
   size_ = base::Vec2i(surface_buffer_->w, surface_buffer_->h);
 
-  if (surface_buffer_->format->format != pixel_format_->format) {
-    SDL_Surface* conv = SDL_ConvertSurface(surface_buffer_, pixel_format_);
+  if (surface_buffer_->format->format != SDL_PIXELFORMAT_ABGR8888) {
+    SDL_Surface* conv =
+        SDL_ConvertSurfaceFormat(surface_buffer_, SDL_PIXELFORMAT_ABGR8888);
     SDL_DestroySurface(surface_buffer_);
     surface_buffer_ = conv;
   }
@@ -218,7 +219,7 @@ void Bitmap::ClearRect(const base::Rect& rect) {
 scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
   CheckIsDisposed();
 
-  if (surface_need_update_) {
+  if (!surface_buffer_ || surface_need_update_) {
     SurfaceRequired();
     surface_need_update_ = false;
   }
@@ -228,9 +229,8 @@ scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
                    y * surface_buffer_->pitch + x * bpp;
 
   uint8_t color[4];
-  uint8_t* p = color;
-  SDL_GetRGBA(*reinterpret_cast<uint32_t*>(pixel), surface_buffer_->format, p,
-              ++p, ++p, ++p);
+  SDL_GetRGBA(*reinterpret_cast<uint32_t*>(pixel), surface_buffer_->format,
+              &color[0], &color[1], &color[2], &color[3]);
 
   return new Color(color[0], color[1], color[2], color[3]);
 }
@@ -238,19 +238,19 @@ scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
 void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
   CheckIsDisposed();
 
+  auto data = color->AsNormal();
+
   if (surface_buffer_) {
     int bpp = surface_buffer_->format->BytesPerPixel;
     uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
                      y * surface_buffer_->pitch + x * bpp;
-
-    auto data = color->AsNormal();
     *reinterpret_cast<uint32_t*>(pixel) =
-        SDL_MapRGBA(pixel_format_, static_cast<uint8_t>(data.x),
+        SDL_MapRGBA(surface_buffer_->format, static_cast<uint8_t>(data.x),
                     static_cast<uint8_t>(data.y), static_cast<uint8_t>(data.z),
                     static_cast<uint8_t>(data.w));
   }
 
-  SetPixelInternal(x, y, color->AsNormal());
+  SetPixelInternal(x, y, data);
 
   NeedUpdateSurface();
 }
@@ -322,7 +322,8 @@ SDL_Surface* Bitmap::SurfaceRequired() {
     SDL_DestroySurface(surface_buffer_);
   }
 
-  surface_buffer_ = SDL_CreateSurface(size_.x, size_.y, pixel_format_->format);
+  surface_buffer_ =
+      SDL_CreateSurface(size_.x, size_.y, SDL_PIXELFORMAT_ABGR8888);
   GetSurfaceInternal();
 
   return surface_buffer_;
@@ -332,7 +333,6 @@ void Bitmap::OnObjectDisposed() {
   // Dispose notify
   observers_.Notify();
 
-  SDL_DestroyPixelFormat(pixel_format_);
   if (surface_buffer_) {
     SDL_DestroySurface(surface_buffer_);
     surface_buffer_ = nullptr;
@@ -347,7 +347,6 @@ void Bitmap::InitBitmapInternal(
 
   if (std::holds_alternative<base::Vec2i>(initial_data)) {
     auto size = std::get<base::Vec2i>(initial_data);
-    surface_buffer_ = nullptr;
     renderer::TextureFrameBuffer::Alloc(tex_fbo_, size.x, size.y);
   } else if (std::holds_alternative<SDL_Surface*>(initial_data)) {
     surface_buffer_ = std::get<SDL_Surface*>(initial_data);
