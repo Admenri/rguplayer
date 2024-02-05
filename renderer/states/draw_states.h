@@ -6,7 +6,6 @@
 #define RENDERER_STATES_DRAW_STATES_H_
 
 #include "base/math/math.h"
-#include "renderer/meta/gles2meta.h"
 
 #include "SDL_opengl.h"
 
@@ -101,11 +100,6 @@ class GLBlendFunc : public StateStack<GLBlendType> {
 class GLClearColor : public StateStack<base::Vec4> {
  public:
   void OnSetState(const base::Vec4& value) override;
-};
-
-class GLVertexAttrib : public StateStack<GLID<VertexAttrib>> {
- public:
-  void OnSetState(const GLID<VertexAttrib>& value) override;
 };
 
 }  // namespace renderer

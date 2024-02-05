@@ -22,9 +22,12 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
       dispatcher_(dispatcher),
       renderer_(renderer),
       resolution_(initial_resolution),
-      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>()),
-      brightness_(255),
       frozen_(false),
+      brightness_(255),
+      frame_count_(0),
+      frame_rate_(config_->version() >= CoreConfigure::RGSS2 ? 60 : 40),
+      average_fps_(0),
+      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)),
       fps_display_{0, SDL_GetPerformanceCounter()} {
   // Initial resolution
   viewport_rect().rect = initial_resolution;
@@ -32,20 +35,6 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
   // Init font attributes
   Font::InitStaticFont();
   default_font_ = new Font();
-
-  // Init version specific frame rate
-  switch (config_->version()) {
-    case CoreConfigure::RGSS1:
-      fps_manager_->SetFrameRate(40);
-      frame_rate_ = 40;
-      break;
-    default:
-    case CoreConfigure::RGSS2:
-    case CoreConfigure::RGSS3:
-      fps_manager_->SetFrameRate(60);
-      frame_rate_ = 60;
-      break;
-  }
 
   InitScreenBufferInternal();
 }
@@ -59,8 +48,7 @@ int Graphics::GetBrightness() const {
 }
 
 void Graphics::SetBrightness(int brightness) {
-  brightness = std::clamp<int>(brightness, 0, 255);
-
+  brightness = std::clamp(brightness, 0, 255);
   brightness_ = brightness;
 }
 
@@ -72,9 +60,7 @@ void Graphics::Wait(int duration) {
 
 scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
   scoped_refptr<Bitmap> snap = new Bitmap(this, resolution_.x, resolution_.y);
-
   SnapToBitmapInternal(snap);
-
   return snap;
 }
 
@@ -85,7 +71,15 @@ void Graphics::FadeOut(int duration) {
   for (int i = 0; i < duration; ++i) {
     SetBrightness(current_brightness -
                   current_brightness * (i / static_cast<float>(duration)));
-    Update();
+    if (frozen_) {
+      PresentScreenInternal(frozen_snapshot_);
+
+      FrameProcessInternal();
+      if (dispatcher_->CheckQuitFlag())
+        break;
+    } else {
+      Update();
+    }
   }
 }
 
@@ -99,6 +93,11 @@ void Graphics::FadeIn(int duration) {
                   diff * (i / static_cast<float>(duration)));
 
     if (frozen_) {
+      PresentScreenInternal(frozen_snapshot_);
+
+      FrameProcessInternal();
+      if (dispatcher_->CheckQuitFlag())
+        break;
     } else {
       Update();
     }
@@ -106,15 +105,12 @@ void Graphics::FadeIn(int duration) {
 }
 
 void Graphics::Update() {
-  if (frozen_)
-    return;
+  if (!frozen_) {
+    CompositeScreenInternal();
+    PresentScreenInternal(screen_buffer_[0]);
+  }
 
-  bool complete_flag = false;
-  CompositeScreenInternal();
-  PresentScreenInternal(screen_buffer_[0]);
-
-  /* Delay for desire frame rate */
-  fps_manager_->Delay();
+  FrameProcessInternal();
 
   /* Check quit flag */
   dispatcher_->CheckQuitFlag();
@@ -140,17 +136,12 @@ void Graphics::Reset() {
        it = it->previous()) {
     it->value_as_init()->Dispose();
   }
-
-  /* Reset fpslimiter */
-  fps_manager_->ResetFrameSkipCap();
 }
 
 void Graphics::Freeze() {
   if (frozen_)
     return;
-
   FreezeSceneInternal();
-
   frozen_ = true;
 }
 
@@ -167,12 +158,10 @@ void Graphics::Transition(int duration,
   vague = std::clamp<int>(vague, 1, 256);
 
   TransitionSceneInternal(duration, trans_bitmap, vague);
-
   renderer::GSM.states.blend.Push(false);
   for (int i = 0; i < duration; ++i) {
     TransitionSceneInternalLoop(i, duration, trans_bitmap);
-
-    fps_manager_->Delay();
+    FrameProcessInternal();
 
     /* Break draw loop for quit flag */
     if (dispatcher_->CheckQuitFlag())
@@ -188,8 +177,6 @@ void Graphics::SetFrameRate(int rate) {
   rate = std::max(rate, 10);
   fps_manager_->SetFrameRate(rate);
   frame_rate_ = rate;
-
-  fps_manager_->ResetFrameSkipCap();
 }
 
 int Graphics::GetFrameRate() const {
@@ -204,9 +191,7 @@ int Graphics::GetFrameCount() const {
   return frame_count_;
 }
 
-void Graphics::FrameReset() {
-  fps_manager_->ResetFrameSkipCap();
-}
+void Graphics::FrameReset() {}
 
 uint64_t Graphics::GetWindowHandle() {
   uint64_t window_handle = 0;
@@ -301,12 +286,6 @@ void Graphics::PresentScreenInternal(
   renderer::Blt::EndDraw();
 
   SDL_GL_SwapWindow(renderer_->window()->AsSDLWindow());
-
-  /* Increase frame render count */
-  ++frame_count_;
-
-  /* Update average fps */
-  UpdateAverageFPSInternal();
 }
 
 void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
@@ -382,6 +361,17 @@ void Graphics::TransitionSceneInternalLoop(int i,
 
   // present with backend buffer
   PresentScreenInternal(screen_buffer_[1]);
+}
+
+void Graphics::FrameProcessInternal() {
+  /* Control frame delay */
+  fps_manager_->Delay();
+
+  /* Increase frame render count */
+  ++frame_count_;
+
+  /* Update average fps */
+  UpdateAverageFPSInternal();
 }
 
 void Graphics::AddDisposable(Disposable* disp) {

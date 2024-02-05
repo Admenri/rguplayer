@@ -84,6 +84,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   void TransitionSceneInternalLoop(int i,
                                    int duration,
                                    scoped_refptr<Bitmap> trans_bitmap);
+  void FrameProcessInternal();
 
   void AddDisposable(Disposable* disp);
   void RemoveDisposable(Disposable* disp);
@@ -110,16 +111,15 @@ class Graphics final : public base::RefCounted<Graphics>,
   base::Vec2i resolution_;
   base::LinkedList<Disposable> disposable_elements_;
 
-  std::unique_ptr<fpslimiter::FPSLimiter> fps_manager_;
-
-  bool frozen_ = false;
-  int brightness_ = 255;
-
-  uint64_t frame_count_ = 0;
-  int frame_rate_ = 60;
-  uint32_t average_fps_ = 0;
+  bool frozen_;
+  int brightness_;
+  uint64_t frame_count_;
+  int frame_rate_;
+  uint32_t average_fps_;
 
   scoped_refptr<Font> default_font_;
+
+  std::unique_ptr<fpslimiter::FPSLimiter> fps_manager_;
 
   struct {
     uint64_t last_frame_count;

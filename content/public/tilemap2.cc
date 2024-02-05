@@ -559,9 +559,6 @@ class GroundLayer : public ViewportChild {
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
-    if (!tilemap_->init_internal_)
-      return;
-
     scoped_refptr<Bitmap> tilemap_a1 =
         tilemap_->bitmaps_[Tilemap2::TilemapBitmapID::TileA1];
 
@@ -620,9 +617,6 @@ class AboveLayer : public ViewportChild {
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
-    if (!tilemap_->init_internal_)
-      return;
-
     auto& shader = renderer::GSM.shaders->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
@@ -654,8 +648,7 @@ Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
     : GraphicElement(screen),
       Disposable(screen),
       viewport_(viewport),
-      tile_size_(tilesize),
-      init_internal_(false) {
+      tile_size_(tilesize) {
   ground_ =
       std::make_unique<GroundLayer>(screen, weak_ptr_factory_.GetWeakPtr());
   above_ = std::make_unique<AboveLayer>(screen, weak_ptr_factory_.GetWeakPtr());
@@ -694,7 +687,7 @@ void Tilemap2::SetBitmap(int index, scoped_refptr<Bitmap> bitmap) {
   atlas_need_update_ = true;
 
   if (bitmap && !bitmap->IsDisposed())
-    observers_[index] = bitmap->AddBitmapObserver(base::BindRepeating(
+    bitmap_observers_[index] = bitmap->AddBitmapObserver(base::BindRepeating(
         &Tilemap2::SetAtlasUpdateInternal, base::Unretained(this)));
 }
 
@@ -803,9 +796,6 @@ void Tilemap2::OnObjectDisposed() {
 }
 
 void Tilemap2::BeforeTilemapComposite() {
-  if (!init_internal_)
-    return;
-
   flash_layer_->BeforeComposite();
 
   UpdateTilemapViewportInternal();
@@ -1283,6 +1273,9 @@ void Tilemap2::SetAtlasUpdateInternal() {
 }
 
 void Tilemap2::InitDrawableData() {
+  if (tilemap_quads_)
+    return;
+
   tilemap_quads_ =
       std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
 
@@ -1291,8 +1284,6 @@ void Tilemap2::InitDrawableData() {
   atlas_tfb_ = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_, tile_size_);
   renderer::TextureFrameBuffer::LinkFrameBuffer(atlas_tfb_);
-
-  init_internal_ = true;
 }
 
 }  // namespace content

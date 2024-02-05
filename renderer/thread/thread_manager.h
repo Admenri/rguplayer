@@ -7,6 +7,7 @@
 
 #include "renderer/shader/gles2_shaders.h"
 #include "renderer/states/draw_states.h"
+#include "renderer/vertex/vertex_set.h"
 
 namespace renderer {
 
@@ -54,7 +55,6 @@ class GlobalStateManager final {
     GLBlend blend;
     GLBlendFunc blend_func;
     GLClearColor clear_color;
-    GLVertexAttrib vertex_attrib;
   } states;
 
   std::unique_ptr<GLShaderWare> shaders;
