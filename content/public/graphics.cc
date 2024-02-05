@@ -67,7 +67,7 @@ scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
 void Graphics::FadeOut(int duration) {
   duration = std::max(duration, 1);
 
-  int current_brightness = brightness_;
+  float current_brightness = static_cast<float>(brightness_);
   for (int i = 0; i < duration; ++i) {
     SetBrightness(current_brightness -
                   current_brightness * (i / static_cast<float>(duration)));
@@ -81,13 +81,15 @@ void Graphics::FadeOut(int duration) {
       Update();
     }
   }
+
+  SetBrightness(0);
 }
 
 void Graphics::FadeIn(int duration) {
   duration = std::max(duration, 1);
 
-  int current_brightness = brightness_;
-  int diff = 255 - brightness_;
+  float current_brightness = static_cast<float>(brightness_);
+  float diff = 255.0f - current_brightness;
   for (int i = 0; i < duration; ++i) {
     SetBrightness(current_brightness +
                   diff * (i / static_cast<float>(duration)));
@@ -108,9 +110,9 @@ void Graphics::Update() {
   if (!frozen_) {
     CompositeScreenInternal();
     PresentScreenInternal(screen_buffer_[0]);
-  }
 
-  FrameProcessInternal();
+    FrameProcessInternal();
+  }
 
   /* Check quit flag */
   dispatcher_->CheckQuitFlag();
