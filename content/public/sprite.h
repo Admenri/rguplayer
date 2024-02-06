@@ -175,7 +175,7 @@ class Sprite : public base::RefCounted<Sprite>,
 
   int GetY() const {
     CheckIsDisposed();
-    return transform_.GetPosition().x;
+    return transform_.GetPosition().y;
   }
 
   void SetY(int v) {
@@ -202,7 +202,7 @@ class Sprite : public base::RefCounted<Sprite>,
 
   int GetOY() const {
     CheckIsDisposed();
-    return transform_.GetOrigin().x;
+    return transform_.GetOrigin().y;
   }
 
   void SetOY(int v) {
@@ -228,7 +228,7 @@ class Sprite : public base::RefCounted<Sprite>,
 
   float GetZoomY() const {
     CheckIsDisposed();
-    return transform_.GetScale().x;
+    return transform_.GetScale().y;
   }
 
   void SetZoomY(float v) {
