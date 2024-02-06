@@ -1,39 +1,65 @@
-// Copyright 2024 Admenri.
-// Use of this source code is governed by a BSD - style license that can be
-// found in the LICENSE file.
+// zlib License
+//
+// copyright (C) 2024 Admenri
+// copyright (C) 2023 Guoxiaomi and Krimiston
+//
+// This software is provided 'as-is', without any express or implied
+// warranty.  In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//    claim that you wrote the original software. If you use this software
+//    in a product, an acknowledgment in the product documentation would be
+//    appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//    misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
 
 #include "components/fpslimiter/fpslimiter.h"
 
 #include "SDL_timer.h"
+#include "base/debug/logging.h"
 
 #include <algorithm>
-
-#include "base/debug/logging.h"
 
 #define NS_PER_S 1e9
 
 namespace fpslimiter {
 
-FPSLimiter::FPSLimiter(int frame_rate)
-    : ticks_per_second_(SDL_GetPerformanceFrequency()),
-      last_ticks_(SDL_GetPerformanceCounter()),
-      ticks_per_frame_(0),
-      ticks_freq_ns_(static_cast<double>(ticks_per_second_) / NS_PER_S) {
-  SetFrameRate(frame_rate);
+FPSLimiter::FPSLimiter(int frame_rate) {
+  counter_ = SDL_GetPerformanceCounter();
+  frequency_ = SDL_GetPerformanceFrequency();
+  error_counter_ = 0;
+  period_min_ = 1;
+  interval_ = 1.0 / frame_rate;
 }
 
 void FPSLimiter::SetFrameRate(int frame_rate) {
-  ticks_per_frame_ = ticks_per_second_ / frame_rate;
+  interval_ = 1.0 / frame_rate;
 }
 
 void FPSLimiter::Delay() {
-  const uint64_t current_ticks = SDL_GetPerformanceCounter();
-  const uint64_t frame_ticks_delta = last_ticks_ - current_ticks;
-  int64_t to_delay = ticks_per_frame_ - frame_ticks_delta;
+  uint64_t next_counter = counter_ + std::round(frequency_ * interval_);
+  uint64_t before_counter = SDL_GetPerformanceCounter();
 
-  SDL_DelayNS(to_delay / ticks_freq_ns_);
+  if (before_counter < next_counter) [[likely]] {
+    uint64_t delta_counter = (next_counter - before_counter) - error_counter_;
+    time_t delay_ns =
+        static_cast<time_t>(delta_counter * (NS_PER_S / frequency_));
 
-  last_ticks_ = SDL_GetPerformanceCounter();
+    SDL_DelayNS(delay_ns);
+
+    counter_ = SDL_GetPerformanceCounter();
+    uint64_t real_delay_counter = counter_ - before_counter;
+    error_counter_ = static_cast<int64_t>(real_delay_counter - delta_counter);
+  } else [[unlikely]] {
+    counter_ = before_counter;
+    error_counter_ = 0;
+  }
 }
 
 }  // namespace fpslimiter

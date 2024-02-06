@@ -17,14 +17,14 @@ class FPSLimiter {
   FPSLimiter& operator=(const FPSLimiter&) = delete;
 
   void SetFrameRate(int frame_rate);
-
   void Delay();
 
  private:
-  uint64_t ticks_per_second_;
-  uint64_t last_ticks_;
-  int64_t ticks_per_frame_;
-  double ticks_freq_ns_;
+  uint64_t counter_;
+  uint64_t frequency_;
+  int64_t error_counter_;
+  uint32_t period_min_;
+  double interval_;
 };
 
 }  // namespace fpslimiter

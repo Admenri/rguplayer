@@ -166,7 +166,11 @@ bool Font::Existed(const std::string& name) {
 }
 
 void Font::SetName(const std::vector<std::string>& name) {
+  if (name_ == name)
+    return;
+
   name_ = name;
+  cache_.reset();
 }
 
 std::vector<std::string> Font::GetName() const {
@@ -174,7 +178,11 @@ std::vector<std::string> Font::GetName() const {
 }
 
 void Font::SetSize(int size) {
+  if (size_ == size)
+    return;
+
   size_ = size;
+  cache_.reset();
 }
 
 int Font::GetSize() const {
