@@ -258,7 +258,10 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
 void Bitmap::HueChange(int hue) {
   CheckIsDisposed();
 
-  // TODO:
+  if (hue % 360 == 0)
+    return;
+
+  HueChangeInternal(hue);
 
   NeedUpdateSurface();
 }
@@ -467,6 +470,36 @@ void Bitmap::SetPixelInternal(int x, int y, const base::Vec4& color) {
 
   renderer::Texture::Bind(tex_fbo_.tex);
   renderer::Texture::TexSubImage2D(x, y, 1, 1, GL_RGBA, pixel.data());
+}
+
+void Bitmap::HueChangeInternal(int hue) {
+  renderer::GSM.EnsureCommonTFB(size_.x, size_.y);
+  auto& dst_tex = renderer::GSM.common_tfb;
+
+  while (hue < 0)
+    hue += 359;
+  hue %= 359;
+
+  renderer::FrameBuffer::Bind(dst_tex.fbo);
+  renderer::FrameBuffer::Clear();
+
+  auto& shader = renderer::GSM.shaders->hue;
+  shader.Bind();
+  shader.SetProjectionMatrix(base::Vec2i(dst_tex.width, dst_tex.height));
+  shader.SetTexture(tex_fbo_.tex);
+  shader.SetTextureSize(size_);
+  shader.SetTransOffset(base::Vec2i());
+  shader.SetHueAdjustValue(static_cast<float>(hue) / 360.0f);
+
+  auto* quad = renderer::GSM.common_quad.get();
+  quad->SetTexCoordRect(base::Vec2(size_));
+  quad->SetPositionRect(base::Vec2(size_));
+  quad->Draw();
+
+  renderer::Blt::BeginDraw(tex_fbo_);
+  renderer::Blt::TexSource(dst_tex);
+  renderer::Blt::BltDraw(size_, size_);
+  renderer::Blt::EndDraw();
 }
 
 void Bitmap::GetSurfaceInternal() {

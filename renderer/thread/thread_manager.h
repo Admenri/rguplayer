@@ -32,6 +32,7 @@ class GlobalStateManager final {
     VagueTransShader vague_shader;
     FlashTileShader flash_tile;
     Tilemap2Shader tilemap2;
+    HueShader hue;
   };
 
   GlobalStateManager() = default;

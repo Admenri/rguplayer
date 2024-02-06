@@ -25,7 +25,7 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
       frozen_(false),
       brightness_(255),
       frame_count_(0),
-      frame_rate_(config_->version() >= CoreConfigure::RGSS2 ? 60 : 40),
+      frame_rate_(dispatcher->rgss_version() >= CoreConfigure::RGSS2 ? 60 : 40),
       average_fps_(0),
       fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)),
       fps_display_{0, SDL_GetPerformanceCounter()} {

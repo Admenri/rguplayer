@@ -16,7 +16,7 @@
 namespace content {
 
 struct ContentInitParams {
-  base::WeakPtr<ui::Widget> host_window = nullptr;
+  base::WeakPtr<ui::Widget> host_window;
   base::Vec2i initial_resolution;
 
   std::unique_ptr<BindingEngine> binding_engine;

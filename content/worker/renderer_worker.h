@@ -10,6 +10,7 @@
 #include "base/memory/weak_ptr.h"
 #include "base/worker/run_loop.h"
 #include "base/worker/thread_worker.h"
+#include "content/config/core_config.h"
 #include "ui/widget/widget.h"
 
 namespace content {
@@ -29,6 +30,8 @@ class RenderRunner : public base::RefCounted<RenderRunner> {
 
   int max_texture_size() const { return max_texture_size_; }
   base::WeakPtr<ui::Widget> window() const { return host_window_; }
+
+  static void InitANGLERenderer(CoreConfigure::ANGLERenderer renderer);
 
  private:
   void InitGLContextInternal();

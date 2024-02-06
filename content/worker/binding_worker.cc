@@ -13,7 +13,7 @@ namespace content {
 
 void BindingRunner::InitBindingComponents(ContentInitParams& params) {
   config_ = params.config;
-  window_ = params.host_window;
+  window_ = params.host_window->AsWeakPtr();
   initial_resolution_ = params.initial_resolution;
   binding_engine_ = std::move(params.binding_engine);
 }

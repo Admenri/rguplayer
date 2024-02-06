@@ -22,6 +22,7 @@ namespace shader {
 #include "renderer/shader/glsl/flashtile.frag.xxd"
 #include "renderer/shader/glsl/flat.frag.xxd"
 #include "renderer/shader/glsl/gray.frag.xxd"
+#include "renderer/shader/glsl/hue.frag.xxd"
 #include "renderer/shader/glsl/minimum.vert.xxd"
 #include "renderer/shader/glsl/plane.frag.xxd"
 #include "renderer/shader/glsl/sprite.frag.xxd"
@@ -530,6 +531,34 @@ void Tilemap2Shader::SetAnimationOffset(const base::Vec2& offset) {
 
 void Tilemap2Shader::SetTileSize(float size) {
   GL.Uniform1f(u_tileSize_, size);
+}
+
+HueShader::HueShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::base_vert, shader::base_vert_len),
+      "base_vert", shader::FromRawData(shader::hue_frag, shader::hue_frag_len),
+      "hue_frag");
+
+  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
+  u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
+  u_texture_ = GL.GetUniformLocation(program(), "u_texture");
+  u_hueAdjustValue_ = GL.GetUniformLocation(program(), "u_hueAdjustValue");
+}
+
+void HueShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void HueShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void HueShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+void HueShader::SetHueAdjustValue(float value) {
+  GL.Uniform1f(u_hueAdjustValue_, value);
 }
 
 }  // namespace renderer

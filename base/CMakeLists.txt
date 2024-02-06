@@ -48,12 +48,5 @@ set(CORE_BASE_SRC
   template_util.h
 )
 
-## concurrentqueue Licence: https://github.com/cameron314/concurrentqueue/blob/master/LICENSE.md
-set(CORE_BASE_THIRD_PARTY
-  third_party/concurrentqueue/blockingconcurrentqueue.h
-  third_party/concurrentqueue/concurrentqueue.h
-  third_party/concurrentqueue/lightweightsemaphore.h
-)
-
 add_library(core_base ${CORE_BASE_SRC} ${CORE_BASE_THIRD_PARTY})
 target_link_libraries(core_base SDL3::SDL3-static)

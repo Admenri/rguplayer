@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include "content/worker/content_compositor.h"
-#include "content_compositor.h"
 
 namespace content {
 
@@ -12,6 +11,7 @@ WorkerTreeCompositor::WorkerTreeCompositor() {}
 WorkerTreeCompositor::~WorkerTreeCompositor() {
   binding_runner_->RequestQuit();
   binding_runner_.reset();
+  event_runner_.reset();
 }
 
 void WorkerTreeCompositor::InitCC(ContentInitParams params) {
@@ -21,7 +21,7 @@ void WorkerTreeCompositor::InitCC(ContentInitParams params) {
   binding_runner_ = new BindingRunner();
 
   // Init event runner on main thread
-  event_runner_->InitEventDispatcher(params.host_window);
+  event_runner_->InitEventDispatcher(params.host_window->AsWeakPtr());
 
   // Init renderer in binding thread for sync mode
   binding_runner_->InitBindingComponents(params);

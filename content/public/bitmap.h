@@ -111,6 +111,7 @@ class Bitmap : public base::RefCounted<Bitmap>,
                                 bool vertical);
   void GetSurfaceInternal();
   void SetPixelInternal(int x, int y, const base::Vec4& color);
+  void HueChangeInternal(int hue);
   void DrawTextInternal(const base::Rect& rect,
                         const std::string& str,
                         TextAlign align);

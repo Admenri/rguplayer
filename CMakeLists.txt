@@ -78,6 +78,9 @@ set_target_properties(mri_ruby PROPERTIES
                       IMPORTED_LOCATION "${RUBY_LIBRARY_PATH}"
                       INTERFACE_INCLUDE_DIRECTORIES "${RUBY_INCLUDE_PATH}")
 
+## Google ANGLE
+include_directories(third_party/angle/include)
+
 ## Physfs
 set(PHYSFS_BUILD_STATIC TRUE)
 set(PHYSFS_BUILD_SHARED FALSE)

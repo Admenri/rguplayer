@@ -150,7 +150,7 @@ void BindingEngineMri::InitializeBinding(
   rb_enc_set_default_internal(rb_enc_from_encoding(rb_utf8_encoding()));
   rb_enc_set_default_external(rb_enc_from_encoding(rb_utf8_encoding()));
 
-  switch (config->version()) {
+  switch (binding_host->rgss_version()) {
     case content::CoreConfigure::RGSS1:
       LOG(INFO) << "[Binding] Content Version: RGSS1";
       rb_eval_string(module_rpg1);
@@ -167,7 +167,8 @@ void BindingEngineMri::InitializeBinding(
       break;
   }
 
-  MriInitException(config->version() == content::CoreConfigure::RGSS3);
+  MriInitException(binding_host->rgss_version() ==
+                   content::CoreConfigure::RGSS3);
 
   InitCoreFileBinding();
   InitUtilityBinding();

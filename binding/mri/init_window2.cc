@@ -18,8 +18,7 @@ MRI_METHOD(window2_initialize) {
 
   scoped_refptr<content::Window2> obj;
 
-  if (MriGetGlobalRunner()->config()->version() >=
-      content::CoreConfigure::RGSS3) {
+  if (MriGetGlobalRunner()->rgss_version() >= content::CoreConfigure::RGSS3) {
     int x = 0, y = 0, w = 0, h = 0;
     if (argc >= 4)
       MriParseArgsTo(argc, argv, "iiii", &x, &y, &w, &h);

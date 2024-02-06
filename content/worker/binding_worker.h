@@ -26,6 +26,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   void RequestQuit();
   bool CheckQuitFlag();
 
+  int rgss_version() { return config_->content_version(); }
   scoped_refptr<CoreConfigure> config() const { return config_; }
   scoped_refptr<Graphics> graphics() const { return graphics_; }
   scoped_refptr<Input> input() const { return input_; }
