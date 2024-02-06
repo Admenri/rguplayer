@@ -57,6 +57,10 @@ void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
   // Destroy and release resource for current worker cc
   self->binding_engine_->FinalizeBinding();
 
+  // Release content module
+  self->graphics_.reset();
+  self->input_.reset();
+
   // Destroy renderer on binding thread
   self->renderer_->DestroyRenderer();
 

@@ -55,9 +55,7 @@ uint16_t utf8_to_ucs2(const char* _input, const char** end_ptr) {
 }  // namespace
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
-    : GraphicElement(host),
-      Disposable(host),
-      font_(new Font(*host->default_font())) {
+    : GraphicElement(host), Disposable(host), font_(new Font()) {
   if (width <= 0 || height <= 0) {
     throw base::Exception::Exception(base::Exception::ContentError,
                                      "Invalid bitmap create size: (%dx%d)",
@@ -79,9 +77,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
 }
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
-    : GraphicElement(host),
-      Disposable(host),
-      font_(new Font(*host->default_font())) {
+    : GraphicElement(host), Disposable(host), font_(new Font()) {
   // TODO: add generic filesystem interface
   std::string tmp_name(host->config()->base_path());
   tmp_name += filename;

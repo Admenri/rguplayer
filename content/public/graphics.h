@@ -64,7 +64,6 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   scoped_refptr<CoreConfigure> config() { return config_; }
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
-  scoped_refptr<Font> default_font() const { return default_font_; }
   uint32_t average_fps() const { return average_fps_; }
 
  private:
@@ -116,8 +115,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   uint64_t frame_count_;
   int frame_rate_;
   uint32_t average_fps_;
-
-  scoped_refptr<Font> default_font_;
 
   std::unique_ptr<fpslimiter::FPSLimiter> fps_manager_;
 

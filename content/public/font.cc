@@ -4,7 +4,10 @@
 
 #include "content/public/font.h"
 
+#include <array>
+#include <fstream>
 #include <map>
+#include <string>
 
 #include "base/exceptions/exception.h"
 #include "content/public/utility.h"
@@ -12,6 +15,11 @@
 #define OutlineSize 1
 
 namespace content {
+
+std::array<std::string, 2> kFontLookupDirs = {
+    "Fonts/",
+    "C:/Windows/Fonts/",
+};
 
 namespace {
 
@@ -24,11 +32,13 @@ struct DefaultFontState {
   bool default_shadow = false;
   scoped_refptr<Color> default_color = nullptr;
   scoped_refptr<Color> default_out_color = nullptr;
+
+  // Storage map: <FontID, Size> -> FontObject
+  std::map<std::pair<int, int>, TTF_Font*> font_cache;
+  std::vector<std::string> path_cache;
 };
 
 std::unique_ptr<DefaultFontState> g_default_font_state = nullptr;
-
-std::map<std::string, scoped_refptr<FontCache>> g_font_cache;
 
 }  // namespace
 
@@ -37,6 +47,13 @@ void Font::InitStaticFont() {
 
   g_default_font_state->default_color = new Color(255.0, 255.0, 255.0, 255.0);
   g_default_font_state->default_out_color = new Color(0, 0, 0, 255.0);
+}
+
+void Font::DestroyStaticFont() {
+  auto& cache = g_default_font_state->font_cache;
+  for (auto& it : cache)
+    TTF_CloseFont(it.second);
+  g_default_font_state.reset();
 }
 
 void Font::SetDefaultName(const std::vector<std::string>& name) {
@@ -104,34 +121,40 @@ scoped_refptr<Color> Font::GetDefaultOutColor() {
 }
 
 Font::Font()
-    : name_(g_default_font_state->default_name),
-      size_(g_default_font_state->default_size),
-      bold_(g_default_font_state->default_bold),
-      italic_(g_default_font_state->default_italic),
-      outline_(g_default_font_state->default_outline),
-      shadow_(g_default_font_state->default_shadow),
-      color_(g_default_font_state->default_color),
-      out_color_(g_default_font_state->default_out_color) {}
+    : name_(GetDefaultName()),
+      size_(GetDefaultSize()),
+      bold_(GetDefaultBold()),
+      italic_(GetDefaultItalic()),
+      outline_(GetDefaultOutline()),
+      shadow_(GetDefaultShadow()),
+      color_(GetDefaultColor()),
+      out_color_(GetDefaultOutColor()),
+      font_(nullptr),
+      font_id_(-1) {}
 
 Font::Font(const std::vector<std::string>& name)
     : name_(name),
-      size_(g_default_font_state->default_size),
-      bold_(g_default_font_state->default_bold),
-      italic_(g_default_font_state->default_italic),
-      outline_(g_default_font_state->default_outline),
-      shadow_(g_default_font_state->default_shadow),
-      color_(g_default_font_state->default_color),
-      out_color_(g_default_font_state->default_out_color) {}
+      size_(GetDefaultSize()),
+      bold_(GetDefaultBold()),
+      italic_(GetDefaultItalic()),
+      outline_(GetDefaultOutline()),
+      shadow_(GetDefaultShadow()),
+      color_(GetDefaultColor()),
+      out_color_(GetDefaultOutColor()),
+      font_(nullptr),
+      font_id_(-1) {}
 
 Font::Font(const std::vector<std::string>& name, int size)
     : name_(name),
       size_(size),
-      bold_(g_default_font_state->default_bold),
-      italic_(g_default_font_state->default_italic),
-      outline_(g_default_font_state->default_outline),
-      shadow_(g_default_font_state->default_shadow),
-      color_(g_default_font_state->default_color),
-      out_color_(g_default_font_state->default_out_color) {}
+      bold_(GetDefaultBold()),
+      italic_(GetDefaultItalic()),
+      outline_(GetDefaultOutline()),
+      shadow_(GetDefaultShadow()),
+      color_(GetDefaultColor()),
+      out_color_(GetDefaultOutColor()),
+      font_(nullptr),
+      font_id_(-1) {}
 
 Font::Font(const Font& other)
     : name_(other.name_),
@@ -142,7 +165,8 @@ Font::Font(const Font& other)
       shadow_(other.shadow_),
       color_(other.color_),
       out_color_(other.out_color_),
-      cache_(other.cache_) {}
+      font_(other.font_),
+      font_id_(other.font_id_) {}
 
 const Font& Font::operator=(const Font& other) {
   name_ = other.name_;
@@ -153,16 +177,13 @@ const Font& Font::operator=(const Font& other) {
   shadow_ = other.shadow_;
   color_ = other.color_;
   out_color_ = other.out_color_;
-  cache_ = other.cache_;
+  font_ = other.font_;
+  font_id_ = other.font_id_;
   return other;
 }
 
 bool Font::Existed(const std::string& name) {
-  // TODO: filesystem required
-  auto* f = SDL_RWFromFile(name.c_str(), "r+");
-  SDL_RWclose(f);
-
-  return !!f;
+  return FindFontInternal(name, nullptr);
 }
 
 void Font::SetName(const std::vector<std::string>& name) {
@@ -170,7 +191,7 @@ void Font::SetName(const std::vector<std::string>& name) {
     return;
 
   name_ = name;
-  cache_.reset();
+  font_ = nullptr;
 }
 
 std::vector<std::string> Font::GetName() const {
@@ -182,7 +203,7 @@ void Font::SetSize(int size) {
     return;
 
   size_ = size;
-  cache_.reset();
+  font_ = nullptr;
 }
 
 int Font::GetSize() const {
@@ -238,14 +259,12 @@ scoped_refptr<Color> Font::GetOutColor() const {
 }
 
 void Font::EnsureLoadFont() {
-  if (!cache_)
+  if (!font_)
     LoadFontInternal();
 }
 
 TTF_Font* Font::AsSDLFont() {
   EnsureLoadFont();
-
-  auto* font = cache_->font(size_);
 
   int font_style = TTF_STYLE_NORMAL;
   if (bold_)
@@ -253,9 +272,9 @@ TTF_Font* Font::AsSDLFont() {
   if (italic_)
     font_style |= TTF_STYLE_ITALIC;
 
-  TTF_SetFontStyle(font, font_style);
+  TTF_SetFontStyle(font_, font_style);
 
-  return font;
+  return font_;
 }
 
 std::string Font::FixupString(const std::string& text) {
@@ -388,31 +407,70 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
 }
 
 void Font::LoadFontInternal() {
-  // Find in global cache
-  for (auto& name : name_) {
-    auto it = g_font_cache.find(name);
-    if (it != g_font_cache.end()) {
-      cache_ = it->second;
-      return;
-    }
-  }
+  auto& cache = g_default_font_state->font_cache;
+  auto& paths = g_default_font_state->path_cache;
 
-  // Load from file
-  for (auto& name : name_) {
-    auto* font_obj = TTF_OpenFont(name.c_str(), size_);
-    if (font_obj) {
-      cache_ = new FontCache(font_obj, size_);
+  // Make unique font path cache
+  if (font_id_ < 0)
+    MakeFontIDInternal();
 
-      // Storage in global cache
-      g_font_cache.insert(std::make_pair(name, cache_));
+  if (size_ >= 6 && size_ <= 96 && font_id_ >= 0) {
+    // Find in global cache
+    while (!font_) {
+      auto it = cache.find({font_id_, size_});
+      if (it != cache.end()) {
+        font_ = it->second;
+        return;
+      }
 
-      return;
+      // Load new font
+      const auto& font_path = paths.at(font_id_);
+      auto* font_ptr = TTF_OpenFont(font_path.c_str(), size_);
+      if (font_ptr)
+        cache.emplace(std::pair{font_id_, size_}, font_ptr);
     }
   }
 
   // Failed to load font
+  std::string font_names;
+  for (auto& it : name_)
+    font_names = font_names + it + " ";
   throw base::Exception::Exception(base::Exception::ContentError,
-                                   "Failed to load Font.");
+                                   "Failed to load Font: %s",
+                                   font_names.c_str());
+}
+
+void Font::MakeFontIDInternal() {
+  auto& cache = g_default_font_state->path_cache;
+  for (auto& name : name_) {
+    std::string font_find_path;
+    if (!FindFontInternal(name, &font_find_path))
+      continue;
+
+    auto it = std::find(cache.begin(), cache.end(), name);
+    int id = static_cast<int>(it - cache.begin());
+
+    if (it == cache.end())
+      cache.push_back(font_find_path);
+
+    if (font_id_ < 0)
+      font_id_ = id;
+  }
+}
+
+bool Font::FindFontInternal(const std::string& name, std::string* out_path) {
+  for (auto& path : kFontLookupDirs) {
+    std::string font_path = path + name;
+    std::ifstream file(font_path);
+    if (file.good()) {
+      if (out_path)
+        *out_path = font_path;
+
+      return true;
+    }
+  }
+
+  return false;
 }
 
 }  // namespace content

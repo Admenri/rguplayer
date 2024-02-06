@@ -34,12 +34,13 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
 
   // Init font attributes
   Font::InitStaticFont();
-  default_font_ = new Font();
 
   InitScreenBufferInternal();
 }
 
 Graphics::~Graphics() {
+  Font::DestroyStaticFont();
+
   DestroyBufferInternal();
 }
 

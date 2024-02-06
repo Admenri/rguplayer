@@ -15,32 +15,10 @@
 
 namespace content {
 
-class FontCache : public base::RefCounted<FontCache> {
- public:
-  FontCache(TTF_Font* font_ptr, int size) : font_(font_ptr), size_(size) {}
-  ~FontCache() { TTF_CloseFont(font_); }
-
-  FontCache(const FontCache&) = delete;
-  FontCache& operator=(const FontCache&) = delete;
-
-  TTF_Font* font(int size) {
-    // Update font size cache
-    if (size != size_) {
-      size_ = size;
-      TTF_SetFontSize(font_, size_);
-    }
-
-    return font_;
-  }
-
- private:
-  TTF_Font* font_;
-  int size_;
-};
-
 class Font : public base::RefCounted<Font> {
  public:
   static void InitStaticFont();
+  static void DestroyStaticFont();
 
   static bool Existed(const std::string& name);
   static void SetDefaultName(const std::vector<std::string>& name);
@@ -91,6 +69,9 @@ class Font : public base::RefCounted<Font> {
 
  private:
   void LoadFontInternal();
+  void MakeFontIDInternal();
+  static bool FindFontInternal(const std::string& name, std::string* out_path);
+
   std::vector<std::string> name_;
   int size_;
   bool bold_;
@@ -100,7 +81,8 @@ class Font : public base::RefCounted<Font> {
   scoped_refptr<Color> color_;
   scoped_refptr<Color> out_color_;
 
-  scoped_refptr<FontCache> cache_;
+  int font_id_;
+  TTF_Font* font_;
 };
 
 }  // namespace content
