@@ -211,7 +211,11 @@ void InitTilemap2Binding() {
   MriDefineAttr(klass, "viewport", tilemap2, viewport);
   MriDefineAttr(klass, "map_data", tilemap2, MapData);
   MriDefineAttr(klass, "flash_data", tilemap2, FlashData);
-  MriDefineAttr(klass, "flags", tilemap2, Flags);
+  if (MriGetGlobalRunner()->rgss_version() >= content::CoreConfigure::RGSS3) {
+    MriDefineAttr(klass, "flags", tilemap2, Flags);
+  } else {
+    MriDefineAttr(klass, "passages", tilemap2, Flags);
+  }
 
   VALUE bitmaps = rb_define_class("BitmapArray", rb_cObject);
   rb_define_alloc_func(bitmaps, MriClassAllocate<&kBitmapArrayDataType>);

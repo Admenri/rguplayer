@@ -62,6 +62,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   uint64_t GetWindowHandle();
 
+  int content_version() const;
   scoped_refptr<CoreConfigure> config() { return config_; }
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
   uint32_t average_fps() const { return average_fps_; }

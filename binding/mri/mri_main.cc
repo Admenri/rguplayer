@@ -136,6 +136,11 @@ MRI_METHOD(mri_p) {
   return Qnil;
 }
 
+template <int id>
+MRI_METHOD(mri_return_id) {
+  return rb_fix_new(id);
+}
+
 BindingEngineMri::BindingEngineMri() {}
 
 BindingEngineMri::~BindingEngineMri() {}
@@ -191,6 +196,22 @@ void BindingEngineMri::InitializeBinding(
   InitWindow2Binding();
   InitGraphicsBinding();
   InitInputBinding();
+
+  if (binding_host->rgss_version() < content::CoreConfigure::RGSS3) {
+    if (sizeof(void*) == 4) {
+      MriDefineMethod(rb_cNilClass, "id", mri_return_id<4>);
+      MriDefineMethod(rb_cTrueClass, "id", mri_return_id<2>);
+    } else if (sizeof(void*) == 8) {
+      MriDefineMethod(rb_cNilClass, "id", mri_return_id<8>);
+      MriDefineMethod(rb_cTrueClass, "id", mri_return_id<20>);
+    } else {
+      NOTREACHED();
+    }
+
+    rb_const_set(rb_cObject, rb_intern("TRUE"), Qtrue);
+    rb_const_set(rb_cObject, rb_intern("FALSE"), Qfalse);
+    rb_const_set(rb_cObject, rb_intern("NIL"), Qnil);
+  }
 
   MriDefineModuleFunction(rb_mKernel, "rgss_main", mri_rgssmain);
   MriDefineModuleFunction(rb_mKernel, "rgss_stop", mri_rgssstop);

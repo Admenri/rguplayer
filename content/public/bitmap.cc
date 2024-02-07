@@ -512,6 +512,9 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
   uint8_t fopacity;
   SDL_Surface* txt_surf = font_->RenderText(str, &fopacity);
 
+  if (!txt_surf)
+    return;
+
   int align_x = rect.x, align_y = rect.y + (rect.height - txt_surf->h) / 2;
 
   switch (align) {

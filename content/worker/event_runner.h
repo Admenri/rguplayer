@@ -12,6 +12,8 @@
 
 #include "SDL_events.h"
 
+#include <optional>
+
 namespace content {
 
 class BindingRunner;
@@ -42,6 +44,8 @@ class EventRunner : public base::RefCounted<EventRunner> {
 
  private:
   void EventFilter(const SDL_Event& event);
+  void UpdateFPSDisplay(std::optional<int32_t> fps);
+
   uint32_t user_event_id_;
   scoped_refptr<CoreConfigure> config_;
   base::CallbackListSubscription quit_observer_;
@@ -50,9 +54,11 @@ class EventRunner : public base::RefCounted<EventRunner> {
   base::WeakPtr<BindingRunner> dispatcher_;
 
   struct {
+    bool enable_display;
     uint64_t frame_count;
     uint64_t last_counter;
     uint64_t counter_freq;
+    int32_t average_fps;
   } fps_counter_;
 
   base::WeakPtrFactory<EventRunner> weak_ptr_factory_{this};

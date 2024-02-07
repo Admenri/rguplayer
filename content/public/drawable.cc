@@ -66,7 +66,6 @@ DrawableParent::~DrawableParent() {
 
 void DrawableParent::InsertDrawable(Drawable* drawable) {
   for (auto it = drawables_.head(); it != drawables_.end(); it = it->next()) {
-    // TODO: RGSS 1/2/3 specific process
     if (CalcDrawableOrder(it->value(), drawable)) {
       return drawables_.InsertBefore(it, drawable);
     }

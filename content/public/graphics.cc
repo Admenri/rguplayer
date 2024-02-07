@@ -235,6 +235,10 @@ uint64_t Graphics::GetWindowHandle() {
   return window_handle;
 }
 
+int Graphics::content_version() const {
+  return dispatcher_->rgss_version();
+}
+
 void Graphics::InitScreenBufferInternal() {
   screen_buffer_[0] = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(screen_buffer_[0], resolution_.x,

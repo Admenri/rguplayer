@@ -113,11 +113,18 @@ int MriParseArgsTo(int argc, VALUE* argv, const char* fmt, ...) {
         ++count;
         break;
       case 'n': {
-        if (!RB_TYPE_P(arg_element, RUBY_T_SYMBOL))
-          rb_raise(rb_eTypeError, "Argument %d: Expected symbol", count);
-
-        ID* ptr = va_arg(args_iter, ID*);
-        *ptr = SYM2ID(arg_element);
+        std::string* ptr = va_arg(args_iter, std::string*);
+        switch (rb_type(arg_element)) {
+          case RUBY_T_SYMBOL:
+            *ptr = std::string(rb_id2name(SYM2ID(arg_element)));
+            break;
+          case RUBY_T_STRING:
+            *ptr =
+                std::string(RSTRING_PTR(arg_element), RSTRING_LEN(arg_element));
+            break;
+          default:
+            rb_raise(rb_eTypeError, "Argument %d: Expected symbol", count);
+        }
       }
         ++count;
         break;

@@ -11,8 +11,8 @@
 namespace content {
 
 EventRunner::EventRunner()
-    : fps_counter_{0, SDL_GetPerformanceCounter(),
-                   SDL_GetPerformanceFrequency()} {
+    : fps_counter_{false, 0, SDL_GetPerformanceCounter(),
+                   SDL_GetPerformanceFrequency(), 0} {
   user_event_id_ = SDL_RegisterEvents(EVENT_NUMS);
 }
 
@@ -47,9 +47,10 @@ void EventRunner::EventFilter(const SDL_Event& event) {
     uint64_t now_ticks = SDL_GetPerformanceCounter();
     uint64_t delta_ticks = now_ticks - fps_counter_.last_counter;
     if (delta_ticks >= fps_counter_.counter_freq) {
-      int32_t average_fps = fps_counter_.frame_count;
-      window_->SetTitle(config_->game_title() +
-                        " FPS: " + std::to_string(average_fps));
+      if (fps_counter_.enable_display) {
+        fps_counter_.average_fps = fps_counter_.frame_count;
+        UpdateFPSDisplay(fps_counter_.average_fps);
+      }
 
       fps_counter_.last_counter = SDL_GetPerformanceCounter();
       fps_counter_.frame_count = 0;
@@ -66,6 +67,28 @@ void EventRunner::EventFilter(const SDL_Event& event) {
       dispatcher_->RequestReset();
     }
   }
+
+  /* Enable FPS display */
+  if (event.type == SDL_EVENT_KEY_UP &&
+      event.window.windowID == window_->GetWindowID()) {
+    if (event.key.keysym.scancode == SDL_SCANCODE_F2) {
+      // Switch fps display mode
+      fps_counter_.enable_display = !fps_counter_.enable_display;
+
+      std::optional<int32_t> fps = std::nullopt;
+      if (fps_counter_.enable_display)
+        fps = fps_counter_.average_fps;
+
+      UpdateFPSDisplay(fps);
+    }
+  }
+}
+
+void EventRunner::UpdateFPSDisplay(std::optional<int32_t> fps) {
+  if (fps.has_value())
+    return window_->SetTitle(config_->game_title() +
+                             " - FPS: " + std::to_string(*fps));
+  return window_->SetTitle(config_->game_title());
 }
 
 }  // namespace content

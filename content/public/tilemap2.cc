@@ -837,13 +837,15 @@ void Tilemap2::CreateTileAtlasInternal() {
   }
 
   /* shadow set atlas */
-  SDL_Surface* shadow_set = CreateShadowSet(tile_size_);
-  renderer::Texture::Bind(atlas_tfb_.tex);
-  renderer::Texture::TexSubImage2D(
-      kShadowAtlasArea.x * tile_size_, kShadowAtlasArea.y * tile_size_,
-      kShadowAtlasArea.width * tile_size_, kShadowAtlasArea.height * tile_size_,
-      GL_RGBA, shadow_set->pixels);
-  SDL_DestroySurface(shadow_set);
+  if (screen()->content_version() >= CoreConfigure::RGSS3) {
+    SDL_Surface* shadow_set = CreateShadowSet(tile_size_);
+    renderer::Texture::Bind(atlas_tfb_.tex);
+    renderer::Texture::TexSubImage2D(
+        kShadowAtlasArea.x * tile_size_, kShadowAtlasArea.y * tile_size_,
+        kShadowAtlasArea.width * tile_size_,
+        kShadowAtlasArea.height * tile_size_, GL_RGBA, shadow_set->pixels);
+    SDL_DestroySurface(shadow_set);
+  }
 }
 
 void Tilemap2::UpdateTilemapViewportInternal() {
@@ -1162,7 +1164,12 @@ void Tilemap2::ParseMapDataBufferInternal() {
                        int16_t underTileID) {
     int16_t flag = TableGetFlag(flagdata, tileID);
     bool over_player = flag & OVER_PLAYER_FLAG;
-    bool is_table = flag & TABLE_FLAG;
+    bool is_table;
+
+    if (screen()->content_version() >= CoreConfigure::RGSS3)
+      is_table = flag & TABLE_FLAG;
+    else
+      is_table = (tileID - 0x0B00) % (8 * 0x30) >= (7 * 0x30);
 
     /* B ~ E */
     if (tileID < 0x0400)
@@ -1234,7 +1241,8 @@ void Tilemap2::ParseMapDataBufferInternal() {
     process_layer(ox, oy, w, h, 1);
 
     /* shadow layer */
-    process_shadow_layer(ox, oy, w, h);
+    if (screen()->content_version() >= CoreConfigure::RGSS3)
+      process_shadow_layer(ox, oy, w, h);
 
     /* BCDE area */
     process_layer(ox, oy, w, h, 2);
