@@ -278,17 +278,22 @@ void Graphics::ResizeResolutionInternal() {
 
 void Graphics::PresentScreenInternal(
     const renderer::TextureFrameBuffer& screen_buffer) {
-  // TODO: incorrect content position
-  renderer::Blt::BeginScreen(resolution_);
+  base::WeakPtr<ui::Widget> window = renderer_->window();
+  UpdateWindowViewportInternal();
+
+  // Blit screen buffer to window buffer
+  renderer::Blt::BeginScreen(window_size_);
   renderer::Blt::TexSource(screen_buffer);
   renderer::GSM.states.clear_color.Set(base::Vec4());
   renderer::FrameBuffer::Clear();
   // Flip screen for Y
-  base::Rect target_rect(0, resolution_.y, resolution_.x, -resolution_.y);
+  base::Rect target_rect(display_viewport_.x,
+                         display_viewport_.y + display_viewport_.height,
+                         display_viewport_.width, -display_viewport_.height);
   renderer::Blt::BltDraw(resolution_, target_rect);
   renderer::Blt::EndDraw();
 
-  SDL_GL_SwapWindow(renderer_->window()->AsSDLWindow());
+  SDL_GL_SwapWindow(window->AsSDLWindow());
 }
 
 void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
@@ -499,6 +504,25 @@ void Graphics::UpdateAverageFPSInternal() {
     fps_display_.last_frame_count = frame_count_;
     fps_display_.last_frame_ticks = now_ticks;
   }
+}
+
+void Graphics::UpdateWindowViewportInternal() {
+  base::WeakPtr<ui::Widget> window = renderer_->window();
+  window_size_ = window->GetSize();
+
+  float window_ratio = static_cast<float>(window_size_.x) / window_size_.y;
+  float screen_ratio = static_cast<float>(resolution_.x) / resolution_.y;
+
+  display_viewport_.width = window_size_.x;
+  display_viewport_.height = window_size_.y;
+
+  if (screen_ratio > window_ratio)
+    display_viewport_.height = display_viewport_.width / screen_ratio;
+  else if (screen_ratio < window_ratio)
+    display_viewport_.width = display_viewport_.height * screen_ratio;
+
+  display_viewport_.x = (window_size_.x - display_viewport_.width) / 2.0f;
+  display_viewport_.y = (window_size_.y - display_viewport_.height) / 2.0f;
 }
 
 }  // namespace content

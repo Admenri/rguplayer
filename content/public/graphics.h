@@ -99,6 +99,7 @@ class Graphics final : public base::RefCounted<Graphics>,
                            const base::Vec4& flash_color);
 
   void UpdateAverageFPSInternal();
+  void UpdateWindowViewportInternal();
 
   renderer::TextureFrameBuffer screen_buffer_[2];
   renderer::TextureFrameBuffer frozen_snapshot_;
@@ -122,6 +123,9 @@ class Graphics final : public base::RefCounted<Graphics>,
     uint64_t last_frame_count;
     uint64_t last_frame_ticks;
   } fps_display_;
+
+  base::Rect display_viewport_;
+  base::Vec2i window_size_;
 
   base::WeakPtrFactory<Graphics> weak_ptr_factory_{this};
 };

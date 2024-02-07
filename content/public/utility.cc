@@ -53,7 +53,7 @@ scoped_refptr<Tone> Tone::Deserialize(const std::string& data) {
 std::string Color::Serialize() {
   std::string data;
 
-  data.resize(4 * sizeof(float));
+  data.resize(4 * sizeof(double));
   Serializable::WriteDouble(data.data(), sizeof(double) * 0, red_);
   Serializable::WriteDouble(data.data(), sizeof(double) * 1, green_);
   Serializable::WriteDouble(data.data(), sizeof(double) * 2, blue_);
