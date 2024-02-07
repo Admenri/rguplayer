@@ -4,6 +4,7 @@
 
 #include "content/public/graphics.h"
 
+#include "content/config/core_config.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
 #include "content/worker/binding_worker.h"
@@ -109,11 +110,19 @@ void Graphics::FadeIn(int duration) {
 
 void Graphics::Update() {
   if (!frozen_) {
+    if (fps_manager_->RequireFrameSkip()) {
+      if (config_->allow_frame_skip()) {
+        return FrameProcessInternal();
+      } else {
+        fps_manager_->Reset();
+      }
+    }
+
     CompositeScreenInternal();
     PresentScreenInternal(screen_buffer_[0]);
-
-    FrameProcessInternal();
   }
+
+  FrameProcessInternal();
 
   /* Check quit flag */
   dispatcher_->CheckQuitFlag();
@@ -194,7 +203,9 @@ int Graphics::GetFrameCount() const {
   return frame_count_;
 }
 
-void Graphics::FrameReset() {}
+void Graphics::FrameReset() {
+  fps_manager_->Reset();
+}
 
 uint64_t Graphics::GetWindowHandle() {
   uint64_t window_handle = 0;

@@ -30,20 +30,21 @@
 
 namespace fpslimiter {
 
-FPSLimiter::FPSLimiter(int frame_rate) {
-  counter_ = SDL_GetPerformanceCounter();
-  frequency_ = SDL_GetPerformanceFrequency();
-  error_counter_ = 0;
-  period_min_ = 1;
-  interval_ = 1.0 / frame_rate;
-}
+FPSLimiter::FPSLimiter(int frame_rate)
+    : counter_(SDL_GetPerformanceCounter()),
+      frequency_(SDL_GetPerformanceFrequency()),
+      error_counter_(0),
+      interval_(1.0 / frame_rate),
+      interval_ticks_(std::round(frequency_ * interval_)),
+      reset_flag_(false) {}
 
 void FPSLimiter::SetFrameRate(int frame_rate) {
   interval_ = 1.0 / frame_rate;
+  interval_ticks_ = std::round(frequency_ * interval_);
 }
 
 void FPSLimiter::Delay() {
-  uint64_t next_counter = counter_ + std::round(frequency_ * interval_);
+  uint64_t next_counter = counter_ + interval_ticks_;
   uint64_t before_counter = SDL_GetPerformanceCounter();
 
   if (before_counter < next_counter) [[likely]] {
@@ -60,6 +61,19 @@ void FPSLimiter::Delay() {
     counter_ = before_counter;
     error_counter_ = 0;
   }
+
+  if (reset_flag_) {
+    reset_flag_ = false;
+    error_counter_ = 0;
+  }
+}
+
+bool FPSLimiter::RequireFrameSkip() {
+  return error_counter_ > interval_ticks_;
+}
+
+void FPSLimiter::Reset() {
+  reset_flag_ = true;
 }
 
 }  // namespace fpslimiter

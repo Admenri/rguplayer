@@ -38,6 +38,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
 
   std::string& base_path() { return base_path_; }
   RGSSVersion& content_version() { return rgss_version_; }
+  bool& allow_frame_skip() { return allow_frame_skip_; }
   std::string& game_title() { return game_title_; }
   std::string& game_scripts() { return game_scripts_; }
   base::Vec2i& initial_resolution() { return initial_resolution_; }
@@ -47,7 +48,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
  private:
   std::string base_path_;
   RGSSVersion rgss_version_ = RGSS3;
-  bool allow_frame_skip_ = false;
+  bool allow_frame_skip_ = true;
   std::string game_title_ = "RGU Widget";
   std::string game_scripts_ = "Data/Scripts.rvdata2";
   base::Vec2i initial_resolution_ = base::Vec2i(544, 416);
