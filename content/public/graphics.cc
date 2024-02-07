@@ -502,19 +502,10 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
 }
 
 void Graphics::UpdateAverageFPSInternal() {
-  const uint64_t now_ticks = SDL_GetPerformanceCounter();
-  const uint64_t delta_ticks = now_ticks - fps_display_.last_frame_ticks;
-  const uint64_t ticks_freq = SDL_GetPerformanceFrequency();
-
-  if (static_cast<double>(delta_ticks) / ticks_freq >= 1.0) {
-    average_fps_ = frame_count_ - fps_display_.last_frame_count;
-
-    renderer()->window()->SetTitle(config_->game_title() +
-                                   " FPS: " + std::to_string(average_fps_));
-
-    fps_display_.last_frame_count = frame_count_;
-    fps_display_.last_frame_ticks = now_ticks;
-  }
+  SDL_Event quit_event;
+  quit_event.type =
+      dispatcher_->user_event_id() + EventRunner::UPDATE_FPS_DISPLAY;
+  SDL_PushEvent(&quit_event);
 }
 
 void Graphics::UpdateWindowViewportInternal() {

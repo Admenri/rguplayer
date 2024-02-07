@@ -7,6 +7,7 @@
 
 #include "base/memory/ref_counted.h"
 #include "base/worker/run_loop.h"
+#include "content/config/core_config.h"
 #include "ui/widget/widget.h"
 
 #include "SDL_events.h"
@@ -17,6 +18,7 @@ class EventRunner : public base::RefCounted<EventRunner> {
  public:
   using EventID = enum {
     QUIT_SYSTEM_EVENT = 0,
+    UPDATE_FPS_DISPLAY,
 
     EVENT_NUMS,
   };
@@ -26,7 +28,8 @@ class EventRunner : public base::RefCounted<EventRunner> {
   EventRunner(const EventRunner&) = delete;
   EventRunner& operator=(const EventRunner&) = delete;
 
-  void InitEventDispatcher(base::WeakPtr<ui::Widget> window);
+  void InitEventDispatcher(scoped_refptr<CoreConfigure> config,
+                           base::WeakPtr<ui::Widget> window);
   void EventMain();
 
   uint32_t user_event_id() { return user_event_id_; }
@@ -37,9 +40,16 @@ class EventRunner : public base::RefCounted<EventRunner> {
  private:
   void EventFilter(const SDL_Event& event);
   uint32_t user_event_id_;
+  scoped_refptr<CoreConfigure> config_;
   base::CallbackListSubscription quit_observer_;
   std::unique_ptr<base::RunLoop> loop_runner_;
   base::WeakPtr<ui::Widget> window_;
+
+  struct {
+    uint64_t frame_count;
+    uint64_t last_counter;
+    uint64_t counter_freq;
+  } fps_counter_;
 
   base::WeakPtrFactory<EventRunner> weak_ptr_factory_{this};
 };

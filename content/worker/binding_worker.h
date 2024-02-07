@@ -30,6 +30,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   scoped_refptr<CoreConfigure> config() const { return config_; }
   scoped_refptr<Graphics> graphics() const { return graphics_; }
   scoped_refptr<Input> input() const { return input_; }
+  uint32_t user_event_id() { return user_event_id_; }
 
  private:
   static void BindingFuncMain(base::WeakPtr<BindingRunner> self);
