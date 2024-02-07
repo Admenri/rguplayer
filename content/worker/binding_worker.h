@@ -24,13 +24,21 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   void InitBindingComponents(ContentInitParams& params);
   void BindingMain(uint32_t event_id);
   void RequestQuit();
-  bool CheckQuitFlag();
+  void RequestReset();
+  void ClearResetFlag();
+
+  bool CheckFlags();
+  void RaiseFlags();
 
   int rgss_version() { return config_->content_version(); }
   scoped_refptr<CoreConfigure> config() const { return config_; }
   scoped_refptr<Graphics> graphics() const { return graphics_; }
   scoped_refptr<Input> input() const { return input_; }
   uint32_t user_event_id() { return user_event_id_; }
+
+  base::WeakPtr<BindingRunner> AsWeakPtr() {
+    return weak_ptr_factory_.GetWeakPtr();
+  }
 
  private:
   static void BindingFuncMain(base::WeakPtr<BindingRunner> self);
@@ -45,6 +53,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   base::Vec2i initial_resolution_;
   base::WeakPtr<ui::Widget> window_;
   base::AtomicFlag quit_atomic_;
+  base::AtomicFlag reset_atomic_;
   uint32_t user_event_id_;
 
   std::unique_ptr<BindingEngine> binding_engine_;

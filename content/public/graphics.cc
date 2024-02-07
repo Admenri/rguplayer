@@ -77,14 +77,18 @@ void Graphics::FadeOut(int duration) {
       PresentScreenInternal(frozen_snapshot_);
 
       FrameProcessInternal();
-      if (dispatcher_->CheckQuitFlag())
+      if (dispatcher_->CheckFlags())
         break;
     } else {
       Update();
     }
   }
 
+  /* Set final brightness */
   SetBrightness(0);
+
+  /* Raise flags */
+  dispatcher_->RaiseFlags();
 }
 
 void Graphics::FadeIn(int duration) {
@@ -100,12 +104,18 @@ void Graphics::FadeIn(int duration) {
       PresentScreenInternal(frozen_snapshot_);
 
       FrameProcessInternal();
-      if (dispatcher_->CheckQuitFlag())
+      if (dispatcher_->CheckFlags())
         break;
     } else {
       Update();
     }
   }
+
+  /* Set final brightness */
+  SetBrightness(255);
+
+  /* Raise flags */
+  dispatcher_->RaiseFlags();
 }
 
 void Graphics::Update() {
@@ -124,8 +134,9 @@ void Graphics::Update() {
 
   FrameProcessInternal();
 
-  /* Check quit flag */
-  dispatcher_->CheckQuitFlag();
+  /* Check flags */
+  dispatcher_->CheckFlags();
+  dispatcher_->RaiseFlags();
 }
 
 void Graphics::ResizeScreen(const base::Vec2i& resolution) {
@@ -140,14 +151,16 @@ void Graphics::Reset() {
   /* Reset freeze */
   frozen_ = false;
 
-  /* Reset brightness */
-  SetBrightness(255);
-
   /* Disposed all elements */
   for (auto it = disposable_elements_.tail(); it != disposable_elements_.end();
        it = it->previous()) {
     it->value_as_init()->Dispose();
   }
+
+  /* Reset attribute */
+  SetFrameRate(dispatcher_->rgss_version() >= CoreConfigure::RGSS2 ? 60 : 40);
+  SetBrightness(255);
+  FrameReset();
 }
 
 void Graphics::Freeze() {
@@ -176,13 +189,16 @@ void Graphics::Transition(int duration,
     FrameProcessInternal();
 
     /* Break draw loop for quit flag */
-    if (dispatcher_->CheckQuitFlag())
+    if (dispatcher_->CheckFlags())
       break;
   }
   renderer::GSM.states.blend.Pop();
 
   /* Transition process complete */
   frozen_ = false;
+
+  /* Raise signal notify */
+  dispatcher_->RaiseFlags();
 }
 
 void Graphics::SetFrameRate(int rate) {

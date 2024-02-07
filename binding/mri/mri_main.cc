@@ -45,18 +45,18 @@ using EvalParamater = struct {
 };
 
 // eval script, nil, title
-static VALUE EvalInternal(EvalParamater* arg) {
+VALUE EvalInternal(EvalParamater* arg) {
   VALUE argv[] = {arg->string, Qnil, arg->filename};
   return rb_funcall2(Qnil, rb_intern("eval"), 3, argv);
 }
 
-static VALUE EvalString(VALUE string, VALUE filename, int* state) {
+VALUE EvalString(VALUE string, VALUE filename, int* state) {
   EvalParamater arg = {string, filename};
   return rb_protect((VALUE(*)(VALUE))EvalInternal, (VALUE)&arg, state);
 }
 
-static void ParseExeceptionInfo(VALUE exc,
-                                const BindingEngineMri::BacktraceData& btData) {
+void ParseExeceptionInfo(VALUE exc,
+                         const BindingEngineMri::BacktraceData& btData) {
   VALUE exeception_name = rb_class_path(rb_obj_class(exc));
   VALUE backtrace = rb_funcall2(exc, rb_intern("backtrace"), 0, NULL);
   VALUE message = rb_funcall2(exc, rb_intern("message"), 0, NULL);
@@ -67,17 +67,26 @@ static void ParseExeceptionInfo(VALUE exc,
   LOG(INFO) << "[Binding] " << StringValueCStr(ds);
 }
 
-static VALUE RgssMainCb(VALUE block) {
+VALUE RgssMainCb(VALUE block) {
   rb_funcall2(block, rb_intern("call"), 0, 0);
   return Qnil;
 }
 
-static VALUE RgssMainRescue(VALUE arg, VALUE exc) {
+VALUE RgssMainRescue(VALUE arg, VALUE exc) {
   VALUE* excRet = (VALUE*)arg;
 
   *excRet = exc;
 
   return Qnil;
+}
+
+void MriProcessReset() {
+  scoped_refptr<content::BindingRunner> binding = MriGetGlobalRunner();
+
+  LOG(INFO) << "[Binding] User trigger Content Reset.";
+  binding->graphics()->Reset();
+
+  binding->ClearResetFlag();
 }
 
 }  // namespace
@@ -94,7 +103,7 @@ MRI_METHOD(mri_rgssmain) {
       break;
 
     if (rb_obj_class(exc) == MriGetException(MriException::RGSSReset))
-      LOG(INFO) << "Reset";
+      MriProcessReset();
     else
       rb_exc_raise(exc);
   }
@@ -199,6 +208,11 @@ void BindingEngineMri::RunBindingMain() {
 
 void BindingEngineMri::QuitRequired() {
   rb_raise(rb_eSystemExit, "");
+}
+
+void BindingEngineMri::ResetRequired() {
+  VALUE rb_eReset = MriGetException(MriException::RGSSReset);
+  rb_raise(rb_eReset, "");
 }
 
 void BindingEngineMri::FinalizeBinding() {
@@ -307,7 +321,7 @@ void BindingEngineMri::LoadPackedScripts() {
     if (rb_obj_class(exc) != MriGetException(RGSSReset))
       break;
 
-    LOG(INFO) << "Reset";
+    MriProcessReset();
   }
 }
 

@@ -16,13 +16,13 @@ namespace ui {
 
 const char kNativeWidgetKey[] = "UIBase::Widget";
 
-Widget* Widget::FromWindowID(uint32_t window_id) {
+Widget* Widget::FromWindowID(SDL_WindowID window_id) {
   SDL_Window* sdl_window = SDL_GetWindowFromID(window_id);
   return static_cast<Widget*>(SDL_GetProperty(
       SDL_GetWindowProperties(sdl_window), kNativeWidgetKey, nullptr));
 }
 
-Widget::Widget() : window_(nullptr) {
+Widget::Widget() : window_(nullptr), window_id_(SDL_WindowID()) {
   ui_dispatcher_binding_ = base::RunLoop::BindEventDispatcher(
       base::BindRepeating(&Widget::UIEventDispatcher, base::Unretained(this)));
 }
@@ -79,6 +79,8 @@ void Widget::Init(InitParams params) {
   SDL_SetProperty(SDL_GetWindowProperties(window_), kNativeWidgetKey, this);
 
   SDL_DestroyProperties(property_id);
+
+  window_id_ = SDL_GetWindowID(window_);
 }
 
 void Widget::SetFullscreen(bool fullscreen) {
@@ -114,16 +116,14 @@ bool Widget::GetKeyState(::SDL_Scancode scancode) const {
 }
 
 void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
-  uint32_t window_id = SDL_GetWindowID(window_);
-
   switch (sdl_event.type) {
     case SDL_EVENT_KEY_DOWN:
-      if (sdl_event.key.windowID == window_id) {
+      if (sdl_event.key.windowID == window_id_) {
         key_states_[sdl_event.key.keysym.scancode] = true;
       }
       break;
     case SDL_EVENT_KEY_UP:
-      if (sdl_event.key.windowID == window_id) {
+      if (sdl_event.key.windowID == window_id_) {
         key_states_[sdl_event.key.keysym.scancode] = false;
       }
       break;

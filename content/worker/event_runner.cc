@@ -4,6 +4,8 @@
 
 #include "content/worker/event_runner.h"
 
+#include "content/worker/binding_worker.h"
+
 #include "SDL_timer.h"
 
 namespace content {
@@ -15,9 +17,12 @@ EventRunner::EventRunner()
 }
 
 void EventRunner::InitEventDispatcher(scoped_refptr<CoreConfigure> config,
-                                      base::WeakPtr<ui::Widget> window) {
+                                      base::WeakPtr<ui::Widget> window,
+                                      base::WeakPtr<BindingRunner> dispatcher) {
   window_ = window;
   config_ = config;
+  dispatcher_ = dispatcher;
+
   loop_runner_ =
       std::make_unique<base::RunLoop>(base::RunLoop::MessagePumpType::UI);
 
@@ -31,9 +36,13 @@ void EventRunner::EventMain() {
 
 void EventRunner::EventFilter(const SDL_Event& event) {
   int user_event = event.type - user_event_id_;
+
+  /* Application quit flag */
   if (user_event == QUIT_SYSTEM_EVENT || event.type == SDL_EVENT_QUIT) {
     loop_runner_->QuitWhenIdle();
   }
+
+  /* Display fps on window title */
   if (user_event == UPDATE_FPS_DISPLAY) {
     uint64_t now_ticks = SDL_GetPerformanceCounter();
     uint64_t delta_ticks = now_ticks - fps_counter_.last_counter;
@@ -47,6 +56,15 @@ void EventRunner::EventFilter(const SDL_Event& event) {
     }
 
     fps_counter_.frame_count++;
+  }
+
+  /* Reset content */
+  if (event.type == SDL_EVENT_KEY_UP &&
+      event.window.windowID == window_->GetWindowID()) {
+    if (event.key.keysym.scancode == SDL_SCANCODE_F12) {
+      // Trigger reset process
+      dispatcher_->RequestReset();
+    }
   }
 }
 

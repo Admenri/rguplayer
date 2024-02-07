@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 
   config->renderer_debug_output() = false;
   config->content_version() = content::CoreConfigure::RGSS3;
-  config->base_path() = "D:/Desktop/Project1/";
+  // config->base_path() = "D:/Desktop/Project1/";
 
   params.config = config;
   params.binding_engine = std::make_unique<binding::BindingEngineMri>();

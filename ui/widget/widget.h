@@ -82,13 +82,15 @@ class Widget {
   base::Vec2i GetPosition();
   base::Vec2i GetSize();
 
-  static Widget* FromWindowID(uint32_t window_id);
+  static Widget* FromWindowID(SDL_WindowID window_id);
+  SDL_WindowID GetWindowID() const { return window_id_; }
   bool GetKeyState(::SDL_Scancode scancode) const;
 
  private:
   void UIEventDispatcher(const SDL_Event& sdl_event);
 
   SDL_Window* window_;
+  SDL_WindowID window_id_;
   base::CallbackListSubscription ui_dispatcher_binding_;
   bool key_states_[SDL_NUM_SCANCODES]{0};
 

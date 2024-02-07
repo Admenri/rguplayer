@@ -22,6 +22,7 @@ class BindingEngine {
   virtual void InitializeBinding(scoped_refptr<BindingRunner> binding_host);
   virtual void RunBindingMain();
   virtual void QuitRequired();
+  virtual void ResetRequired();
   virtual void FinalizeBinding();
 };
 

@@ -14,6 +14,8 @@
 
 namespace content {
 
+class BindingRunner;
+
 class EventRunner : public base::RefCounted<EventRunner> {
  public:
   using EventID = enum {
@@ -29,7 +31,8 @@ class EventRunner : public base::RefCounted<EventRunner> {
   EventRunner& operator=(const EventRunner&) = delete;
 
   void InitEventDispatcher(scoped_refptr<CoreConfigure> config,
-                           base::WeakPtr<ui::Widget> window);
+                           base::WeakPtr<ui::Widget> window,
+                           base::WeakPtr<BindingRunner> dispatcher);
   void EventMain();
 
   uint32_t user_event_id() { return user_event_id_; }
@@ -44,6 +47,7 @@ class EventRunner : public base::RefCounted<EventRunner> {
   base::CallbackListSubscription quit_observer_;
   std::unique_ptr<base::RunLoop> loop_runner_;
   base::WeakPtr<ui::Widget> window_;
+  base::WeakPtr<BindingRunner> dispatcher_;
 
   struct {
     uint64_t frame_count;

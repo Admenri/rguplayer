@@ -21,7 +21,8 @@ void WorkerTreeCompositor::InitCC(ContentInitParams params) {
   binding_runner_ = new BindingRunner();
 
   // Init event runner on main thread
-  event_runner_->InitEventDispatcher(config_, params.host_window->AsWeakPtr());
+  event_runner_->InitEventDispatcher(config_, params.host_window->AsWeakPtr(),
+                                     binding_runner_->AsWeakPtr());
 
   // Init renderer in binding thread for sync mode
   binding_runner_->InitBindingComponents(params);

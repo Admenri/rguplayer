@@ -25,6 +25,7 @@ class BindingEngineMri : public content::BindingEngine {
       scoped_refptr<content::BindingRunner> binding_host) override;
   void RunBindingMain() override;
   void QuitRequired() override;
+  void ResetRequired() override;
   void FinalizeBinding() override;
 
  private:

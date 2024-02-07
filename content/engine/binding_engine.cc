@@ -25,6 +25,10 @@ void BindingEngine::QuitRequired() {
   LOG(INFO) << "Empty QuitRequired implement for BindingEngine.";
 }
 
+void BindingEngine::ResetRequired() {
+  LOG(INFO) << "Empty ResetRequired implement for BindingEngine.";
+}
+
 void BindingEngine::FinalizeBinding() {
   LOG(INFO) << "Empty FinalizeBinding implement for BindingEngine.";
 }

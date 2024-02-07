@@ -31,11 +31,30 @@ void BindingRunner::RequestQuit() {
   runner_thread_.reset();
 }
 
-bool BindingRunner::CheckQuitFlag() {
-  bool quit_required = quit_atomic_.IsSet();
-  if (quit_required && binding_engine_)
-    binding_engine_->QuitRequired();
+void BindingRunner::RequestReset() {
+  reset_atomic_.Set();
+}
+
+void BindingRunner::ClearResetFlag() {
+  reset_atomic_.UnsafeResetForTesting();
+}
+
+bool BindingRunner::CheckFlags() {
+  bool quit_required = false;
+  quit_required |= quit_atomic_.IsSet();
+  quit_required |= reset_atomic_.IsSet();
+
   return quit_required;
+}
+
+void BindingRunner::RaiseFlags() {
+  if (!binding_engine_)
+    return;
+
+  if (quit_atomic_.IsSet())
+    binding_engine_->QuitRequired();
+  if (reset_atomic_.IsSet())
+    binding_engine_->ResetRequired();
 }
 
 void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
