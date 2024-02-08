@@ -13,9 +13,9 @@ const Uint32 SDL_RWOPS_PHYSFS = SDL_RWOPS_UNKNOWN + 16;
 
 namespace {
 
-void ToUpper(std::string& str) {
+void ToLower(std::string& str) {
   for (size_t i = 0; i < str.size(); ++i)
-    str[i] = toupper(str[i]);
+    str[i] = tolower(str[i]);
 }
 
 const char* FindFileExtName(const char* filename) {
@@ -134,11 +134,14 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
                                                     const char* origdir,
                                                     const char* fname) {
   OpenReadEnumData* enum_data = static_cast<OpenReadEnumData*>(data);
+  std::string filename(fname);
+  ToLower(filename);
 
   if (enum_data->search_complete)
     return PHYSFS_ENUM_STOP;
 
-  if (strncmp(fname, enum_data->filename.c_str(), enum_data->filename_end) != 0)
+  if (strncmp(filename.c_str(), enum_data->filename.c_str(),
+              enum_data->filename_end) != 0)
     return PHYSFS_ENUM_OK;
 
   std::string fullpath;
@@ -146,9 +149,9 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
     fullpath += std::string(origdir);
     fullpath += "/";
   }
-  fullpath += std::string(fname);
+  fullpath += filename;
 
-  char last = fname[enum_data->filename_end];
+  char last = filename[enum_data->filename_end];
   if (last != '.' && last != '\0')
     return PHYSFS_ENUM_STOP;
 
@@ -161,7 +164,8 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
   }
 
   WrapperRWops(file, enum_data->ops, false);
-  if (enum_data->callback.Run(&enum_data->ops, FindFileExtName(fname)))
+  if (enum_data->callback.Run(&enum_data->ops,
+                              FindFileExtName(filename.c_str())))
     enum_data->search_complete = true;
 
   enum_data->match_count++;
@@ -213,6 +217,7 @@ void Filesystem::OpenRead(const std::string& filename, OpenCallback callback) {
   OpenReadEnumData data;
   data.callback = callback;
   data.filename = file;
+  ToLower(data.filename);
   data.filename_end = len + buf - sep - !root_dir;
 
   PHYSFS_enumerate(dir, OpenReadEnumCallback, &data);
