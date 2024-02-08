@@ -6,6 +6,7 @@
 #define CONTENT_WORKER_BINDING_WORKER_H_
 
 #include "base/memory/ref_counted.h"
+#include "components/filesystem/filesystem.h"
 #include "content/public/graphics.h"
 #include "content/public/input.h"
 #include "content/worker/content_params.h"
@@ -30,11 +31,12 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   bool CheckFlags();
   void RaiseFlags();
 
-  int rgss_version() { return config_->content_version(); }
+  RGSSVersion rgss_version() { return config_->content_version(); }
   scoped_refptr<CoreConfigure> config() const { return config_; }
   scoped_refptr<Graphics> graphics() const { return graphics_; }
   scoped_refptr<Input> input() const { return input_; }
   uint32_t user_event_id() { return user_event_id_; }
+  filesystem::Filesystem* filesystem() { return file_manager_.get(); }
 
   base::WeakPtr<BindingRunner> AsWeakPtr() {
     return weak_ptr_factory_.GetWeakPtr();
@@ -56,6 +58,8 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   base::AtomicFlag reset_atomic_;
   uint32_t user_event_id_;
 
+  std::string argv0_;
+  std::unique_ptr<filesystem::Filesystem> file_manager_;
   std::unique_ptr<BindingEngine> binding_engine_;
 
   base::WeakPtrFactory<BindingRunner> weak_ptr_factory_{this};

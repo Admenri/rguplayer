@@ -19,6 +19,7 @@ using MriException = enum {
   ContentError = 0,
   OpenGLError,
   SDLError,
+  FilesystemError,
 
   RGSSReset,
 

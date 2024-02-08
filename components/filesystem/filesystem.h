@@ -5,21 +5,39 @@
 #ifndef COMPONENTS_FILESYSTEM_FILESYSTEM_H_
 #define COMPONENTS_FILESYSTEM_FILESYSTEM_H_
 
+#include "base/bind/callback.h"
 #include "base/memory/ref_counted.h"
+#include "base/memory/weak_ptr.h"
 
 #include "SDL_rwops.h"
 
 namespace filesystem {
 
-class Filesystem : public base::RefCounted<Filesystem> {
+class Filesystem {
  public:
-  Filesystem();
+  Filesystem(const std::string& argv0);
   ~Filesystem();
 
   Filesystem(const Filesystem&) = delete;
   Filesystem& operator=(const Filesystem&) = delete;
 
+  void AddLoadPath(const std::string& path);
+
+  bool Exists(const std::string& filename);
+
+  using OpenCallback =
+      base::RepeatingCallback<bool(SDL_RWops*, const std::string&)>;
+  void OpenRead(const std::string& filename, OpenCallback callback);
+  void OpenReadRaw(const std::string& filename,
+                   SDL_RWops& ops,
+                   bool free_on_close);
+
+  base::WeakPtr<Filesystem> AsWeakPtr() {
+    return weak_ptr_factory_.GetWeakPtr();
+  }
+
  private:
+  base::WeakPtrFactory<Filesystem> weak_ptr_factory_{this};
 };
 
 }  // namespace filesystem

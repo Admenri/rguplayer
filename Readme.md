@@ -70,7 +70,7 @@ ui文件夹存放了SDL窗口的封装代码，用于与input模块进行配合�
 - aom - https://aomedia.googlesource.com/aom
 - json - https://github.com/nlohmann/json
 - zlib - https://github.com/madler/zlib
-- json - https://github.com/nlohmann/json
+- inih - https://github.com/jtilly/inih
 
 ## 联系方式
 

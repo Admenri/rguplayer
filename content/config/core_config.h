@@ -8,21 +8,19 @@
 #include "base/math/math.h"
 #include "base/memory/ref_counted.h"
 
-#include <optional>
-
 namespace content {
+
+enum class RGSSVersion : int {
+  Null = 0,
+  RGSS1,
+  RGSS2,
+  RGSS3,
+};
 
 class CoreConfigure : public base::RefCounted<CoreConfigure> {
  public:
-  using RGSSVersion = enum {
-    Null = 0,
-    RGSS1,
-    RGSS2,
-    RGSS3,
-  };
-
-  using ANGLERenderer = enum {
-    DefaultGLES = 0,
+  enum class ANGLERenderer : int {
+    Default = 0,
     D3D9,
     D3D11,
     Vulkan,
@@ -30,30 +28,39 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
     Software,
   };
 
-  CoreConfigure();
-  ~CoreConfigure();
+  CoreConfigure() = default;
 
   CoreConfigure(const CoreConfigure&) = delete;
   CoreConfigure& operator=(const CoreConfigure&) = delete;
 
-  std::string& base_path() { return base_path_; }
+  bool LoadConfigure(const std::string& filename);
+
   RGSSVersion& content_version() { return rgss_version_; }
+
+  ANGLERenderer& angle_renderer() { return angle_renderer_; }
+  bool& renderer_debug_output() { return renderer_debug_output_; }
+  base::Vec2i& initial_resolution() { return initial_resolution_; }
   bool& allow_frame_skip() { return allow_frame_skip_; }
+
+  std::string& game_rtp() { return game_rtp_; }
   std::string& game_title() { return game_title_; }
   std::string& game_scripts() { return game_scripts_; }
-  base::Vec2i& initial_resolution() { return initial_resolution_; }
-  bool& renderer_debug_output() { return renderer_debug_output_; }
-  ANGLERenderer& angle_renderer() { return angle_renderer_; }
+
+  std::vector<std::string>& load_paths() { return load_paths_; }
 
  private:
-  std::string base_path_;
-  RGSSVersion rgss_version_ = RGSS3;
-  bool allow_frame_skip_ = true;
-  std::string game_title_ = "RGU Widget";
-  std::string game_scripts_ = "Data/Scripts.rvdata2";
-  base::Vec2i initial_resolution_ = base::Vec2i(544, 416);
-  bool renderer_debug_output_ = true;
-  ANGLERenderer angle_renderer_ = DefaultGLES;
+  RGSSVersion rgss_version_;
+
+  ANGLERenderer angle_renderer_;
+  bool renderer_debug_output_;
+  base::Vec2i initial_resolution_;
+  bool allow_frame_skip_;
+
+  std::string game_rtp_;
+  std::string game_title_;
+  std::string game_scripts_;
+
+  std::vector<std::string> load_paths_;
 };
 
 }  // namespace content

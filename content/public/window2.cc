@@ -85,13 +85,12 @@ Window2::Window2(scoped_refptr<Graphics> screen,
                  int height)
     : GraphicElement(screen),
       Disposable(screen),
-      ViewportChild(
-          screen,
-          nullptr,
-          (screen->content_version() >= CoreConfigure::RGSS3 ? 100 : 0),
-          (screen->content_version() >= CoreConfigure::RGSS3
-               ? std::numeric_limits<int>::max()
-               : 0)),
+      ViewportChild(screen,
+                    nullptr,
+                    (screen->content_version() >= RGSSVersion::RGSS3 ? 100 : 0),
+                    (screen->content_version() >= RGSSVersion::RGSS3
+                         ? std::numeric_limits<int>::max()
+                         : 0)),
       rect_(x, y, width, height) {
   InitWindow();
 }
@@ -483,7 +482,7 @@ void Window2::Composite() {
   renderer::GSM.states.scissor_rect.PushOnly();
 
   base::Rect clip_rect(trans_offset, rect_.Size());
-  if (screen()->content_version() >= CoreConfigure::RGSS3)
+  if (screen()->content_version() >= RGSSVersion::RGSS3)
     clip_rect = padding_trans_rect;
 
   renderer::GSM.states.scissor_rect.SetIntersect(clip_rect);
@@ -494,7 +493,7 @@ void Window2::Composite() {
     cursor_trans.x += cursor_rect_->GetX() - ox_;
     cursor_trans.y += cursor_rect_->GetY() - oy_;
 
-    if (screen()->content_version() >= CoreConfigure::RGSS3)
+    if (screen()->content_version() >= RGSSVersion::RGSS3)
       cursor_trans = cursor_trans - base::Vec2i(ox_, oy_);
     shader.SetTransOffset(cursor_trans);
 
@@ -503,7 +502,7 @@ void Window2::Composite() {
 
   /* Window contents */
   if (contents_valid && contents_opacity_) {
-    if (screen()->content_version() < CoreConfigure::RGSS3)
+    if (screen()->content_version() < RGSSVersion::RGSS3)
       renderer::GSM.states.scissor_rect.SetIntersect(padding_trans_rect);
 
     base::Vec2i content_trans = padding_trans_rect.Position();
@@ -530,9 +529,8 @@ void Window2::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
 }
 
 void Window2::InitWindow() {
-  padding_ = screen()->content_version() >= CoreConfigure::RGSS3 ? 12 : 16;
-  back_opacity_ =
-      screen()->content_version() >= CoreConfigure::RGSS3 ? 192 : 255;
+  padding_ = screen()->content_version() >= RGSSVersion::RGSS3 ? 12 : 16;
+  back_opacity_ = screen()->content_version() >= RGSSVersion::RGSS3 ? 192 : 255;
 
   tone_ = new Tone();
   tone_observer_ = tone_->AddChangedObserver(base::BindRepeating(

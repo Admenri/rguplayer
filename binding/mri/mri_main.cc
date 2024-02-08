@@ -165,15 +165,15 @@ void BindingEngineMri::InitializeBinding(
   rb_enc_set_default_external(rb_enc_from_encoding(rb_utf8_encoding()));
 
   switch (binding_host->rgss_version()) {
-    case content::CoreConfigure::RGSS1:
+    case content::RGSSVersion::RGSS1:
       LOG(INFO) << "[Binding] Content Version: RGSS1";
       rb_eval_string(module_rpg1);
       break;
-    case content::CoreConfigure::RGSS2:
+    case content::RGSSVersion::RGSS2:
       LOG(INFO) << "[Binding] Content Version: RGSS2";
       rb_eval_string(module_rpg2);
       break;
-    case content::CoreConfigure::RGSS3:
+    case content::RGSSVersion::RGSS3:
       LOG(INFO) << "[Binding] Content Version: RGSS3";
       rb_eval_string(module_rpg3);
       break;
@@ -181,8 +181,7 @@ void BindingEngineMri::InitializeBinding(
       break;
   }
 
-  MriInitException(binding_host->rgss_version() ==
-                   content::CoreConfigure::RGSS3);
+  MriInitException(binding_host->rgss_version() == content::RGSSVersion::RGSS3);
 
   InitCoreFileBinding();
   InitUtilityBinding();
@@ -197,7 +196,7 @@ void BindingEngineMri::InitializeBinding(
   InitGraphicsBinding();
   InitInputBinding();
 
-  if (binding_host->rgss_version() < content::CoreConfigure::RGSS3) {
+  if (binding_host->rgss_version() < content::RGSSVersion::RGSS3) {
     if (sizeof(void*) == 4) {
       MriDefineMethod(rb_cNilClass, "id", mri_return_id<4>);
       MriDefineMethod(rb_cTrueClass, "id", mri_return_id<2>);

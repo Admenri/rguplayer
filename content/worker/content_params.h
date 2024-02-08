@@ -16,6 +16,8 @@
 namespace content {
 
 struct ContentInitParams {
+  std::string argv0;
+
   base::WeakPtr<ui::Widget> host_window;
   base::Vec2i initial_resolution;
 

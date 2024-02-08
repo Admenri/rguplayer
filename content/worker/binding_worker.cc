@@ -12,6 +12,7 @@
 namespace content {
 
 void BindingRunner::InitBindingComponents(ContentInitParams& params) {
+  argv0_ = params.argv0;
   config_ = params.config;
   window_ = params.host_window->AsWeakPtr();
   initial_resolution_ = params.initial_resolution;
@@ -62,6 +63,11 @@ void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
   self->renderer_ = new RenderRunner();
   self->renderer_->InitRenderer(self->config_, self->window_);
 
+  // Init I/O filesystem
+  self->file_manager_ = std::make_unique<filesystem::Filesystem>(self->argv0_);
+  for (auto& it : self->config_->load_paths())
+    self->file_manager_->AddLoadPath(it);
+
   // Init Modules
   self->graphics_ =
       new Graphics(self.get(), self->renderer_, self->initial_resolution_);
@@ -82,6 +88,9 @@ void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
 
   // Destroy renderer on binding thread
   self->renderer_->DestroyRenderer();
+
+  // Release I/O filesystem
+  self->file_manager_.reset();
 
   // Quit app required
   SDL_Event quit_event;

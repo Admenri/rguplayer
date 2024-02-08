@@ -9,6 +9,7 @@
 #include <array>
 
 #include "base/exceptions/exception.h"
+#include "components/filesystem/filesystem.h"
 #include "content/config/core_config.h"
 #include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
@@ -78,12 +79,17 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
     : GraphicElement(host), Disposable(host), font_(new Font()) {
-  // TODO: add generic filesystem interface
-  std::string tmp_name(host->config()->base_path());
-  tmp_name += filename;
-  tmp_name += ".png";
-  surface_buffer_ = IMG_Load(tmp_name.c_str());
+  surface_buffer_ = nullptr;
   surface_need_update_ = false;
+
+  auto file_handler = base::BindRepeating(
+      [](SDL_Surface** surf, SDL_RWops* ops, const std::string& ext) {
+        *surf = IMG_LoadTyped_RW(ops, SDL_TRUE, ext.c_str());
+
+        return !!*surf;
+      },
+      &surface_buffer_);
+  host->filesystem()->OpenRead(filename, file_handler);
 
   if (!surface_buffer_) {
     throw base::Exception::Exception(base::Exception::ContentError,

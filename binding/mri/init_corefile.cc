@@ -17,25 +17,25 @@ struct CoreFileInfo {
 };
 
 VALUE CreateCoreFileFrom(const std::string& filename, bool mri_exc) {
-  CoreFileInfo* info = new CoreFileInfo;
+  SDL_RWops* ops = SDL_CreateRW();
+  try {
+    MriGetGlobalRunner()->filesystem()->OpenReadRaw(filename, *ops, false);
+  } catch (base::Exception& e) {
+    SDL_DestroyRW(ops);
 
-  // TODO: filesystem required
-  std::string path(MriGetGlobalRunner()->config()->base_path());
-  path += filename;
-  info->ops = SDL_RWFromFile(path.c_str(), "r+");
-  info->closed = false;
-  info->free = false;
+    if (mri_exc) {
+      MriProcessException(e);
+    } else
+      throw e;
+  }
+
+  CoreFileInfo* info = new CoreFileInfo;
+  info->ops = ops;
+  info->closed = true;
+  info->free = true;
 
   if (!info->ops) {
     delete info;
-
-    if (mri_exc) {
-      rb_raise(rb_eRuntimeError, "Failed to load file: %s", filename.c_str());
-    } else {
-      throw base::Exception::Exception(base::Exception::SDLError,
-                                       "Failed to load file: %s",
-                                       filename.c_str());
-    }
   }
 
   VALUE klass = rb_const_get(rb_cObject, rb_intern("CoreFile"));

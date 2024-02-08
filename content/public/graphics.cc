@@ -26,7 +26,7 @@ Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
       frozen_(false),
       brightness_(255),
       frame_count_(0),
-      frame_rate_(dispatcher->rgss_version() >= CoreConfigure::RGSS2 ? 60 : 40),
+      frame_rate_(dispatcher->rgss_version() >= RGSSVersion::RGSS2 ? 60 : 40),
       average_fps_(0),
       fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)),
       fps_display_{0, SDL_GetPerformanceCounter()} {
@@ -158,7 +158,7 @@ void Graphics::Reset() {
   }
 
   /* Reset attribute */
-  SetFrameRate(dispatcher_->rgss_version() >= CoreConfigure::RGSS2 ? 60 : 40);
+  SetFrameRate(dispatcher_->rgss_version() >= RGSSVersion::RGSS2 ? 60 : 40);
   SetBrightness(255);
   FrameReset();
 }
@@ -235,8 +235,12 @@ uint64_t Graphics::GetWindowHandle() {
   return window_handle;
 }
 
-int Graphics::content_version() const {
+RGSSVersion Graphics::content_version() const {
   return dispatcher_->rgss_version();
+}
+
+filesystem::Filesystem* Graphics::filesystem() {
+  return dispatcher_->filesystem();
 }
 
 void Graphics::InitScreenBufferInternal() {

@@ -38,25 +38,32 @@ void RenderRunner::DestroyRenderer() {
 void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
   SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
 
-  if (renderer == content::CoreConfigure::DefaultGLES)
+  if (renderer == content::CoreConfigure::ANGLERenderer::Default) {
+    LOG(INFO) << "[Renderer] Disable ANGLE Renderer.";
     return;
+  }
 
   g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
   switch (renderer) {
     default:
-    case content::CoreConfigure::D3D9:
+    case content::CoreConfigure::ANGLERenderer::D3D9:
+      LOG(INFO) << "[Renderer] Use ANGLE D3D9 Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE);
       break;
-    case content::CoreConfigure::D3D11:
+    case content::CoreConfigure::ANGLERenderer::D3D11:
+      LOG(INFO) << "[Renderer] Use ANGLE D3D11 Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE);
       break;
-    case content::CoreConfigure::Vulkan:
+    case content::CoreConfigure::ANGLERenderer::Vulkan:
+      LOG(INFO) << "[Renderer] Use ANGLE Vulkan Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
       break;
-    case content::CoreConfigure::Metal:
+    case content::CoreConfigure::ANGLERenderer::Metal:
+      LOG(INFO) << "[Renderer] Use ANGLE Metal Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE);
       break;
-    case content::CoreConfigure::Software:
+    case content::CoreConfigure::ANGLERenderer::Software:
+      LOG(INFO) << "[Renderer] Use ANGLE Software Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE);
       g_angle_attrib.push_back(

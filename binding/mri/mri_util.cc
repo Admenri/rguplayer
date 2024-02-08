@@ -150,6 +150,8 @@ void MriInitException(bool rgss3) {
   g_exception_list[OpenGLError] =
       rb_define_class("OpenGLError", rb_eStandardError);
   g_exception_list[SDLError] = rb_define_class("SDLError", rb_eStandardError);
+  g_exception_list[FilesystemError] =
+      rb_define_class("FilesystemError", rb_eStandardError);
 
   g_exception_list[RGSSReset] =
       rb_define_class(rgss3 ? "RGSSReset" : "Reset", rb_eException);

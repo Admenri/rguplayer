@@ -6,6 +6,7 @@
 #define CONTENT_PUBLIC_GRAPHICS_H_
 
 #include "base/memory/weak_ptr.h"
+#include "components/filesystem/filesystem.h"
 #include "components/fpslimiter/fpslimiter.h"
 #include "content/config/core_config.h"
 #include "content/public/drawable.h"
@@ -62,10 +63,11 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   uint64_t GetWindowHandle();
 
-  int content_version() const;
+  RGSSVersion content_version() const;
   scoped_refptr<CoreConfigure> config() { return config_; }
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
   uint32_t average_fps() const { return average_fps_; }
+  filesystem::Filesystem* filesystem();
 
  private:
   friend class Viewport;

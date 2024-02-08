@@ -837,7 +837,7 @@ void Tilemap2::CreateTileAtlasInternal() {
   }
 
   /* shadow set atlas */
-  if (screen()->content_version() >= CoreConfigure::RGSS3) {
+  if (screen()->content_version() >= RGSSVersion::RGSS3) {
     SDL_Surface* shadow_set = CreateShadowSet(tile_size_);
     renderer::Texture::Bind(atlas_tfb_.tex);
     renderer::Texture::TexSubImage2D(
@@ -1166,7 +1166,7 @@ void Tilemap2::ParseMapDataBufferInternal() {
     bool over_player = flag & OVER_PLAYER_FLAG;
     bool is_table;
 
-    if (screen()->content_version() >= CoreConfigure::RGSS3)
+    if (screen()->content_version() >= RGSSVersion::RGSS3)
       is_table = flag & TABLE_FLAG;
     else
       is_table = (tileID - 0x0B00) % (8 * 0x30) >= (7 * 0x30);
@@ -1241,7 +1241,7 @@ void Tilemap2::ParseMapDataBufferInternal() {
     process_layer(ox, oy, w, h, 1);
 
     /* shadow layer */
-    if (screen()->content_version() >= CoreConfigure::RGSS3)
+    if (screen()->content_version() >= RGSSVersion::RGSS3)
       process_shadow_layer(ox, oy, w, h);
 
     /* BCDE area */

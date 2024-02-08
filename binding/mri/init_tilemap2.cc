@@ -211,7 +211,7 @@ void InitTilemap2Binding() {
   MriDefineAttr(klass, "viewport", tilemap2, viewport);
   MriDefineAttr(klass, "map_data", tilemap2, MapData);
   MriDefineAttr(klass, "flash_data", tilemap2, FlashData);
-  if (MriGetGlobalRunner()->rgss_version() >= content::CoreConfigure::RGSS3) {
+  if (MriGetGlobalRunner()->rgss_version() >= content::RGSSVersion::RGSS3) {
     MriDefineAttr(klass, "flags", tilemap2, Flags);
   } else {
     MriDefineAttr(klass, "passages", tilemap2, Flags);

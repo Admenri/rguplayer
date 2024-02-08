@@ -2,17 +2,28 @@
 #include "binding/mri/mri_main.h"
 #include "content/worker/content_compositor.h"
 
+#include <fstream>
+
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
 
 int main(int argc, char* argv[]) {
-  scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
+  std::string app(argv[0]);
+  auto last_sep = app.find_last_of('\\');
+  if (last_sep != std::string::npos)
+    app = app.substr(last_sep + 1);
 
-  config->renderer_debug_output() = false;
-  config->content_version() = content::CoreConfigure::RGSS3;
-  config->game_scripts() = "Data/Scripts.rvdata2";
-  config->base_path() = "D:/Desktop/Project1/";
+  LOG(INFO) << "[Entry] App: " << app;
+
+  last_sep = app.find_last_of('.');
+  if (last_sep != std::string::npos)
+    app = app.substr(0, last_sep);
+  std::string ini = app + ".ini";
+
+  scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
+  if (!config->LoadConfigure(ini))
+    return 1;
 
   SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
@@ -34,6 +45,7 @@ int main(int argc, char* argv[]) {
       new content::WorkerTreeCompositor);
   content::ContentInitParams params;
 
+  params.argv0 = *argv;
   params.config = config;
   params.binding_engine = std::make_unique<binding::BindingEngineMri>();
   params.initial_resolution = config->initial_resolution();
