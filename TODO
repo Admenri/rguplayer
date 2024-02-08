@@ -1,18 +1,14 @@
-2024.1.31:
+2024.2.8:
 
 * Bitmap：
 - 未接入文件系统
 - 模糊未实现
-- 色调变换未实现
-
-* Font
-- 未接入缓存机制和文件系统
 
 * Window
-- 未实现RGSS1版本，未测试RGSS2兼容
+- 未实现RGSS1版本
 
 * Tilemap
-- 未实现RGSS1版本，未测试RGSS2兼容
+- 未实现RGSS1版本
 
 * Graphics
 - playmovie未完成
@@ -22,9 +18,6 @@
 
 * Input
 - 已支持键盘输入，手柄输入待完成
-
-* Sprite
-- 波形wave部分来自mkxp但是效果不好需要改进
 
 * Filesystem IO
 - 需要编写统一文件系统进行IO读写

@@ -10,9 +10,9 @@ int main(int argc, char* argv[]) {
   scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
 
   config->renderer_debug_output() = false;
-  config->content_version() = content::CoreConfigure::RGSS2;
-  config->game_scripts() = "Data/Scripts.rvdata";
-  config->base_path() = "D:/Desktop/Project2/";
+  config->content_version() = content::CoreConfigure::RGSS3;
+  config->game_scripts() = "Data/Scripts.rvdata2";
+  config->base_path() = "D:/Desktop/Project1/";
 
   SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
