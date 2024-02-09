@@ -66,6 +66,7 @@ class GlobalStateManager final {
   GLID<Texture> generic_tex;
   base::Vec2i generic_tex_size;
   int max_texture_size;
+  bool enable_es_shaders;
 
   std::unique_ptr<QuadIndexBuffer> quad_ibo;
 };

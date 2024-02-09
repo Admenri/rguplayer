@@ -21,6 +21,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
  public:
   enum class ANGLERenderer : int {
     Default = 0,
+    GLES,
     D3D9,
     D3D11,
     Vulkan,

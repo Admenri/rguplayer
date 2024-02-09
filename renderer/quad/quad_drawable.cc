@@ -136,12 +136,9 @@ void QuadDrawable::Draw() {
 
 void Blt::BeginScreen(const base::Rect& rect) {
   FrameBuffer::Unbind();
+  GSM.states.viewport.Push(rect);
 
   auto& shader = GSM.shaders->base;
-
-  GSM.states.viewport.Push(rect);
-  GSM.states.blend.Push(false);
-
   shader.Bind();
   shader.SetProjectionMatrix(rect.Size());
   shader.SetTransOffset(base::Vec2i());
@@ -149,13 +146,10 @@ void Blt::BeginScreen(const base::Rect& rect) {
 
 void Blt::BeginDraw(const TextureFrameBuffer& dest_tfb) {
   FrameBuffer::Bind(dest_tfb.fbo);
-
   auto size = base::Vec2i(dest_tfb.width, dest_tfb.height);
-  auto& shader = GSM.shaders->base;
-
   GSM.states.viewport.Push(size);
-  GSM.states.blend.Push(false);
 
+  auto& shader = GSM.shaders->base;
   shader.Bind();
   shader.SetProjectionMatrix(size);
   shader.SetTransOffset(base::Vec2i());
@@ -171,22 +165,25 @@ void Blt::TexSource(const TextureFrameBuffer& src_tfb) {
 void Blt::BltDraw(const base::RectF& src_rect, const base::RectF& dest_rect) {
   auto* quad = GSM.common_quad.get();
 
+  GSM.states.blend.Push(false);
   quad->SetPositionRect(dest_rect);
   quad->SetTexCoordRect(src_rect);
   quad->Draw();
+  GSM.states.blend.Pop();
 }
 
 void Blt::BltDraw(const base::Rect& src_rect, const base::Rect& dest_rect) {
   auto* quad = GSM.common_quad.get();
 
+  GSM.states.blend.Push(false);
   quad->SetPositionRect(dest_rect);
   quad->SetTexCoordRect(src_rect);
   quad->Draw();
+  GSM.states.blend.Pop();
 }
 
 void Blt::EndDraw() {
   GSM.states.viewport.Pop();
-  GSM.states.blend.Pop();
 }
 
 }  // namespace renderer

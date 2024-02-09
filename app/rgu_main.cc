@@ -3,6 +3,7 @@
 #include "content/worker/content_compositor.h"
 
 #include <fstream>
+#include <iostream>
 
 #include "SDL.h"
 #include "SDL_image.h"
@@ -61,6 +62,9 @@ int main(int argc, char* argv[]) {
   TTF_Quit();
   IMG_Quit();
   SDL_Quit();
+
+  std::cout << "Enter to exit.";
+  std::cin.get();
 
   return 0;
 }

@@ -92,8 +92,14 @@ void MriProcessReset() {
 }  // namespace
 
 MRI_METHOD(mri_rgssmain) {
+  bool gc_required = false;
+
   while (true) {
     VALUE exc = Qnil;
+    if (gc_required) {
+      rb_gc_start();
+      gc_required = false;
+    }
 
     rb_rescue2((VALUE(*)(ANYARGS))RgssMainCb, rb_block_proc(),
                (VALUE(*)(ANYARGS))RgssMainRescue, (VALUE)&exc, rb_eException,
@@ -102,9 +108,10 @@ MRI_METHOD(mri_rgssmain) {
     if (NIL_P(exc))
       break;
 
-    if (rb_obj_class(exc) == MriGetException(MriException::RGSSReset))
+    if (rb_obj_class(exc) == MriGetException(MriException::RGSSReset)) {
+      gc_required = true;
       MriProcessReset();
-    else
+    } else
       rb_exc_raise(exc);
   }
 

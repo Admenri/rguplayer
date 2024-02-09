@@ -34,7 +34,15 @@ void GLES2Context::EnableDebugOutputForCurrentThread() {
 }
 
 void GLES2Context::InitGLESContext() {
+  suffix_.clear();
 #include "renderer/context/gles2_command_buffer_header_autogen.cc"
+
+  // Reload extension for platforms
+  if (SDL_GL_ExtensionSupported("GL_ARB_vertex_array_object"))
+    suffix_.clear();
+  else if (SDL_GL_ExtensionSupported("GL_OES_vertex_array_object"))
+    suffix_ = "OES";
+#include "renderer/context/gles2_VertexArray_extensions_header_autogen.cc"
 }
 
 void GLES2Context::EnableDebugOutput() {
@@ -53,10 +61,10 @@ void GLES2Context::EnableDebugOutput() {
 }
 
 void* GLES2Context::GetGLProc(const std::string& fname) {
-  std::string glfname;
+  std::string glfname("gl");
 
-  glfname += "gl";
   glfname += fname;
+  glfname += suffix_;
 
   void* fptr = SDL_GL_GetProcAddress(glfname.c_str());
 

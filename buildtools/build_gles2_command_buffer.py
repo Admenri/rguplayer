@@ -10,6 +10,7 @@ parser.add_argument("--file", type=str, help="File path")
 parser.add_argument("--output", type=str, help="File path")
 parser.add_argument("--header", action="store_true", help="Generate header file")
 parser.add_argument("--body", action="store_true", help="Generate defined body file")
+parser.add_argument("--extension", action="store_true", help="Generate extension apis")
 
 args = parser.parse_args()
 
@@ -23,6 +24,7 @@ target_dir = os.path.dirname(args.output)
 if not os.path.exists(target_dir):
   os.makedirs(target_dir)
 
+out_prefix = ""
 if args.header:
   with open(args.file, "r") as file:
     functions = file.readlines()
@@ -30,9 +32,15 @@ if args.header:
   converted_functions = []
   converted_functions.append(autogen_comments)
   for function in functions:
-    if function != "":
+    if function.startswith("--"):
+      out_prefix = function.lstrip('-')
+    elif function != "":
       converted_functions.append("PFNGL" + function.upper() + "PROC " + function + " = nullptr;\n\n")
-  with open(args.output, "w") as file:
+  if args.extension and out_prefix != "":
+    outfile = args.output.format(out_prefix)
+  else:
+    outfile = args.output
+  with open(outfile, "w") as file:
     file.writelines(converted_functions)
 
 elif args.body:
@@ -42,7 +50,13 @@ elif args.body:
   converted_functions = []
   converted_functions.append(autogen_comments)
   for function in functions:
-    if function != "":
-      converted_functions.append("{} = static_cast<{}>(GetGLProc(\"{}\"));\nif (!{}) LOG(ERROR) << \"Cannot find GLES function:{}\";\n".format(function, "PFNGL" + function.upper() + "PROC", function, function, function))
-  with open(args.output, "w") as file:
+    if function.startswith("--"):
+      out_prefix = function.lstrip('-')
+    elif function != "":
+      converted_functions.append("{} = static_cast<{}>(GetGLProc(\"{}\"));\nif (!{}) LOG(ERROR) << \"Cannot find GLES function: {}\";\n".format(function, "PFNGL" + function.upper() + "PROC", function, function, function))
+  if args.extension and out_prefix != "":
+    outfile = args.output.format(out_prefix)
+  else:
+    outfile = args.output
+  with open(outfile, "w") as file:
     file.writelines(converted_functions)

@@ -36,10 +36,14 @@ void RenderRunner::DestroyRenderer() {
 }
 
 void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
-  SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
-
   if (renderer == content::CoreConfigure::ANGLERenderer::Default) {
-    LOG(INFO) << "[Renderer] Disable ANGLE Renderer.";
+    LOG(INFO) << "[Renderer] Use default OpenGL driver for renderer.";
+    return;
+  }
+
+  SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
+  if (renderer == content::CoreConfigure::ANGLERenderer::GLES) {
+    LOG(INFO) << "[Renderer] Use OpenGL ES driver for renderer.";
     return;
   }
 
@@ -88,6 +92,9 @@ void RenderRunner::InitGLContextInternal() {
   if (config_->renderer_debug_output())
     renderer::GLES2Context::EnableDebugOutputForCurrentThread();
 
+  renderer::GSM.enable_es_shaders =
+      (config_->angle_renderer() !=
+       content::CoreConfigure::ANGLERenderer::Default);
   renderer::GSM.InitStates();
   max_texture_size_ = renderer::GSM.GetMaxTextureSize();
 
