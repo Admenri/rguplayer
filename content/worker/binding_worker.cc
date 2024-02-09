@@ -65,6 +65,7 @@ void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
 
   // Init I/O filesystem
   self->file_manager_ = std::make_unique<filesystem::Filesystem>(self->argv0_);
+  self->file_manager_->AddLoadPath(".");
   for (auto& it : self->config_->load_paths())
     self->file_manager_->AddLoadPath(it);
 

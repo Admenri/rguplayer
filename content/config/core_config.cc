@@ -9,6 +9,16 @@
 
 namespace content {
 
+namespace {
+
+void ReplaceStringWidth(std::string& str, char before, char after) {
+  for (size_t i = 0; i < str.size(); ++i)
+    if (str[i] == before)
+      str[i] = after;
+}
+
+}  // namespace
+
 bool CoreConfigure::LoadConfigure(const std::string& filename) {
   INIReader reader(filename);
 
@@ -50,6 +60,8 @@ bool CoreConfigure::LoadConfigure(const std::string& filename) {
   }
 
   game_scripts_ = reader.Get("Game", "Scripts", scripts_file);
+  ReplaceStringWidth(game_scripts_, '\\', '/');
+
   game_title_ = reader.Get("Game", "Title", "RGU Default Widget");
 
   /* Filesystem */
