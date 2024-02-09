@@ -62,9 +62,9 @@ void GLES2Context::InitGLESContext() {
     suffix_ = "NV";
   else
     suffix_.clear();
-  BIND_GLES_FUN(BlitFrameBuffer);
+  BIND_GLES_FUN(BlitFramebuffer);
 
-  if (!BlitFrameBuffer)
+  if (!BlitFramebuffer)
     LOG(INFO) << "[Renderer] Unsupport FrameBuffer blit extension.";
 
 #undef BIND_GLES_FUN

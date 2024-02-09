@@ -135,7 +135,7 @@ void QuadDrawable::Draw() {
 }
 
 void Blt::BeginScreen(const base::Rect& rect) {
-  if (GL.BlitFrameBuffer)
+  if (GL.BlitFramebuffer)
     return GL.BindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
   FrameBuffer::Unbind();
@@ -147,7 +147,7 @@ void Blt::BeginScreen(const base::Rect& rect) {
 }
 
 void Blt::BeginDraw(const TextureFrameBuffer& dest_tfb) {
-  if (GL.BlitFrameBuffer)
+  if (GL.BlitFramebuffer)
     return GL.BindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_tfb.fbo.gl);
 
   FrameBuffer::Bind(dest_tfb.fbo);
@@ -160,7 +160,7 @@ void Blt::BeginDraw(const TextureFrameBuffer& dest_tfb) {
 }
 
 void Blt::TexSource(const TextureFrameBuffer& src_tfb) {
-  if (GL.BlitFrameBuffer)
+  if (GL.BlitFramebuffer)
     return GL.BindFramebuffer(GL_READ_FRAMEBUFFER, src_tfb.fbo.gl);
 
   auto& shader = GSM.shaders->base;
@@ -171,8 +171,8 @@ void Blt::TexSource(const TextureFrameBuffer& src_tfb) {
 void Blt::BltDraw(const base::RectF& src_rect,
                   const base::RectF& dest_rect,
                   bool smooth) {
-  if (GL.BlitFrameBuffer)
-    return GL.BlitFrameBuffer(
+  if (GL.BlitFramebuffer)
+    return GL.BlitFramebuffer(
         src_rect.x, src_rect.y, src_rect.x + src_rect.width,
         src_rect.y + src_rect.height, dest_rect.x, dest_rect.y,
         dest_rect.x + dest_rect.width, dest_rect.y + dest_rect.height,
@@ -193,8 +193,8 @@ void Blt::BltDraw(const base::RectF& src_rect,
 void Blt::BltDraw(const base::Rect& src_rect,
                   const base::Rect& dest_rect,
                   bool smooth) {
-  if (GL.BlitFrameBuffer)
-    return GL.BlitFrameBuffer(
+  if (GL.BlitFramebuffer)
+    return GL.BlitFramebuffer(
         src_rect.x, src_rect.y, src_rect.x + src_rect.width,
         src_rect.y + src_rect.height, dest_rect.x, dest_rect.y,
         dest_rect.x + dest_rect.width, dest_rect.y + dest_rect.height,
@@ -213,7 +213,7 @@ void Blt::BltDraw(const base::Rect& src_rect,
 }
 
 void Blt::EndDraw() {
-  if (GL.BlitFrameBuffer)
+  if (GL.BlitFramebuffer)
     return;
   GSM.states.viewport.Pop();
 }

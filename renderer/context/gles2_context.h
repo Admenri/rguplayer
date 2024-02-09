@@ -43,7 +43,7 @@ class GLES2Context {
   PFNGLISVERTEXARRAYOESPROC IsVertexArray = nullptr;
 
   // FrameBuffer blit extension
-  PFNGLBLITFRAMEBUFFERANGLEPROC BlitFrameBuffer = nullptr;
+  PFNGLBLITFRAMEBUFFERANGLEPROC BlitFramebuffer = nullptr;
 
  private:
   void InitGLESContext();
