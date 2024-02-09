@@ -21,21 +21,6 @@ execute_process(
   OUTPUT_QUIET
 )
 
-### GL (ES) 2.0 Extension ###
-
-execute_process(
-  COMMAND "${PYTHON_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/buildtools/build_gles2_command_buffer.py" "--file=${PROJECT_SOURCE_DIR}/renderer/context/gles2_extensions.txt" --extension --header "--output=${RGU_AUTOGEN_DIR}/renderer/context/gles2_{}_extensions_header_autogen.h"
-  RESULT_VARIABLE PYTHON_SCRIPT_RESULT
-  OUTPUT_QUIET
-)
-
-# Export header file import
-execute_process(
-  COMMAND "${PYTHON_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/buildtools/build_gles2_command_buffer.py" "--file=${PROJECT_SOURCE_DIR}/renderer/context/gles2_extensions.txt" --extension --body "--output=${RGU_AUTOGEN_DIR}/renderer/context/gles2_{}_extensions_header_autogen.cc"
-  RESULT_VARIABLE PYTHON_SCRIPT_RESULT
-  OUTPUT_QUIET
-)
-
 if(NOT PYTHON_SCRIPT_RESULT EQUAL 0)
   message(FATAL_ERROR "Failed to generate gles2 header: ${PYTHON_SCRIPT_RESULT}")
 endif()

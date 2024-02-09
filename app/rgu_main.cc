@@ -63,8 +63,5 @@ int main(int argc, char* argv[]) {
   IMG_Quit();
   SDL_Quit();
 
-  std::cout << "Enter to exit.";
-  std::cin.get();
-
   return 0;
 }

@@ -36,13 +36,38 @@ void GLES2Context::EnableDebugOutputForCurrentThread() {
 void GLES2Context::InitGLESContext() {
   suffix_.clear();
 #include "renderer/context/gles2_command_buffer_header_autogen.cc"
+#define BIND_GLES_FUN(x) x = static_cast<decltype(x)>(GetGLProc(#x));
 
-  // Reload extension for platforms
+  // VertexArray extension
   if (SDL_GL_ExtensionSupported("GL_ARB_vertex_array_object"))
     suffix_.clear();
   else if (SDL_GL_ExtensionSupported("GL_OES_vertex_array_object"))
     suffix_ = "OES";
-#include "renderer/context/gles2_VertexArray_extensions_header_autogen.cc"
+  BIND_GLES_FUN(BindVertexArray);
+  BIND_GLES_FUN(DeleteVertexArrays);
+  BIND_GLES_FUN(GenVertexArrays);
+  BIND_GLES_FUN(IsVertexArray);
+
+  if (!GenVertexArrays)
+    LOG(INFO) << "[Renderer] Unsupport Vertex Array extension.";
+
+  // FrameBuffer blit
+  if (SDL_GL_ExtensionSupported("GL_ARB_framebuffer_object"))
+    suffix_.clear();
+  else if (SDL_GL_ExtensionSupported("GL_EXT_framebuffer_blit"))
+    suffix_ = "EXT";
+  else if (SDL_GL_ExtensionSupported("GL_ANGLE_framebuffer_blit"))
+    suffix_ = "ANGLE";
+  else if (SDL_GL_ExtensionSupported("GL_NV_framebuffer_blit"))
+    suffix_ = "NV";
+  else
+    suffix_.clear();
+  BIND_GLES_FUN(BlitFrameBuffer);
+
+  if (!BlitFrameBuffer)
+    LOG(INFO) << "[Renderer] Unsupport FrameBuffer blit extension.";
+
+#undef BIND_GLES_FUN
 }
 
 void GLES2Context::EnableDebugOutput() {

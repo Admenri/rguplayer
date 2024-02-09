@@ -135,9 +135,11 @@ void QuadDrawable::Draw() {
 }
 
 void Blt::BeginScreen(const base::Rect& rect) {
+  if (GL.BlitFrameBuffer)
+    return GL.BindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
   FrameBuffer::Unbind();
   GSM.states.viewport.Push(rect);
-
   auto& shader = GSM.shaders->base;
   shader.Bind();
   shader.SetProjectionMatrix(rect.Size());
@@ -145,10 +147,12 @@ void Blt::BeginScreen(const base::Rect& rect) {
 }
 
 void Blt::BeginDraw(const TextureFrameBuffer& dest_tfb) {
+  if (GL.BlitFrameBuffer)
+    return GL.BindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_tfb.fbo.gl);
+
   FrameBuffer::Bind(dest_tfb.fbo);
   auto size = base::Vec2i(dest_tfb.width, dest_tfb.height);
   GSM.states.viewport.Push(size);
-
   auto& shader = GSM.shaders->base;
   shader.Bind();
   shader.SetProjectionMatrix(size);
@@ -156,33 +160,61 @@ void Blt::BeginDraw(const TextureFrameBuffer& dest_tfb) {
 }
 
 void Blt::TexSource(const TextureFrameBuffer& src_tfb) {
-  auto& shader = GSM.shaders->base;
+  if (GL.BlitFrameBuffer)
+    return GL.BindFramebuffer(GL_READ_FRAMEBUFFER, src_tfb.fbo.gl);
 
+  auto& shader = GSM.shaders->base;
   shader.SetTexture(src_tfb.tex);
   shader.SetTextureSize(base::Vec2i(src_tfb.width, src_tfb.height));
 }
 
-void Blt::BltDraw(const base::RectF& src_rect, const base::RectF& dest_rect) {
-  auto* quad = GSM.common_quad.get();
+void Blt::BltDraw(const base::RectF& src_rect,
+                  const base::RectF& dest_rect,
+                  bool smooth) {
+  if (GL.BlitFrameBuffer)
+    return GL.BlitFrameBuffer(
+        src_rect.x, src_rect.y, src_rect.x + src_rect.width,
+        src_rect.y + src_rect.height, dest_rect.x, dest_rect.y,
+        dest_rect.x + dest_rect.width, dest_rect.y + dest_rect.height,
+        GL_COLOR_BUFFER_BIT, smooth ? GL_LINEAR : GL_NEAREST);
 
+  if (smooth)
+    Texture::SetFilter(GL_LINEAR);
+  auto* quad = GSM.common_quad.get();
   GSM.states.blend.Push(false);
   quad->SetPositionRect(dest_rect);
   quad->SetTexCoordRect(src_rect);
   quad->Draw();
   GSM.states.blend.Pop();
+  if (smooth)
+    Texture::SetFilter(GL_NEAREST);
 }
 
-void Blt::BltDraw(const base::Rect& src_rect, const base::Rect& dest_rect) {
-  auto* quad = GSM.common_quad.get();
+void Blt::BltDraw(const base::Rect& src_rect,
+                  const base::Rect& dest_rect,
+                  bool smooth) {
+  if (GL.BlitFrameBuffer)
+    return GL.BlitFrameBuffer(
+        src_rect.x, src_rect.y, src_rect.x + src_rect.width,
+        src_rect.y + src_rect.height, dest_rect.x, dest_rect.y,
+        dest_rect.x + dest_rect.width, dest_rect.y + dest_rect.height,
+        GL_COLOR_BUFFER_BIT, smooth ? GL_LINEAR : GL_NEAREST);
 
+  if (smooth)
+    Texture::SetFilter(GL_LINEAR);
+  auto* quad = GSM.common_quad.get();
   GSM.states.blend.Push(false);
   quad->SetPositionRect(dest_rect);
   quad->SetTexCoordRect(src_rect);
   quad->Draw();
   GSM.states.blend.Pop();
+  if (smooth)
+    Texture::SetFilter(GL_NEAREST);
 }
 
 void Blt::EndDraw() {
+  if (GL.BlitFrameBuffer)
+    return;
   GSM.states.viewport.Pop();
 }
 

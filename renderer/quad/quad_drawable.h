@@ -152,9 +152,12 @@ struct Blt {
   static void BeginScreen(const base::Rect& rect);
   static void BeginDraw(const TextureFrameBuffer& dest_tfb);
   static void TexSource(const TextureFrameBuffer& src_tfb);
-  static void BltDraw(const base::Rect& src_rect, const base::Rect& dest_rect);
+  static void BltDraw(const base::Rect& src_rect,
+                      const base::Rect& dest_rect,
+                      bool smooth = false);
   static void BltDraw(const base::RectF& src_rect,
-                      const base::RectF& dest_rect);
+                      const base::RectF& dest_rect,
+                      bool smooth = false);
   static void EndDraw();
 };
 
