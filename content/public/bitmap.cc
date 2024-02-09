@@ -323,6 +323,8 @@ void Bitmap::SetFont(scoped_refptr<Font> font) {
 }
 
 SDL_Surface* Bitmap::SurfaceRequired() {
+  CheckIsDisposed();
+
   if (surface_buffer_) {
     SDL_DestroySurface(surface_buffer_);
   }

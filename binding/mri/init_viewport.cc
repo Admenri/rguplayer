@@ -4,6 +4,7 @@
 
 #include "binding/mri/init_viewport.h"
 
+#include "binding/mri/init_bitmap.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/mri_template.h"
 #include "content/public/viewport.h"
@@ -42,6 +43,20 @@ MRI_METHOD(viewport_initialize) {
   MriWrapProperty(self, obj->GetTone(), "_tone", kToneDataType);
 
   return self;
+}
+
+MRI_METHOD(viewport_snap_to_bitmap) {
+  scoped_refptr<content::Viewport> obj =
+      MriGetStructData<content::Viewport>(self);
+
+  VALUE bitmap;
+  MriParseArgsTo(argc, argv, "o", &bitmap);
+
+  scoped_refptr<content::Bitmap> target =
+      MriCheckStructData<content::Bitmap>(bitmap, kBitmapDataType);
+  obj->SnapToBitmap(target);
+
+  return bitmap;
 }
 
 #define VIEWPORT_DEFINE_INT_ATTR(name)             \
@@ -95,6 +110,7 @@ void InitViewportBinding() {
   MriInitDrawableBinding<content::Viewport>(klass);
 
   MriDefineMethod(klass, "initialize", viewport_initialize);
+  MriDefineMethod(klass, "snap_to_bitmap", viewport_snap_to_bitmap);
 
   MriDefineAttr(klass, "ox", viewport, OX);
   MriDefineAttr(klass, "oy", viewport, OY);

@@ -36,6 +36,8 @@ set(BINDING_MRI_SRC
   mri_main.h
   mri_util.cc
   mri_util.h
+
+  zlib.c
 )
 
 add_library(binding_mri ${BINDING_MRI_SRC})

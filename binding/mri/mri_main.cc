@@ -31,6 +31,8 @@
 
 extern "C" {
 void rb_call_builtin_inits();
+
+void Init_zlib(void);
 }
 
 namespace binding {
@@ -202,6 +204,7 @@ void BindingEngineMri::InitializeBinding(
   InitWindow2Binding();
   InitGraphicsBinding();
   InitInputBinding();
+  Init_zlib();
 
   if (binding_host->rgss_version() < content::RGSSVersion::RGSS3) {
     if (sizeof(void*) == 4) {

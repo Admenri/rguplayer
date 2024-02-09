@@ -8,6 +8,8 @@
 #include "binding/mri/init_utility.h"
 #include "binding/mri/mri_template.h"
 
+#include "SDL_image.h"
+
 namespace binding {
 
 static std::string AsString(VALUE obj) {
@@ -353,6 +355,20 @@ MRI_METHOD(bitmap_set_font) {
   return self;
 }
 
+MRI_METHOD(bitmap_save_png) {
+  scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
+
+  std::string path;
+  MriParseArgsTo(argc, argv, "s", &path);
+
+  SDL_Surface* auto_surf = nullptr;
+  MRI_GUARD(auto_surf = obj->SurfaceRequired(););
+
+  IMG_SavePNG(auto_surf, path.c_str());
+
+  return self;
+}
+
 void InitBitmapBinding() {
   VALUE klass = rb_define_class("Bitmap", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kBitmapDataType>);
@@ -378,6 +394,8 @@ void InitBitmapBinding() {
   MriDefineMethod(klass, "radial_blur", bitmap_radial_blur);
   MriDefineMethod(klass, "draw_text", bitmap_draw_text);
   MriDefineMethod(klass, "text_size", bitmap_text_size);
+
+  MriDefineMethod(klass, "save_png", bitmap_save_png);
 
   MriDefineAttr(klass, "font", bitmap, font);
 }
