@@ -118,7 +118,7 @@ void WrapperRWops(PHYSFS_File* handle, SDL_RWops& ops, bool auto_free) {
 struct OpenReadEnumData {
   Filesystem::OpenCallback callback;
   std::string filename;
-  int filename_end;
+  int fname_sep = 0;
 
   SDL_RWops ops = {0};
 
@@ -141,7 +141,7 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
     return PHYSFS_ENUM_STOP;
 
   if (strncmp(filename.c_str(), enum_data->filename.c_str(),
-              enum_data->filename_end) != 0)
+              enum_data->fname_sep) != 0)
     return PHYSFS_ENUM_OK;
 
   std::string fullpath;
@@ -151,7 +151,7 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
   }
   fullpath += filename;
 
-  char last = filename[enum_data->filename_end];
+  char last = fname[filename.size()];
   if (last != '.' && last != '\0')
     return PHYSFS_ENUM_STOP;
 
@@ -218,7 +218,7 @@ void Filesystem::OpenRead(const std::string& filename, OpenCallback callback) {
   data.callback = callback;
   data.filename = file;
   ToLower(data.filename);
-  data.filename_end = len + buf - sep - !root_dir;
+  data.fname_sep = len + buf - sep - !root_dir;
 
   PHYSFS_enumerate(dir, OpenReadEnumCallback, &data);
 
