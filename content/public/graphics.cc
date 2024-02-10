@@ -316,15 +316,16 @@ void Graphics::PresentScreenInternal(
   base::WeakPtr<ui::Widget> window = renderer_->window();
   UpdateWindowViewportInternal();
 
-  // Blit screen buffer to window buffer
-  renderer::Blt::BeginScreen(window_size_);
-  renderer::Blt::TexSource(screen_buffer);
-  renderer::GSM.states.clear_color.Set(base::Vec4());
-  renderer::FrameBuffer::Clear();
   // Flip screen for Y
   base::Rect target_rect(display_viewport_.x,
                          display_viewport_.y + display_viewport_.height,
                          display_viewport_.width, -display_viewport_.height);
+
+  // Blit screen buffer to window buffer
+  renderer::Blt::BeginScreen(window_size_);
+  renderer::FrameBuffer::ClearColor();
+  renderer::FrameBuffer::Clear();
+  renderer::Blt::TexSource(screen_buffer);
   renderer::Blt::BltDraw(resolution_, target_rect);
   renderer::Blt::EndDraw();
 
@@ -336,8 +337,6 @@ void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
 
   renderer::Blt::BeginDraw(target->AsGLType());
   renderer::Blt::TexSource(screen_buffer_[0]);
-  renderer::GSM.states.clear_color.Set(base::Vec4());
-  renderer::FrameBuffer::Clear();
   renderer::Blt::BltDraw(resolution_, resolution_);
   renderer::Blt::EndDraw();
 }
@@ -347,8 +346,6 @@ void Graphics::FreezeSceneInternal() {
 
   renderer::Blt::BeginDraw(frozen_snapshot_);
   renderer::Blt::TexSource(screen_buffer_[0]);
-  renderer::GSM.states.clear_color.Set(base::Vec4());
-  renderer::FrameBuffer::Clear();
   renderer::Blt::BltDraw(resolution_, resolution_);
   renderer::Blt::EndDraw();
 }

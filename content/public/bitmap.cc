@@ -350,22 +350,30 @@ void Bitmap::OnObjectDisposed() {
 
 void Bitmap::InitBitmapInternal(
     const std::variant<base::Vec2i, SDL_Surface*>& initial_data) {
+  // Alloc new texture memory
   tex_fbo_ = renderer::TextureFrameBuffer::Gen();
+  bool need_clear = false;
 
   if (std::holds_alternative<base::Vec2i>(initial_data)) {
     auto size = std::get<base::Vec2i>(initial_data);
     renderer::TextureFrameBuffer::Alloc(tex_fbo_, size.x, size.y);
+    // Clear texture cache
+    need_clear = true;
   } else if (std::holds_alternative<SDL_Surface*>(initial_data)) {
     surface_buffer_ = std::get<SDL_Surface*>(initial_data);
     renderer::TextureFrameBuffer::Alloc(tex_fbo_, surface_buffer_->w,
                                         surface_buffer_->h);
     renderer::Texture::TexImage2D(surface_buffer_->w, surface_buffer_->h,
                                   GL_RGBA, surface_buffer_->pixels);
+
   } else {
     NOTREACHED();
   }
 
+  // Link framebuffer
   renderer::TextureFrameBuffer::LinkFrameBuffer(tex_fbo_);
+  if (need_clear)
+    renderer::FrameBuffer::Clear();
 }
 
 void Bitmap::StretchBltInternal(const base::Rect& dest_rect,

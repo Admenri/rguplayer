@@ -55,8 +55,8 @@ void GLES2Shader::Bind() {
 }
 
 void GLES2Shader::Unbind() {
-  GSM.states.program.Set(0);
   GL.ActiveTexture(GL_TEXTURE0);
+  GSM.states.program.Set(0);
 }
 
 bool GLES2Shader::Setup(const std::string& vertex_shader,

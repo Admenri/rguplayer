@@ -501,7 +501,7 @@ void Window2::Composite() {
   }
 
   /* Window contents */
-  if (contents_valid && contents_opacity_) {
+  if (contents_valid && contents_opacity_ > 0) {
     if (screen()->content_version() < RGSSVersion::RGSS3)
       renderer::GSM.states.scissor_rect.SetIntersect(padding_trans_rect);
 
@@ -509,7 +509,6 @@ void Window2::Composite() {
     content_trans = content_trans - base::Vec2i(ox_, oy_);
 
     shader.SetTransOffset(content_trans);
-
     shader.SetTexture(contents_->AsGLType().tex);
     shader.SetTextureSize(contents_->GetSize());
 
