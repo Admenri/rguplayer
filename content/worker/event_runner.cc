@@ -82,6 +82,16 @@ void EventRunner::EventFilter(const SDL_Event& event) {
       UpdateFPSDisplay(fps);
     }
   }
+
+  // Audio device changed
+  if (event.type == SDL_EVENT_AUDIO_DEVICE_ADDED) {
+    SDL_AudioDeviceID which = event.adevice.which;
+    LOG(INFO) << "[Event] Audio device added: "
+              << SDL_GetAudioDeviceName(which);
+  } else if (event.type == SDL_EVENT_AUDIO_DEVICE_REMOVED) {
+    SDL_AudioDeviceID which = event.adevice.which;
+    LOG(INFO) << "[Event] Audio device removed: " << which;
+  }
 }
 
 void EventRunner::UpdateFPSDisplay(std::optional<int32_t> fps) {

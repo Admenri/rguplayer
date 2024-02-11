@@ -98,6 +98,10 @@ endif()
 add_subdirectory(third_party/zlib)
 include_directories(third_party/zlib)
 
+## Soloud
+add_subdirectory(third_party/soloud)
+include_directories(third_party/soloud/include)
+
 #--------------------------------------------------------------------------------
 # Components of Core
 #--------------------------------------------------------------------------------

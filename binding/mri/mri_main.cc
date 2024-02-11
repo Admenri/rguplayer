@@ -7,6 +7,7 @@
 
 #include "binding/mri/mri_main.h"
 
+#include "binding/mri/init_audio.h"
 #include "binding/mri/init_bitmap.h"
 #include "binding/mri/init_corefile.h"
 #include "binding/mri/init_font.h"
@@ -204,6 +205,8 @@ void BindingEngineMri::InitializeBinding(
   InitWindow2Binding();
   InitGraphicsBinding();
   InitInputBinding();
+  InitAudioBinding();
+
   Init_zlib();
 
   if (binding_host->rgss_version() < content::RGSSVersion::RGSS3) {

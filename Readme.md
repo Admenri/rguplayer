@@ -71,6 +71,7 @@ ui文件夹存放了SDL窗口的封装代码，用于与input模块进行配合�
 - json - https://github.com/nlohmann/json
 - zlib - https://github.com/madler/zlib
 - inih - https://github.com/jtilly/inih
+- soloud - https://github.com/jarikomppa/soloud
 
 ## 联系方式
 

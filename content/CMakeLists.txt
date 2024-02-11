@@ -14,6 +14,8 @@ set(CORE_CONTENT_SRC
   config/core_config.h
   engine/binding_engine.cc
   engine/binding_engine.h
+  public/audio.cc
+  public/audio.h
   public/bitmap.cc
   public/bitmap.h
   public/disposable.h
@@ -41,6 +43,8 @@ set(CORE_CONTENT_SRC
   public/viewport.h
   public/window2.cc
   public/window2.h
+  worker/audio_runner.cc
+  worker/audio_runner.h
   worker/binding_worker.cc
   worker/binding_worker.h
   worker/content_compositor.cc
@@ -60,4 +64,5 @@ target_link_libraries(core_content PUBLIC
                       components_fpslimiter
                       SDL3::SDL3-static
                       SDL3_image::SDL3_image
-                      SDL3_ttf::SDL3_ttf)
+                      SDL3_ttf::SDL3_ttf
+                      soloud)

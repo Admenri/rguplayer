@@ -11,12 +11,15 @@
 
 namespace content {
 
-void BindingRunner::InitBindingComponents(ContentInitParams& params) {
+void BindingRunner::InitBindingComponents(
+    ContentInitParams& params,
+    scoped_refptr<AudioRunner> audio_runner) {
   argv0_ = params.argv0;
   config_ = params.config;
   window_ = params.host_window->AsWeakPtr();
   initial_resolution_ = params.initial_resolution;
   binding_engine_ = std::move(params.binding_engine);
+  audio_ = new Audio(audio_runner);
 }
 
 void BindingRunner::BindingMain(uint32_t event_id) {

@@ -5,6 +5,7 @@
 #ifndef CONTENT_WORKER_CONTENT_COMPOSITOR_H_
 #define CONTENT_WORKER_CONTENT_COMPOSITOR_H_
 
+#include "content/worker/audio_runner.h"
 #include "content/worker/binding_worker.h"
 #include "content/worker/content_params.h"
 #include "content/worker/event_runner.h"
@@ -26,6 +27,7 @@ class WorkerTreeCompositor {
   scoped_refptr<CoreConfigure> config_;
   scoped_refptr<EventRunner> event_runner_;
   scoped_refptr<BindingRunner> binding_runner_;
+  scoped_refptr<AudioRunner> audio_runner_;
 };
 
 }  // namespace content

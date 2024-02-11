@@ -7,6 +7,7 @@
 
 #include "base/memory/ref_counted.h"
 #include "components/filesystem/filesystem.h"
+#include "content/public/audio.h"
 #include "content/public/graphics.h"
 #include "content/public/input.h"
 #include "content/worker/content_params.h"
@@ -22,7 +23,8 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   BindingRunner(const BindingRunner&) = delete;
   BindingRunner& operator=(const BindingRunner&) = delete;
 
-  void InitBindingComponents(ContentInitParams& params);
+  void InitBindingComponents(ContentInitParams& params,
+                             scoped_refptr<AudioRunner> audio_runner);
   void BindingMain(uint32_t event_id);
   void RequestQuit();
   void RequestReset();
@@ -35,6 +37,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   scoped_refptr<CoreConfigure> config() const { return config_; }
   scoped_refptr<Graphics> graphics() const { return graphics_; }
   scoped_refptr<Input> input() const { return input_; }
+  scoped_refptr<Audio> audio() const { return audio_; }
   uint32_t user_event_id() { return user_event_id_; }
   filesystem::Filesystem* filesystem() { return file_manager_.get(); }
 
@@ -51,6 +54,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   scoped_refptr<RenderRunner> renderer_;
   scoped_refptr<Graphics> graphics_;
   scoped_refptr<Input> input_;
+  scoped_refptr<Audio> audio_;
 
   base::Vec2i initial_resolution_;
   base::WeakPtr<ui::Widget> window_;
