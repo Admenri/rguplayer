@@ -16,7 +16,7 @@
 
 namespace content {
 
-Graphics::Graphics(scoped_refptr<BindingRunner> dispatcher,
+Graphics::Graphics(base::WeakPtr<BindingRunner> dispatcher,
                    scoped_refptr<RenderRunner> renderer,
                    const base::Vec2i& initial_resolution)
     : config_(dispatcher->config()),

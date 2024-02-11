@@ -23,7 +23,7 @@ class BindingRunner;
 class Graphics final : public base::RefCounted<Graphics>,
                        public DrawableParent {
  public:
-  Graphics(scoped_refptr<BindingRunner> dispatcher,
+  Graphics(base::WeakPtr<BindingRunner> dispatcher,
            scoped_refptr<RenderRunner> renderer,
            const base::Vec2i& initial_resolution);
   ~Graphics();
@@ -109,7 +109,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;
 
   scoped_refptr<CoreConfigure> config_;
-  scoped_refptr<BindingRunner> dispatcher_;
+  base::WeakPtr<BindingRunner> dispatcher_;
   scoped_refptr<RenderRunner> renderer_;
   base::Vec2i resolution_;
   base::LinkedList<Disposable> disposable_elements_;

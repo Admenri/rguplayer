@@ -32,6 +32,8 @@ class AudioRunner : public base::SequencedTaskRunner {
 
   std::unique_ptr<base::ThreadWorker> worker_;
   SoLoud::Soloud core_;
+
+  base::WeakPtrFactory<AudioRunner> weak_ptr_factory_{this};
 };
 
 }  // namespace content

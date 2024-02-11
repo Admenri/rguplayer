@@ -73,8 +73,8 @@ void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
     self->file_manager_->AddLoadPath(it);
 
   // Init Modules
-  self->graphics_ =
-      new Graphics(self.get(), self->renderer_, self->initial_resolution_);
+  self->graphics_ = new Graphics(self->weak_ptr_factory_.GetWeakPtr(),
+                                 self->renderer_, self->initial_resolution_);
   self->input_ = new Input(self->window_);
 
   // Before run main initialize
@@ -85,6 +85,7 @@ void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
 
   // Destroy and release resource for current worker cc
   self->binding_engine_->FinalizeBinding();
+  self->binding_engine_.reset();
 
   // Release content module
   self->graphics_.reset();

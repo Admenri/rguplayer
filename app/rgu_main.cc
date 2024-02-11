@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
   if (!config->LoadConfigure(ini))
     return 1;
 
-  SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+  SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   TTF_Init();
 

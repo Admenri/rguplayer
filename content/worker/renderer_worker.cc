@@ -115,6 +115,8 @@ void RenderRunner::QuitGLContextInternal() {
 
   SDL_GL_DeleteContext(glcontext_);
   glcontext_ = nullptr;
+
+  LOG(INFO) << "[Content] Destroy renderer.";
 }
 
 }  // namespace content
