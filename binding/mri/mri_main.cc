@@ -273,12 +273,13 @@ void BindingEngineMri::LoadPackedScripts() {
   try {
     packed_scripts = MriLoadData(config->game_scripts(), false);
   } catch (const base::Exception& exception) {
-    LOG(INFO) << exception.GetErrorMessage();
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Binding",
+                             exception.GetErrorMessage().c_str(), nullptr);
     return;
   }
 
   if (!RB_TYPE_P(packed_scripts, RUBY_T_ARRAY)) {
-    LOG(INFO) << "Failed to read script data.";
+    LOG(INFO) << "[Binding] Failed to read script data.";
     return;
   }
 

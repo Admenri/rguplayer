@@ -80,6 +80,110 @@ MRI_METHOD(input_dir8) {
   return rb_fix_new(input->Dir8());
 }
 
+MRI_METHOD(input_is_pressed_key) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+  int key = 0;
+  MriParseArgsTo(argc, argv, "i", &key);
+  bool v = input->KeyPressed(key);
+  return MRI_BOOL_NEW(v);
+}
+
+MRI_METHOD(input_is_triggered_key) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+  int key = 0;
+  MriParseArgsTo(argc, argv, "i", &key);
+  bool v = input->KeyTriggered(key);
+  return MRI_BOOL_NEW(v);
+}
+
+MRI_METHOD(input_is_repeated_key) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+  int key = 0;
+  MriParseArgsTo(argc, argv, "i", &key);
+  bool v = input->KeyRepeated(key);
+  return MRI_BOOL_NEW(v);
+}
+
+MRI_METHOD(input_recent_pressed_keys) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  std::vector<int> keys;
+  input->GetRecentPressed(keys);
+  VALUE ary = rb_ary_new2(keys.size());
+  for (auto& it : keys)
+    rb_ary_push(ary, rb_fix_new(it));
+
+  return ary;
+}
+
+MRI_METHOD(input_recent_triggered_keys) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  std::vector<int> keys;
+  input->GetRecentTriggered(keys);
+  VALUE ary = rb_ary_new2(keys.size());
+  for (auto& it : keys)
+    rb_ary_push(ary, rb_fix_new(it));
+
+  return ary;
+}
+
+MRI_METHOD(input_recent_repeated_keys) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  std::vector<int> keys;
+  input->GetRecentRepeated(keys);
+  VALUE ary = rb_ary_new2(keys.size());
+  for (auto& it : keys)
+    rb_ary_push(ary, rb_fix_new(it));
+
+  return ary;
+}
+
+MRI_METHOD(input_get_key_name) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  int key = 0;
+  MriParseArgsTo(argc, argv, "i", &key);
+  std::string name = input->GetKeyName(key);
+
+  return rb_str_new(name.c_str(), name.size());
+}
+
+MRI_METHOD(input_get_keys_from) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  std::string flag;
+  MriParseArgsTo(argc, argv, "s", &flag);
+
+  std::vector<int> keys;
+  input->GetKeysFromFlag(flag, keys);
+  VALUE ary = rb_ary_new2(keys.size());
+  for (auto& it : keys)
+    rb_ary_push(ary, rb_fix_new(it));
+
+  return ary;
+}
+
+MRI_METHOD(input_set_keys_from) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  std::string flag;
+  VALUE ary;
+  MriParseArgsTo(argc, argv, "so", &flag, &ary);
+
+  if (rb_type(ary) != RUBY_T_ARRAY)
+    rb_raise(rb_eArgError, "Argument 1: Expected array");
+
+  std::vector<int> keys;
+  for (int i = 0; i < RARRAY_LEN(ary); ++i)
+    keys.push_back(NUM2INT(rb_ary_entry(ary, i)));
+
+  input->SetKeysFromFlag(flag, keys);
+
+  return Qnil;
+}
+
 void InitInputBinding() {
   VALUE module = rb_define_module("Input");
 
@@ -89,6 +193,20 @@ void InitInputBinding() {
   MriDefineModuleFunction(module, "repeat?", input_is_repeated);
   MriDefineModuleFunction(module, "dir4", input_dir4);
   MriDefineModuleFunction(module, "dir8", input_dir8);
+
+  MriDefineModuleFunction(module, "press_key?", input_is_pressed_key);
+  MriDefineModuleFunction(module, "trigger_key?", input_is_triggered_key);
+  MriDefineModuleFunction(module, "repeat_key?", input_is_repeated_key);
+
+  MriDefineModuleFunction(module, "recent_pressed", input_recent_pressed_keys);
+  MriDefineModuleFunction(module, "recent_triggered",
+                          input_recent_triggered_keys);
+  MriDefineModuleFunction(module, "recent_repeated",
+                          input_recent_repeated_keys);
+
+  MriDefineModuleFunction(module, "get_key_name", input_get_key_name);
+  MriDefineModuleFunction(module, "get_keys_from_flag", input_get_keys_from);
+  MriDefineModuleFunction(module, "set_keys_from_flag", input_set_keys_from);
 
   g_input_symbol_hash = rb_hash_new();
   for (auto& it : kKeyboardBindings) {

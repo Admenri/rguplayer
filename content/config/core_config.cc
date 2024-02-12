@@ -7,6 +7,8 @@
 #include "base/debug/logging.h"
 #include "inih/INIReader.h"
 
+#include "SDL_messagebox.h"
+
 namespace content {
 
 namespace {
@@ -23,7 +25,9 @@ bool CoreConfigure::LoadConfigure(const std::string& filename) {
   INIReader reader(filename);
 
   if (reader.ParseError()) {
-    LOG(INFO) << "[Config] Failed to load configure file: " << filename;
+    std::string str = "Failed to load configure file: " + filename;
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Core", str.c_str(),
+                             nullptr);
     return false;
   }
 
