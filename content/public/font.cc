@@ -289,6 +289,9 @@ std::string Font::FixupString(const std::string& text) {
 
 SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
   auto ensure_format = [](SDL_Surface*& surf) {
+    if (!surf)
+      return;
+
     SDL_Surface* format_surf = surf;
     if (surf->format->format != SDL_PIXELFORMAT_ABGR8888) {
       format_surf = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_ABGR8888);
@@ -302,7 +305,18 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
   if (src_text.empty())
     return nullptr;
 
+  int space_count = 0;
+  for (auto& c : src_text)
+    if (c == ' ')
+      ++space_count;
+
+  if (space_count >= src_text.size())
+    return nullptr;
+
   TTF_Font* font = AsSDLFont();
+  if (!font)
+    return nullptr;
+
   SDL_Color font_color = color_->AsSDLColor();
   SDL_Color outline_color = out_color_->AsSDLColor();
   if (font_opacity) {
@@ -314,6 +328,8 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
 
   SDL_Surface* raw_surf =
       TTF_RenderUTF8_Blended(font, src_text.c_str(), font_color);
+  if (!raw_surf)
+    return nullptr;
   ensure_format(raw_surf);
 
   if (shadow_) {
@@ -391,9 +407,14 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
   }
 
   if (outline_) {
-    SDL_Surface* outline;
+    SDL_Surface* outline = nullptr;
     TTF_SetFontOutline(font, OutlineSize);
     outline = TTF_RenderUTF8_Blended(font, src_text.c_str(), outline_color);
+    if (!outline) {
+      SDL_DestroySurface(raw_surf);
+      return nullptr;
+    }
+
     ensure_format(outline);
     SDL_Rect outRect = {OutlineSize, OutlineSize, raw_surf->w, raw_surf->h};
     SDL_SetSurfaceBlendMode(raw_surf, SDL_BLENDMODE_BLEND);
