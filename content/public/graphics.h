@@ -67,6 +67,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   scoped_refptr<CoreConfigure> config() { return config_; }
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
   uint32_t average_fps() const { return average_fps_; }
+  base::WeakPtr<ui::Widget> window() { return renderer_->window(); }
   filesystem::Filesystem* filesystem();
 
  private:

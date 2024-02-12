@@ -11,27 +11,24 @@
 
 namespace content {
 
-void BindingRunner::InitBindingComponents(
-    ContentInitParams& params,
-    scoped_refptr<AudioRunner> audio_runner) {
+void BindingRunner::InitBindingComponents(ContentInitParams& params) {
   argv0_ = params.argv0;
   config_ = params.config;
   window_ = params.host_window->AsWeakPtr();
   initial_resolution_ = params.initial_resolution;
   binding_engine_ = std::move(params.binding_engine);
-  audio_ = new Audio(audio_runner);
 }
 
-void BindingRunner::BindingMain(uint32_t event_id) {
+void BindingRunner::BindingMain(uint32_t event_id,
+                                scoped_refptr<AudioRunner> audio_runner) {
   user_event_id_ = event_id;
   runner_thread_ = std::make_unique<std::thread>(
-      BindingFuncMain, weak_ptr_factory_.GetWeakPtr());
+      BindingFuncMain, weak_ptr_factory_.GetWeakPtr(), audio_runner);
 }
 
 void BindingRunner::RequestQuit() {
   quit_atomic_.Set();
   runner_thread_->join();
-
   runner_thread_.reset();
 }
 
@@ -61,7 +58,8 @@ void BindingRunner::RaiseFlags() {
     binding_engine_->ResetRequired();
 }
 
-void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
+void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self,
+                                    scoped_refptr<AudioRunner> audio_runner) {
   // Attach renderer to binding thread
   self->renderer_ = new RenderRunner();
   self->renderer_->InitRenderer(self->config_, self->window_);
@@ -76,6 +74,7 @@ void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
   self->graphics_ = new Graphics(self->weak_ptr_factory_.GetWeakPtr(),
                                  self->renderer_, self->initial_resolution_);
   self->input_ = new Input(self->window_);
+  self->audio_ = new Audio(self->file_manager_.get(), audio_runner);
 
   // Before run main initialize
   self->binding_engine_->InitializeBinding(self.get());
@@ -90,6 +89,7 @@ void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self) {
   // Release content module
   self->graphics_.reset();
   self->input_.reset();
+  self->audio_.reset();
 
   // Destroy renderer on binding thread
   self->renderer_->DestroyRenderer();

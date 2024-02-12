@@ -23,9 +23,8 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   BindingRunner(const BindingRunner&) = delete;
   BindingRunner& operator=(const BindingRunner&) = delete;
 
-  void InitBindingComponents(ContentInitParams& params,
-                             scoped_refptr<AudioRunner> audio_runner);
-  void BindingMain(uint32_t event_id);
+  void InitBindingComponents(ContentInitParams& params);
+  void BindingMain(uint32_t event_id, scoped_refptr<AudioRunner> audio_runner);
   void RequestQuit();
   void RequestReset();
   void ClearResetFlag();
@@ -46,7 +45,8 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   }
 
  private:
-  static void BindingFuncMain(base::WeakPtr<BindingRunner> self);
+  static void BindingFuncMain(base::WeakPtr<BindingRunner> self,
+                              scoped_refptr<AudioRunner> audio_runner);
 
   scoped_refptr<CoreConfigure> config_;
   std::unique_ptr<std::thread> runner_thread_;

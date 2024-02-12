@@ -118,8 +118,7 @@ void WrapperRWops(PHYSFS_File* handle, SDL_RWops& ops, bool auto_free) {
 struct OpenReadEnumData {
   Filesystem::OpenCallback callback;
   std::string filename;
-
-  SDL_RWops ops = {0};
+  SDL_RWops* ops;
 
   bool search_complete = false;
   int match_count = 0;
@@ -162,8 +161,8 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
     return PHYSFS_ENUM_ERROR;
   }
 
-  WrapperRWops(file, enum_data->ops, false);
-  if (enum_data->callback.Run(&enum_data->ops,
+  WrapperRWops(file, *enum_data->ops, false);
+  if (enum_data->callback.Run(enum_data->ops,
                               FindFileExtName(filename.c_str())))
     enum_data->search_complete = true;
 
@@ -217,8 +216,10 @@ void Filesystem::OpenRead(const std::string& filename, OpenCallback callback) {
   data.callback = callback;
   data.filename = file;
   ToLower(data.filename);
+  data.ops = SDL_CreateRW();
 
   PHYSFS_enumerate(dir, OpenReadEnumCallback, &data);
+  SDL_DestroyRW(data.ops);
 
   if (!data.physfs_error.empty())
     throw base::Exception::Exception(base::Exception::FilesystemError,

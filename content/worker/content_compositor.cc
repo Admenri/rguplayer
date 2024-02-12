@@ -30,12 +30,12 @@ void WorkerTreeCompositor::InitCC(ContentInitParams params) {
   audio_runner_->InitAudioComponents(config_);
 
   // Init renderer in binding thread for sync mode
-  binding_runner_->InitBindingComponents(params, audio_runner_);
+  binding_runner_->InitBindingComponents(params);
 }
 
 void WorkerTreeCompositor::ContentMain() {
   // Launch script thread
-  binding_runner_->BindingMain(event_runner_->user_event_id());
+  binding_runner_->BindingMain(event_runner_->user_event_id(), audio_runner_);
 
   // Launch event loop
   event_runner_->EventMain();

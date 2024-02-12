@@ -68,6 +68,10 @@ void ParseExeceptionInfo(VALUE exc,
   VALUE ds = rb_sprintf("%" PRIsVALUE ": %" PRIsVALUE " (%" PRIsVALUE ")",
                         backtrace_front, exc, exeception_name);
   LOG(INFO) << "[Binding] " << StringValueCStr(ds);
+
+  SDL_ShowSimpleMessageBox(
+      SDL_MESSAGEBOX_ERROR, "RGU Error", StringValueCStr(ds),
+      MriGetGlobalRunner()->graphics()->window()->AsSDLWindow());
 }
 
 VALUE RgssMainCb(VALUE block) {
@@ -88,6 +92,7 @@ void MriProcessReset() {
 
   LOG(INFO) << "[Binding] User trigger Content Reset.";
   binding->graphics()->Reset();
+  binding->audio()->Reset();
 
   binding->ClearResetFlag();
 }
