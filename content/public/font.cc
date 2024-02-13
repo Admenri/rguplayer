@@ -38,6 +38,45 @@ struct DefaultFontState {
   std::vector<std::string> path_cache;
 };
 
+void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
+  SDL_Surface* out =
+      SDL_CreateSurface(in->w + 1, in->h + 1, in->format->format);
+  float fr = color.r / 255.0f, fg = color.g / 255.0f, fb = color.b / 255.0f;
+
+  for (int y = 0; y < in->h + 1; ++y) {
+    for (int x = 0; x < in->w + 1; ++x) {
+      uint32_t src = 0, shd = 0,
+               *outP = (uint32_t*)((uint8_t*)out->pixels + y * out->pitch) + x;
+
+      if (y < in->h && x < in->w)
+        src = ((uint32_t*)((uint8_t*)in->pixels + y * in->pitch))[x];
+      if (y > 0 && x > 0)
+        shd = ((uint32_t*)((uint8_t*)in->pixels + (y - 1) * in->pitch))[x - 1] &
+              in->format->Amask;
+
+      if (x == 0 || y == 0 || src & in->format->Amask) {
+        *outP = (x == in->w || y == in->h) ? shd : src;
+        continue;
+      }
+
+      uint8_t srcA = (src & in->format->Amask) >> in->format->Ashift;
+      float fSrcA = srcA / 255.0f,
+            fShdA = ((shd & in->format->Amask) >> in->format->Ashift) / 255.0f;
+      float fa = fSrcA + fShdA * (1.0f - fSrcA), co3 = fSrcA / fa;
+
+      *outP = SDL_MapRGBA(
+          in->format,
+          static_cast<uint8_t>(std::clamp(fr * co3, 0.0f, 1.0f) * 255),
+          static_cast<uint8_t>(std::clamp(fg * co3, 0.0f, 1.0f) * 255),
+          static_cast<uint8_t>(std::clamp(fb * co3, 0.0f, 1.0f) * 255),
+          static_cast<uint8_t>(std::clamp(fa, 0.0f, 1.0f) * 255));
+    }
+  }
+
+  SDL_DestroySurface(in);
+  in = out;
+}
+
 std::unique_ptr<DefaultFontState> g_default_font_state = nullptr;
 
 }  // namespace
@@ -331,79 +370,8 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
     return nullptr;
   ensure_format(raw_surf);
 
-  /*if (shadow_) {
-    SDL_Surface* shadow_surf = SDL_CreateSurface(
-        raw_surf->w + 1, raw_surf->h + 1, SDL_PIXELFORMAT_ABGR8888);
-
-    float font_red = font_color.r / 255.0f;
-    float font_green = font_color.g / 255.0f;
-    float font_blue = font_color.b / 255.0f;
-
-    for (int y = 0; y < raw_surf->h + 1; ++y)
-      for (int x = 0; x < raw_surf->w + 1; ++x) {
-        uint32_t* out_pixel = reinterpret_cast<uint32_t*>(
-                                  static_cast<uint8_t*>(shadow_surf->pixels) +
-                                  y * shadow_surf->pitch) +
-                              x;
-
-        uint32_t src_pixel = 0, shadow_pixel = 0;
-        uint32_t* sample_pixel = reinterpret_cast<uint32_t*>(
-            static_cast<uint8_t*>(raw_surf->pixels) + y * raw_surf->pitch);
-
-        if (x < raw_surf->w && y < raw_surf->h)
-          src_pixel = sample_pixel[x];
-        if (x > 0 && y > 0)
-          shadow_pixel = sample_pixel[x - 1];
-
-        shadow_pixel &= raw_surf->format->Amask;
-        if (x == 0 || y == 0) {
-          *out_pixel = src_pixel;
-          continue;
-        }
-
-        if (x == raw_surf->w || y == raw_surf->h) {
-          *out_pixel = shadow_pixel;
-          continue;
-        }
-
-        uint8_t src_alpha, shadow_alpha;
-        src_alpha =
-            (src_pixel & raw_surf->format->Amask) >> raw_surf->format->Ashift;
-        shadow_alpha = (shadow_pixel & raw_surf->format->Amask) >>
-                       raw_surf->format->Ashift;
-
-        if (src_alpha == 255 || shadow_alpha == 0) {
-          *out_pixel = src_alpha;
-          continue;
-        }
-
-        if (src_alpha == 0 && shadow_alpha == 0) {
-          *out_pixel = 0;
-          continue;
-        }
-
-        float fSrcA = src_alpha / 255.0f;
-        float fShdA = shadow_alpha / 255.0f;
-
-        float co2 = fShdA * (1.0f - fSrcA);
-        float fa = fSrcA + co2;
-        float co3 = fSrcA / fa;
-
-        uint8_t r, g, b, a;
-        r = static_cast<uint8_t>(std::clamp<float>(font_red * co3, 0, 1) *
-                                 255.0f);
-        g = static_cast<uint8_t>(std::clamp<float>(font_green * co3, 0, 1) *
-                                 255.0f);
-        b = static_cast<uint8_t>(std::clamp<float>(font_blue * co3, 0, 1) *
-                                 255.0f);
-        a = static_cast<uint8_t>(std::clamp<float>(fa, 0, 1) * 255.0f);
-
-        *out_pixel = SDL_MapRGBA(raw_surf->format, r, g, b, a);
-      }
-
-    SDL_DestroySurface(raw_surf);
-    raw_surf = shadow_surf;
-  }*/
+  if (shadow_)
+    RenderShadowSurface(raw_surf, font_color);
 
   if (outline_) {
     SDL_Surface* outline = nullptr;
