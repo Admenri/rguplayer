@@ -173,20 +173,22 @@ class PlaneShader : public GLES2ShaderBase {
   GLint u_tone_;
 };
 
-class GrayShader : public GLES2ShaderBase {
+class ViewportShader : public GLES2ShaderBase {
  public:
-  GrayShader();
+  ViewportShader();
 
   void SetTextureSize(const base::Vec2& tex_size);
   void SetTransOffset(const base::Vec2& offset);
   void SetTexture(GLID<Texture> tex);
-  void SetGray(float gray);
+  void SetColor(const base::Vec4& color);
+  void SetTone(const base::Vec4& tone);
 
  private:
   GLint u_texSize_;
   GLint u_transOffset_;
   GLint u_texture_;
-  GLint u_gray_;
+  GLint u_color_;
+  GLint u_tone_;
 };
 
 class FlatShader : public GLES2ShaderBase {

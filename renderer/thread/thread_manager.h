@@ -26,7 +26,7 @@ class GlobalStateManager final {
     ColorShader color;
     PlaneShader plane;
     BaseAlphaShader base_alpha;
-    GrayShader gray;
+    ViewportShader viewport;
     FlatShader flat;
     AlphaTransShader alpha_trans;
     VagueTransShader vague_shader;

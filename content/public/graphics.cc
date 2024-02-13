@@ -438,88 +438,34 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
   const base::Rect& viewport_rect = renderer::GSM.states.scissor_rect.Current();
   const base::Rect& screen_rect = resolution_;
 
-  if (tone.w != 0) {
-    // Blt front buffer to back
-    renderer::GSM.states.scissor.Push(false);
-    renderer::Blt::BeginDraw(backend);
-    renderer::Blt::TexSource(frontend);
-    renderer::Blt::BltDraw(screen_rect, screen_rect);
-    renderer::Blt::EndDraw();
-    renderer::GSM.states.scissor.Pop();
-
-    renderer::FrameBuffer::Bind(frontend.fbo);
-    auto& shader = renderer::GSM.shaders->gray;
-    shader.Bind();
-    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-    shader.SetGray(tone.w);
-
-    shader.SetTexture(backend.tex);
-    shader.SetTextureSize(screen_rect.Size());
-
-    renderer::GSM.states.blend.Push(false);
-    quad.Draw();
-    renderer::GSM.states.blend.Pop();
-  }
-
-  const bool has_tone_effect = (tone.x != 0 || tone.y != 0 || tone.z != 0);
+  const bool has_tone_effect =
+      (tone.x != 0 || tone.y != 0 || tone.z != 0 || tone.w != 0);
   const bool has_color_effect = color.w != 0;
   const bool has_flash_effect = flash_color.w != 0;
 
   if (!has_tone_effect && !has_color_effect && !has_flash_effect)
     return;
 
-  auto& shader = renderer::GSM.shaders->flat;
+  renderer::GSM.states.scissor.Push(false);
+  renderer::Blt::BeginDraw(backend);
+  renderer::Blt::TexSource(frontend);
+  renderer::Blt::BltDraw(screen_rect, screen_rect);
+  renderer::Blt::EndDraw();
+  renderer::GSM.states.scissor.Pop();
+
+  renderer::FrameBuffer::Bind(frontend.fbo);
+  auto& shader = renderer::GSM.shaders->viewport;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+  shader.SetTone(tone);
+  shader.SetColor((flash_color.w > color.w) ? flash_color : color);
 
-  if (has_tone_effect) {
-    base::Vec4 add, sub;
+  shader.SetTexture(backend.tex);
+  shader.SetTextureSize(screen_rect.Size());
 
-    if (tone.x > 0)
-      add.x = tone.x;
-    if (tone.y > 0)
-      add.y = tone.y;
-    if (tone.z > 0)
-      add.z = tone.z;
-
-    if (tone.x < 0)
-      sub.x = -tone.x;
-    if (tone.y < 0)
-      sub.y = -tone.y;
-    if (tone.z < 0)
-      sub.z = -tone.z;
-
-    renderer::GL.BlendFuncSeparate(GL_ONE, GL_ONE, GL_ZERO, GL_ONE);
-    if (add.x || add.y || add.z) {
-      renderer::GL.BlendEquation(GL_FUNC_ADD);
-      shader.SetColor(add);
-      quad.Draw();
-    }
-
-    if (sub.x || sub.y || sub.z) {
-      renderer::GL.BlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-      shader.SetColor(sub);
-      quad.Draw();
-    }
-  }
-
-  if (has_color_effect || has_flash_effect) {
-    renderer::GL.BlendEquation(GL_FUNC_ADD);
-    renderer::GL.BlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                                   GL_ZERO, GL_ONE);
-  }
-
-  if (has_color_effect) {
-    shader.SetColor(color);
-    quad.Draw();
-  }
-
-  if (has_flash_effect) {
-    shader.SetColor(flash_color);
-    quad.Draw();
-  }
-
-  renderer::GSM.states.blend_func.Refresh();
+  renderer::GSM.states.blend.Push(false);
+  quad.Draw();
+  renderer::GSM.states.blend.Pop();
 }
 
 void Graphics::UpdateAverageFPSInternal() {

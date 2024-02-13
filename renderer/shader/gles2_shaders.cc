@@ -21,7 +21,6 @@ namespace shader {
 #include "renderer/shader/glsl/basecolor.vert.xxd"
 #include "renderer/shader/glsl/flashtile.frag.xxd"
 #include "renderer/shader/glsl/flat.frag.xxd"
-#include "renderer/shader/glsl/gray.frag.xxd"
 #include "renderer/shader/glsl/hue.frag.xxd"
 #include "renderer/shader/glsl/minimum.vert.xxd"
 #include "renderer/shader/glsl/plane.frag.xxd"
@@ -30,6 +29,7 @@ namespace shader {
 #include "renderer/shader/glsl/tilemap2.vert.xxd"
 #include "renderer/shader/glsl/transform.vert.xxd"
 #include "renderer/shader/glsl/vaguetrans.frag.xxd"
+#include "renderer/shader/glsl/viewport.frag.xxd"
 
 static inline std::string FromRawData(const uint8_t* raw_data,
                                       const uint32_t data_size) {
@@ -366,33 +366,38 @@ void PlaneShader::SetTone(const base::Vec4& tone) {
   GL.Uniform4f(u_tone_, tone.x, tone.y, tone.z, tone.w);
 }
 
-GrayShader::GrayShader() {
+ViewportShader::ViewportShader() {
   GLES2ShaderBase::Setup(
       shader::FromRawData(shader::base_vert, shader::base_vert_len),
       "base_vert",
-      shader::FromRawData(shader::gray_frag, shader::gray_frag_len),
+      shader::FromRawData(shader::viewport_frag, shader::viewport_frag_len),
       "gray_frag");
 
   u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
   u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
   u_texture_ = GL.GetUniformLocation(program(), "u_texture");
-  u_gray_ = GL.GetUniformLocation(program(), "u_gray");
+  u_color_ = GL.GetUniformLocation(program(), "u_color");
+  u_tone_ = GL.GetUniformLocation(program(), "u_tone");
 }
 
-void GrayShader::SetTextureSize(const base::Vec2& tex_size) {
+void ViewportShader::SetTextureSize(const base::Vec2& tex_size) {
   GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
 }
 
-void GrayShader::SetTransOffset(const base::Vec2& offset) {
+void ViewportShader::SetTransOffset(const base::Vec2& offset) {
   GL.Uniform2f(u_transOffset_, offset.x, offset.y);
 }
 
-void GrayShader::SetTexture(GLID<Texture> tex) {
+void ViewportShader::SetTexture(GLID<Texture> tex) {
   GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
 }
 
-void GrayShader::SetGray(float gray) {
-  GL.Uniform1f(u_gray_, gray);
+void ViewportShader::SetColor(const base::Vec4& color) {
+  GL.Uniform4f(u_color_, color.x, color.y, color.z, color.w);
+}
+
+void ViewportShader::SetTone(const base::Vec4& tone) {
+  GL.Uniform4f(u_tone_, tone.x, tone.y, tone.z, tone.w);
 }
 
 FlatShader::FlatShader() {
