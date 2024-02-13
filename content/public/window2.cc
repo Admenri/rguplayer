@@ -455,12 +455,14 @@ void Window2::Composite() {
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
 
-  if (windowskin_valid && opacity_) {
-    shader.SetTransOffset(trans_offset);
-    shader.SetTexture(base_layer_.tfb_.tex);
-    shader.SetTextureSize(rect_.Size());
+  if (windowskin_valid) {
+    if (opacity_) {
+      shader.SetTransOffset(trans_offset);
+      shader.SetTexture(base_layer_.tfb_.tex);
+      shader.SetTextureSize(rect_.Size());
 
-    base_quad_->Draw();
+      base_quad_->Draw();
+    }
 
     if (openness_ < 255)
       return;
@@ -490,8 +492,8 @@ void Window2::Composite() {
   /* Control arrows and cursor */
   if (cursor_.cursor_quads_->count() > 0 && windowskin_valid) {
     base::Vec2i cursor_trans = padding_trans_rect.Position();
-    cursor_trans.x += cursor_rect_->GetX() - ox_;
-    cursor_trans.y += cursor_rect_->GetY() - oy_;
+    cursor_trans.x += cursor_rect_->GetX();
+    cursor_trans.y += cursor_rect_->GetY();
 
     if (screen()->content_version() >= RGSSVersion::RGSS3)
       cursor_trans = cursor_trans - base::Vec2i(ox_, oy_);
