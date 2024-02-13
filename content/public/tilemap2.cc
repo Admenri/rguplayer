@@ -703,6 +703,10 @@ void Tilemap2::SetMapData(scoped_refptr<Table> map_data) {
     return;
   map_data_ = map_data;
   buffer_need_update_ = true;
+
+  if (map_data_)
+    map_data_observer_ = map_data_->AddObserver(base::BindRepeating(
+        &Tilemap2::UpdateMapBufferInternal, base::Unretained(this)));
 }
 
 scoped_refptr<Table> Tilemap2::GetFlashData() const {
@@ -730,6 +734,10 @@ void Tilemap2::SetFlags(scoped_refptr<Table> flags) {
     return;
   flags_ = flags;
   buffer_need_update_ = true;
+
+  if (flags_)
+    flags_observer_ = flags_->AddObserver(base::BindRepeating(
+        &Tilemap2::UpdateMapBufferInternal, base::Unretained(this)));
 }
 
 scoped_refptr<Viewport> Tilemap2::GetViewport() const {
@@ -1278,6 +1286,10 @@ void Tilemap2::DrawFlashLayerInternal() {
 
 void Tilemap2::SetAtlasUpdateInternal() {
   atlas_need_update_ = true;
+}
+
+void Tilemap2::UpdateMapBufferInternal() {
+  buffer_need_update_ = true;
 }
 
 void Tilemap2::InitDrawableData() {

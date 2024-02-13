@@ -118,6 +118,7 @@ class ViewportChild : public Drawable {
   virtual void OnViewportChanged() {}
 
  private:
+  scoped_refptr<Graphics> screen_;
   scoped_refptr<Viewport> viewport_;
 };
 

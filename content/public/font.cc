@@ -319,9 +319,8 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
 
   SDL_Color font_color = color_->AsSDLColor();
   SDL_Color outline_color = out_color_->AsSDLColor();
-  if (font_opacity) {
+  if (font_opacity)
     *font_opacity = font_color.a;
-  }
 
   font_color.a = 255;
   outline_color.a = 255;
@@ -332,7 +331,7 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
     return nullptr;
   ensure_format(raw_surf);
 
-  if (shadow_) {
+  /*if (shadow_) {
     SDL_Surface* shadow_surf = SDL_CreateSurface(
         raw_surf->w + 1, raw_surf->h + 1, SDL_PIXELFORMAT_ABGR8888);
 
@@ -404,7 +403,7 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
 
     SDL_DestroySurface(raw_surf);
     raw_surf = shadow_surf;
-  }
+  }*/
 
   if (outline_) {
     SDL_Surface* outline = nullptr;

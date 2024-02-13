@@ -20,10 +20,9 @@ using MriException = enum {
   OpenGLError,
   SDLError,
   FilesystemError,
+  NoFileError,
 
   RGSSReset,
-
-  ErrnoENOENT,
 
   MriExceptionNum,
 };

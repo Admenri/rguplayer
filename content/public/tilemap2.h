@@ -87,6 +87,7 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   void ParseMapDataBufferInternal();
   void DrawFlashLayerInternal();
   void SetAtlasUpdateInternal();
+  void UpdateMapBufferInternal();
 
   std::unique_ptr<GroundLayer> ground_;
   std::unique_ptr<AboveLayer> above_;
@@ -118,6 +119,8 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   int flash_alpha_index_ = 0;
   base::Vec2 animation_offset_;
 
+  base::CallbackListSubscription map_data_observer_;
+  base::CallbackListSubscription flags_observer_;
   base::CallbackListSubscription bitmap_observers_[9];
 
   base::WeakPtrFactory<Tilemap2> weak_ptr_factory_{this};

@@ -164,7 +164,8 @@ ViewportChild::ViewportChild(scoped_refptr<Graphics> screen,
                         : screen.get(),
                z,
                true,
-               sprite_y) {}
+               sprite_y),
+      screen_(screen) {}
 
 void ViewportChild::SetViewport(scoped_refptr<Viewport> viewport) {
   CheckDisposed();
@@ -173,7 +174,11 @@ void ViewportChild::SetViewport(scoped_refptr<Viewport> viewport) {
     return;
 
   viewport_ = viewport;
-  SetParent(viewport_.get());
+  DrawableParent* parent = viewport_.get();
+  if (!parent)
+    parent = screen_.get();
+  SetParent(parent);
+  OnViewportRectChanged(parent->viewport_rect());
 }
 
 }  // namespace content
