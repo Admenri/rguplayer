@@ -447,8 +447,11 @@ void Window2::BeforeComposite() {
 void Window2::Composite() {
   bool windowskin_valid = windowskin_ && !windowskin_->IsDisposed();
   bool contents_valid = contents_ && !contents_->IsDisposed();
-
   base::Vec2i trans_offset = rect_.Position() + parent_rect().GetRealOffset();
+
+  renderer::GSM.states.scissor.Push(true);
+  renderer::GSM.states.scissor_rect.Push(
+      base::Rect(trans_offset, rect_.Size()));
 
   /* Stretch background & frame */
   auto& shader = renderer::GSM.shaders->base_alpha;
@@ -464,30 +467,26 @@ void Window2::Composite() {
       base_quad_->Draw();
     }
 
-    if (openness_ < 255)
-      return;
+    if (openness_ >= 255) {
+      shader.SetTexture(windowskin_->AsGLType().tex);
+      shader.SetTextureSize(windowskin_->GetSize());
 
-    shader.SetTexture(windowskin_->AsGLType().tex);
-    shader.SetTextureSize(windowskin_->GetSize());
-
-    arrows_.arrows_quads_->Draw(0, arrows_.quad_count_);
+      arrows_.arrows_quads_->Draw(0, arrows_.quad_count_);
+    }
   }
 
-  if (openness_ < 255)
+  if (openness_ < 255) {
+    renderer::GSM.states.scissor.Pop();
+    renderer::GSM.states.scissor_rect.Pop();
     return;
+  }
 
   base::Rect padding_trans_rect = padding_rect_;
   padding_trans_rect.x += trans_offset.x;
   padding_trans_rect.y += trans_offset.y;
 
-  renderer::GSM.states.scissor.Push(true);
-  renderer::GSM.states.scissor_rect.PushOnly();
-
-  base::Rect clip_rect(trans_offset, rect_.Size());
   if (screen()->content_version() >= RGSSVersion::RGSS3)
-    clip_rect = padding_trans_rect;
-
-  renderer::GSM.states.scissor_rect.SetIntersect(clip_rect);
+    renderer::GSM.states.scissor_rect.SetIntersect(padding_trans_rect);
 
   /* Control arrows and cursor */
   if (cursor_.cursor_quads_->count() > 0 && windowskin_valid) {
