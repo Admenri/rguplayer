@@ -154,6 +154,8 @@ std::string Input::GetKeyName(int scancode) {
 
 void Input::GetKeysFromFlag(const std::string& flag, std::vector<int>& out) {
   out.clear();
+  if (flag.empty())
+    return;
 
   for (auto& it : key_bindings_) {
     if (it.sym == flag) {
@@ -164,6 +166,9 @@ void Input::GetKeysFromFlag(const std::string& flag, std::vector<int>& out) {
 
 void Input::SetKeysFromFlag(const std::string& flag,
                             const std::vector<int>& keys) {
+  if (flag.empty())
+    return;
+
   auto iter = std::remove_if(
       key_bindings_.begin(), key_bindings_.end(),
       [&](const KeyBinding& binding) { return binding.sym == flag; });

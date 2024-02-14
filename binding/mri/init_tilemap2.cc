@@ -18,15 +18,16 @@ MRI_DEFINE_DATATYPE(BitmapArray, "BitmapArray", RUBY_NEVER_FREE);
 MRI_METHOD(tilemap2_initialize) {
   scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
 
-  VALUE v;
-  MriParseArgsTo(argc, argv, "|o", &v);
+  VALUE v = Qnil;
+  int tilesize = 32;
+  MriParseArgsTo(argc, argv, "|oi", &v, &tilesize);
 
   scoped_refptr<content::Viewport> viewport;
   if (!NIL_P(v))
     viewport = MriCheckStructData<content::Viewport>(v, kViewportDataType);
 
   scoped_refptr<content::Tilemap2> obj;
-  MRI_GUARD(obj = new content::Tilemap2(screen, viewport););
+  MRI_GUARD(obj = new content::Tilemap2(screen, viewport, tilesize););
   obj->AddRef();
   MriSetStructData(self, obj.get());
 
