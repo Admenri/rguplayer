@@ -133,6 +133,8 @@ MRI_METHOD(table_set_at) {
       break;
   }
 
+  obj->Set(value, x, y, z);
+
   return argv[argc - 1];
 }
 
