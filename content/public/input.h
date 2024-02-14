@@ -59,9 +59,21 @@ class Input final : public base::RefCounted<Input> {
   int Dir8();
 
  private:
+  void UpdateDir4Internal();
+  void UpdateDir8Internal();
+
   KeySymMap key_bindings_;
   std::array<KeyState, SDL_NUM_SCANCODES> key_states_;
   std::array<KeyState, SDL_NUM_SCANCODES> recent_key_states_;
+
+  struct {
+    int active = 0;
+    int previous = 0;
+  } dir4_state_;
+
+  struct {
+    int active = 0;
+  } dir8_state_;
 
   base::WeakPtr<ui::Widget> window_;
 };

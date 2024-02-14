@@ -31,6 +31,16 @@ const Input::KeyBinding kDefaultKeyboardBindings[] = {
 const int kDefaultKeyboardBindingsSize =
     sizeof(kDefaultKeyboardBindings) / sizeof(kDefaultKeyboardBindings[0]);
 
+const std::string kArrowDirsSymbol[] = {
+    "DOWN",
+    "LEFT",
+    "RIGHT",
+    "UP",
+};
+
+const int kArrowDirsSymbolSize =
+    sizeof(kArrowDirsSymbol) / sizeof(kArrowDirsSymbol[0]);
+
 }  // namespace
 
 Input::Input(base::WeakPtr<ui::Widget> input_device) : window_(input_device) {
@@ -81,6 +91,9 @@ void Input::Update() {
     recent_key_states_[i].trigger = key_states_[i].trigger;
     recent_key_states_[i].repeat = key_states_[i].repeat;
   }
+
+  UpdateDir4Internal();
+  UpdateDir8Internal();
 }
 
 bool Input::IsPressed(const std::string& keysym) {
@@ -196,35 +209,107 @@ void Input::GetRecentRepeated(std::vector<int>& out) {
 }
 
 int Input::Dir4() {
-  if (key_states_[SDL_SCANCODE_UP].pressed) {
-    return 8;
-  } else if (key_states_[SDL_SCANCODE_RIGHT].pressed) {
-    return 6;
-  } else if (key_states_[SDL_SCANCODE_LEFT].pressed) {
-    return 4;
-  } else if (key_states_[SDL_SCANCODE_DOWN].pressed) {
-    return 2;
-  }
-
-  return 0;
+  return dir4_state_.active;
 }
 
 int Input::Dir8() {
-  if (key_states_[SDL_SCANCODE_UP].pressed &&
-      key_states_[SDL_SCANCODE_RIGHT].pressed) {
-    return 9;
-  } else if (key_states_[SDL_SCANCODE_UP].pressed &&
-             key_states_[SDL_SCANCODE_LEFT].pressed) {
-    return 7;
-  } else if (key_states_[SDL_SCANCODE_DOWN].pressed &&
-             key_states_[SDL_SCANCODE_RIGHT].pressed) {
-    return 3;
-  } else if (key_states_[SDL_SCANCODE_DOWN].pressed &&
-             key_states_[SDL_SCANCODE_LEFT].pressed) {
-    return 1;
+  return dir8_state_.active;
+}
+
+void Input::UpdateDir4Internal() {
+  bool key_states[kArrowDirsSymbolSize] = {0};
+  for (auto& it : key_bindings_)
+    for (int i = 0; i < kArrowDirsSymbolSize; ++i)
+      if (it.sym == kArrowDirsSymbol[i])
+        key_states[i] |= key_states_[it.scancode].pressed;
+
+  int dir_flag = 0;
+  const int dir_flags_fix[] = {
+      1 << 1,
+      1 << 2,
+      1 << 3,
+      1 << 4,
+  };
+
+  const int block_dir_flags[] = {dir_flags_fix[0] | dir_flags_fix[3],
+                                 dir_flags_fix[1] | dir_flags_fix[2]};
+
+  const int other_dirs[][3] = {
+      {1, 2, 3},
+      {0, 3, 2},
+      {0, 3, 1},
+      {1, 2, 0},
+  };
+
+  for (size_t i = 0; i < 4; ++i)
+    dir_flag |= (key_states[i] ? dir_flags_fix[i] : 0);
+
+  if (dir_flag == block_dir_flags[0] || dir_flag == block_dir_flags[1]) {
+    dir4_state_.active = 0;
+    return;
   }
 
-  return Dir4();
+  if (dir4_state_.previous) {
+    if (key_states[dir4_state_.previous / 2 - 1]) {
+      for (size_t i = 0; i < 3; ++i) {
+        int other_key = other_dirs[dir4_state_.previous / 2 - 1][i];
+        if (!key_states[other_key])
+          continue;
+
+        dir4_state_.active = (other_key + 1) * 2;
+        return;
+      }
+    }
+  }
+
+  for (size_t i = 0; i < 4; ++i) {
+    if (!key_states[i])
+      continue;
+
+    dir4_state_.active = (i + 1) * 2;
+    dir4_state_.previous = (i + 1) * 2;
+    return;
+  }
+
+  dir4_state_.active = 0;
+  dir4_state_.previous = 0;
+}
+
+void Input::UpdateDir8Internal() {
+  bool key_states[kArrowDirsSymbolSize] = {0};
+  for (auto& it : key_bindings_)
+    for (int i = 0; i < kArrowDirsSymbolSize; ++i)
+      if (it.sym == kArrowDirsSymbol[i])
+        key_states[i] |= key_states_[it.scancode].pressed;
+
+  static const int combos[4][4] = {
+      {2, 1, 3, 0}, {1, 4, 0, 7}, {3, 0, 6, 9}, {0, 7, 9, 8}};
+
+  const int other_dirs[][3] = {
+      {1, 2, 3},
+      {0, 3, 2},
+      {0, 3, 1},
+      {1, 2, 0},
+  };
+
+  dir8_state_.active = 0;
+
+  for (size_t i = 0; i < 4; ++i) {
+    if (!key_states[i])
+      continue;
+
+    for (int j = 0; j < 3; ++j) {
+      int other_key = other_dirs[i][j];
+      if (!key_states[other_key])
+        continue;
+
+      dir8_state_.active = combos[i][other_key];
+      return;
+    }
+
+    dir8_state_.active = (i + 1) * 2;
+    return;
+  }
 }
 
 }  // namespace content
