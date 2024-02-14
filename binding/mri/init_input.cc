@@ -28,9 +28,9 @@ const std::map<std::string, int> kKeyboardBindings = {
 std::string GetButtonSymbol(int argc, VALUE* argv) {
   std::string sym;
 
-  if (FIXNUM_P(*argv)) {
-    VALUE str_key = rb_hash_lookup2(g_input_symbol_hash, FIX2INT(*argv),
-                                    rb_str_new2(sym.c_str()));
+  if (argc == 1 && FIXNUM_P(*argv)) {
+    VALUE str_key =
+        rb_hash_lookup2(g_input_symbol_hash, *argv, rb_str_new2(sym.c_str()));
     sym = std::string(RSTRING_PTR(str_key), RSTRING_LEN(str_key));
   } else {
     MriParseArgsTo(argc, argv, "n", &sym);

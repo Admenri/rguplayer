@@ -25,6 +25,7 @@ const Input::KeyBinding kDefaultKeyboardBindings[] = {
     {"C", SDL_SCANCODE_SPACE},      {"C", SDL_SCANCODE_RETURN},
     {"C", SDL_SCANCODE_Z},          {"X", SDL_SCANCODE_A},
     {"Y", SDL_SCANCODE_S},          {"Z", SDL_SCANCODE_D},
+    {"L", SDL_SCANCODE_Q},          {"R", SDL_SCANCODE_W},
 };
 
 const int kDefaultKeyboardBindingsSize =
@@ -83,6 +84,9 @@ void Input::Update() {
 }
 
 bool Input::IsPressed(const std::string& keysym) {
+  if (keysym.empty())
+    return false;
+
   for (auto& it : key_bindings_) {
     if (it.sym == keysym)
       if (key_states_[it.scancode].pressed)
@@ -93,6 +97,9 @@ bool Input::IsPressed(const std::string& keysym) {
 }
 
 bool Input::IsTriggered(const std::string& keysym) {
+  if (keysym.empty())
+    return false;
+
   for (auto& it : key_bindings_) {
     if (it.sym == keysym)
       if (key_states_[it.scancode].trigger)
@@ -103,6 +110,9 @@ bool Input::IsTriggered(const std::string& keysym) {
 }
 
 bool Input::IsRepeated(const std::string& keysym) {
+  if (keysym.empty())
+    return false;
+
   for (auto& it : key_bindings_) {
     if (it.sym == keysym)
       if (key_states_[it.scancode].repeat)
