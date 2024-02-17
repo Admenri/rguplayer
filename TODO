@@ -1,4 +1,4 @@
-2024.2.13:
+2024.2.17:
 
 * F1 Menu
 - 未实现F1按键绑定菜单
@@ -6,14 +6,11 @@
 * Bitmap：
 - 模糊未实现
 
-* Window
-- 未实现RGSS1版本
-
-* Tilemap
-- 未实现RGSS1版本
-
 * Graphics
 - playmovie未完成
 
 * Input
 - 已支持键盘输入，手柄输入待完成
+
+* Audio
+- 需要重新设计

@@ -86,6 +86,25 @@ const base::RectF kAutotileSrcRects[] = {
     {0.5, 0, 0.5, 0.5},   {0, 0.5, 0.5, 0.5},   {0.5, 0.5, 0.5, 0.5},
 };
 
+const uint8_t kAutotileAnimation[] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+};
+
+const int kAutotileAnimationSize =
+    sizeof(kAutotileAnimation) / sizeof(kAutotileAnimation[0]);
+
+const uint8_t kFlashAlpha[] = {
+    /* Fade in */
+    0x3C, 0x3C, 0x3C, 0x3C, 0x4B, 0x4B, 0x4B, 0x4B, 0x5A, 0x5A, 0x5A, 0x5A,
+    0x69, 0x69, 0x69, 0x69,
+    /* Fade out */
+    0x78, 0x78, 0x78, 0x78, 0x69, 0x69, 0x69, 0x69, 0x5A, 0x5A, 0x5A, 0x5A,
+    0x4B, 0x4B, 0x4B, 0x4B};
+
+const int kFlashAlphaSize = sizeof(kFlashAlpha) / sizeof(kFlashAlpha[0]);
+
 const int kGroundLayerDefaultZ = 0;
 const int kZLayerDefaultZ = 0;
 
@@ -97,18 +116,36 @@ class TilemapGroundLayer : public ViewportChild {
                      base::WeakPtr<Tilemap> tilemap)
       : ViewportChild(screen, tilemap->viewport_, kGroundLayerDefaultZ),
         tilemap_(tilemap) {}
-  ~TilemapGroundLayer() override {}
 
   TilemapGroundLayer(const TilemapGroundLayer&) = delete;
   TilemapGroundLayer& operator=(const TilemapGroundLayer&) = delete;
 
   void InitDrawableData() override { tilemap_->InitTilemapData(); }
-  void BeforeComposite() override {}
-  void Composite() override {}
+  void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
+
+  void Composite() override {
+    auto& shader = renderer::GSM.shaders->tilemap;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTextureSize(
+        base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
+    shader.SetTexture(tilemap_->atlas_tfb_.tex);
+    shader.SetTransOffset(tilemap_->tilemap_offset_);
+    shader.SetAnimateIndex(tilemap_->frame_index_);
+    shader.SetTileSize(tilemap_->tile_size_);
+
+    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
+    tilemap_->tilemap_quads_->Draw(0, ground_quad_size);
+
+    tilemap_->DrawFlashLayerInternal();
+  }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
   void OnViewportRectChanged(
-      const DrawableParent::ViewportInfo& rect) override {}
+      const DrawableParent::ViewportInfo& rect) override {
+    tilemap_->ResetDrawLayerInternal();
+    tilemap_->map_buffer_need_update_ = true;
+  }
 
   base::WeakPtr<Tilemap> tilemap_;
 };
@@ -118,20 +155,35 @@ class TilemapZLayer : public ViewportChild {
   TilemapZLayer(scoped_refptr<Graphics> screen, base::WeakPtr<Tilemap> tilemap)
       : ViewportChild(screen, tilemap->viewport_, kZLayerDefaultZ),
         tilemap_(tilemap) {}
-  ~TilemapZLayer() override {}
 
   TilemapZLayer(const TilemapZLayer&) = delete;
   TilemapZLayer& operator=(const TilemapZLayer&) = delete;
 
   void InitDrawableData() override {}
   void BeforeComposite() override {}
-  void Composite() override {}
+  void Composite() override {
+    auto& shader = renderer::GSM.shaders->base;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTextureSize(
+        base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
+    shader.SetTexture(tilemap_->atlas_tfb_.tex);
+    shader.SetTransOffset(tilemap_->tilemap_offset_);
+
+    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
+    tilemap_->tilemap_quads_->Draw(
+        ground_quad_size + tilemap_->above_offsets_[index_] / 4,
+        tilemap_->above_vertices_[index_].size() / 4);
+  }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
   void OnViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {}
 
+  void SetIndex(int index) { index_ = index; }
+
   base::WeakPtr<Tilemap> tilemap_;
+  int index_ = 0;
 };
 
 Tilemap::Tilemap(scoped_refptr<Graphics> screen,
@@ -140,7 +192,9 @@ Tilemap::Tilemap(scoped_refptr<Graphics> screen,
     : GraphicElement(screen),
       Disposable(screen),
       viewport_(viewport),
-      tile_size_(tilesize) {}
+      tile_size_(tilesize) {
+  ResetDrawLayerInternal();
+}
 
 Tilemap::~Tilemap() {
   Dispose();
@@ -148,6 +202,13 @@ Tilemap::~Tilemap() {
 
 void Tilemap::Update() {
   CheckIsDisposed();
+
+  frame_index_ = kAutotileAnimation[animation_index_];
+  if (++animation_index_ >= kAutotileAnimationSize)
+    animation_index_ = 0;
+
+  if (++flash_alpha_index_ >= kFlashAlphaSize)
+    flash_alpha_index_ = 0;
 }
 
 scoped_refptr<Bitmap> Tilemap::GetTileset() const {
@@ -162,6 +223,10 @@ void Tilemap::SetTileset(scoped_refptr<Bitmap> bitmap) {
     return;
 
   tileset_ = bitmap;
+  atlas_need_update_ = true;
+  if (tileset_)
+    tileset_->AddBitmapObserver(base::BindRepeating(
+        &Tilemap::RaiseUpdateAtlasInternal, base::Unretained(this)));
 }
 
 scoped_refptr<Bitmap> Tilemap::GetAutotiles(int index) const {
@@ -176,6 +241,10 @@ void Tilemap::SetAutotiles(int index, scoped_refptr<Bitmap> bitmap) {
     return;
 
   autotiles_[index].bitmap = bitmap;
+  atlas_need_update_ = true;
+  if (autotiles_[index].bitmap)
+    autotiles_[index].bitmap->AddBitmapObserver(base::BindRepeating(
+        &Tilemap::RaiseUpdateAtlasInternal, base::Unretained(this)));
 }
 
 scoped_refptr<Table> Tilemap::GetMapData() const {
@@ -190,6 +259,10 @@ void Tilemap::SetMapData(scoped_refptr<Table> map_data) {
     return;
 
   map_data_ = map_data;
+  map_buffer_need_update_ = true;
+  if (map_data_)
+    map_data_->AddObserver(base::BindRepeating(
+        &Tilemap::RaiseUpdateBufferInternal, base::Unretained(this)));
 }
 
 scoped_refptr<Table> Tilemap::GetFlashData() const {
@@ -204,6 +277,7 @@ void Tilemap::SetFlashData(scoped_refptr<Table> flash_data) {
     return;
 
   flash_data_ = flash_data;
+  flash_layer_->SetFlashData(flash_data_);
 }
 
 scoped_refptr<Table> Tilemap::GetPriorities() const {
@@ -218,20 +292,15 @@ void Tilemap::SetPriorities(scoped_refptr<Table> flags) {
     return;
 
   priorities_ = flags;
+  map_buffer_need_update_ = true;
+  if (priorities_)
+    priorities_->AddObserver(base::BindRepeating(
+        &Tilemap::RaiseUpdateBufferInternal, base::Unretained(this)));
 }
 
 scoped_refptr<Viewport> Tilemap::GetViewport() const {
   CheckIsDisposed();
   return viewport_;
-}
-
-void Tilemap::SetViewport(scoped_refptr<Viewport> viewport) {
-  CheckIsDisposed();
-
-  if (viewport_ == viewport)
-    return;
-
-  viewport_ = viewport;
 }
 
 bool Tilemap::GetVisible() const {
@@ -246,6 +315,9 @@ void Tilemap::SetVisible(bool visible) {
     return;
 
   visible_ = visible;
+  ground_layer_->SetVisible(visible_);
+  for (auto& it : above_layers_)
+    it->SetVisible(visible_);
 }
 
 int Tilemap::GetOX() const {
@@ -260,6 +332,7 @@ void Tilemap::SetOX(int ox) {
     return;
 
   origin_.x = ox;
+  map_buffer_need_update_ = true;
 }
 
 int Tilemap::GetOY() const {
@@ -274,6 +347,7 @@ void Tilemap::SetOY(int oy) {
     return;
 
   origin_.y = oy;
+  map_buffer_need_update_ = true;
 }
 
 void Tilemap::OnObjectDisposed() {
@@ -298,19 +372,19 @@ void Tilemap::InitTilemapData() {
   renderer::TextureFrameBuffer::LinkFrameBuffer(atlas_tfb_);
 }
 
-void Tilemap::UpdateTilemapParameters() {}
-
 void Tilemap::BeforeTilemapComposite() {
   flash_layer_->BeforeComposite();
 
-  if (map_buffer_need_update_) {
-    map_buffer_need_update_ = false;
-    UpdateMapBufferInternal();
-  }
+  UpdateViewportInternal();
 
   if (atlas_need_update_) {
     atlas_need_update_ = false;
     MakeAtlasInternal();
+  }
+
+  if (map_buffer_need_update_) {
+    map_buffer_need_update_ = false;
+    UpdateMapBufferInternal();
   }
 }
 
@@ -393,7 +467,7 @@ void Tilemap::UpdateViewportInternal() {
   const DrawableParent::ViewportInfo& viewport_rect =
       ground_layer_->parent_rect();
 
-  const base::Vec2i tilemap_origin = origin_ + viewport_rect.GetRealOffset();
+  const base::Vec2i tilemap_origin = origin_;
   const base::Vec2i viewport_size = viewport_rect.rect.Size();
 
   base::Rect new_tilemap_viewport;
@@ -412,7 +486,7 @@ void Tilemap::UpdateViewportInternal() {
     flash_layer_->SetViewport(tilemap_viewport_);
   }
 
-  tilemap_offset_ = viewport_rect.rect.Position() -
+  tilemap_offset_ = viewport_rect.GetRealOffset() -
                     vwrap(tilemap_origin, tile_size_) -
                     base::Vec2i(0, tile_size_);
 }
@@ -467,10 +541,14 @@ void Tilemap::UpdateMapBufferInternal() {
         const base::RectF* autotile_src = &kAutotileSrcRects[patternID * 4];
         for (int i = 0; i < 4; ++i) {
           renderer::CommonVertex verts[4];
+          base::RectF tex_src = autotile_src[i];
+          tex_src.y += autotileID * 4 * tile_size_;
+          if (info.type == AutotileType::Static)
+            tex_src.x += 3 * tile_size_;
           base::RectF chunk_pos(x * tile_size_, y * tile_size_,
                                 tile_size_ / 2.0f, tile_size_ / 2.0f);
           autotile_subpos(chunk_pos, i);
-          renderer::QuadSetTexPosRect(verts, autotile_src[i], chunk_pos);
+          renderer::QuadSetTexPosRect(verts, tex_src, chunk_pos);
           for (int j = 0; j < 4; ++j)
             target->push_back(verts[i]);
         }
@@ -551,6 +629,8 @@ void Tilemap::UpdateMapBufferInternal() {
   if (!vertex_count)
     return;
 
+  above_offsets_.clear();
+  int vert_add = 0;
   renderer::CommonVertex* vert = &tilemap_quads_->vertices()[0];
   memcpy(vert, ground_vertices_.data(),
          ground_vertices_.size() * sizeof(renderer::CommonVertex));
@@ -558,9 +638,15 @@ void Tilemap::UpdateMapBufferInternal() {
   for (auto& it : above_vertices_) {
     memcpy(vert, it.data(), it.size() * sizeof(renderer::CommonVertex));
     vert += it.size();
+
+    above_offsets_.push_back(vert_add);
+    vert_add += it.size();
   }
 
   tilemap_quads_->Update();
+
+  // Update layers for new buffer
+  UpdateZLayersOrderInternal();
 }
 
 void Tilemap::ResetDrawLayerInternal() {
@@ -574,6 +660,38 @@ void Tilemap::ResetDrawLayerInternal() {
         new TilemapZLayer(screen(), weak_ptr_factory_.GetWeakPtr()));
     above_layers_.push_back(std::move(new_layer));
   }
+}
+
+void Tilemap::UpdateZLayersOrderInternal() {
+  auto calc_z_order = [&](int index) {
+    return 32 * (index + tilemap_viewport_.y + 1) - origin_.y;
+  };
+
+  for (int i = 0; i < above_vertices_.size(); ++i) {
+    auto& it = above_vertices_[i];
+    if (it.empty()) {
+      above_layers_[i]->SetIndex(-1);
+      above_layers_[i]->SetVisible(false);
+      continue;
+    }
+
+    above_layers_[i]->SetZ(calc_z_order(i));
+    above_layers_[i]->SetVisible(true);
+    above_layers_[i]->SetIndex(i);
+  }
+}
+
+void Tilemap::RaiseUpdateAtlasInternal() {
+  atlas_need_update_ = true;
+}
+
+void Tilemap::RaiseUpdateBufferInternal() {
+  map_buffer_need_update_ = true;
+}
+
+void Tilemap::DrawFlashLayerInternal() {
+  float alpha = kFlashAlpha[flash_alpha_index_] / 255.0f;
+  flash_layer_->Composite(tilemap_offset_, alpha);
 }
 
 }  // namespace content

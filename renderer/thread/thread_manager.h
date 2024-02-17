@@ -33,6 +33,7 @@ class GlobalStateManager final {
     FlashTileShader flash_tile;
     Tilemap2Shader tilemap2;
     HueShader hue;
+    TilemapShader tilemap;
   };
 
   GlobalStateManager() = default;

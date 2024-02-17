@@ -33,6 +33,7 @@ class Tilemap : public base::RefCounted<Tilemap>,
   Tilemap& operator=(const Tilemap&) = delete;
 
   void Update();
+  scoped_refptr<Viewport> GetViewport() const;
 
   scoped_refptr<Bitmap> GetTileset() const;
   void SetTileset(scoped_refptr<Bitmap> bitmap);
@@ -48,9 +49,6 @@ class Tilemap : public base::RefCounted<Tilemap>,
 
   scoped_refptr<Table> GetPriorities() const;
   void SetPriorities(scoped_refptr<Table> flags);
-
-  scoped_refptr<Viewport> GetViewport() const;
-  void SetViewport(scoped_refptr<Viewport> viewport);
 
   bool GetVisible() const;
   void SetVisible(bool visible);
@@ -68,13 +66,16 @@ class Tilemap : public base::RefCounted<Tilemap>,
   std::string_view DisposedObjectName() const override { return "Tilemap"; }
 
   void InitTilemapData();
-  void UpdateTilemapParameters();
   void BeforeTilemapComposite();
 
   void MakeAtlasInternal();
   void UpdateViewportInternal();
   void UpdateMapBufferInternal();
   void ResetDrawLayerInternal();
+  void UpdateZLayersOrderInternal();
+  void RaiseUpdateAtlasInternal();
+  void RaiseUpdateBufferInternal();
+  void DrawFlashLayerInternal();
 
   enum class AutotileType {
     Animated = 0,
@@ -103,6 +104,7 @@ class Tilemap : public base::RefCounted<Tilemap>,
       tilemap_quads_;
   std::vector<renderer::CommonVertex> ground_vertices_;
   std::vector<std::vector<renderer::CommonVertex>> above_vertices_;
+  std::vector<size_t> above_offsets_;
   std::unique_ptr<TilemapFlashLayer> flash_layer_;
 
   std::unique_ptr<TilemapGroundLayer> ground_layer_;
@@ -114,6 +116,10 @@ class Tilemap : public base::RefCounted<Tilemap>,
 
   bool atlas_need_update_ = false;
   bool map_buffer_need_update_ = false;
+
+  int frame_index_ = 0;
+  int animation_index_ = 0;
+  int flash_alpha_index_ = 0;
 
   base::CallbackListSubscription map_data_observer_;
   base::CallbackListSubscription priorities_observer_;

@@ -184,7 +184,8 @@ class Sprite : public base::RefCounted<Sprite>,
     if (i.y == v)
       return;
     transform_.SetPosition(base::Vec2(i.x, (float)v));
-    Drawable::SetSpriteY(v);
+    if (screen()->content_version() >= RGSSVersion::RGSS2)
+      Drawable::SetSpriteY(v);
   }
 
   int GetOX() const {

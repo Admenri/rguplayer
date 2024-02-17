@@ -42,7 +42,7 @@ const uint8_t kAniIndicesRegular[3 * 4] = {0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1};
 const uint8_t kAniIndicesWaterfall[3 * 4] = {0, 1, 2, 0, 1, 2,
                                              0, 1, 2, 0, 1, 2};
 
-const uint8_t kflashAlpha[] = {
+const uint8_t kFlashAlpha[] = {
     /* Fade in */
     0x78, 0x78, 0x78, 0x78, 0x96, 0x96, 0x96, 0x96, 0xB4, 0xB4, 0xB4, 0xB4,
     0xD2, 0xD2, 0xD2, 0xD2,
@@ -50,7 +50,7 @@ const uint8_t kflashAlpha[] = {
     0xF0, 0xF0, 0xF0, 0xF0, 0xD2, 0xD2, 0xD2, 0xD2, 0xB4, 0xB4, 0xB4, 0xB4,
     0x96, 0x96, 0x96, 0x96};
 
-const int kflashAlphaSize = sizeof(kflashAlpha) / sizeof(kflashAlpha[0]);
+const int kFlashAlphaSize = sizeof(kFlashAlpha) / sizeof(kFlashAlpha[0]);
 
 const base::RectF kAutotileSrcRegular[] = {
     {1.0f, 2.0f, 0.5f, 0.5f}, {0.5f, 2.0f, 0.5f, 0.5f},
@@ -605,8 +605,6 @@ class TilemapAboveLayer2 : public ViewportChild {
     int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
     tilemap_->tilemap_quads_->Draw(ground_quad_size,
                                    tilemap_->above_vertices_.size() / 4);
-
-    tilemap_->DrawFlashLayerInternal();
   }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
@@ -646,7 +644,7 @@ void Tilemap2::Update() {
   animation_offset_ =
       base::Vec2(aniIdxA * 2 * tile_size_, aniIdxC * tile_size_);
 
-  if (++flash_alpha_index_ >= kflashAlphaSize)
+  if (++flash_alpha_index_ >= kFlashAlphaSize)
     flash_alpha_index_ = 0;
 }
 
@@ -699,6 +697,7 @@ void Tilemap2::SetFlashData(scoped_refptr<Table> flash_data) {
   if (flash_data_ == flash_data)
     return;
   flash_data_ = flash_data;
+  flash_layer_->SetFlashData(flash_data_);
 }
 
 scoped_refptr<Table> Tilemap2::GetFlags() const {
@@ -1260,7 +1259,7 @@ void Tilemap2::ParseMapDataBufferInternal() {
 }
 
 void Tilemap2::DrawFlashLayerInternal() {
-  float alpha = (kflashAlpha[flash_alpha_index_] / 255.0f) / 2;
+  float alpha = (kFlashAlpha[flash_alpha_index_] / 255.0f) / 2;
   flash_layer_->Composite(tilemap_offset_, alpha);
 }
 

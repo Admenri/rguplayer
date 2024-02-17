@@ -21,6 +21,7 @@ void TilemapFlashLayer::Composite(const base::Vec2i offset, float alpha) {
   auto& shader = renderer::GSM.shaders->flash_tile;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+  shader.SetTransOffset(offset);
   shader.SetAlpha(alpha);
 
   quads_->Draw();
