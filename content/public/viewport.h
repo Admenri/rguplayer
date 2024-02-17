@@ -74,15 +74,16 @@ class Viewport : public base::RefCounted<Viewport>,
   std::string_view DisposedObjectName() const override { return "Viewport"; }
 
   void InitDrawableData() override;
-  void UpdateRendererParameters() override;
-  void BeforeComposite() override { DrawableParent::NotifyPrepareComposite(); }
+  void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override { CheckIsDisposed(); }
   void OnViewportRectChanged(const ViewportInfo& rect) override;
 
   void InitViewportInternal();
-  void OnRectChangedInternal();
+
   void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
+
+  void OnRectChangedInternal();
 
   scoped_refptr<Rect> rect_;
   scoped_refptr<Color> color_;

@@ -86,7 +86,7 @@ void Sprite::InitDrawableData() {
       std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
 }
 
-void Sprite::UpdateRendererParameters() {
+void Sprite::BeforeComposite() {
   if (src_rect_need_update_) {
     src_rect_need_update_ = false;
 
@@ -107,9 +107,7 @@ void Sprite::UpdateRendererParameters() {
       }
     }
   }
-}
 
-void Sprite::BeforeComposite() {
   if (wave_.need_update_) {
     UpdateWaveQuadsInternal();
     wave_.need_update_ = false;

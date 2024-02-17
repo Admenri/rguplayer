@@ -103,17 +103,10 @@ class TilemapGroundLayer : public ViewportChild {
   TilemapGroundLayer& operator=(const TilemapGroundLayer&) = delete;
 
   void InitDrawableData() override { tilemap_->InitTilemapData(); }
-
-  void UpdateRendererParameters() override {
-    tilemap_->UpdateTilemapParameters();
-  }
-
   void BeforeComposite() override {}
-
   void Composite() override {}
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
-
   void OnViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {}
 
@@ -131,15 +124,10 @@ class TilemapZLayer : public ViewportChild {
   TilemapZLayer& operator=(const TilemapZLayer&) = delete;
 
   void InitDrawableData() override {}
-
-  void UpdateRendererParameters() override {}
-
   void BeforeComposite() override {}
-
   void Composite() override {}
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
-
   void OnViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {}
 

@@ -184,25 +184,23 @@ class Window2 : public base::RefCounted<Window2>,
   std::string_view DisposedObjectName() const override { return "Window2"; }
 
   void InitDrawableData() override;
-  void UpdateRendererParameters() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override;
   void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;
 
   void InitWindow();
+  void UpdateInternal();
+
   void CalcBaseQuadArrayInternal();
   void UpdateBaseTextureInternal();
   void UpdateBaseQuadInternal();
   void CalcArrowsQuadArrayInternal();
-  void UpdateInternal();
-
-  void ToneChangedInternal();
   void CursorRectChangedInternal();
   void WindowskinChangedInternal();
-
   void UpdatePauseStepInternal();
   void UpdateCursorQuadsInternal();
+  void ToneChangedInternal();
 
   scoped_refptr<Bitmap> windowskin_;
   base::CallbackListSubscription windowskin_observer_;
@@ -228,49 +226,39 @@ class Window2 : public base::RefCounted<Window2>,
   scoped_refptr<Tone> tone_;
   base::CallbackListSubscription tone_observer_;
 
-  struct {
-    std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
-        quad_array_;
-
-    size_t bg_tile_count_ = 0;
-    size_t frame_tile_count_ = 0;
-    renderer::TextureFrameBuffer tfb_;
-
-    bool base_tex_updated_ = true;
-  } base_layer_;
-
-  struct {
-    std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
-        arrows_quads_;
-    size_t quad_count_ = 0;
-    bool quad_need_update_ = true;
-
-    renderer::CommonVertex* pause_vertex_ = nullptr;
-    bool need_update_ = true;
-
-    int pause_quad_index_ = 0;
-    int pause_alpha_index_ = 0;
-  } arrows_;
-
-  struct {
-    std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
-        cursor_quads_;
-    bool need_update_ = true;
-    bool need_cursor_update_ = true;
-
-    int cursor_alpha_index_ = 0;
-  } cursor_;
-
   base::Rect padding_rect_;
 
-  std::unique_ptr<renderer::QuadDrawable> content_quad_;
   std::unique_ptr<renderer::QuadDrawable> base_quad_;
-  bool base_quad_updated_ = true;
+  std::unique_ptr<renderer::QuadDrawable> content_quad_;
+  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
+      arrows_quads_;
+  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
+      cursor_quads_;
+
+  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
+      base_tex_quad_array_;
+
+  renderer::TextureFrameBuffer base_tfb_;
 
   bool update_required_ = false;
+
+  bool base_tex_need_update_ = true;
+  bool base_quad_need_update_ = true;
   bool contents_quad_need_update_ = false;
   bool cursor_step_need_update_ = false;
-  bool content_opacity_need_update_ = false;
+  bool arrows_quad_need_update_ = true;
+  bool cursor_quad_need_update_ = true;
+  bool cursor_data_need_update_ = true;
+
+  size_t base_bg_tile_count_ = 0;
+  size_t base_frame_tile_count_ = 0;
+  size_t arrows_quad_count_ = 0;
+
+  int pause_quad_index_ = 0;
+  int pause_alpha_index_ = 0;
+  int cursor_alpha_index_ = 0;
+
+  renderer::CommonVertex* pause_vertex_ = nullptr;
 };
 
 }  // namespace content

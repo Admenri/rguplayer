@@ -102,7 +102,6 @@ class Plane : public base::RefCounted<Plane>,
   std::string_view DisposedObjectName() const override { return "Plane"; }
 
   void InitDrawableData() override;
-  void UpdateRendererParameters() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const { CheckIsDisposed(); }

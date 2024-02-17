@@ -85,7 +85,9 @@ void Viewport::InitDrawableData() {
   viewport_quad_->SetTexCoordRect(rect);
 }
 
-void Viewport::UpdateRendererParameters() {
+void Viewport::BeforeComposite() {
+  DrawableParent::NotifyPrepareComposite();
+
   if (viewport_rect_need_update_) {
     viewport_rect_need_update_ = false;
     auto rect = base::Rect(viewport_rect().rect.Size());

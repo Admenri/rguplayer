@@ -92,7 +92,6 @@ class Drawable : public base::LinkNode<Drawable> {
 
  protected:
   virtual void InitDrawableData() = 0;
-  virtual void UpdateRendererParameters() = 0;
   virtual void BeforeComposite() {}
   virtual void Composite() = 0;
   virtual void CheckDisposed() const = 0;

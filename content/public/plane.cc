@@ -98,8 +98,6 @@ void Plane::InitDrawableData() {
   renderer::TextureFrameBuffer::LinkFrameBuffer(layer_tfb_);
 }
 
-void Plane::UpdateRendererParameters() {}
-
 void Plane::BeforeComposite() {
   if (quad_array_dirty_) {
     UpdateQuadArray();

@@ -88,9 +88,6 @@ void DrawableParent::NotifyPrepareComposite() {
         child->init_data_complete_ = true;
       }
 
-      // Update renderer params on RenderRunner
-      child->UpdateRendererParameters();
-
       // Prepare for render composite
       child->BeforeComposite();
     }

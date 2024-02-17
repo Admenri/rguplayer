@@ -261,7 +261,6 @@ class Sprite : public base::RefCounted<Sprite>,
   std::string_view DisposedObjectName() const override { return "Sprite"; }
 
   void InitDrawableData() override;
-  void UpdateRendererParameters() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override { CheckIsDisposed(); }

@@ -547,17 +547,12 @@ class TilemapGroundLayer2 : public ViewportChild {
                       base::WeakPtr<Tilemap2> tilemap)
       : ViewportChild(screen, tilemap->viewport_, kGroundLayerDefaultZ),
         tilemap_(tilemap) {}
-  ~TilemapGroundLayer2() override {}
 
   TilemapGroundLayer2(const TilemapGroundLayer2&) = delete;
   TilemapGroundLayer2& operator=(const TilemapGroundLayer2&) = delete;
 
   void InitDrawableData() override { tilemap_->InitDrawableData(); }
-
-  void UpdateRendererParameters() override {}
-
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
-
   void Composite() override {
     auto& shader = renderer::GSM.shaders->tilemap2;
     shader.Bind();
@@ -577,7 +572,6 @@ class TilemapGroundLayer2 : public ViewportChild {
   }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
-
   void OnViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {
     tilemap_->buffer_need_update_ = true;
@@ -592,14 +586,11 @@ class TilemapAboveLayer2 : public ViewportChild {
                      base::WeakPtr<Tilemap2> tilemap)
       : ViewportChild(screen, tilemap->viewport_, kAboveLayerDefaultZ),
         tilemap_(tilemap) {}
-  ~TilemapAboveLayer2() override {}
 
   TilemapAboveLayer2(const TilemapAboveLayer2&) = delete;
   TilemapAboveLayer2& operator=(const TilemapAboveLayer2&) = delete;
 
   void InitDrawableData() override {}
-  void UpdateRendererParameters() override {}
-
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
@@ -619,7 +610,6 @@ class TilemapAboveLayer2 : public ViewportChild {
   }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
-
   void OnViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {
     tilemap_->buffer_need_update_ = true;
@@ -670,6 +660,7 @@ void Tilemap2::SetBitmap(int index, scoped_refptr<Bitmap> bitmap) {
 
   if (bitmaps_[index] == bitmap)
     return;
+
   bitmaps_[index] = bitmap;
   atlas_need_update_ = true;
 
@@ -688,6 +679,7 @@ void Tilemap2::SetMapData(scoped_refptr<Table> map_data) {
 
   if (map_data_ == map_data)
     return;
+
   map_data_ = map_data;
   buffer_need_update_ = true;
 
@@ -719,6 +711,7 @@ void Tilemap2::SetFlags(scoped_refptr<Table> flags) {
 
   if (flags_ == flags)
     return;
+
   flags_ = flags;
   buffer_need_update_ = true;
 
