@@ -6,14 +6,19 @@
 #define CONTENT_PUBLIC_TILEMAP_H_
 
 #include "base/memory/ref_counted.h"
+#include "content/common/tilemap_common.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
 #include "content/public/table.h"
 #include "content/public/viewport.h"
+#include "renderer/quad/quad_array.h"
 
 #include <array>
 
 namespace content {
+
+class TilemapGroundLayer;
+class TilemapZLayer;
 
 class Tilemap : public base::RefCounted<Tilemap>,
                 public GraphicElement,
@@ -57,11 +62,33 @@ class Tilemap : public base::RefCounted<Tilemap>,
   void SetOY(int oy);
 
  private:
+  friend class TilemapGroundLayer;
+  friend class TilemapZLayer;
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Tilemap"; }
 
+  void InitTilemapData();
+  void UpdateTilemapParameters();
+  void BeforeTilemapComposite();
+
+  void MakeAtlasInternal();
+  void UpdateViewportInternal();
+  void UpdateMapBufferInternal();
+  void ResetDrawLayerInternal();
+
+  enum class AutotileType {
+    Animated = 0,
+    Static,
+    SingleAnimated,
+  };
+
+  struct AutotileInfo {
+    scoped_refptr<Bitmap> bitmap;
+    AutotileType type;
+  };
+
   scoped_refptr<Bitmap> tileset_;
-  std::array<scoped_refptr<Bitmap>, 7> autotiles_;
+  std::array<AutotileInfo, 7> autotiles_;
 
   scoped_refptr<Table> map_data_;
   scoped_refptr<Table> flash_data_;
@@ -71,6 +98,28 @@ class Tilemap : public base::RefCounted<Tilemap>,
   bool visible_ = true;
   base::Vec2i origin_;
   int tile_size_;
+
+  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
+      tilemap_quads_;
+  std::vector<renderer::CommonVertex> ground_vertices_;
+  std::vector<std::vector<renderer::CommonVertex>> above_vertices_;
+  std::unique_ptr<TilemapFlashLayer> flash_layer_;
+
+  std::unique_ptr<TilemapGroundLayer> ground_layer_;
+  std::vector<std::unique_ptr<TilemapZLayer>> above_layers_;
+
+  renderer::TextureFrameBuffer atlas_tfb_;
+  base::Vec2i tilemap_offset_;
+  base::Rect tilemap_viewport_;
+
+  bool atlas_need_update_ = false;
+  bool map_buffer_need_update_ = false;
+
+  base::CallbackListSubscription map_data_observer_;
+  base::CallbackListSubscription priorities_observer_;
+  base::CallbackListSubscription bitmap_observers_[8];
+
+  base::WeakPtrFactory<Tilemap> weak_ptr_factory_{this};
 };
 
 }  // namespace content

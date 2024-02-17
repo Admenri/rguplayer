@@ -69,6 +69,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   uint32_t average_fps() const { return average_fps_; }
   base::WeakPtr<ui::Widget> window() { return renderer_->window(); }
   filesystem::Filesystem* filesystem();
+  int max_texture_size() const { return renderer_->max_texture_size(); }
 
  private:
   friend class Viewport;
@@ -92,15 +93,12 @@ class Graphics final : public base::RefCounted<Graphics>,
   void AddDisposable(Disposable* disp);
   void RemoveDisposable(Disposable* disp);
 
-  void RenderEffectRequire(const base::Vec4& color,
-                           const base::Vec4& tone,
-                           const base::Vec4& flash_color);
+  void RenderEffectRequire(const base::Vec4& color, const base::Vec4& tone);
   void ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
                            renderer::TextureFrameBuffer& backend,
                            renderer::QuadDrawable& quad,
                            const base::Vec4& color,
-                           const base::Vec4& tone,
-                           const base::Vec4& flash_color);
+                           const base::Vec4& tone);
 
   void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();

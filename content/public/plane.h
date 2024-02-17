@@ -112,7 +112,7 @@ class Plane : public base::RefCounted<Plane>,
 
   scoped_refptr<Bitmap> bitmap_;
   int ox_ = 0, oy_ = 0;
-  double zoom_x_ = 1.0f, zoom_y_ = 1.0f;
+  double zoom_x_ = 1.0, zoom_y_ = 1.0;
   int opacity_ = 255;
   renderer::GLBlendType blend_type_ = renderer::GLBlendType::Normal;
 
@@ -122,6 +122,7 @@ class Plane : public base::RefCounted<Plane>,
   std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
       quad_array_;
   renderer::TextureFrameBuffer layer_tfb_;
+
   bool quad_array_dirty_ = false;
 };
 

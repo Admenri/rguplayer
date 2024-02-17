@@ -9,7 +9,6 @@
 
 #include "SDL_pixels.h"
 #include "SDL_surface.h"
-#include "tilemap2.h"
 
 namespace {
 
@@ -542,15 +541,16 @@ SDL_Surface* CreateShadowSet(int tilesize) {
 
 namespace content {
 
-class GroundLayer : public ViewportChild {
+class TilemapGroundLayer2 : public ViewportChild {
  public:
-  GroundLayer(scoped_refptr<Graphics> screen, base::WeakPtr<Tilemap2> tilemap)
+  TilemapGroundLayer2(scoped_refptr<Graphics> screen,
+                      base::WeakPtr<Tilemap2> tilemap)
       : ViewportChild(screen, tilemap->viewport_, kGroundLayerDefaultZ),
         tilemap_(tilemap) {}
-  ~GroundLayer() override {}
+  ~TilemapGroundLayer2() override {}
 
-  GroundLayer(const GroundLayer&) = delete;
-  GroundLayer& operator=(const GroundLayer&) = delete;
+  TilemapGroundLayer2(const TilemapGroundLayer2&) = delete;
+  TilemapGroundLayer2& operator=(const TilemapGroundLayer2&) = delete;
 
   void InitDrawableData() override { tilemap_->InitDrawableData(); }
 
@@ -559,31 +559,16 @@ class GroundLayer : public ViewportChild {
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
-    scoped_refptr<Bitmap> tilemap_a1 =
-        tilemap_->bitmaps_[Tilemap2::TilemapBitmapID::TileA1];
+    auto& shader = renderer::GSM.shaders->tilemap2;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTextureSize(
+        base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
+    shader.SetTexture(tilemap_->atlas_tfb_.tex);
+    shader.SetTransOffset(tilemap_->tilemap_offset_);
 
-    if (!tilemap_a1 || tilemap_a1->IsDisposed()) {
-      auto& shader = renderer::GSM.shaders->base;
-      shader.Bind();
-      shader.SetProjectionMatrix(
-          renderer::GSM.states.viewport.Current().Size());
-      shader.SetTextureSize(
-          base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
-      shader.SetTexture(tilemap_->atlas_tfb_.tex);
-      shader.SetTransOffset(tilemap_->tilemap_offset_);
-    } else {
-      auto& shader = renderer::GSM.shaders->tilemap2;
-      shader.Bind();
-      shader.SetProjectionMatrix(
-          renderer::GSM.states.viewport.Current().Size());
-      shader.SetTextureSize(
-          base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
-      shader.SetTexture(tilemap_->atlas_tfb_.tex);
-      shader.SetTransOffset(tilemap_->tilemap_offset_);
-
-      shader.SetAnimationOffset(tilemap_->animation_offset_);
-      shader.SetTileSize(tilemap_->tile_size_);
-    }
+    shader.SetAnimationOffset(tilemap_->animation_offset_);
+    shader.SetTileSize(tilemap_->tile_size_);
 
     int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
     tilemap_->tilemap_quads_->Draw(0, ground_quad_size);
@@ -601,15 +586,16 @@ class GroundLayer : public ViewportChild {
   base::WeakPtr<Tilemap2> tilemap_;
 };
 
-class AboveLayer : public ViewportChild {
+class TilemapAboveLayer2 : public ViewportChild {
  public:
-  AboveLayer(scoped_refptr<Graphics> screen, base::WeakPtr<Tilemap2> tilemap)
+  TilemapAboveLayer2(scoped_refptr<Graphics> screen,
+                     base::WeakPtr<Tilemap2> tilemap)
       : ViewportChild(screen, tilemap->viewport_, kAboveLayerDefaultZ),
         tilemap_(tilemap) {}
-  ~AboveLayer() override {}
+  ~TilemapAboveLayer2() override {}
 
-  AboveLayer(const AboveLayer&) = delete;
-  AboveLayer& operator=(const AboveLayer&) = delete;
+  TilemapAboveLayer2(const TilemapAboveLayer2&) = delete;
+  TilemapAboveLayer2& operator=(const TilemapAboveLayer2&) = delete;
 
   void InitDrawableData() override {}
   void UpdateRendererParameters() override {}
@@ -649,9 +635,10 @@ Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
       Disposable(screen),
       viewport_(viewport),
       tile_size_(tilesize) {
-  ground_ =
-      std::make_unique<GroundLayer>(screen, weak_ptr_factory_.GetWeakPtr());
-  above_ = std::make_unique<AboveLayer>(screen, weak_ptr_factory_.GetWeakPtr());
+  ground_ = std::make_unique<TilemapGroundLayer2>(
+      screen, weak_ptr_factory_.GetWeakPtr());
+  above_ = std::make_unique<TilemapAboveLayer2>(screen,
+                                                weak_ptr_factory_.GetWeakPtr());
 }
 
 Tilemap2::~Tilemap2() {
@@ -859,7 +846,7 @@ void Tilemap2::CreateTileAtlasInternal() {
 void Tilemap2::UpdateTilemapViewportInternal() {
   auto& viewport_rect = ground_->parent_rect();
 
-  const base::Vec2i tilemap_origin = origin_ + viewport_rect.GetRealOffset();
+  const base::Vec2i tilemap_origin = origin_;
   const base::Vec2i viewport_size = viewport_rect.rect.Size();
 
   base::Rect new_tilemap_viewport;
@@ -878,7 +865,7 @@ void Tilemap2::UpdateTilemapViewportInternal() {
     flash_layer_->SetViewport(tilemap_viewport_);
   }
 
-  tilemap_offset_ = viewport_rect.rect.Position() -
+  tilemap_offset_ = viewport_rect.GetRealOffset() -
                     vwrap(tilemap_origin, tile_size_) -
                     base::Vec2i(0, tile_size_);
 }

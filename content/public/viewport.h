@@ -75,9 +75,7 @@ class Viewport : public base::RefCounted<Viewport>,
 
   void InitDrawableData() override;
   void UpdateRendererParameters() override;
-
   void BeforeComposite() override { DrawableParent::NotifyPrepareComposite(); }
-
   void Composite() override;
   void CheckDisposed() const override { CheckIsDisposed(); }
   void OnViewportRectChanged(const ViewportInfo& rect) override;

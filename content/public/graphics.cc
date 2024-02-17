@@ -423,27 +423,24 @@ void Graphics::RemoveDisposable(Disposable* disp) {
 }
 
 void Graphics::RenderEffectRequire(const base::Vec4& color,
-                                   const base::Vec4& tone,
-                                   const base::Vec4& flash_color) {
+                                   const base::Vec4& tone) {
   ApplyViewportEffect(screen_buffer_[0], screen_buffer_[1], *screen_quad_,
-                      color, tone, flash_color);
+                      color, tone);
 }
 
 void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
                                    renderer::TextureFrameBuffer& backend,
                                    renderer::QuadDrawable& quad,
                                    const base::Vec4& color,
-                                   const base::Vec4& tone,
-                                   const base::Vec4& flash_color) {
+                                   const base::Vec4& tone) {
   const base::Rect& viewport_rect = renderer::GSM.states.scissor_rect.Current();
   const base::Rect& screen_rect = resolution_;
 
   const bool has_tone_effect =
       (tone.x != 0 || tone.y != 0 || tone.z != 0 || tone.w != 0);
   const bool has_color_effect = color.w != 0;
-  const bool has_flash_effect = flash_color.w != 0;
 
-  if (!has_tone_effect && !has_color_effect && !has_flash_effect)
+  if (!has_tone_effect && !has_color_effect)
     return;
 
   renderer::GSM.states.scissor.Push(false);
@@ -458,7 +455,7 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTone(tone);
-  shader.SetColor((flash_color.w > color.w) ? flash_color : color);
+  shader.SetColor(color);
 
   shader.SetTexture(backend.tex);
   shader.SetTextureSize(screen_rect.Size());

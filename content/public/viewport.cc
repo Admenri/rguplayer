@@ -99,16 +99,21 @@ void Viewport::UpdateRendererParameters() {
 }
 
 void Viewport::Composite() {
-  if (DrawableParent::link().empty())
-    return;
-
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);
 
   DrawableParent::CompositeChildren();
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
-    screen()->RenderEffectRequire(color_->AsBase(), tone_->AsBase(),
-                                  Flashable::GetFlashColor());
+    base::Vec4 composite_color = color_->AsBase();
+    base::Vec4 flash_color = Flashable::GetFlashColor();
+    base::Vec4 target_color;
+    if (Flashable::IsFlashing())
+      target_color =
+          (flash_color.w > composite_color.w ? flash_color : composite_color);
+    else
+      target_color = composite_color;
+
+    screen()->RenderEffectRequire(target_color, tone_->AsBase());
   }
 
   renderer::GSM.states.scissor_rect.Pop();
@@ -147,9 +152,18 @@ void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
 
   CompositeChildren();
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
+    base::Vec4 composite_color = color_->AsBase();
+    base::Vec4 flash_color = Flashable::GetFlashColor();
+    base::Vec4 target_color;
+    if (Flashable::IsFlashing())
+      target_color =
+          (flash_color.w > composite_color.w ? flash_color : composite_color);
+    else
+      target_color = composite_color;
+
     screen()->ApplyViewportEffect(target->AsGLType(), viewport_buffer_,
-                                  *viewport_quad_, color_->AsBase(),
-                                  tone_->AsBase(), Flashable::GetFlashColor());
+                                  *viewport_quad_, target_color,
+                                  tone_->AsBase());
   }
 
   renderer::GSM.states.scissor_rect.Pop();

@@ -277,7 +277,6 @@ class Color : public base::RefCounted<Color>,
         green_(std::clamp(green, 0.0, 255.0)),
         blue_(std::clamp(blue, 0.0, 255.0)),
         alpha_(std::clamp(alpha, 0.0, 255.0)) {}
-  ~Color() override {}
 
   Color(const Color& other) {
     red_ = other.red_;
@@ -381,7 +380,7 @@ class Color : public base::RefCounted<Color>,
                      static_cast<uint8_t>(blue_), static_cast<uint8_t>(alpha_)};
   }
 
-  bool IsValid() { return alpha_ != 0.0f; }
+  bool IsValid() { return alpha_ != 0.0; }
 
   std::string Serialize() override;
   static scoped_refptr<Color> Deserialize(const std::string& data);

@@ -26,6 +26,10 @@ int main(int argc, char* argv[]) {
   if (!config->LoadConfigure(ini))
     return 1;
 
+  SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+  SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+  SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+
   SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   TTF_Init();

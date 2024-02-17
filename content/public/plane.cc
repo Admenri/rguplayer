@@ -23,8 +23,7 @@ Plane::Plane(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
       ViewportChild(screen, viewport),
       color_(new Color()),
       tone_(new Tone()) {
-  if (auto* viewport = GetViewport().get())
-    OnViewportRectChanged(parent_rect());
+  OnViewportRectChanged(parent_rect());
 }
 
 Plane::~Plane() {
@@ -192,8 +191,8 @@ void Plane::UpdateQuadArray() {
   renderer::GSM.states.viewport.Pop();
   renderer::GSM.states.blend.Pop();
 
-  float wrap_ox = fwrap(parent_rect().origin.x, item_x);
-  float wrap_oy = fwrap(parent_rect().origin.y, item_y);
+  float wrap_ox = fwrap(ox_, item_x);
+  float wrap_oy = fwrap(oy_, item_y);
 
   int tile_x =
       std::ceil((parent_rect().rect.width + wrap_ox - item_x) / item_x) + 1;

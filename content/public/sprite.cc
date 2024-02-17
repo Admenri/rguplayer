@@ -70,8 +70,7 @@ void Sprite::InitAttributeInternal() {
   src_rect_observer_ = src_rect_->AddChangedObserver(base::BindRepeating(
       &Sprite::OnSrcRectChangedInternal, base::Unretained(this)));
 
-  if (GetViewport())
-    OnViewportRectChanged(parent_rect());
+  OnViewportRectChanged(parent_rect());
 }
 
 void Sprite::OnObjectDisposed() {

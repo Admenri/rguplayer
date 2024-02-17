@@ -17,8 +17,8 @@
 
 namespace content {
 
-class GroundLayer;
-class AboveLayer;
+class TilemapGroundLayer2;
+class TilemapAboveLayer2;
 
 // Reference: https://www.tktkgame.com/tkool/memo/vx/tile_id.html
 class Tilemap2 : public base::RefCounted<Tilemap2>,
@@ -73,8 +73,8 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   void SetOY(int oy);
 
  private:
-  friend class GroundLayer;
-  friend class AboveLayer;
+  friend class TilemapGroundLayer2;
+  friend class TilemapAboveLayer2;
 
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Tilemap2"; }
@@ -89,8 +89,8 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   void SetAtlasUpdateInternal();
   void UpdateMapBufferInternal();
 
-  std::unique_ptr<GroundLayer> ground_;
-  std::unique_ptr<AboveLayer> above_;
+  std::unique_ptr<TilemapGroundLayer2> ground_;
+  std::unique_ptr<TilemapAboveLayer2> above_;
 
   scoped_refptr<Viewport> viewport_;
   bool visible_ = true;
@@ -108,10 +108,11 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
       tilemap_quads_;
 
   renderer::TextureFrameBuffer atlas_tfb_;
-  bool atlas_need_update_ = false;
   int tile_size_;
   base::Rect tilemap_viewport_;
   base::Vec2i tilemap_offset_;
+
+  bool atlas_need_update_ = false;
   bool buffer_need_update_ = false;
 
   std::unique_ptr<TilemapFlashLayer> flash_layer_;
