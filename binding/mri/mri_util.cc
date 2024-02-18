@@ -106,8 +106,13 @@ int MriParseArgsTo(int argc, VALUE* argv, const char* fmt, ...) {
           case RUBY_T_NIL:
             *ptr = false;
             break;
+          case RUBY_T_FIXNUM:
+            *ptr = FIX2INT(arg_element);
+            break;
           default:
-            rb_raise(rb_eTypeError, "Argument %d: Expected bool", count);
+            rb_warning("Warning: Argument %d: Expected bool", count);
+            *ptr = true;
+            break;
         }
       }
         ++count;

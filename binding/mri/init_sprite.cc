@@ -122,7 +122,7 @@ DEFINE_SPRITE_ATTR_VAL(Tone, "_tone", Tone);
         MriGetStructData<content::Sprite>(self); \
     bool v;                                      \
     MRI_GUARD(v = obj->Get##name(););            \
-    return rb_fix_new(v);                        \
+    return MRI_BOOL_NEW(v);                      \
   }                                              \
   MRI_METHOD(sprite_set_##name) {                \
     scoped_refptr<content::Sprite> obj =         \
