@@ -6,8 +6,6 @@
 
 #include "content/common/tilemap_common.h"
 
-#include <algorithm>
-
 namespace content {
 
 namespace {
@@ -391,7 +389,7 @@ void Tilemap::BeforeTilemapComposite() {
 void Tilemap::MakeAtlasInternal() {
   int atlas_height = 28 * tile_size_;
   if (tileset_ && !tileset_->IsDisposed())
-    atlas_height = tileset_->GetSize().x;
+    atlas_height = std::max(atlas_height, tileset_->GetSize().y);
   renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_ * 20,
                                       atlas_height);
 
@@ -450,12 +448,11 @@ void Tilemap::MakeAtlasInternal() {
   // Tileset part
   if (!tileset_ || tileset_->IsDisposed())
     return;
-  if (tileset_->GetSize().x > tile_size_ * 8)
-    return;
 
   auto tileset_size = tileset_->GetSize();
-  auto dst_rect = tileset_size;
-  dst_rect.x += 12 * tile_size_;
+  base::Rect dst_rect = tileset_size;
+  dst_rect.x = 12 * tile_size_;
+  dst_rect.y = 0;
 
   renderer::Blt::BeginDraw(atlas_tfb_);
   renderer::Blt::TexSource(tileset_->AsGLType());
@@ -540,22 +537,30 @@ void Tilemap::UpdateMapBufferInternal() {
       case AutotileType::Static: {
         const base::RectF* autotile_src = &kAutotileSrcRects[patternID * 4];
         for (int i = 0; i < 4; ++i) {
-          renderer::CommonVertex verts[4];
           base::RectF tex_src = autotile_src[i];
-          tex_src.y += autotileID * 4 * tile_size_;
+          tex_src.x = tex_src.x * tile_size_ + 0.5f;
+          tex_src.y = tex_src.y * tile_size_ + 0.5f;
+          tex_src.width = tex_src.width * tile_size_ - 1.0f;
+          tex_src.height = tex_src.height * tile_size_ - 1.0f;
+
           if (info.type == AutotileType::Static)
             tex_src.x += 3 * tile_size_;
+          tex_src.y += autotileID * 4 * tile_size_;
+
           base::RectF chunk_pos(x * tile_size_, y * tile_size_,
                                 tile_size_ / 2.0f, tile_size_ / 2.0f);
           autotile_subpos(chunk_pos, i);
+
+          renderer::CommonVertex verts[4];
           renderer::QuadSetTexPosRect(verts, tex_src, chunk_pos);
           for (int j = 0; j < 4; ++j)
-            target->push_back(verts[i]);
+            target->push_back(verts[j]);
         }
       } break;
       case AutotileType::SingleAnimated: {
         renderer::CommonVertex verts[4];
-        const base::RectF single_tex(0.5, 0.5, tile_size_ - 1, tile_size_ - 1);
+        const base::RectF single_tex(0.5, 0.5 + autotileID * 4 * tile_size_,
+                                     tile_size_ - 1, tile_size_ - 1);
         const base::RectF single_pos(x * tile_size_, y * tile_size_, tile_size_,
                                      tile_size_);
         renderer::QuadSetTexPosRect(verts, single_tex, single_pos);
@@ -595,7 +600,7 @@ void Tilemap::UpdateMapBufferInternal() {
     int tileX = tilesetID % 8;
     int tileY = tilesetID / 8;
 
-    base::Vec2i atlas_offset;
+    base::Vec2i atlas_offset(12 + tileX, tileY);
     base::RectF tex((float)atlas_offset.x * tile_size_ + 0.5f,
                     (float)atlas_offset.y * tile_size_ + 0.5f, tile_size_ - 1,
                     tile_size_ - 1);
