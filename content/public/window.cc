@@ -224,27 +224,30 @@ void Window::SetOY(int v) {
 
 void Window::SetOpacity(int v) {
   CheckIsDisposed();
-
+  v = std::clamp(v, 0, 255);
   if (v == opacity_)
     return;
+
   opacity_ = v;
   base_quad_need_update_ = true;
 }
 
 void Window::SetBackOpacity(int v) {
   CheckIsDisposed();
-
+  v = std::clamp(v, 0, 255);
   if (v == back_opacity_)
     return;
+
   back_opacity_ = v;
   base_tex_need_update_ = true;
 }
 
 void Window::SetContentsOpacity(int v) {
   CheckIsDisposed();
-
+  v = std::clamp(v, 0, 255);
   if (v == contents_opacity_)
     return;
+
   contents_opacity_ = v;
   contents_quad_need_update_ = true;
 }
@@ -506,6 +509,7 @@ void Window::UpdateControlsQuadsInternal() {
   int i = 0;
   auto* vert = controls_quads_->vertices().data();
 
+  cursor_vertex_ = nullptr;
   auto cur_rect = cursor_rect_->AsBase();
   if (!cur_rect.width <= 0 || !cur_rect.height <= 0) {
     base::Rect effect_rect(cur_rect.x + 16, cur_rect.y + 16, cur_rect.width,
@@ -541,6 +545,7 @@ void Window::UpdateControlsQuadsInternal() {
                                        scroll_arrows.bottom);
   }
 
+  pause_vertex_ = nullptr;
   if (pause_) {
     pause_vertex_ = &vert[i * 4];
     i += renderer::QuadSetTexPosRect(
