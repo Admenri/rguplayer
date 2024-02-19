@@ -4,19 +4,10 @@
 
 #include "content/public/window2.h"
 
+#include "content/common/tilemap_common.h"
 #include "content/public/tilequad.h"
 
 namespace content {
-
-template <typename T>
-struct Sides {
-  T left, right, top, bottom;
-};
-
-template <typename T>
-struct Corners {
-  T top_left, top_right, bottom_left, bottom_right;
-};
 
 /* Asset rect fix data from Other runtime source */
 static const base::Rect background_stretch_src = {0, 0, 64, 64};

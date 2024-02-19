@@ -188,8 +188,8 @@ void ViewportChild::SetViewport(scoped_refptr<Viewport> viewport) {
 
   if (viewport == viewport_)
     return;
-
   viewport_ = viewport;
+
   DrawableParent* parent = viewport_.get();
   if (!parent)
     parent = screen_.get();

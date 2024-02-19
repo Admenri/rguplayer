@@ -10,6 +10,16 @@
 
 namespace content {
 
+template <typename T>
+struct Sides {
+  T left, right, top, bottom;
+};
+
+template <typename T>
+struct Corners {
+  T top_left, top_right, bottom_left, bottom_right;
+};
+
 inline int vwrap(int value, int range) {
   int res = value % range;
   return res < 0 ? res + range : res;

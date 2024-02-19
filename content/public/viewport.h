@@ -106,15 +106,11 @@ class ViewportChild : public Drawable {
   ViewportChild(const ViewportChild&) = delete;
   ViewportChild& operator=(const ViewportChild&) = delete;
 
-  void SetViewport(scoped_refptr<Viewport> viewport);
+  virtual void SetViewport(scoped_refptr<Viewport> viewport);
   scoped_refptr<Viewport> GetViewport() {
     CheckDisposed();
-
     return viewport_;
   }
-
- protected:
-  virtual void OnViewportChanged() {}
 
  private:
   scoped_refptr<Graphics> screen_;

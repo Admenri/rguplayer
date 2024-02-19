@@ -66,23 +66,19 @@ class Drawable : public base::LinkNode<Drawable> {
     return parent_;
   }
 
-  void SetZ(int z);
-
+  virtual void SetZ(int z);
   int GetZ() const {
     CheckDisposed();
-
     return z_;
   }
 
-  void SetVisible(bool visible) {
+  virtual void SetVisible(bool visible) {
     CheckDisposed();
-
     visible_ = visible;
   }
 
   bool GetVisible() const {
     CheckDisposed();
-
     return visible_;
   }
 
