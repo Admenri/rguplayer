@@ -2,41 +2,40 @@
 
 ## 项目概述
 
-RGU是一款兼容RGSS 1/2/3，使用SDL作为底层，
-OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。
-旨在提供兼容RGSS的同时提供跨平台与性能提升支持。
-
-本项目使用BSD-3协议开源。
-
-本项目语法风格与代码结构与The Chromium Project相似。
+- RGU是一款兼容RGSS 1/2/3，使用SDL作为底层，OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。旨在提供兼容RGSS的同时提供跨平台与性能提升支持。
+- 本项目使用BSD-3协议开源。
+- 本项目语法风格与代码结构与The Chromium Project相似。
 
 ## 项目结构
 
-运行结构为多线程架构，程序内存在多个线程worker，每个worker都有任务投递的接口，
-引擎将事件处理，逻辑渲染处理，音频播放处理，视频解码处理等分解为多个线程。
+- 运行结构为多线程架构，程序内存在多个线程worker，每个worker都有任务投递的接口，引擎将事件处理，逻辑渲染处理，音频播放处理，视频解码处理等分解为多个线程。
 
-源码结构分为逻辑实现，图像渲染实现，基础库实现，封装组件实现与脚本引擎绑定实现，
-整个程序的入口在app文件夹中，
-content文件夹中存放负责组织引擎全部内容（图像，输入，音频）功能的代码，是引擎的核心实现，
-components中存放引擎中的某些特定组件实现（如IO系统，fps计数器等），
-base文件夹中存放跨平台的基础代码，
-binding文件夹中存放与cruby，mruby等第三方解释器进行绑定的代码
-buildtools中存放所有的python自动化代码
-renderer文件夹存放了GLES2.0渲染器的初级封装代码
-third_party中为使用的第三方代码库，base/third_party中也有部分第三方库
-ui文件夹存放了SDL窗口的封装代码，用于与input模块进行配合操作
+- 源码结构分为逻辑实现，图像渲染实现，基础库实现，封装组件实现与脚本引擎绑定实现，
+- 整个程序的入口在app文件夹中
+- content文件夹中存放负责组织引擎全部内容（图像，输入，音频）功能的代码，是引擎的核心实现
+- components中存放引擎中的某些特定组件实现（如IO系统，fps计数器等）
+- base文件夹中存放跨平台的基础代码
+- binding文件夹中存放与cruby，mruby等第三方解释器进行绑定的代码
+- buildtools中存放所有的python自动化代码
+- renderer文件夹存放了GLES2.0渲染器的初级封装代码
+- third_party中为使用的第三方代码库，base/third_party中也有部分第三方库
+- ui文件夹存放了SDL窗口的封装代码，用于与input模块进行配合操作
 
-游戏的图像渲染采用OpenGL ES 2.0标准以获得最大兼容，
-用户可以选择使用ANGLE运行其他渲染器后端（D3D9 D3D11 Vulkan Metal 软渲染等）
-引擎的输入处理基于SDL的事件处理
-引擎的音频处理基于SoLoud库，音频数据通过soloud核心处理后输出到SDL的音频设备接口
-引擎的脚本处理部分使用了Ruby 3.2.2的解释器
+- 游戏的图像渲染采用OpenGL ES 2.0标准以获得最大兼容，
+- 用户可以选择使用ANGLE运行其他渲染器后端（D3D9 D3D11 Vulkan Metal 软渲染等）
+- 引擎的输入处理基于SDL的事件处理
+- 引擎的音频处理基于SoLoud库，音频数据通过soloud核心处理后输出到SDL的音频设备接口
+- 引擎的脚本处理部分使用了Ruby 3.2.2的解释器
 
 ## 开发中截图
 
 <img src="app/test/1.png" height="300">
 
 <img src="app/test/2.png" height="300">
+
+<img src="app/test/3.png" height="300">
+
+<img src="app/test/4.png" height="300">
 
 ## 编译项目
 
