@@ -160,6 +160,9 @@ class TilemapZLayer : public ViewportChild {
   void InitDrawableData() override {}
   void BeforeComposite() override {}
   void Composite() override {
+    if (!tilemap_ || !tilemap_->above_offsets_.size())
+      return;
+
     auto& shader = renderer::GSM.shaders->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
@@ -602,8 +605,8 @@ void Tilemap::UpdateMapBufferInternal() {
 
     base::Vec2i atlas_offset(12 + tileX, tileY);
     base::RectF tex((float)atlas_offset.x * tile_size_ + 0.5f,
-                    (float)atlas_offset.y * tile_size_ + 0.5f, tile_size_ - 1,
-                    tile_size_ - 1);
+                    (float)atlas_offset.y * tile_size_ + 0.5f,
+                    (float)tile_size_ - 1.0f, (float)tile_size_ - 1.0f);
     base::RectF pos(x * tile_size_, y * tile_size_, tile_size_, tile_size_);
     renderer::CommonVertex verts[4];
     renderer::QuadSetTexPosRect(verts, tex, pos);

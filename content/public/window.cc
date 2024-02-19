@@ -511,7 +511,7 @@ void Window::UpdateControlsQuadsInternal() {
 
   cursor_vertex_ = nullptr;
   auto cur_rect = cursor_rect_->AsBase();
-  if (!cur_rect.width <= 0 || !cur_rect.height <= 0) {
+  if (cur_rect.width > 0 && cur_rect.height > 0) {
     base::Rect effect_rect(cur_rect.x + 16, cur_rect.y + 16, cur_rect.width,
                            cur_rect.height);
     cursor_vertex_ = &vert[i * 4];

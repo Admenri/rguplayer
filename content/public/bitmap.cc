@@ -495,9 +495,10 @@ void Bitmap::HueChangeInternal(int hue) {
   renderer::FrameBuffer::Bind(dst_tex.fbo);
   renderer::FrameBuffer::Clear();
 
+  renderer::GSM.states.viewport.Push(size_);
   auto& shader = renderer::GSM.shaders->hue;
   shader.Bind();
-  shader.SetProjectionMatrix(base::Vec2i(dst_tex.width, dst_tex.height));
+  shader.SetProjectionMatrix(size_);
   shader.SetTexture(tex_fbo_.tex);
   shader.SetTextureSize(size_);
   shader.SetTransOffset(base::Vec2i());
@@ -507,6 +508,7 @@ void Bitmap::HueChangeInternal(int hue) {
   quad->SetTexCoordRect(base::Vec2(size_));
   quad->SetPositionRect(base::Vec2(size_));
   quad->Draw();
+  renderer::GSM.states.viewport.Pop();
 
   renderer::Blt::BeginDraw(tex_fbo_);
   renderer::Blt::TexSource(dst_tex);
