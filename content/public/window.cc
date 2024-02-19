@@ -100,7 +100,7 @@ Window::~Window() {
 }
 
 void Window::Update() {
-  update_required_ = true;
+  CheckIsDisposed();
 
   if (++cursor_alpha_index_ == kCursorAniAlphaSize)
     cursor_alpha_index_ = 0;
@@ -110,6 +110,7 @@ void Window::Update() {
 
   if (++pause_quad_index_ == kPauseAniQuadSize)
     pause_quad_index_ = 0;
+  update_required_ = true;
 }
 
 void Window::SetWindowskin(scoped_refptr<Bitmap> windowskin) {
@@ -265,15 +266,17 @@ void Window::SetViewport(scoped_refptr<Viewport> viewport) {
 }
 
 void Window::OnObjectDisposed() {
+  weak_ptr_factory_.InvalidateWeakPtrs();
+
+  RemoveFromList();
+
+  control_layer_.reset();
   base_quad_.reset();
   content_quad_.reset();
   controls_quads_.reset();
   base_tex_quad_array_.reset();
 
   renderer::TextureFrameBuffer::Del(base_tfb_);
-
-  weak_ptr_factory_.InvalidateWeakPtrs();
-  control_layer_.reset();
 }
 
 void Window::InitDrawableData() {
@@ -348,8 +351,6 @@ void Window::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {}
 
 void Window::InitWindow() {
   control_layer_.reset(new WindowControlLayer(weak_ptr_factory_.GetWeakPtr()));
-
-  contents_ = new Bitmap(screen(), 1, 1);
 
   cursor_rect_ = new Rect();
   cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(

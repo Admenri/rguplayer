@@ -145,7 +145,7 @@ class Window : public base::RefCounted<Window>,
   scoped_refptr<Bitmap> contents_;
   bool stretch_ = true;
   scoped_refptr<Rect> cursor_rect_;
-  bool active_ = false;
+  bool active_ = true;
   bool pause_ = false;
   base::Rect rect_;
   base::Vec2i origin_;

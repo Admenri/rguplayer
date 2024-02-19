@@ -650,10 +650,17 @@ void Tilemap::UpdateMapBufferInternal() {
 }
 
 void Tilemap::ResetDrawLayerInternal() {
-  int layer_num = tilemap_viewport_.height + 5;
-
   ground_layer_.reset(
       new TilemapGroundLayer(screen(), weak_ptr_factory_.GetWeakPtr()));
+  const DrawableParent::ViewportInfo& viewport_rect =
+      ground_layer_->parent_rect();
+
+  const base::Vec2i tilemap_origin = origin_;
+  const base::Vec2i viewport_size = viewport_rect.rect.Size();
+
+  int layer_num =
+      (viewport_size.y / tile_size_) + !!(viewport_size.y % tile_size_) + 7;
+
   above_layers_.clear();
   for (int i = 0; i < layer_num; ++i) {
     std::unique_ptr<TilemapZLayer> new_layer(

@@ -16,9 +16,11 @@
 #include "binding/mri/init_plane.h"
 #include "binding/mri/init_sprite.h"
 #include "binding/mri/init_table.h"
+#include "binding/mri/init_tilemap.h"
 #include "binding/mri/init_tilemap2.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/init_viewport.h"
+#include "binding/mri/init_window.h"
 #include "binding/mri/init_window2.h"
 #include "content/worker/binding_worker.h"
 
@@ -179,24 +181,7 @@ void BindingEngineMri::InitializeBinding(
   rb_enc_set_default_internal(rb_enc_from_encoding(rb_utf8_encoding()));
   rb_enc_set_default_external(rb_enc_from_encoding(rb_utf8_encoding()));
 
-  switch (binding_host->rgss_version()) {
-    case content::RGSSVersion::RGSS1:
-      LOG(INFO) << "[Binding] Content Version: RGSS1";
-      rb_eval_string(module_rpg1);
-      break;
-    case content::RGSSVersion::RGSS2:
-      LOG(INFO) << "[Binding] Content Version: RGSS2";
-      rb_eval_string(module_rpg2);
-      break;
-    case content::RGSSVersion::RGSS3:
-      LOG(INFO) << "[Binding] Content Version: RGSS3";
-      rb_eval_string(module_rpg3);
-      break;
-    default:
-      break;
-  }
-
-  MriInitException(binding_host->rgss_version() == content::RGSSVersion::RGSS3);
+  MriInitException(binding_host->rgss_version() >= content::RGSSVersion::RGSS3);
 
   InitCoreFileBinding();
   InitUtilityBinding();
@@ -206,11 +191,16 @@ void BindingEngineMri::InitializeBinding(
   InitBitmapBinding();
   InitPlaneBinding();
   InitSpriteBinding();
-  InitTilemap2Binding();
-  InitWindow2Binding();
   InitGraphicsBinding();
   InitInputBinding();
   InitAudioBinding();
+  if (binding_host->rgss_version() >= content::RGSSVersion::RGSS2) {
+    InitTilemap2Binding();
+    InitWindow2Binding();
+  } else {
+    InitTilemapBinding();
+    InitWindowBinding();
+  }
 
   Init_zlib();
 
@@ -233,6 +223,23 @@ void BindingEngineMri::InitializeBinding(
   MriDefineModuleFunction(rb_mKernel, "rgss_main", mri_rgssmain);
   MriDefineModuleFunction(rb_mKernel, "rgss_stop", mri_rgssstop);
   MriDefineModuleFunction(rb_mKernel, "p", mri_p);
+
+  switch (binding_host->rgss_version()) {
+    case content::RGSSVersion::RGSS1:
+      LOG(INFO) << "[Binding] Content Version: RGSS1";
+      rb_eval_string(module_rpg1);
+      break;
+    case content::RGSSVersion::RGSS2:
+      LOG(INFO) << "[Binding] Content Version: RGSS2";
+      rb_eval_string(module_rpg2);
+      break;
+    case content::RGSSVersion::RGSS3:
+      LOG(INFO) << "[Binding] Content Version: RGSS3";
+      rb_eval_string(module_rpg3);
+      break;
+    default:
+      break;
+  }
 
   LOG(INFO) << "[Binding] CRuby Interpreter Version: " << RUBY_API_VERSION_CODE;
   LOG(INFO) << "[Binding] CRuby Interpreter Platform: " << RUBY_PLATFORM;

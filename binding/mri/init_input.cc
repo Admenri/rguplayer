@@ -12,9 +12,12 @@ namespace binding {
 
 namespace {
 
-VALUE g_input_symbol_hash;
+struct BindingSet {
+  std::string name;
+  int key_id;
+};
 
-const std::map<std::string, int> kKeyboardBindings = {
+const BindingSet kKeyboardBindings[] = {
     {"DOWN", 2},   {"LEFT", 4},  {"RIGHT", 6}, {"UP", 8},
 
     {"A", 11},     {"B", 12},    {"C", 13},    {"X", 14},  {"Y", 15},
@@ -25,13 +28,17 @@ const std::map<std::string, int> kKeyboardBindings = {
     {"F5", 25},    {"F6", 26},   {"F7", 27},   {"F8", 28}, {"F9", 29},
 };
 
+const int kKeyboardBindingsSize =
+    sizeof(kKeyboardBindings) / sizeof(kKeyboardBindings[0]);
+
 std::string GetButtonSymbol(int argc, VALUE* argv) {
   std::string sym;
 
   if (argc == 1 && FIXNUM_P(*argv)) {
-    VALUE str_key =
-        rb_hash_lookup2(g_input_symbol_hash, *argv, rb_str_new2(sym.c_str()));
-    sym = std::string(RSTRING_PTR(str_key), RSTRING_LEN(str_key));
+    int key_id = FIX2INT(*argv);
+    for (int i = 0; i < kKeyboardBindingsSize; ++i)
+      if (kKeyboardBindings[i].key_id == key_id)
+        return kKeyboardBindings[i].name;
   } else {
     MriParseArgsTo(argc, argv, "n", &sym);
   }
@@ -208,17 +215,12 @@ void InitInputBinding() {
   MriDefineModuleFunction(module, "get_keys_from_flag", input_get_keys_from);
   MriDefineModuleFunction(module, "set_keys_from_flag", input_set_keys_from);
 
-  g_input_symbol_hash = rb_hash_new();
-  for (auto& it : kKeyboardBindings) {
-    ID key = rb_intern(it.first.c_str());
+  for (int i = 0; i < kKeyboardBindingsSize; ++i) {
+    auto& binding_set = kKeyboardBindings[i];
 
-    rb_const_set(module, key, rb_str_new2(it.first.c_str()));
-
-    rb_hash_aset(g_input_symbol_hash, INT2FIX(it.second),
-                 rb_str_new(it.first.c_str(), it.first.size()));
+    ID key = rb_intern(binding_set.name.c_str());
+    rb_const_set(module, key, rb_str_new2(binding_set.name.c_str()));
   }
-
-  rb_iv_set(module, "_symbol_table", g_input_symbol_hash);
 }
 
 }  // namespace binding

@@ -31,6 +31,8 @@ MRI_METHOD(tilemap2_initialize) {
   obj->AddRef();
   MriSetStructData(self, obj.get());
 
+  rb_iv_set(self, "_viewport", v);
+
   VALUE klass = rb_const_get(rb_cObject, rb_intern("BitmapArray"));
   VALUE bitmap_array = rb_obj_alloc(klass);
   MriSetStructData(bitmap_array, obj.get());

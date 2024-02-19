@@ -24,12 +24,16 @@ set(BINDING_MRI_SRC
   init_sprite.h
   init_table.cc
   init_table.h
+  init_tilemap.cc
+  init_tilemap.h
   init_tilemap2.cc
   init_tilemap2.h
   init_utility.cc
   init_utility.h
   init_viewport.cc
   init_viewport.h
+  init_window.cc
+  init_window.h
   init_window2.cc
   init_window2.h
 

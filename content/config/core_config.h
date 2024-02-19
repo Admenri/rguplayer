@@ -12,9 +12,9 @@ namespace content {
 
 enum class RGSSVersion : int {
   Null = 0,
-  RGSS1,
-  RGSS2,
-  RGSS3,
+  RGSS1 = 1,
+  RGSS2 = 2,
+  RGSS3 = 3,
 };
 
 class CoreConfigure : public base::RefCounted<CoreConfigure> {

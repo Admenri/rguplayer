@@ -9,17 +9,17 @@
 
 namespace content {
 
-int QuadTileCount(int tile, int dest) {
+inline int QuadTileCount(int tile, int dest) {
   if (!tile || !dest)
     return 0;
 
   return dest / tile + (dest % tile ? 1 : 0);
 }
 
-int QuadTileCount2D(int tile_width,
-                    int tile_height,
-                    int dest_width,
-                    int dest_height) {
+inline int QuadTileCount2D(int tile_width,
+                           int tile_height,
+                           int dest_width,
+                           int dest_height) {
   return QuadTileCount(tile_width, dest_width) *
          QuadTileCount(tile_height, dest_height);
 }
