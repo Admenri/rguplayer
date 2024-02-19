@@ -320,11 +320,13 @@ void Window::BeforeComposite() {
 
   if (contents_quad_need_update_) {
     contents_quad_need_update_ = false;
-    base::Rect size = contents_->GetSize();
-    content_quad_->SetTexCoordRect(size);
-    content_quad_->SetPositionRect(size);
-    content_quad_->SetColor(-1,
-                            base::Vec4(0, 0, 0, contents_opacity_ / 255.0f));
+    if (contents_ && !contents_->IsDisposed()) {
+      base::Rect size = contents_->GetSize();
+      content_quad_->SetTexCoordRect(size);
+      content_quad_->SetPositionRect(size);
+      content_quad_->SetColor(-1,
+                              base::Vec4(0, 0, 0, contents_opacity_ / 255.0f));
+    }
   }
 }
 
@@ -521,7 +523,7 @@ void Window::UpdateControlsQuadsInternal() {
   scroll_arrows.top = base::Rect(scroll.x, 4, 16, 8);
   scroll_arrows.bottom = base::Rect(scroll.x, rect_.height - 12, 16, 8);
 
-  if (contents_ || !contents_->IsDisposed()) {
+  if (contents_ && !contents_->IsDisposed()) {
     if (origin_.x > 0)
       i += renderer::QuadSetTexPosRect(&vert[i * 4], kScrollArrowSrc.left,
                                        scroll_arrows.left);
@@ -554,7 +556,9 @@ void Window::UpdateControlsInternal() {
   bool update_buffer = false;
   if (active_ && cursor_vertex_) {
     float alpha = kCursorAniAlpha[cursor_alpha_index_] / 255.0f;
-    renderer::QuadSetColor(cursor_vertex_, -1, base::Vec4(0, 0, 0, alpha));
+    for (int i = 0; i < 9; ++i)
+      renderer::QuadSetColor(cursor_vertex_ + 4 * i, -1,
+                             base::Vec4(0, 0, 0, alpha));
     update_buffer = true;
   }
 
