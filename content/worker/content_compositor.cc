@@ -12,7 +12,6 @@ WorkerTreeCompositor::~WorkerTreeCompositor() {
   binding_runner_->RequestQuit();
   binding_runner_.reset();
   event_runner_.reset();
-  audio_runner_.reset();
 }
 
 void WorkerTreeCompositor::InitCC(ContentInitParams params) {
@@ -20,14 +19,10 @@ void WorkerTreeCompositor::InitCC(ContentInitParams params) {
 
   event_runner_ = new EventRunner();
   binding_runner_ = new BindingRunner();
-  audio_runner_ = new AudioRunner();
 
   // Init event runner on main thread
   event_runner_->InitEventDispatcher(config_, params.host_window->AsWeakPtr(),
                                      binding_runner_->AsWeakPtr());
-
-  // Init audio device
-  audio_runner_->InitAudioComponents(config_);
 
   // Init renderer in binding thread for sync mode
   binding_runner_->InitBindingComponents(params);
@@ -35,7 +30,7 @@ void WorkerTreeCompositor::InitCC(ContentInitParams params) {
 
 void WorkerTreeCompositor::ContentMain() {
   // Launch script thread
-  binding_runner_->BindingMain(event_runner_->user_event_id(), audio_runner_);
+  binding_runner_->BindingMain(event_runner_->user_event_id());
 
   // Launch event loop
   event_runner_->EventMain();

@@ -19,11 +19,10 @@ void BindingRunner::InitBindingComponents(ContentInitParams& params) {
   binding_engine_ = std::move(params.binding_engine);
 }
 
-void BindingRunner::BindingMain(uint32_t event_id,
-                                scoped_refptr<AudioRunner> audio_runner) {
+void BindingRunner::BindingMain(uint32_t event_id) {
   user_event_id_ = event_id;
-  runner_thread_ = std::make_unique<std::thread>(
-      BindingFuncMain, weak_ptr_factory_.GetWeakPtr(), audio_runner);
+  runner_thread_ =
+      std::make_unique<std::thread>(&BindingRunner::BindingFuncMain, this);
 }
 
 void BindingRunner::RequestQuit() {
@@ -58,48 +57,47 @@ void BindingRunner::RaiseFlags() {
     binding_engine_->ResetRequired();
 }
 
-void BindingRunner::BindingFuncMain(base::WeakPtr<BindingRunner> self,
-                                    scoped_refptr<AudioRunner> audio_runner) {
+void BindingRunner::BindingFuncMain() {
   // Attach renderer to binding thread
-  self->renderer_ = new RenderRunner();
-  self->renderer_->InitRenderer(self->config_, self->window_);
+  renderer_ = new RenderRunner();
+  renderer_->InitRenderer(config_, window_);
 
   // Init I/O filesystem
-  self->file_manager_ = std::make_unique<filesystem::Filesystem>(self->argv0_);
-  self->file_manager_->AddLoadPath(".");
-  for (auto& it : self->config_->load_paths())
-    self->file_manager_->AddLoadPath(it);
+  file_manager_ = std::make_unique<filesystem::Filesystem>(argv0_);
+  file_manager_->AddLoadPath(".");
+  for (auto& it : config_->load_paths())
+    file_manager_->AddLoadPath(it);
 
   // Init Modules
-  self->graphics_ = new Graphics(self->weak_ptr_factory_.GetWeakPtr(),
-                                 self->renderer_, self->initial_resolution_);
-  self->input_ = new Input(self->window_);
-  self->audio_ = new Audio(self->file_manager_.get(), audio_runner);
+  graphics_ = new Graphics(weak_ptr_factory_.GetWeakPtr(), renderer_,
+                           initial_resolution_);
+  input_ = new Input(window_);
+  audio_ = new Audio(file_manager_->AsWeakPtr(), config_);
 
   // Before run main initialize
-  self->binding_engine_->InitializeBinding(self.get());
+  binding_engine_->InitializeBinding(this);
 
   // Boot binding components
-  self->binding_engine_->RunBindingMain();
+  binding_engine_->RunBindingMain();
 
   // Destroy and release resource for current worker cc
-  self->binding_engine_->FinalizeBinding();
-  self->binding_engine_.reset();
+  binding_engine_->FinalizeBinding();
+  binding_engine_.reset();
 
   // Release content module
-  self->graphics_.reset();
-  self->input_.reset();
-  self->audio_.reset();
+  graphics_.reset();
+  input_.reset();
+  audio_.reset();
 
   // Destroy renderer on binding thread
-  self->renderer_->DestroyRenderer();
+  renderer_->DestroyRenderer();
 
   // Release I/O filesystem
-  self->file_manager_.reset();
+  file_manager_.reset();
 
   // Quit app required
   SDL_Event quit_event;
-  quit_event.type = self->user_event_id_ + EventRunner::QUIT_SYSTEM_EVENT;
+  quit_event.type = user_event_id_ + EventRunner::QUIT_SYSTEM_EVENT;
   SDL_PushEvent(&quit_event);
 }
 

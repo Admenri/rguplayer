@@ -7,13 +7,20 @@
 
 #include "base/memory/ref_counted.h"
 #include "components/filesystem/filesystem.h"
-#include "content/worker/audio_runner.h"
+#include "content/config/core_config.h"
+
+#include "SDL_audio.h"
+#include "soloud.h"
+#include "soloud_wav.h"
+
+#include <list>
 
 namespace content {
 
 class Audio final : public base::RefCounted<Audio> {
  public:
-  Audio(filesystem::Filesystem* file_reader, scoped_refptr<AudioRunner> runner);
+  Audio(base::WeakPtr<filesystem::Filesystem> file_reader,
+        scoped_refptr<CoreConfigure> config);
   ~Audio();
 
   Audio(const Audio&) = delete;
@@ -23,18 +30,18 @@ class Audio final : public base::RefCounted<Audio> {
   void BGMPlay(const std::string& filename,
                int volume = 100,
                int pitch = 100,
-               float pos = 0);
+               double pos = 0);
   void BGMStop();
   void BGMFade(int time);
-  float BGMPos();
+  double BGMPos();
 
   void BGSPlay(const std::string& filename,
                int volume = 100,
                int pitch = 100,
-               float pos = 0);
+               double pos = 0);
   void BGSStop();
   void BGSFade(int time);
-  float BGSPos();
+  double BGSPos();
 
   void MEPlay(const std::string& filename, int volume = 100, int pitch = 100);
   void MEStop();
@@ -45,14 +52,35 @@ class Audio final : public base::RefCounted<Audio> {
 
   void Reset();
 
+  SDL_AudioDeviceID& output_device() { return output_device_; }
+  SDL_AudioStream*& soloud_stream() { return soloud_stream_; }
+  SDL_AudioSpec& soloud_spec() { return soloud_spec_; }
+
  private:
-  static void MEMonitorInternal(std::stop_token token,
-                                scoped_refptr<AudioRunner> runner);
+  void InitAudioDeviceInternal();
+  void DestroyAudioDeviceInternal();
+  void MeMonitorInternal();
 
-  filesystem::Filesystem* file_reader_;
-  scoped_refptr<AudioRunner> runner_;
+  SoLoud::Soloud core_;
+  SDL_AudioDeviceID output_device_;
+  SDL_AudioStream* soloud_stream_;
+  SDL_AudioSpec soloud_spec_;
 
+  struct SlotInfo {
+    std::unique_ptr<SoLoud::Wav> source;
+    std::string filename;
+    SoLoud::handle play_handle = 0;
+  };
+
+  SlotInfo bgm_;
+  SlotInfo bgs_;
+  SlotInfo me_;
+  std::list<std::unique_ptr<SoLoud::Wav>> se_cache_;
+
+  base::WeakPtr<filesystem::Filesystem> file_reader_;
+  scoped_refptr<CoreConfigure> config_;
   std::unique_ptr<std::jthread> me_watcher_;
+  std::atomic_bool quit_flag_;
 };
 
 }  // namespace content

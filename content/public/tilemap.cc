@@ -562,8 +562,9 @@ void Tilemap::UpdateMapBufferInternal() {
       } break;
       case AutotileType::SingleAnimated: {
         renderer::CommonVertex verts[4];
-        const base::RectF single_tex(0.5, 0.5 + autotileID * 4 * tile_size_,
-                                     tile_size_ - 1, tile_size_ - 1);
+        const base::RectF single_tex(0.5f,
+                                     0.5f + autotileID * tile_size_ * 4.0f,
+                                     tile_size_ - 1.0f, tile_size_ - 1.0f);
         const base::RectF single_pos(x * tile_size_, y * tile_size_, tile_size_,
                                      tile_size_);
         renderer::QuadSetTexPosRect(verts, single_tex, single_pos);

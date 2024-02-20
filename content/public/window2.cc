@@ -429,6 +429,7 @@ void Window2::Composite() {
   auto& shader = renderer::GSM.shaders->base_alpha;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+  renderer::Texture::SetFilter(GL_LINEAR);
 
   if (windowskin_valid) {
     if (opacity_) {
@@ -450,6 +451,7 @@ void Window2::Composite() {
   if (openness_ < 255) {
     renderer::GSM.states.scissor.Pop();
     renderer::GSM.states.scissor_rect.Pop();
+    renderer::Texture::SetFilter();
     return;
   }
 
@@ -472,6 +474,8 @@ void Window2::Composite() {
 
     cursor_quads_->Draw();
   }
+
+  renderer::Texture::SetFilter();
 
   /* Window contents */
   if (contents_valid && contents_opacity_ > 0) {
@@ -619,11 +623,10 @@ void Window2::UpdateBaseTextureInternal() {
   shader.SetTone(tone_->AsBase());
   shader.SetColor(base::Vec4());
   shader.SetOpacity(back_opacity_ / 255.0f);
-
   shader.SetTexture(windowskin_->AsGLType().tex);
   shader.SetTextureSize(windowskin_->GetSize());
-
   shader.SetTransOffset(base::Vec2());
+  renderer::Texture::SetFilter(GL_LINEAR);
 
   /* Draw stretch layer */
   base_tex_quad_array_->Draw(0, 1);
@@ -647,6 +650,7 @@ void Window2::UpdateBaseTextureInternal() {
   /* Frame corner and sides */
   base_tex_quad_array_->Draw(1 + base_bg_tile_count_, base_frame_tile_count_);
 
+  renderer::Texture::SetFilter();
   renderer::GSM.states.blend_func.Pop();
   renderer::GSM.states.viewport.Pop();
   renderer::GSM.states.blend.Pop();

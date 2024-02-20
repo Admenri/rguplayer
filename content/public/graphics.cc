@@ -317,16 +317,25 @@ void Graphics::PresentScreenInternal(
   UpdateWindowViewportInternal();
 
   // Flip screen for Y
-  base::Rect target_rect(display_viewport_.x,
-                         display_viewport_.y + display_viewport_.height,
-                         display_viewport_.width, -display_viewport_.height);
+  base::Rect target_rect;
+  if (config_->keep_ratio()) {
+    target_rect.x = display_viewport_.x;
+    target_rect.y = display_viewport_.y + display_viewport_.height;
+    target_rect.width = display_viewport_.width;
+    target_rect.height = -display_viewport_.height;
+  } else {
+    target_rect.x = 0;
+    target_rect.y = window_size_.y;
+    target_rect.width = window_size_.x;
+    target_rect.height = -window_size_.y;
+  }
 
   // Blit screen buffer to window buffer
   renderer::Blt::BeginScreen(window_size_);
   renderer::FrameBuffer::ClearColor();
   renderer::FrameBuffer::Clear();
   renderer::Blt::TexSource(screen_buffer);
-  renderer::Blt::BltDraw(resolution_, target_rect);
+  renderer::Blt::BltDraw(resolution_, target_rect, config_->smooth_scale());
   renderer::Blt::EndDraw();
 
   SDL_GL_SwapWindow(window->AsSDLWindow());

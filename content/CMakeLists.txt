@@ -47,8 +47,6 @@ set(CORE_CONTENT_SRC
   public/window.h
   public/window2.cc
   public/window2.h
-  worker/audio_runner.cc
-  worker/audio_runner.h
   worker/binding_worker.cc
   worker/binding_worker.h
   worker/content_compositor.cc

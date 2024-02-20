@@ -22,8 +22,8 @@ void ReplaceStringWidth(std::string& str, char before, char after) {
 }  // namespace
 
 bool CoreConfigure::LoadConfigure(const std::string& filename) {
+  /* Parse configure */
   INIReader reader(filename);
-
   if (reader.ParseError()) {
     std::string str = "Failed to load configure file: " + filename;
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Core", str.c_str(),
@@ -31,8 +31,31 @@ bool CoreConfigure::LoadConfigure(const std::string& filename) {
     return false;
   }
 
+  /* RGSS config part */
+  game_rtp_ = reader.Get("Game", "RTP", std::string());
+  game_title_ = reader.Get("Game", "Title", "RGU Default Widget");
+  game_scripts_ = reader.Get("Game", "Scripts", std::string());
+  ReplaceStringWidth(game_scripts_, '\\', '/');
+
   /* Core config */
-  rgss_version_ = (RGSSVersion)reader.GetInteger("Core", "RGSSVerison", 3);
+  rgss_version_ = (RGSSVersion)reader.GetInteger("Core", "RGSSVerison", 0);
+  if (rgss_version_ == RGSSVersion::Null) {
+    if (!game_scripts_.empty()) {
+      rgss_version_ = RGSSVersion::RGSS1;
+
+      const char* p = &game_scripts_[game_scripts_.size()];
+      const char* head = &game_scripts_[0];
+
+      while (--p != head)
+        if (*p == '.')
+          break;
+
+      if (!strcmp(p, ".rvdata"))
+        rgss_version_ = RGSSVersion::RGSS2;
+      else if (!strcmp(p, ".rvdata2"))
+        rgss_version_ = RGSSVersion::RGSS3;
+    }
+  }
 
   /* Renderer config */
   angle_renderer_ = (ANGLERenderer)reader.GetInteger("Renderer", "UseANGLE", 0);
@@ -44,29 +67,8 @@ bool CoreConfigure::LoadConfigure(const std::string& filename) {
       reader.GetInteger("Renderer", "ScreenHeight",
                         rgss_version_ >= RGSSVersion::RGSS2 ? 416 : 480);
   allow_frame_skip_ = reader.GetBoolean("Renderer", "AllowFrameSkip", false);
-
-  /* RGSS config part */
-  game_rtp_ = reader.Get("Game", "RTP", "");
-
-  std::string scripts_file;
-  switch (rgss_version_) {
-    default:
-    case content::RGSSVersion::Null:
-    case content::RGSSVersion::RGSS1:
-      scripts_file = "Data/Scripts.rxdata";
-      break;
-    case content::RGSSVersion::RGSS2:
-      scripts_file = "Data/Scripts.rvdata";
-      break;
-    case content::RGSSVersion::RGSS3:
-      scripts_file = "Data/Scripts.rvdata2";
-      break;
-  }
-
-  game_scripts_ = reader.Get("Game", "Scripts", scripts_file);
-  ReplaceStringWidth(game_scripts_, '\\', '/');
-
-  game_title_ = reader.Get("Game", "Title", "RGU Default Widget");
+  smooth_scale_ = reader.GetBoolean("Renderer", "SmoothScale", true);
+  keep_ratio_ = reader.GetBoolean("Renderer", "KeepRatio", true);
 
   /* Filesystem */
   int size = reader.GetInteger("Filesystem", "LoadPathListSize", 0);

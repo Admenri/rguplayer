@@ -187,7 +187,7 @@ namespace SoLoud
 		mAudioThreadMutex = NULL;
 	}
 
-	result Soloud::init(BackendCallback callback, unsigned int aSamplerate, unsigned int aBufferSize, unsigned int aChannels, unsigned int aFlags)
+	result Soloud::init(BackendCallback callback, void* user_data, unsigned int aSamplerate, unsigned int aBufferSize, unsigned int aChannels, unsigned int aFlags)
 	{		
 		if (aChannels == 3 || aChannels == 5 || aChannels == 7 || aChannels > MAX_CHANNELS)
 			return INVALID_PARAMETER;
@@ -195,6 +195,7 @@ namespace SoLoud
 		deinit();
 
 		mAudioThreadMutex = Thread::createMutex();
+		mUserData = user_data;
 
 		int samplerate = 44100;
 		int buffersize = 2048;

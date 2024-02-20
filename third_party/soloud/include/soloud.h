@@ -182,7 +182,7 @@ namespace SoLoud
 
 		// Initialize SoLoud. Must be called before SoLoud can be used.
 		using BackendCallback = result(*)(SoLoud::Soloud *aSoloud, unsigned int aFlags, unsigned int aSamplerate, unsigned int aBuffer, unsigned int aChannels);
-		result init(BackendCallback callback, unsigned int aSamplerate, unsigned int aBufferSize, unsigned int aChannels = 2, unsigned int aFlags = Soloud::CLIP_ROUNDOFF);
+		result init(BackendCallback callback, void* user_data, unsigned int aSamplerate, unsigned int aBufferSize, unsigned int aChannels = 2, unsigned int aFlags = Soloud::CLIP_ROUNDOFF);
 
 		// Deinitialize SoLoud. Must be called before shutting down.
 		void deinit();
@@ -521,6 +521,9 @@ namespace SoLoud
 		unsigned int mActiveVoiceCount;
 		// Active voices list needs to be recalculated
 		bool mActiveVoiceDirty;
+
+		// User data
+    void* mUserData;
 	};
 };
 

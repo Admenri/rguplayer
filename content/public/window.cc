@@ -348,8 +348,10 @@ void Window::Composite() {
   shader.SetTexture(base_tfb_.tex);
   shader.SetTextureSize(base::Vec2i(base_tfb_.width, base_tfb_.height));
   shader.SetTransOffset(offset);
+  renderer::Texture::SetFilter(GL_LINEAR);
 
   base_quad_->Draw();
+  renderer::Texture::SetFilter();
 }
 
 void Window::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {}
@@ -448,6 +450,7 @@ void Window::UpdateBaseTexInternal() {
   shader.SetTexture(windowskin_->AsGLType().tex);
   shader.SetTextureSize(windowskin_->GetSize());
   shader.SetTransOffset(base::Vec2());
+  renderer::Texture::SetFilter(GL_LINEAR);
 
   /* Draw stretch layer */
   base_tex_quad_array_->Draw(0, background_quads_count_);
@@ -462,6 +465,7 @@ void Window::UpdateBaseTexInternal() {
   renderer::GSM.states.blend_func.Pop();
   renderer::GSM.states.viewport.Pop();
   renderer::GSM.states.blend.Pop();
+  renderer::Texture::SetFilter();
 }
 
 void Window::UpdateControlsQuadsInternal() {
@@ -608,8 +612,10 @@ void Window::CompositeControls() {
     shader.SetTransOffset(offset);
     shader.SetTexture(windowskin_->AsGLType().tex);
     shader.SetTextureSize(windowskin_->GetSize());
+    renderer::Texture::SetFilter(GL_LINEAR);
 
     controls_quads_->Draw(0, controls_quad_count);
+    renderer::Texture::SetFilter();
   }
 
   if (contents_ && !contents_->IsDisposed()) {

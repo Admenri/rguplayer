@@ -1,15 +1,17 @@
 
 #include "binding/mri/mri_main.h"
+#include "content/config/core_config.h"
 #include "content/worker/content_compositor.h"
-
-#include <fstream>
-#include <iostream>
 
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
 
 int main(int argc, char* argv[]) {
+#if defined(OS_WIN)
+  ::SetConsoleOutputCP(CP_UTF8);
+#endif  //! defined(OS_WIN)
+
   std::string app(argv[0]);
   auto last_sep = app.find_last_of('\\');
   if (last_sep != std::string::npos)
@@ -25,6 +27,14 @@ int main(int argc, char* argv[]) {
   scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
   if (!config->LoadConfigure(ini))
     return 1;
+
+  if (config->content_version() == content::RGSSVersion::Null) {
+    LOG(INFO) << "[Entry] Failed to load RGSS version.";
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Core",
+                             "Failed to identify RGSS version from configure.",
+                             nullptr);
+    return 1;
+  }
 
   SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
   SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
