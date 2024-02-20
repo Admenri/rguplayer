@@ -27,7 +27,7 @@ class Filesystem {
 
   using OpenCallback =
       base::RepeatingCallback<bool(SDL_RWops*, const std::string&)>;
-  void OpenRead(const std::string& filename, OpenCallback callback);
+  void OpenRead(const std::string& file_path, OpenCallback callback);
   void OpenReadRaw(const std::string& filename,
                    SDL_RWops& ops,
                    bool free_on_close);

@@ -117,8 +117,12 @@ void WrapperRWops(PHYSFS_File* handle, SDL_RWops& ops, bool auto_free) {
 
 struct OpenReadEnumData {
   Filesystem::OpenCallback callback;
-  std::string filename;
-  SDL_RWops* ops;
+  std::string full;
+  std::string dir;
+  std::string file;
+  std::string ext;
+
+  SDL_RWops* ops = nullptr;
 
   bool search_complete = false;
   int match_count = 0;
@@ -138,11 +142,11 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
   if (enum_data->search_complete)
     return PHYSFS_ENUM_STOP;
 
-  if (strncmp(filename.c_str(), enum_data->filename.c_str(),
-              enum_data->filename.size()) != 0)
+  size_t it = filename.rfind(enum_data->file);
+  if (it == std::string::npos)
     return PHYSFS_ENUM_OK;
 
-  char last = filename[enum_data->filename.size()];
+  const char last = filename[enum_data->file.size()];
   if (last != '.' && last != '/')
     return PHYSFS_ENUM_OK;
 
@@ -192,33 +196,34 @@ bool Filesystem::Exists(const std::string& filename) {
   return PHYSFS_exists(filename.c_str());
 }
 
-void Filesystem::OpenRead(const std::string& filename, OpenCallback callback) {
-  char buf[512] = {0};
-  int len = filename.size();
-  memcpy(buf, filename.data(), len);
-  char* sep;
+void Filesystem::OpenRead(const std::string& file_path, OpenCallback callback) {
+  std::string filename(file_path);
+  ToLower(filename);
+  std::string dir, file, ext;
 
-  for (sep = buf + len; sep > buf; --sep)
-    if (*sep == '/' || *sep == '\\')
-      break;
+  size_t last_slash_pos = filename.find_last_of('/');
+  if (last_slash_pos != std::string::npos) {
+    dir = filename.substr(0, last_slash_pos);
+    file = filename.substr(last_slash_pos + 1);
+  } else
+    file = filename;
 
-  const bool root_dir = (sep == buf);
-  const char* file = buf;
-  const char* dir = "";
-
-  if (!root_dir) {
-    *sep = '\0';
-    file = sep + 1;
-    dir = buf;
+  size_t last_dot_pos = file.find_last_of('.');
+  if (last_dot_pos != std::string::npos) {
+    ext = file.substr(last_dot_pos + 1);
+    file = file.substr(0, last_dot_pos);
   }
 
   OpenReadEnumData data;
   data.callback = callback;
-  data.filename = file;
-  ToLower(data.filename);
+
+  data.full = filename;
+  data.dir = dir;
+  data.file = file;
+  data.ext = ext;
   data.ops = SDL_CreateRW();
 
-  PHYSFS_enumerate(dir, OpenReadEnumCallback, &data);
+  PHYSFS_enumerate(dir.c_str(), OpenReadEnumCallback, &data);
   SDL_DestroyRW(data.ops);
 
   if (!data.physfs_error.empty())

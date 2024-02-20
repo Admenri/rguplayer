@@ -404,18 +404,22 @@ void Font::LoadFontInternal() {
 
   if (size_ >= 6 && size_ <= 96 && font_id_ >= 0) {
     // Find in global cache
+    bool loaded = false;
     while (!font_) {
       auto it = cache.find({font_id_, size_});
       if (it != cache.end()) {
         font_ = it->second;
         return;
-      }
+      } else if (loaded)
+        break;
 
       // Load new font
       const auto& font_path = paths.at(font_id_);
       auto* font_ptr = TTF_OpenFont(font_path.c_str(), size_);
-      if (font_ptr)
+      if (font_ptr) {
         cache.emplace(std::pair{font_id_, size_}, font_ptr);
+        loaded = true;
+      }
     }
   }
 
