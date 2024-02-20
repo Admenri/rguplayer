@@ -219,7 +219,7 @@ void InitInputBinding() {
     auto& binding_set = kKeyboardBindings[i];
 
     ID key = rb_intern(binding_set.name.c_str());
-    rb_const_set(module, key, rb_str_new2(binding_set.name.c_str()));
+    rb_const_set(module, key, INT2FIX(binding_set.key_id));
   }
 }
 
