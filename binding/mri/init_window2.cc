@@ -110,7 +110,6 @@ WINDOW2_DEFINE_ATTR(Openness, int, rb_fix_new, "i");
   MRI_METHOD(window2_get_##name) {                                      \
     scoped_refptr<content::Window2> obj =                               \
         MriGetStructData<content::Window2>(self);                       \
-    MRI_GUARD(obj->CheckIsDisposed(););                                 \
     return rb_iv_get(self, iv);                                         \
   }                                                                     \
   MRI_METHOD(window2_set_##name) {                                      \

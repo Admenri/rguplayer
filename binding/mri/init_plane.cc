@@ -87,7 +87,6 @@ MRI_METHOD(plane_set_blendtype) {
 
 MRI_METHOD(plane_get_bitmap) {
   scoped_refptr<content::Plane> obj = MriGetStructData<content::Plane>(self);
-  MRI_GUARD(obj->CheckIsDisposed(););
   return rb_iv_get(self, "_bitmap");
 }
 

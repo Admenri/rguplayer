@@ -118,7 +118,6 @@ MRI_METHOD(tilemap_set_visible) {
   MRI_METHOD(tilemap_get_##name) {                               \
     scoped_refptr<content::Tilemap> obj =                        \
         MriGetStructData<content::Tilemap>(self);                \
-    MRI_GUARD(obj->CheckIsDisposed(););                          \
     return rb_iv_get(self, iv);                                  \
   }                                                              \
   MRI_METHOD(tilemap_set_##name) {                               \
@@ -141,7 +140,6 @@ DEFINE_TILEMAP_ATTR_TABLE(Priorities, "_priorities");
 MRI_METHOD(tilemap_get_Tileset) {
   scoped_refptr<content::Tilemap> obj =
       MriGetStructData<content::Tilemap>(self);
-  MRI_GUARD(obj->CheckIsDisposed(););
   return rb_iv_get(self, "_tileset");
 }
 
@@ -170,7 +168,6 @@ MRI_METHOD(tilemap_get_viewport) {
 MRI_METHOD(tilemapautotiles_get_bitmaps) {
   scoped_refptr<content::Tilemap> obj =
       MriGetStructData<content::Tilemap>(self);
-  MRI_GUARD(obj->CheckIsDisposed(););
 
   int i;
   MriParseArgsTo(argc, argv, "i", &i);

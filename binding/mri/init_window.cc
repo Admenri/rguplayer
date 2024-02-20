@@ -66,7 +66,6 @@ WINDOW_DEFINE_ATTR(ContentsOpacity, int, rb_fix_new, "i");
   MRI_METHOD(window_get_##name) {                                       \
     scoped_refptr<content::Window> obj =                                \
         MriGetStructData<content::Window>(self);                        \
-    MRI_GUARD(obj->CheckIsDisposed(););                                 \
     return rb_iv_get(self, iv);                                         \
   }                                                                     \
   MRI_METHOD(window_set_##name) {                                       \

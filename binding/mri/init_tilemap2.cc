@@ -118,7 +118,6 @@ MRI_METHOD(tilemap2_set_visible) {
   MRI_METHOD(tilemap2_get_##name) {                              \
     scoped_refptr<content::Tilemap2> obj =                       \
         MriGetStructData<content::Tilemap2>(self);               \
-    MRI_GUARD(obj->CheckIsDisposed(););                          \
     return rb_iv_get(self, iv);                                  \
   }                                                              \
   MRI_METHOD(tilemap2_set_##name) {                              \
@@ -168,7 +167,6 @@ MRI_METHOD(tilemap2_set_viewport) {
 MRI_METHOD(bitmaparray_get_bitmaps) {
   scoped_refptr<content::Tilemap2> obj =
       MriGetStructData<content::Tilemap2>(self);
-  MRI_GUARD(obj->CheckIsDisposed(););
 
   int i;
   MriParseArgsTo(argc, argv, "i", &i);

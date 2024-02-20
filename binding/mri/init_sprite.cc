@@ -44,7 +44,6 @@ MRI_METHOD(sprite_height) {
 
 MRI_METHOD(sprite_get_bitmap) {
   scoped_refptr<content::Sprite> obj = MriGetStructData<content::Sprite>(self);
-  MRI_GUARD(obj->CheckIsDisposed(););
   return rb_iv_get(self, "_bitmap");
 }
 
