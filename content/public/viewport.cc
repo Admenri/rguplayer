@@ -101,6 +101,9 @@ void Viewport::BeforeComposite() {
 }
 
 void Viewport::Composite() {
+  if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
+    return;
+
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);
 
@@ -148,6 +151,9 @@ void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
   renderer::FrameBuffer::Bind(target->AsGLType().fbo);
   renderer::GSM.states.clear_color.Set(base::Vec4());
   renderer::FrameBuffer::Clear();
+
+  if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
+    return;
 
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);

@@ -115,6 +115,8 @@ void Sprite::BeforeComposite() {
 }
 
 void Sprite::Composite() {
+  if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
+    return;
   if (!opacity_)
     return;
   if (!bitmap_ || bitmap_->IsDisposed())
