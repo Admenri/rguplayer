@@ -18,6 +18,7 @@ static std::string AsString(VALUE obj) {
 }
 
 MRI_DEFINE_DATATYPE_REF(Bitmap, "Bitmap", content::Bitmap);
+MRI_DEFINE_DATATYPE(PixelArray, "PixelArray", RUBY_NEVER_FREE);
 
 void bitmap_init_prop(scoped_refptr<content::Bitmap> bitmap, VALUE self) {
   scoped_refptr<content::Font> f = bitmap->GetFont();
@@ -369,6 +370,90 @@ MRI_METHOD(bitmap_save_png) {
   return self;
 }
 
+MRI_METHOD(bitmap_process_pixel) {
+  scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
+
+  VALUE pa_klass =
+      rb_const_get(rb_cObject, rb_intern(kPixelArrayDataType.wrap_struct_name));
+  VALUE pa_obj = rb_obj_alloc(pa_klass);
+  MriSetStructData<content::Bitmap>(pa_obj, obj.get());
+  rb_iv_set(self, "_pixel_array", pa_obj);
+
+  // Cached pixels in memory
+  obj->SurfaceRequired();
+
+  VALUE yield = rb_block_proc();
+  rb_funcall2(yield, rb_intern("call"), 1, &pa_obj);
+
+  // Update memory to GPU memory
+  obj->UpdateSurface();
+  rb_iv_set(self, "_pixel_array", Qnil);
+
+  return self;
+}
+
+MRI_METHOD(pixelarray_get_color) {
+  scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
+
+  int index = 0;
+  MriParseArgsTo(argc, argv, "i", &index);
+
+  SDL_Surface* surf = obj->SurfaceRequired();
+  uint32_t pixel = *(static_cast<uint32_t*>(surf->pixels) + index);
+
+  return LONG2FIX(pixel);
+}
+
+MRI_METHOD(pixelarray_set_color) {
+  scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
+
+  int index = 0;
+  uint32_t pixel = 0;
+  MriParseArgsTo(argc, argv, "ii", &index, &pixel);
+
+  SDL_Surface* surf = obj->SurfaceRequired();
+  *(static_cast<uint32_t*>(surf->pixels) + index) = pixel;
+
+  return Qnil;
+}
+
+MRI_METHOD(pixelarray_savedata) {
+  scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
+
+  VALUE buf;
+  MriParseArgsTo(argc, argv, "o", &buf);
+
+  if (!RB_TYPE_P(buf, RUBY_T_STRING))
+    rb_raise(rb_eTypeError, "Argument 0: Expected string");
+
+  SDL_Surface* surf = obj->SurfaceRequired();
+  memcpy(RSTRING_PTR(buf), surf->pixels, RSTRING_LEN(buf));
+
+  return buf;
+}
+
+MRI_METHOD(pixelarray_loaddata) {
+  scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
+
+  VALUE buf;
+  MriParseArgsTo(argc, argv, "o", &buf);
+
+  if (!RB_TYPE_P(buf, RUBY_T_STRING))
+    rb_raise(rb_eTypeError, "Argument 0: Expected string");
+
+  SDL_Surface* surf = obj->SurfaceRequired();
+  memcpy(surf->pixels, RSTRING_PTR(buf), RSTRING_LEN(buf));
+
+  return buf;
+}
+
+MRI_METHOD(pixelarray_size) {
+  scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
+
+  SDL_Surface* surf = obj->SurfaceRequired();
+  return INT2FIX(surf->w * surf->h * 4);
+}
+
 void InitBitmapBinding() {
   VALUE klass = rb_define_class("Bitmap", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kBitmapDataType>);
@@ -394,10 +479,19 @@ void InitBitmapBinding() {
   MriDefineMethod(klass, "radial_blur", bitmap_radial_blur);
   MriDefineMethod(klass, "draw_text", bitmap_draw_text);
   MriDefineMethod(klass, "text_size", bitmap_text_size);
+  MriDefineAttr(klass, "font", bitmap, font);
 
   MriDefineMethod(klass, "save_png", bitmap_save_png);
+  MriDefineMethod(klass, "process_pixel", bitmap_process_pixel);
 
-  MriDefineAttr(klass, "font", bitmap, font);
+  /* Pixel Process extension */
+  VALUE pixel_array = rb_define_class("PixelArray", rb_cObject);
+  rb_define_alloc_func(pixel_array, MriClassAllocate<&kPixelArrayDataType>);
+
+  MriDefineAttr(pixel_array, "[]", pixelarray, color);
+  MriDefineMethod(pixel_array, "save_data", pixelarray_savedata);
+  MriDefineMethod(pixel_array, "load_data", pixelarray_loaddata);
+  MriDefineMethod(pixel_array, "size", pixelarray_size);
 }
 
 }  // namespace binding

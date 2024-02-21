@@ -221,11 +221,7 @@ void Bitmap::ClearRect(const base::Rect& rect) {
 scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
   CheckIsDisposed();
 
-  if (!surface_buffer_ || surface_need_update_) {
-    SurfaceRequired();
-    surface_need_update_ = false;
-  }
-
+  SurfaceRequired();
   int bpp = surface_buffer_->format->BytesPerPixel;
   uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
                    y * surface_buffer_->pitch + x * bpp;
@@ -325,15 +321,25 @@ void Bitmap::SetFont(scoped_refptr<Font> font) {
 SDL_Surface* Bitmap::SurfaceRequired() {
   CheckIsDisposed();
 
-  if (surface_buffer_) {
-    SDL_DestroySurface(surface_buffer_);
-  }
+  if (!surface_need_update_)
+    return surface_buffer_;
+  surface_need_update_ = false;
 
+  if (surface_buffer_)
+    SDL_DestroySurface(surface_buffer_);
   surface_buffer_ =
       SDL_CreateSurface(size_.x, size_.y, SDL_PIXELFORMAT_ABGR8888);
   GetSurfaceInternal();
 
   return surface_buffer_;
+}
+
+void Bitmap::UpdateSurface() {
+  CheckIsDisposed();
+
+  UpdateSurfaceInternal();
+
+  NeedUpdateSurface();
 }
 
 void Bitmap::OnObjectDisposed() {
@@ -602,6 +608,14 @@ void Bitmap::NeedUpdateSurface() {
   surface_need_update_ = true;
 
   observers_.Notify();
+}
+
+void Bitmap::UpdateSurfaceInternal() {
+  if (surface_buffer_ && surface_buffer_->pixels) {
+    renderer::Texture::Bind(tex_fbo_.tex);
+    renderer::Texture::TexImage2D(size_.x, size_.y, GL_RGBA,
+                                  surface_buffer_->pixels);
+  }
 }
 
 }  // namespace content

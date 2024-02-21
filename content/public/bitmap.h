@@ -85,6 +85,7 @@ class Bitmap : public base::RefCounted<Bitmap>,
 
   /* Sync Method */
   SDL_Surface* SurfaceRequired();
+  void UpdateSurface();
 
   base::CallbackListSubscription AddBitmapObserver(
       base::RepeatingClosure observer) {
@@ -116,6 +117,7 @@ class Bitmap : public base::RefCounted<Bitmap>,
                         const std::string& str,
                         TextAlign align);
   void NeedUpdateSurface();
+  void UpdateSurfaceInternal();
 
   base::Vec2i size_;
   renderer::TextureFrameBuffer tex_fbo_;
