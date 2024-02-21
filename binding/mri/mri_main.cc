@@ -14,6 +14,7 @@
 #include "binding/mri/init_graphics.h"
 #include "binding/mri/init_input.h"
 #include "binding/mri/init_plane.h"
+#include "binding/mri/init_rgu.h"
 #include "binding/mri/init_sprite.h"
 #include "binding/mri/init_table.h"
 #include "binding/mri/init_tilemap.h"
@@ -202,6 +203,7 @@ void BindingEngineMri::InitializeBinding(
     InitWindowBinding();
   }
 
+  InitRGUBinding();
   Init_zlib();
 
   if (binding_host->rgss_version() < content::RGSSVersion::RGSS3) {

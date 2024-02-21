@@ -68,4 +68,9 @@ set(CORE_RENDERER_SRC
 )
 
 add_library(core_renderer ${CORE_RENDERER_SRC})
-target_link_libraries(core_renderer core_base SDL3::SDL3-static)
+target_link_libraries(core_renderer PRIVATE core_base SDL3::SDL3-static)
+if (MSVC)
+  target_compile_options(core_renderer PRIVATE /O2 /WX "$<$<CXX_COMPILER_ID:MSVC>:-utf-8>")
+else()
+  target_compile_options(core_renderer PRIVATE -O2 -Werror)
+endif()

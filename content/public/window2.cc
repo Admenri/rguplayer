@@ -139,7 +139,7 @@ void Window2::SetContents(scoped_refptr<Bitmap> contents) {
 void Window2::SetCursorRect(scoped_refptr<Rect> cursor_rect) {
   CheckIsDisposed();
 
-  if (*cursor_rect_ == *cursor_rect)
+  if (cursor_rect_->IsSame(*cursor_rect))
     return;
 
   *cursor_rect_ = *cursor_rect;
@@ -307,7 +307,7 @@ void Window2::SetOpenness(int openness) {
 void Window2::SetTone(scoped_refptr<Tone> tone) {
   CheckIsDisposed();
 
-  if (*tone_ == *tone)
+  if (tone_->IsSame(*tone))
     return;
 
   *tone_ = *tone;
@@ -429,22 +429,25 @@ void Window2::Composite() {
   auto& shader = renderer::GSM.shaders->base_alpha;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+  shader.SetTransOffset(trans_offset);
   renderer::Texture::SetFilter(GL_LINEAR);
 
   if (windowskin_valid) {
-    if (opacity_) {
-      shader.SetTransOffset(trans_offset);
+    /* Base window draw */
+    if (opacity_ > 0) {
       shader.SetTexture(base_tfb_.tex);
       shader.SetTextureSize(rect_.Size());
 
       base_quad_->Draw();
     }
 
+    /* Controls draw */
     if (openness_ >= 255) {
       shader.SetTexture(windowskin_->AsGLType().tex);
       shader.SetTextureSize(windowskin_->GetSize());
 
-      arrows_quads_->Draw(0, arrows_quad_count_);
+      if (arrows_quad_count_)
+        arrows_quads_->Draw(0, arrows_quad_count_);
     }
   }
 
@@ -462,7 +465,7 @@ void Window2::Composite() {
   if (screen()->content_version() >= RGSSVersion::RGSS3)
     renderer::GSM.states.scissor_rect.SetIntersect(padding_trans_rect);
 
-  /* Control arrows and cursor */
+  /* Cursor draw */
   if (cursor_quads_->count() > 0 && windowskin_valid) {
     base::Vec2i cursor_trans = padding_trans_rect.Position();
     cursor_trans.x += cursor_rect_->GetX();

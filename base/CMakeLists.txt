@@ -50,3 +50,8 @@ set(CORE_BASE_SRC
 
 add_library(core_base ${CORE_BASE_SRC} ${CORE_BASE_THIRD_PARTY})
 target_link_libraries(core_base SDL3::SDL3-static)
+if (MSVC)
+  target_compile_options(core_base PRIVATE /O2 /WX "$<$<CXX_COMPILER_ID:MSVC>:-utf-8>")
+else()
+  target_compile_options(core_base PRIVATE -O2 -Werror)
+endif()

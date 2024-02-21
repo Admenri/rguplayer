@@ -427,9 +427,8 @@ void Font::LoadFontInternal() {
   std::string font_names;
   for (auto& it : name_)
     font_names = font_names + it + " ";
-  throw base::Exception::Exception(base::Exception::ContentError,
-                                   "Failed to load Font: %s",
-                                   font_names.c_str());
+  throw base::Exception(base::Exception::ContentError,
+                        "Failed to load Font: %s", font_names.c_str());
 }
 
 void Font::MakeFontIDInternal() {

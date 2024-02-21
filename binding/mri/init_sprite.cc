@@ -59,22 +59,22 @@ MRI_METHOD(sprite_set_bitmap) {
   return propObj;
 }
 
-#define DEFINE_SPRITE_ATTR_VAL(name, iv, ty)                         \
-  MRI_METHOD(sprite_get_##name) {                                    \
-    scoped_refptr<content::Sprite> obj =                             \
-        MriGetStructData<content::Sprite>(self);                     \
-    MRI_GUARD(obj->CheckIsDisposed(););                              \
-    return rb_iv_get(self, iv);                                      \
-  }                                                                  \
-  MRI_METHOD(sprite_set_##name) {                                    \
-    MriCheckArgc(argc, 1);                                           \
-    scoped_refptr<content::Sprite> obj =                             \
-        MriGetStructData<content::Sprite>(self);                     \
-    VALUE propObj = *argv;                                           \
-    scoped_refptr<content::##ty> prop =                              \
-        MriCheckStructData<content::##ty>(propObj, k##ty##DataType); \
-    MRI_GUARD(obj->Set##name(prop););                                \
-    return propObj;                                                  \
+#define DEFINE_SPRITE_ATTR_VAL(name, iv, ty)                       \
+  MRI_METHOD(sprite_get_##name) {                                  \
+    scoped_refptr<content::Sprite> obj =                           \
+        MriGetStructData<content::Sprite>(self);                   \
+    MRI_GUARD(obj->CheckIsDisposed(););                            \
+    return rb_iv_get(self, iv);                                    \
+  }                                                                \
+  MRI_METHOD(sprite_set_##name) {                                  \
+    MriCheckArgc(argc, 1);                                         \
+    scoped_refptr<content::Sprite> obj =                           \
+        MriGetStructData<content::Sprite>(self);                   \
+    VALUE propObj = *argv;                                         \
+    scoped_refptr<content::ty> prop =                              \
+        MriCheckStructData<content::ty>(propObj, k##ty##DataType); \
+    MRI_GUARD(obj->Set##name(prop););                              \
+    return propObj;                                                \
   }
 
 DEFINE_SPRITE_ATTR_VAL(SrcRect, "_src_rect", Rect);

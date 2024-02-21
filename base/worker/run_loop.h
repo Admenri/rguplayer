@@ -63,9 +63,6 @@ class SequencedTaskRunner : public base::RefCounted<SequencedTaskRunner> {
   SequencedTaskRunner() = default;
   virtual ~SequencedTaskRunner() = default;
 
-  SequencedTaskRunner(const SequencedTaskRunner&) = delete;
-  SequencedTaskRunner& operator=(const SequencedTaskRunner) = delete;
-
   virtual void PostTask(base::OnceClosure task) = 0;
   virtual void WaitForSync() = 0;
 

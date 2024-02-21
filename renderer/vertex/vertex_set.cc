@@ -6,7 +6,7 @@
 
 namespace renderer {
 
-static const VertexItemAttribute CommonVertexInfo[] = {
+const VertexItemAttribute CommonVertexInfo[] = {
     {GLES2Shader::AttribLocation::Position, 2, GL_FLOAT,
      (const void*)offsetof(CommonVertex, position)},
     {GLES2Shader::AttribLocation::TexCoord, 2, GL_FLOAT,
@@ -14,10 +14,7 @@ static const VertexItemAttribute CommonVertexInfo[] = {
     {GLES2Shader::AttribLocation::Color, 4, GL_FLOAT,
      (const void*)offsetof(CommonVertex, color)}};
 
-template <>
-const VertexItemAttribute* VertexInfo<CommonVertex>::attrs = CommonVertexInfo;
-template <>
-const int VertexInfo<CommonVertex>::attr_size = sizeof(CommonVertexInfo) /
-                                                sizeof(CommonVertexInfo[0]);
+const int CommonVertexInfoSize =
+    sizeof(CommonVertexInfo) / sizeof(CommonVertexInfo[0]);
 
 }  // namespace renderer

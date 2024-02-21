@@ -53,7 +53,7 @@ class Rect : public base::RefCounted<Rect>,
     return other;
   }
 
-  bool operator==(const Rect& other) {
+  bool IsSame(const Rect& other) {
     return other.x_ == x_ && other.y_ == y_ && other.width_ == width_ &&
            other.height_ == height_;
   }
@@ -178,7 +178,7 @@ class Tone : public base::RefCounted<Tone>,
     return other;
   }
 
-  bool operator==(const Tone& other) {
+  bool IsSame(const Tone& other) {
     return other.red_ == red_ && other.green_ == green_ &&
            other.blue_ == blue_ && other.gray_ == gray_;
   }
@@ -293,7 +293,7 @@ class Color : public base::RefCounted<Color>,
     return other;
   }
 
-  bool operator==(const Color& other) {
+  bool IsSame(const Color& other) {
     return other.red_ == red_ && other.green_ == green_ &&
            other.blue_ == blue_ && other.alpha_ == alpha_;
   }

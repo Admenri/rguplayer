@@ -83,6 +83,8 @@ void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
 }
 
 void RenderRunner::InitGLContextInternal() {
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
   glcontext_ = SDL_GL_CreateContext(host_window_->AsSDLWindow());
   SDL_GL_MakeCurrent(host_window_->AsSDLWindow(), glcontext_);
   SDL_GL_SetSwapInterval(0);

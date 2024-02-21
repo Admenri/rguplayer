@@ -37,6 +37,9 @@ set(BINDING_MRI_SRC
   init_window2.cc
   init_window2.h
 
+  init_rgu.cc
+  init_rgu.h
+
   mri_template.h
   mri_main.cc
   mri_main.h

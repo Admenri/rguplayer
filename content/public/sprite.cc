@@ -37,7 +37,7 @@ void Sprite::SetBitmap(scoped_refptr<Bitmap> bitmap) {
 void Sprite::SetSrcRect(scoped_refptr<Rect> rect) {
   CheckIsDisposed();
 
-  if (*src_rect_ == *rect)
+  if (src_rect_->IsSame(*rect))
     return;
 
   *src_rect_ = *rect;

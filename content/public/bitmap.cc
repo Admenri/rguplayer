@@ -58,16 +58,15 @@ uint16_t utf8_to_ucs2(const char* _input, const char** end_ptr) {
 Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
     : GraphicElement(host), Disposable(host), font_(new Font()) {
   if (width <= 0 || height <= 0) {
-    throw base::Exception::Exception(base::Exception::ContentError,
-                                     "Invalid bitmap create size: (%dx%d)",
-                                     width, height);
+    throw base::Exception(base::Exception::ContentError,
+                          "Invalid bitmap create size: (%dx%d)", width, height);
   }
 
   if (width > screen()->renderer()->max_texture_size() ||
       height > screen()->renderer()->max_texture_size()) {
-    throw base::Exception::Exception(base::Exception::OpenGLError,
-                                     "Unable to create large bitmap: (%dx%d)",
-                                     width, height);
+    throw base::Exception(base::Exception::OpenGLError,
+                          "Unable to create large bitmap: (%dx%d)", width,
+                          height);
   }
 
   size_ = base::Vec2i(width, height);
@@ -92,16 +91,16 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
   host->filesystem()->OpenRead(filename, file_handler);
 
   if (!surface_buffer_) {
-    throw base::Exception::Exception(base::Exception::ContentError,
-                                     "Failed to load image: '%s': %s",
-                                     filename.c_str(), SDL_GetError());
+    throw base::Exception(base::Exception::ContentError,
+                          "Failed to load image: '%s': %s", filename.c_str(),
+                          SDL_GetError());
   }
 
   if (surface_buffer_->w > screen()->renderer()->max_texture_size() ||
       surface_buffer_->h > screen()->renderer()->max_texture_size()) {
-    throw base::Exception::Exception(base::Exception::OpenGLError,
-                                     "Unable to load large image: (%dx%d)",
-                                     surface_buffer_->w, surface_buffer_->h);
+    throw base::Exception(base::Exception::OpenGLError,
+                          "Unable to load large image: (%dx%d)",
+                          surface_buffer_->w, surface_buffer_->h);
   }
 
   size_ = base::Vec2i(surface_buffer_->w, surface_buffer_->h);

@@ -36,7 +36,7 @@ void GLES2Context::EnableDebugOutputForCurrentThread() {
 void GLES2Context::InitGLESContext() {
   suffix_.clear();
 #include "renderer/context/gles2_command_buffer_header_autogen.cc"
-#define BIND_GLES_FUN(x) x = static_cast<decltype(x)>(GetGLProc(#x));
+#define BIND_GLES_FUN(x) x = reinterpret_cast<decltype(x)>(GetGLProc(#x));
 
   // VertexArray extension
   if (SDL_GL_ExtensionSupported("GL_ARB_vertex_array_object"))
@@ -91,8 +91,7 @@ void* GLES2Context::GetGLProc(const std::string& fname) {
   glfname += fname;
   glfname += suffix_;
 
-  void* fptr = SDL_GL_GetProcAddress(glfname.c_str());
-
+  void* fptr = reinterpret_cast<void*>(SDL_GL_GetProcAddress(glfname.c_str()));
   return fptr;
 }
 

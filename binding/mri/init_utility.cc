@@ -108,7 +108,7 @@ MRI_METHOD(rect_equal) {
   scoped_refptr<content::Rect> other_obj =
       MriCheckStructData<content::Rect>(other, kRectDataType);
 
-  return (*other_obj == *obj) ? Qtrue : Qfalse;
+  return other_obj->IsSame(*obj) ? Qtrue : Qfalse;
 }
 
 void InitRectBinding() {
@@ -226,7 +226,7 @@ MRI_METHOD(color_equal) {
   scoped_refptr<content::Color> other_obj =
       MriCheckStructData<content::Color>(other, kColorDataType);
 
-  return (*other_obj == *obj) ? Qtrue : Qfalse;
+  return other_obj->IsSame(*obj) ? Qtrue : Qfalse;
 }
 
 void InitColorBinding() {
@@ -341,7 +341,7 @@ MRI_METHOD(tone_equal) {
   scoped_refptr<content::Tone> other_obj =
       MriCheckStructData<content::Tone>(other, kToneDataType);
 
-  return (*other_obj == *obj) ? Qtrue : Qfalse;
+  return other_obj->IsSame(*obj) ? Qtrue : Qfalse;
 }
 
 void InitToneBinding() {

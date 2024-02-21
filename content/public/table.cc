@@ -100,8 +100,8 @@ std::string Table::Serialize() {
 
 scoped_refptr<Table> Table::Deserialize(const std::string& data) {
   if (data.size() < 20)
-    throw base::Exception::Exception(base::Exception::ContentError,
-                                     "incorrect table serialize data");
+    throw base::Exception(base::Exception::ContentError,
+                          "incorrect table serialize data");
 
   int xsize, ysize, zsize, size;
   xsize = Serializable::ReadInt32(data.data(), 4);
@@ -110,11 +110,11 @@ scoped_refptr<Table> Table::Deserialize(const std::string& data) {
   size = Serializable::ReadInt32(data.data(), 16);
 
   if (size != xsize * ysize * zsize)
-    throw base::Exception::Exception(base::Exception::ContentError,
-                                     "incorrect table serialize data");
+    throw base::Exception(base::Exception::ContentError,
+                          "incorrect table serialize data");
   if (data.size() != sizeof(int32_t) * 5 + sizeof(int16_t) * size)
-    throw base::Exception::Exception(base::Exception::ContentError,
-                                     "incorrect table serialize data");
+    throw base::Exception(base::Exception::ContentError,
+                          "incorrect table serialize data");
 
   scoped_refptr<Table> obj = new Table(xsize, ysize, zsize);
   if (size)

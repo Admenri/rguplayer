@@ -104,7 +104,7 @@ class Plane : public base::RefCounted<Plane>,
   void InitDrawableData() override;
   void BeforeComposite() override;
   void Composite() override;
-  void CheckDisposed() const { CheckIsDisposed(); }
+  void CheckDisposed() const override { CheckIsDisposed(); }
   void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;
 
   void UpdateQuadArray();

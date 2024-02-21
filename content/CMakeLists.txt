@@ -28,6 +28,8 @@ set(CORE_CONTENT_SRC
   public/graphics.h
   public/input.cc
   public/input.h
+  public/mouse.cc
+  public/mouse.h
   public/plane.cc
   public/plane.h
   public/sprite.cc
@@ -68,3 +70,9 @@ target_link_libraries(core_content PUBLIC
                       SDL3_image::SDL3_image
                       SDL3_ttf::SDL3_ttf
                       soloud)
+
+if (MSVC)
+  target_compile_options(core_content PRIVATE /O2 /WX "$<$<CXX_COMPILER_ID:MSVC>:-utf-8>")
+else()
+  target_compile_options(core_content PRIVATE -O2 -Werror)
+endif()

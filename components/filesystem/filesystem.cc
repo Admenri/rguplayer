@@ -227,12 +227,12 @@ void Filesystem::OpenRead(const std::string& file_path, OpenCallback callback) {
   SDL_DestroyRW(data.ops);
 
   if (!data.physfs_error.empty())
-    throw base::Exception::Exception(base::Exception::FilesystemError,
-                                     "PhysFS: %s", data.physfs_error.c_str());
+    throw base::Exception(base::Exception::FilesystemError, "PhysFS: %s",
+                          data.physfs_error.c_str());
 
   if (data.match_count <= 0)
-    throw base::Exception::Exception(base::Exception::NoFileError,
-                                     "No file match: %s", filename.c_str());
+    throw base::Exception(base::Exception::NoFileError, "No file match: %s",
+                          filename.c_str());
 }
 
 void Filesystem::OpenReadRaw(const std::string& filename,
@@ -240,9 +240,8 @@ void Filesystem::OpenReadRaw(const std::string& filename,
                              bool free_on_close) {
   PHYSFS_File* file = PHYSFS_openRead(filename.c_str());
   if (!file)
-    throw base::Exception::Exception(base::Exception::NoFileError,
-                                     "Failed to load file: %s",
-                                     filename.c_str());
+    throw base::Exception(base::Exception::NoFileError,
+                          "Failed to load file: %s", filename.c_str());
 
   WrapperRWops(file, ops, free_on_close);
 }

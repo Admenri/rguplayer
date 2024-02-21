@@ -52,7 +52,7 @@ void Viewport::SetOY(int oy) {
 void Viewport::SetRect(scoped_refptr<Rect> rect) {
   CheckIsDisposed();
 
-  if (*rect == *rect_)
+  if (rect->IsSame(*rect_))
     return;
 
   *rect_ = *rect;

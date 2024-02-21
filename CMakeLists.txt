@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.18.0)
 project(rgu_player VERSION 1.0.0)
 include_directories("${PROJECT_SOURCE_DIR}")
 
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 set(CMAKE_CXX_STANDARD 20)
 
 option(CORE_ENABLE_VIDEO "Enable Core Video Decode Functions" false)

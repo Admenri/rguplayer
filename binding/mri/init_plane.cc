@@ -28,22 +28,22 @@ MRI_METHOD(plane_initialize) {
   return self;
 }
 
-#define PLANE_DEFINE_VAL_ATTR(name, ivname)                              \
-  MRI_METHOD(plane_get_##name) {                                         \
-    scoped_refptr<content::Plane> obj =                                  \
-        MriGetStructData<content::Plane>(self);                          \
-    MRI_GUARD(obj->CheckIsDisposed(););                                  \
-    return rb_iv_get(self, #ivname);                                     \
-  }                                                                      \
-  MRI_METHOD(plane_set_##name) {                                         \
-    MriCheckArgc(argc, 1);                                               \
-    scoped_refptr<content::Plane> obj =                                  \
-        MriGetStructData<content::Plane>(self);                          \
-    VALUE propObj = *argv;                                               \
-    scoped_refptr<content::##name> prop =                                \
-        MriCheckStructData<content::##name>(propObj, k##name##DataType); \
-    MRI_GUARD(obj->Set##name(prop););                                    \
-    return propObj;                                                      \
+#define PLANE_DEFINE_VAL_ATTR(name, ivname)                            \
+  MRI_METHOD(plane_get_##name) {                                       \
+    scoped_refptr<content::Plane> obj =                                \
+        MriGetStructData<content::Plane>(self);                        \
+    MRI_GUARD(obj->CheckIsDisposed(););                                \
+    return rb_iv_get(self, #ivname);                                   \
+  }                                                                    \
+  MRI_METHOD(plane_set_##name) {                                       \
+    MriCheckArgc(argc, 1);                                             \
+    scoped_refptr<content::Plane> obj =                                \
+        MriGetStructData<content::Plane>(self);                        \
+    VALUE propObj = *argv;                                             \
+    scoped_refptr<content::name> prop =                                \
+        MriCheckStructData<content::name>(propObj, k##name##DataType); \
+    MRI_GUARD(obj->Set##name(prop););                                  \
+    return propObj;                                                    \
   }
 
 PLANE_DEFINE_VAL_ATTR(Color, _color);

@@ -143,7 +143,7 @@ void Window::SetStretch(bool stretch) {
 void Window::SetCursorRect(scoped_refptr<Rect> cursor_rect) {
   CheckIsDisposed();
 
-  if (*cursor_rect_ == *cursor_rect)
+  if (cursor_rect_->IsSame(*cursor_rect))
     return;
   *cursor_rect_ = *cursor_rect;
   controls_quads_need_update_ = true;

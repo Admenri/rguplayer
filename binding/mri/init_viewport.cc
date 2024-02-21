@@ -79,22 +79,22 @@ MRI_METHOD(viewport_snap_to_bitmap) {
 VIEWPORT_DEFINE_INT_ATTR(OX);
 VIEWPORT_DEFINE_INT_ATTR(OY);
 
-#define VIEWPORT_DEFINE_VAL_ATTR(name, ivname)                           \
-  MRI_METHOD(viewport_get_##name) {                                      \
-    scoped_refptr<content::Viewport> obj =                               \
-        MriGetStructData<content::Viewport>(self);                       \
-    MRI_GUARD(obj->CheckIsDisposed(););                                  \
-    return rb_iv_get(self, #ivname);                                     \
-  }                                                                      \
-  MRI_METHOD(viewport_set_##name) {                                      \
-    MriCheckArgc(argc, 1);                                               \
-    scoped_refptr<content::Viewport> obj =                               \
-        MriGetStructData<content::Viewport>(self);                       \
-    VALUE propObj = *argv;                                               \
-    scoped_refptr<content::##name> prop =                                \
-        MriCheckStructData<content::##name>(propObj, k##name##DataType); \
-    MRI_GUARD(obj->Set##name(prop);)                                     \
-    return propObj;                                                      \
+#define VIEWPORT_DEFINE_VAL_ATTR(name, ivname)                         \
+  MRI_METHOD(viewport_get_##name) {                                    \
+    scoped_refptr<content::Viewport> obj =                             \
+        MriGetStructData<content::Viewport>(self);                     \
+    MRI_GUARD(obj->CheckIsDisposed(););                                \
+    return rb_iv_get(self, #ivname);                                   \
+  }                                                                    \
+  MRI_METHOD(viewport_set_##name) {                                    \
+    MriCheckArgc(argc, 1);                                             \
+    scoped_refptr<content::Viewport> obj =                             \
+        MriGetStructData<content::Viewport>(self);                     \
+    VALUE propObj = *argv;                                             \
+    scoped_refptr<content::name> prop =                                \
+        MriCheckStructData<content::name>(propObj, k##name##DataType); \
+    MRI_GUARD(obj->Set##name(prop);)                                   \
+    return propObj;                                                    \
   }
 
 VIEWPORT_DEFINE_VAL_ATTR(Rect, _rect);

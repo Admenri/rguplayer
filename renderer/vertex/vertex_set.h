@@ -34,6 +34,14 @@ struct VertexInfo {
   static const int attr_size;
 };
 
+extern const VertexItemAttribute CommonVertexInfo[];
+extern const int CommonVertexInfoSize;
+
+template <>
+const VertexItemAttribute* VertexInfo<CommonVertex>::attrs = CommonVertexInfo;
+template <>
+const int VertexInfo<CommonVertex>::attr_size = CommonVertexInfoSize;
+
 template <typename VertexType>
 struct VertexArray {
   using Type = VertexType;
