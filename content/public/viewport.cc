@@ -87,17 +87,6 @@ void Viewport::InitDrawableData() {
 
 void Viewport::BeforeComposite() {
   DrawableParent::NotifyPrepareComposite();
-
-  if (viewport_rect_need_update_) {
-    viewport_rect_need_update_ = false;
-    auto rect = base::Rect(viewport_rect().rect.Size());
-    viewport_quad_->SetPositionRect(rect);
-    viewport_quad_->SetTexCoordRect(rect);
-
-    renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
-                                        viewport_rect().rect.width,
-                                        viewport_rect().rect.height);
-  }
 }
 
 void Viewport::Composite() {
@@ -146,6 +135,17 @@ void Viewport::OnRectChangedInternal() {
 }
 
 void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
+  if (viewport_rect_need_update_) {
+    viewport_rect_need_update_ = false;
+    auto rect = base::Rect(viewport_rect().rect.Size());
+    viewport_quad_->SetPositionRect(rect);
+    viewport_quad_->SetTexCoordRect(rect);
+
+    renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
+                                        viewport_rect().rect.width,
+                                        viewport_rect().rect.height);
+  }
+
   NotifyPrepareComposite();
 
   renderer::FrameBuffer::Bind(target->AsGLType().fbo);

@@ -54,6 +54,16 @@ MRI_METHOD(disposable_dispose) {
   if (!obj)
     return Qnil;
 
+  if (MriGetGlobalRunner()->rgss_version() == content::RGSSVersion::RGSS1) {
+    VALUE children = rb_iv_get(self, "_children");
+
+    if (!NIL_P(children)) {
+      ID dispose_func = rb_intern("_dispose_alias_");
+      for (long i = 0; i < RARRAY_LEN(children); ++i)
+        rb_funcall2(rb_ary_entry(children, i), dispose_func, 0, 0);
+    }
+  }
+
   obj->Dispose();
 
   return Qnil;
@@ -73,6 +83,9 @@ template <typename Ty>
 void MriInitDisposableBinding(VALUE klass) {
   MriDefineMethod(klass, "dispose", disposable_dispose<Ty>);
   MriDefineMethod(klass, "disposed?", disposable_is_disposed<Ty>);
+
+  if (MriGetGlobalRunner()->rgss_version() == content::RGSSVersion::RGSS1)
+    rb_define_alias(klass, "_dispose_alias_", "dispose");
 }
 
 template <typename Ty>
@@ -190,8 +203,20 @@ scoped_refptr<Ty> MriInitializeViewportchild(
   MriParseArgsTo(argc, argv, "|o", &v);
 
   scoped_refptr<content::Viewport> viewport;
-  if (!NIL_P(v))
+  if (!NIL_P(v)) {
     viewport = MriCheckStructData<content::Viewport>(v, kViewportDataType);
+
+    if (screen->content_version() == content::RGSSVersion::RGSS1) {
+      VALUE children = rb_iv_get(v, "_children");
+
+      if (NIL_P(children)) {
+        children = rb_ary_new();
+        rb_iv_set(v, "_children", children);
+      }
+
+      rb_ary_push(children, self);
+    }
+  }
 
   scoped_refptr<Ty> obj;
   MRI_GUARD(obj = new Ty(screen, viewport););

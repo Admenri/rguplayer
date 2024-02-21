@@ -15,13 +15,14 @@ MRI_DEFINE_DATATYPE_REF(Window2, "Window", content::Window2);
 
 MRI_METHOD(window2_initialize) {
   scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
-
   scoped_refptr<content::Window2> obj;
 
   if (MriGetGlobalRunner()->rgss_version() >= content::RGSSVersion::RGSS3) {
     int x = 0, y = 0, w = 0, h = 0;
-    if (argc >= 4)
+    if (argc == 4)
       MriParseArgsTo(argc, argv, "iiii", &x, &y, &w, &h);
+    else if (argc > 0)
+      MriCheckArgc(argc, 4);
     MRI_GUARD(obj = new content::Window2(screen, x, y, w, h););
   } else {
     obj =

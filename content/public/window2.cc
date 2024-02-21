@@ -65,7 +65,13 @@ Window2::Window2(scoped_refptr<Graphics> screen,
                  scoped_refptr<Viewport> viewport)
     : GraphicElement(screen),
       Disposable(screen),
-      ViewportChild(screen, viewport) {
+      ViewportChild(screen,
+                    viewport,
+                    (screen->content_version() >= RGSSVersion::RGSS3 ? 100 : 0),
+                    (screen->content_version() >= RGSSVersion::RGSS3
+                         ? std::numeric_limits<int>::max()
+                         : 0)),
+      rect_(0, 0, 0, 0) {
   InitWindow();
 }
 
@@ -419,10 +425,12 @@ void Window2::BeforeComposite() {
 void Window2::Composite() {
   bool windowskin_valid = windowskin_ && !windowskin_->IsDisposed();
   bool contents_valid = contents_ && !contents_->IsDisposed();
+
   base::Vec2i trans_offset = rect_.Position() + parent_rect().GetRealOffset();
 
   renderer::GSM.states.scissor.Push(true);
-  renderer::GSM.states.scissor_rect.Push(
+  renderer::GSM.states.scissor_rect.PushOnly();
+  renderer::GSM.states.scissor_rect.SetIntersect(
       base::Rect(trans_offset, rect_.Size()));
 
   /* Stretch background & frame */
@@ -495,8 +503,8 @@ void Window2::Composite() {
     content_quad_->Draw();
   }
 
-  renderer::GSM.states.scissor.Pop();
   renderer::GSM.states.scissor_rect.Pop();
+  renderer::GSM.states.scissor.Pop();
 }
 
 void Window2::CheckDisposed() const {
@@ -759,7 +767,7 @@ void Window2::UpdateCursorQuadsInternal() {
   const base::Rect rect = cursor_rect_->AsBase();
   const CursorSrc& src = cursor_src;
 
-  if (rect.width <= 0 || rect.height <= 0) {
+  if (rect.width == 0 || rect.height == 0) {
     cursor_quads_->Clear();
     cursor_data_need_update_ = true;
     return;

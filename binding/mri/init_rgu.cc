@@ -42,7 +42,7 @@ void InitRGUBinding() {
   rb_const_set(module, rb_intern("SDLVERSION"), INT2FIX(SDL_COMPILEDVERSION));
 
   // Locale in host
-  MriDefineModuleFunction(module, "get_locate", rgu_get_locate);
+  MriDefineModuleFunction(module, "get_locale", rgu_get_locate);
 
   // Open url
   MriDefineModuleFunction(module, "open_url", rgu_open_url);

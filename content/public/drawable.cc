@@ -22,16 +22,16 @@ Drawable::Drawable(DrawableParent* parent, int z, bool visible, int sprite_y)
 }
 
 Drawable::~Drawable() {
-  if (parent_)
-    RemoveFromList();
+  RemoveFromList();
 }
 
 void Drawable::SetParent(DrawableParent* parent) {
   CheckDisposed();
 
-  if (parent_)
-    RemoveFromList();
+  if (parent_ == parent)
+    return;
 
+  RemoveFromList();
   parent_ = parent;
   parent_->InsertDrawable(this);
 
@@ -41,7 +41,7 @@ void Drawable::SetParent(DrawableParent* parent) {
 void Drawable::SetZ(int z) {
   CheckDisposed();
 
-  if (!parent_ || z_ == z)
+  if (z_ == z)
     return;
 
   z_ = z;

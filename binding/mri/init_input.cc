@@ -32,14 +32,15 @@ const int kKeyboardBindingsSize =
     sizeof(kKeyboardBindings) / sizeof(kKeyboardBindings[0]);
 
 std::string GetButtonSymbol(int argc, VALUE* argv) {
-  std::string sym;
+  MriCheckArgc(argc, 1);
 
-  if (argc == 1 && FIXNUM_P(*argv)) {
+  std::string sym;
+  if (FIXNUM_P(*argv)) {
     int key_id = FIX2INT(*argv);
     for (int i = 0; i < kKeyboardBindingsSize; ++i)
       if (kKeyboardBindings[i].key_id == key_id)
         return kKeyboardBindings[i].name;
-  } else {
+  } else if (SYMBOL_P(*argv)) {
     MriParseArgsTo(argc, argv, "n", &sym);
   }
 

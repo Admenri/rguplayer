@@ -340,7 +340,12 @@ void Window::Composite() {
   if (rect_.width <= 0 || rect_.height <= 0)
     return;
 
-  auto offset = rect_.Position() + parent_rect().GetRealOffset();
+  base::Vec2i offset = rect_.Position() + parent_rect().GetRealOffset();
+  base::Rect clip_rect(offset, rect_.Size());
+
+  renderer::GSM.states.scissor.Push(true);
+  renderer::GSM.states.scissor_rect.PushOnly();
+  renderer::GSM.states.scissor_rect.SetIntersect(clip_rect);
 
   auto& shader = renderer::GSM.shaders->base_alpha;
   shader.Bind();
@@ -352,6 +357,9 @@ void Window::Composite() {
 
   base_quad_->Draw();
   renderer::Texture::SetFilter();
+
+  renderer::GSM.states.scissor_rect.Pop();
+  renderer::GSM.states.scissor.Pop();
 }
 
 void Window::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {}

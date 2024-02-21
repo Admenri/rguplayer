@@ -433,7 +433,10 @@ void Font::LoadFontInternal() {
 
 void Font::MakeFontIDInternal() {
   auto& cache = g_default_font_state->path_cache;
-  for (auto& name : name_) {
+  std::vector<std::string> load_names(name_);
+  load_names.push_back("Default.ttf");
+
+  for (auto& name : load_names) {
     std::string font_find_path;
     if (!FindFontInternal(name, &font_find_path))
       continue;

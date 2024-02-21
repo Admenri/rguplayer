@@ -26,7 +26,8 @@ const Input::KeyBinding kDefaultKeyboardBindings[] = {
     {"C", SDL_SCANCODE_Z},          {"X", SDL_SCANCODE_A},
     {"Y", SDL_SCANCODE_S},          {"Z", SDL_SCANCODE_D},
     {"L", SDL_SCANCODE_Q},          {"R", SDL_SCANCODE_W},
-};
+
+    {"C", SDL_SCANCODE_C},          {"A", SDL_SCANCODE_Z}};
 
 const int kDefaultKeyboardBindingsSize =
     sizeof(kDefaultKeyboardBindings) / sizeof(kDefaultKeyboardBindings[0]);

@@ -61,6 +61,19 @@ VALUE EvalString(VALUE string, VALUE filename, int* state) {
   return rb_protect((VALUE(*)(VALUE))EvalInternal, (VALUE)&arg, state);
 }
 
+std::string InsertNewLines(const std::string& input, size_t interval) {
+  std::string result;
+  size_t length = input.length();
+
+  for (size_t i = 0; i < length; i += interval) {
+    result += input.substr(i, interval);
+    if (i + interval < length)
+      result += '\n';
+  }
+
+  return result;
+}
+
 void ParseExeceptionInfo(VALUE exc,
                          const BindingEngineMri::BacktraceData& btData) {
   VALUE exeception_name = rb_class_path(rb_obj_class(exc));
@@ -70,10 +83,13 @@ void ParseExeceptionInfo(VALUE exc,
 
   VALUE ds = rb_sprintf("%" PRIsVALUE ": %" PRIsVALUE " (%" PRIsVALUE ")",
                         backtrace_front, exc, exeception_name);
-  LOG(INFO) << "[Binding] " << StringValueCStr(ds);
 
+  std::string error_info(StringValueCStr(ds));
+  LOG(INFO) << "[Binding] " << error_info;
+
+  error_info = InsertNewLines(error_info, 128);
   SDL_ShowSimpleMessageBox(
-      SDL_MESSAGEBOX_ERROR, "RGU Error", StringValueCStr(ds),
+      SDL_MESSAGEBOX_ERROR, "RGU Error", error_info.c_str(),
       MriGetGlobalRunner()->graphics()->window()->AsSDLWindow());
 }
 

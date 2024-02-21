@@ -60,16 +60,16 @@ class Rect : public base::RefCounted<Rect>,
 
   void Set(const base::Rect& rect) {
     bool changed = false;
-    if (x_ == rect.x)
+    if (x_ != rect.x)
       changed = true;
     x_ = rect.x;
-    if (y_ == rect.y)
+    if (y_ != rect.y)
       changed = true;
     y_ = rect.y;
-    if (width_ == rect.width)
+    if (width_ != rect.width)
       changed = true;
     width_ = rect.width;
-    if (height_ == rect.height)
+    if (height_ != rect.height)
       changed = true;
     height_ = rect.height;
     if (changed)
@@ -94,7 +94,7 @@ class Rect : public base::RefCounted<Rect>,
       UpdateData();
   }
 
-  void Empty() { Set(base::Rect()); }
+  void Empty() { Set(base::Rect(0, 0, 0, 0)); }
 
   int GetX() const { return x_; }
   void SetX(int x) {
@@ -141,6 +141,8 @@ class Rect : public base::RefCounted<Rect>,
 
     return base::Rect(x_, y_, width_, height_);
   }
+
+  bool IsValid() const { return width_ != 0 && height_ != 0; }
 
   std::string Serialize() override;
   static scoped_refptr<Rect> Deserialize(const std::string& data);
