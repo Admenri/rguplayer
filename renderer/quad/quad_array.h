@@ -43,14 +43,14 @@ class QuadDrawableArray final {
     VertexBuffer::Bind(vao_.vbo);
     size_t buffer_size = quad_size_ * sizeof(VertexType) * 4;
     if (buffer_size > vbo_size_) {
-      VertexBuffer::BufferData(buffer_size, &vertices_[0], GL_DYNAMIC_DRAW);
+      VertexBuffer::BufferData(buffer_size, vertices_.data(), GL_DYNAMIC_DRAW);
       vbo_size_ = buffer_size;
 
       // Ensure ibo max index
       GSM.quad_ibo->EnsureSize(quad_size_);
     } else {
       // As subdata upload
-      VertexBuffer::BufferSubData(0, buffer_size, &vertices_[0]);
+      VertexBuffer::BufferSubData(0, buffer_size, vertices_.data());
     }
     VertexBuffer::Unbind();
   }

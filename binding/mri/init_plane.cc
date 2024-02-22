@@ -19,9 +19,6 @@ MRI_METHOD(plane_initialize) {
   scoped_refptr<content::Plane> plane =
       MriInitializeViewportchild<content::Plane>(screen, argc, argv, self);
 
-  plane->AddRef();
-  MriSetStructData(self, plane.get());
-
   MriWrapProperty(self, plane->GetColor(), "_color", kColorDataType);
   MriWrapProperty(self, plane->GetTone(), "_tone", kToneDataType);
 

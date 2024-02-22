@@ -24,13 +24,13 @@ MRI_METHOD(window2_initialize) {
     else if (argc > 0)
       MriCheckArgc(argc, 4);
     MRI_GUARD(obj = new content::Window2(screen, x, y, w, h););
+
+    obj->AddRef();
+    MriSetStructData(self, obj.get());
   } else {
     obj =
         MriInitializeViewportchild<content::Window2>(screen, argc, argv, self);
   }
-
-  obj->AddRef();
-  MriSetStructData(self, obj.get());
 
   MriWrapProperty(self, obj->GetCursorRect(), "_cursor_rect", kRectDataType);
   MriWrapProperty(self, obj->GetTone(), "_tone", kToneDataType);

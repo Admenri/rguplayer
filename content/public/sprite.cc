@@ -236,7 +236,7 @@ void Sprite::UpdateWaveQuadsInternal() {
   int lastLength = (visibleLength - firstLength) % 8;
 
   wave_quads_->Resize(!!firstLength + chunks + !!lastLength);
-  renderer::CommonVertex* vert = &wave_quads_->vertices()[0];
+  renderer::CommonVertex* vert = wave_quads_->vertices().data();
 
   float phase = (wave_.phase_ * (float)M_PI) / 180.0f;
 

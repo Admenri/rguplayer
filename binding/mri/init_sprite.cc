@@ -18,9 +18,6 @@ MRI_METHOD(sprite_initialize) {
   scoped_refptr<content::Sprite> sprite_obj =
       MriInitializeViewportchild<content::Sprite>(screen, argc, argv, self);
 
-  sprite_obj->AddRef();
-  MriSetStructData(self, sprite_obj.get());
-
   MriWrapProperty(self, sprite_obj->GetSrcRect(), "_src_rect", kRectDataType);
   MriWrapProperty(self, sprite_obj->GetColor(), "_color", kColorDataType);
   MriWrapProperty(self, sprite_obj->GetTone(), "_tone", kToneDataType);

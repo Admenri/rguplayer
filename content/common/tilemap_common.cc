@@ -76,7 +76,7 @@ void TilemapFlashLayer::UpdateBuffer() {
 
   size_t quad_size = vertices.size() / 4;
   quads_->Resize(quad_size);
-  memcpy(&quads_->vertices()[0], &vertices[0],
+  memcpy(quads_->vertices().data(), vertices.data(),
          vertices.size() * sizeof(renderer::CommonVertex));
   quads_->Update();
 

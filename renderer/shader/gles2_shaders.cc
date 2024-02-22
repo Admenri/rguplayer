@@ -22,6 +22,8 @@ namespace shader {
 #include "renderer/shader/glsl/basesprite.frag.xxd"
 #include "renderer/shader/glsl/flashtile.frag.xxd"
 #include "renderer/shader/glsl/flat.frag.xxd"
+#include "renderer/shader/glsl/geometry.frag.xxd"
+#include "renderer/shader/glsl/geometry.vert.xxd"
 #include "renderer/shader/glsl/hue.frag.xxd"
 #include "renderer/shader/glsl/minimum.vert.xxd"
 #include "renderer/shader/glsl/plane.frag.xxd"
@@ -89,7 +91,7 @@ bool GLES2Shader::Setup(const std::string& vertex_shader,
 
     std::string log(log_length, '\0');
     GL.GetProgramInfoLog(program(), static_cast<GLsizei>(log.size()), 0,
-                         &log[0]);
+                         log.data());
 
     LOG(ERROR) << "[GLSL] Program: " << log;
     return false;
@@ -135,7 +137,8 @@ bool GLES2Shader::CompileShader(GLuint glshader,
     GL.GetShaderiv(glshader, GL_INFO_LOG_LENGTH, &log_length);
 
     std::string log(log_length, '\0');
-    GL.GetShaderInfoLog(glshader, static_cast<GLsizei>(log.size()), 0, &log[0]);
+    GL.GetShaderInfoLog(glshader, static_cast<GLsizei>(log.size()), 0,
+                        log.data());
 
     LOG(ERROR) << "[GLSL] " << shader_name << ": " << log;
     return false;
@@ -639,6 +642,35 @@ void TilemapShader::SetTileSize(float size) {
 
 void TilemapShader::SetAnimateIndex(float index) {
   GL.Uniform1f(u_animateIndex_, index);
+}
+
+GeometryShader::GeometryShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::geometry_vert, shader::geometry_vert_len),
+      "tilemap_vert",
+      shader::FromRawData(shader::geometry_frag, shader::geometry_frag_len),
+      "base_frag");
+
+  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
+  u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
+  u_texture_ = GL.GetUniformLocation(program(), "u_texture");
+  u_textureEmptyFlag_ = GL.GetUniformLocation(program(), "u_textureEmptyFlag");
+}
+
+void GeometryShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void GeometryShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void GeometryShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+void GeometryShader::SetTextureEmptyFlag(float flag) {
+  GL.Uniform1f(u_textureEmptyFlag_, flag);
 }
 
 }  // namespace renderer

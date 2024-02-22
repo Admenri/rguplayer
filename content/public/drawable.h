@@ -91,8 +91,8 @@ class Drawable : public base::LinkNode<Drawable> {
   virtual void BeforeComposite() {}
   virtual void Composite() = 0;
   virtual void CheckDisposed() const = 0;
-  virtual void OnViewportRectChanged(
-      const DrawableParent::ViewportInfo& rect) = 0;
+  virtual void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
+  }
 
   void SetSpriteY(int y);
 

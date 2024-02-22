@@ -327,6 +327,22 @@ class HueShader : public GLES2ShaderBase {
   GLint u_hueAdjustValue_;
 };
 
+class GeometryShader : public GLES2ShaderBase {
+ public:
+  GeometryShader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetTexture(GLID<Texture> tex);
+  void SetTextureEmptyFlag(float flag);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transOffset_;
+  GLint u_texture_;
+  GLint u_textureEmptyFlag_;
+};
+
 }  // namespace renderer
 
 #endif  // !RENDERER_SHADER_GLES2_SHADERS_H_

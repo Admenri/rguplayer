@@ -18,9 +18,6 @@ MRI_METHOD(window_initialize) {
 
   scoped_refptr<content::Window> obj =
       MriInitializeViewportchild<content::Window>(screen, argc, argv, self);
-  obj->AddRef();
-  MriSetStructData(self, obj.get());
-
   MriWrapProperty(self, obj->GetCursorRect(), "_cursor_rect", kRectDataType);
 
   return self;

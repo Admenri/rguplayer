@@ -561,7 +561,7 @@ void Window2::CalcBaseQuadArrayInternal() {
   base_tex_quad_array_->Resize(quad_count);
 
   /* Fill vertex data */
-  renderer::CommonVertex* vertex = &base_tex_quad_array_->vertices()[0];
+  renderer::CommonVertex* vertex = base_tex_quad_array_->vertices().data();
 
   int i = 0;
   /* Stretch background */
@@ -692,7 +692,7 @@ void Window2::CalcArrowsQuadArrayInternal() {
 
   size_t i = 0;
   arrows_quads_->Resize(5);
-  renderer::CommonVertex* vert = &arrows_quads_->vertices()[0];
+  renderer::CommonVertex* vert = arrows_quads_->vertices().data();
 
   if (contents_ && !contents_->IsDisposed() && arrows_visible_) {
     if (ox_ > 0)
@@ -810,7 +810,7 @@ void Window2::UpdateCursorQuadsInternal() {
     quads += 1;
 
   cursor_quads_->Resize(quads);
-  renderer::CommonVertex* vert = &cursor_quads_->vertices()[0];
+  renderer::CommonVertex* vert = cursor_quads_->vertices().data();
   size_t i = 0;
 
   i += renderer::QuadSetTexPosRect(&vert[i * 4], src.corners.top_left,

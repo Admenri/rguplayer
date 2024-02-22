@@ -640,7 +640,7 @@ void Tilemap::UpdateMapBufferInternal() {
 
   above_offsets_.clear();
   int vert_add = 0;
-  renderer::CommonVertex* vert = &tilemap_quads_->vertices()[0];
+  renderer::CommonVertex* vert = tilemap_quads_->vertices().data();
   memcpy(vert, ground_vertices_.data(),
          ground_vertices_.size() * sizeof(renderer::CommonVertex));
   vert += ground_vertices_.size();

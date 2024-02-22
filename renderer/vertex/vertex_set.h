@@ -21,6 +21,12 @@ struct CommonVertex {
   base::Vec4 color{0, 0, 0, 1.0f};
 };
 
+struct GeometryVertex {
+  base::Vec4 position;
+  base::Vec2 texCoord;
+  base::Vec4 color;
+};
+
 struct VertexItemAttribute {
   GLES2Shader::AttribLocation index;
   int32_t size;
@@ -37,10 +43,19 @@ struct VertexInfo {
 extern const VertexItemAttribute CommonVertexInfo[];
 extern const int CommonVertexInfoSize;
 
+extern const VertexItemAttribute GeometryVertexInfo[];
+extern const int GeometryVertexInfoSize;
+
 template <>
 const VertexItemAttribute* VertexInfo<CommonVertex>::attrs = CommonVertexInfo;
 template <>
 const int VertexInfo<CommonVertex>::attr_size = CommonVertexInfoSize;
+
+template <>
+const VertexItemAttribute* VertexInfo<GeometryVertex>::attrs =
+    GeometryVertexInfo;
+template <>
+const int VertexInfo<GeometryVertex>::attr_size = GeometryVertexInfoSize;
 
 template <typename VertexType>
 struct VertexArray {

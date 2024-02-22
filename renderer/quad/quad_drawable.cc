@@ -11,48 +11,7 @@
 
 namespace renderer {
 
-static const std::array<uint16_t, 6> index_template = {0, 1, 2, 2, 3, 0};
-
-GeometryDrawable::GeometryDrawable()
-    : CommonVertexDrawable(GLID<IndexBuffer>()) {}
-
-void GeometryDrawable::SetPosition(int index, const base::Vec2& pos) {
-  CommonVertex& vert = vertex_[std::clamp(index, 0, 2)];
-
-  if (vert.position == pos)
-    return;
-
-  vert.position = pos;
-  need_update_ = true;
-}
-
-void GeometryDrawable::SetTexCoord(int index, const base::Vec2& texcoord) {
-  CommonVertex& vert = vertex_[std::clamp(index, 0, 2)];
-
-  if (vert.texCoord == texcoord)
-    return;
-
-  vert.texCoord = texcoord;
-  need_update_ = true;
-}
-
-void GeometryDrawable::SetColor(int index, const base::Vec4& color) {
-  CommonVertex& vert = vertex_[std::clamp(index, 0, 2)];
-
-  if (vert.color == color)
-    return;
-
-  vert.color = color;
-  need_update_ = true;
-}
-
-void GeometryDrawable::Draw() {
-  CommonVertexDrawable::Draw();
-
-  VertexArray<CommonVertex>::Bind(vertex_array_);
-  GL.DrawArrays(GL_TRIANGLES, 0, 3);
-  VertexArray<CommonVertex>::Unbind();
-}
+static const std::array<uint16_t, 6> kQuadIndexTemplate = {0, 1, 2, 2, 3, 0};
 
 QuadIndexBuffer::QuadIndexBuffer() {
   ibo = IndexBuffer::Gen();
@@ -70,10 +29,10 @@ void QuadIndexBuffer::EnsureSize(size_t count) {
   buffer.reserve(count * 6);
   for (size_t i = begin; i < count; ++i)
     for (size_t j = 0; j < 6; ++j)
-      buffer.push_back(static_cast<uint16_t>(i * 4 + index_template[j]));
+      buffer.push_back(static_cast<uint16_t>(i * 4 + kQuadIndexTemplate[j]));
 
   IndexBuffer::Bind(ibo);
-  IndexBuffer::BufferData(buffer.size() * sizeof(uint16_t), &buffer[0]);
+  IndexBuffer::BufferData(buffer.size() * sizeof(uint16_t), buffer.data());
   IndexBuffer::Unbind();
 }
 

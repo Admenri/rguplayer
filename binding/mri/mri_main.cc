@@ -11,6 +11,7 @@
 #include "binding/mri/init_bitmap.h"
 #include "binding/mri/init_corefile.h"
 #include "binding/mri/init_font.h"
+#include "binding/mri/init_geometry.h"
 #include "binding/mri/init_graphics.h"
 #include "binding/mri/init_input.h"
 #include "binding/mri/init_mouse.h"
@@ -220,6 +221,7 @@ void BindingEngineMri::InitializeBinding(
     InitWindowBinding();
   }
 
+  InitGeometryBinding();
   InitMouseBinding();
   InitRGUBinding();
   Init_zlib();

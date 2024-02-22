@@ -1242,15 +1242,15 @@ void Tilemap2::ParseMapDataBufferInternal() {
   size_t quad_size = (ground_vertices_.size() + above_vertices_.size()) / 4;
   tilemap_quads_->Resize(quad_size);
 
-  auto* base_addr = &tilemap_quads_->vertices()[0];
+  auto* base_addr = tilemap_quads_->vertices().data();
 
   if (!ground_vertices_.empty()) {
-    memcpy(base_addr, &ground_vertices_[0],
+    memcpy(base_addr, ground_vertices_.data(),
            ground_vertices_.size() * sizeof(renderer::CommonVertex));
   }
 
   if (!above_vertices_.empty()) {
-    memcpy(base_addr + ground_vertices_.size(), &above_vertices_[0],
+    memcpy(base_addr + ground_vertices_.size(), above_vertices_.data(),
            above_vertices_.size() * sizeof(renderer::CommonVertex));
   }
 
