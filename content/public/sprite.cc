@@ -87,6 +87,10 @@ void Sprite::InitDrawableData() {
 }
 
 void Sprite::BeforeComposite() {
+  UpdateVisibilityInternal();
+  if (need_invisible_)
+    return;
+
   if (src_rect_need_update_) {
     src_rect_need_update_ = false;
 
@@ -121,27 +125,40 @@ void Sprite::Composite() {
     return;
   if (!bitmap_ || bitmap_->IsDisposed())
     return;
+  if (need_invisible_)
+    return;
 
-  auto& shader = renderer::GSM.shaders->sprite;
-  shader.Bind();
-  shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-  shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
+  bool render_effect = color_->IsValid() || tone_->IsValid() ||
+                       Flashable::IsFlashing() || bush_.depth_ != 0;
 
   auto& bitmap_size = bitmap_->AsGLType();
-  shader.SetTexture(bitmap_size.tex);
-  shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
-  shader.SetOpacity(opacity_ / 255.0f);
+  if (render_effect) {
+    auto& shader = renderer::GSM.shaders->sprite;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
+    shader.SetTexture(bitmap_size.tex);
+    shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
+    shader.SetOpacity(opacity_ / 255.0f);
 
-  const base::Vec4 color = color_->AsBase();
-  shader.SetColor(
-      (Flashable::IsFlashing() && Flashable::GetFlashColor().w > color.w)
-          ? Flashable::GetFlashColor()
-          : color);
-
-  shader.SetTone(tone_->AsBase());
-  shader.SetBushDepth(static_cast<float>(
-      src_rect_->GetY() + src_rect_->GetHeight() - bush_.depth_));
-  shader.SetBushOpacity(bush_.opacity_ / 255.0f);
+    const base::Vec4 color = color_->AsBase();
+    shader.SetColor(
+        (Flashable::IsFlashing() && Flashable::GetFlashColor().w > color.w)
+            ? Flashable::GetFlashColor()
+            : color);
+    shader.SetTone(tone_->AsBase());
+    shader.SetBushDepth(static_cast<float>(
+        src_rect_->GetY() + src_rect_->GetHeight() - bush_.depth_));
+    shader.SetBushOpacity(bush_.opacity_ / 255.0f);
+  } else {
+    auto& shader = renderer::GSM.shaders->basesprite;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
+    shader.SetTexture(bitmap_size.tex);
+    shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
+    shader.SetOpacity(opacity_ / 255.0f);
+  }
 
   renderer::GSM.states.blend.Push(true);
   renderer::GSM.states.blend_func.Push(blend_mode_);
@@ -234,6 +251,41 @@ void Sprite::UpdateWaveQuadsInternal() {
                   lastLength);
 
   wave_quads_->Update();
+}
+
+void Sprite::UpdateVisibilityInternal() {
+  need_invisible_ = true;
+
+  if (!opacity_)
+    return;
+
+  if (!bitmap_ || bitmap_->IsDisposed())
+    return;
+
+  if (wave_.active_) {
+    need_invisible_ = false;
+    return;
+  }
+
+  const base::Vec2& scale = transform_.GetScale();
+  if (scale.x != 1.0f || scale.y != 1.0f || transform_.GetRotation() != 0) {
+    need_invisible_ = false;
+    return;
+  }
+
+  SDL_Rect screen_rect{0, 0, parent_rect().rect.width,
+                       parent_rect().rect.height};
+
+  SDL_Rect self_rect;
+  self_rect.w = bitmap_->GetWidth();
+  self_rect.h = bitmap_->GetHeight();
+
+  self_rect.x = transform_.GetPosition().x - transform_.GetOrigin().x -
+                parent_rect().GetRealOffset().x;
+  self_rect.y = transform_.GetPosition().y - transform_.GetOrigin().y -
+                parent_rect().GetRealOffset().y;
+
+  need_invisible_ = !SDL_HasRectIntersection(&self_rect, &screen_rect);
 }
 
 }  // namespace content

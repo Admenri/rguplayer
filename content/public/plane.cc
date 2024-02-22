@@ -111,18 +111,25 @@ void Plane::Composite() {
   if (!bitmap_ || bitmap_->IsDisposed())
     return;
 
-  auto& shader = renderer::GSM.shaders->plane;
+  if (color_->IsValid() || tone_->IsValid() || opacity_ != 255) {
+    auto& shader = renderer::GSM.shaders->plane;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTransOffset(parent_rect().GetRealOffset());
+    shader.SetTexture(layer_tfb_.tex);
+    shader.SetTextureSize(base::Vec2i(layer_tfb_.width, layer_tfb_.height));
 
-  shader.Bind();
-  shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-  shader.SetTransOffset(parent_rect().GetRealOffset());
-
-  shader.SetTexture(layer_tfb_.tex);
-  shader.SetTextureSize(base::Vec2i(layer_tfb_.width, layer_tfb_.height));
-
-  shader.SetColor(color_->AsBase());
-  shader.SetTone(tone_->AsBase());
-  shader.SetOpacity(opacity_ / 255.0f);
+    shader.SetColor(color_->AsBase());
+    shader.SetTone(tone_->AsBase());
+    shader.SetOpacity(opacity_ / 255.0f);
+  } else {
+    auto& shader = renderer::GSM.shaders->base;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTransOffset(parent_rect().GetRealOffset());
+    shader.SetTexture(layer_tfb_.tex);
+    shader.SetTextureSize(base::Vec2i(layer_tfb_.width, layer_tfb_.height));
+  }
 
   renderer::GSM.states.blend.Push(true);
   renderer::GSM.states.blend_func.Push(blend_type_);

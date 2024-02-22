@@ -19,6 +19,7 @@ namespace shader {
 #include "renderer/shader/glsl/basealpha.vert.xxd"
 #include "renderer/shader/glsl/basecolor.frag.xxd"
 #include "renderer/shader/glsl/basecolor.vert.xxd"
+#include "renderer/shader/glsl/basesprite.frag.xxd"
 #include "renderer/shader/glsl/flashtile.frag.xxd"
 #include "renderer/shader/glsl/flat.frag.xxd"
 #include "renderer/shader/glsl/hue.frag.xxd"
@@ -220,6 +221,36 @@ void BaseAlphaShader::SetTransOffset(const base::Vec2& offset) {
 
 void BaseAlphaShader::SetTexture(GLID<Texture> tex) {
   GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+BaseSpriteShader::BaseSpriteShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::transform_vert, shader::transform_vert_len),
+      "transform_vert",
+      shader::FromRawData(shader::basesprite_frag, shader::basesprite_frag_len),
+      "basesprite_frag");
+
+  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
+  u_transformMat_ = GL.GetUniformLocation(program(), "u_transformMat");
+  u_texture_ = GL.GetUniformLocation(program(), "u_texture");
+
+  u_opacity_ = GL.GetUniformLocation(program(), "u_opacity");
+}
+
+void BaseSpriteShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void BaseSpriteShader::SetTransformMatrix(const float* mat4) {
+  GL.UniformMatrix4fv(u_transformMat_, 1, GL_FALSE, mat4);
+}
+
+void BaseSpriteShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+void BaseSpriteShader::SetOpacity(float opacity) {
+  GL.Uniform1f(u_opacity_, opacity);
 }
 
 SpriteShader::SpriteShader() {

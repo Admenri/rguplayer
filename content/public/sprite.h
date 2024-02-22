@@ -268,6 +268,7 @@ class Sprite : public base::RefCounted<Sprite>,
   void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;
   void OnSrcRectChangedInternal();
   void UpdateWaveQuadsInternal();
+  void UpdateVisibilityInternal();
 
   scoped_refptr<Bitmap> bitmap_;
   scoped_refptr<Rect> src_rect_;
@@ -304,6 +305,7 @@ class Sprite : public base::RefCounted<Sprite>,
 
   base::CallbackListSubscription src_rect_observer_;
 
+  bool need_invisible_ = false;
   bool src_rect_need_update_ = false;
 };
 

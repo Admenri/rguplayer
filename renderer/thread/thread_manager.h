@@ -34,6 +34,7 @@ class GlobalStateManager final {
     Tilemap2Shader tilemap2;
     HueShader hue;
     TilemapShader tilemap;
+    BaseSpriteShader basesprite;
   };
 
   GlobalStateManager() = default;
