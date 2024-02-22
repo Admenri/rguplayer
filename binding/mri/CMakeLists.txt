@@ -39,6 +39,8 @@ set(BINDING_MRI_SRC
 
   init_rgu.cc
   init_rgu.h
+  init_mouse.cc
+  init_mouse.h
 
   mri_template.h
   mri_main.cc

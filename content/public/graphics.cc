@@ -318,16 +318,23 @@ void Graphics::PresentScreenInternal(
 
   // Flip screen for Y
   base::Rect target_rect;
+  window->GetMouseState().resolution = resolution_;
   if (config_->keep_ratio()) {
     target_rect.x = display_viewport_.x;
     target_rect.y = display_viewport_.y + display_viewport_.height;
     target_rect.width = display_viewport_.width;
     target_rect.height = -display_viewport_.height;
+
+    window->GetMouseState().screen_offset = display_viewport_.Position();
+    window->GetMouseState().screen = display_viewport_.Size();
   } else {
     target_rect.x = 0;
     target_rect.y = window_size_.y;
     target_rect.width = window_size_.x;
     target_rect.height = -window_size_.y;
+
+    window->GetMouseState().screen_offset = base::Vec2i();
+    window->GetMouseState().screen = window_size_;
   }
 
   // Blit screen buffer to window buffer

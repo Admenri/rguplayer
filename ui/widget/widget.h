@@ -20,8 +20,26 @@ struct SDL_Window;
 
 namespace ui {
 
+#define MOUSE_BUTTON_COUNT 32
+
 class Widget {
  public:
+  struct MouseState {
+    // Ratio position in window
+    float x, y;
+    int scroll_x;
+    int scroll_y;
+    bool states[MOUSE_BUTTON_COUNT];
+    uint8_t clicks[MOUSE_BUTTON_COUNT];
+    bool visible;
+
+    base::Vec2i screen_offset;
+    base::Vec2 screen, resolution;
+
+    bool in_window;
+    bool focused;
+  };
+
   enum class WindowPlacement {
     Show = 0,
     Hide,
@@ -84,7 +102,9 @@ class Widget {
 
   static Widget* FromWindowID(SDL_WindowID window_id);
   SDL_WindowID GetWindowID() const { return window_id_; }
+
   bool GetKeyState(::SDL_Scancode scancode) const;
+  MouseState& GetMouseState() { return mouse_state_; }
 
  private:
   void UIEventDispatcher(const SDL_Event& sdl_event);
@@ -92,7 +112,9 @@ class Widget {
   SDL_Window* window_;
   SDL_WindowID window_id_;
   base::CallbackListSubscription ui_dispatcher_binding_;
+
   bool key_states_[SDL_NUM_SCANCODES]{0};
+  MouseState mouse_state_{0};
 
   base::WeakPtrFactory<Widget> weak_ptr_factory_{this};
 };

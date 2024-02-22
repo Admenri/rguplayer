@@ -113,6 +113,9 @@ add_subdirectory(components/fpslimiter)
 ## Filesystem
 add_subdirectory(components/filesystem)
 
+## SettingsMenu
+add_subdirectory(components/settingsmenu)
+
 #--------------------------------------------------------------------------------
 # Auto-generated directory include path
 #--------------------------------------------------------------------------------

@@ -118,15 +118,61 @@ bool Widget::GetKeyState(::SDL_Scancode scancode) const {
 void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
   switch (sdl_event.type) {
     case SDL_EVENT_KEY_DOWN:
-      if (sdl_event.key.windowID == window_id_) {
+      if (sdl_event.key.windowID == window_id_)
         key_states_[sdl_event.key.keysym.scancode] = true;
-      }
       break;
     case SDL_EVENT_KEY_UP:
-      if (sdl_event.key.windowID == window_id_) {
+      if (sdl_event.key.windowID == window_id_)
         key_states_[sdl_event.key.keysym.scancode] = false;
-      }
       break;
+    case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+      if (sdl_event.button.windowID == window_id_)
+        mouse_state_.states[sdl_event.button.button] = true;
+    } break;
+    case SDL_EVENT_MOUSE_BUTTON_UP: {
+      if (sdl_event.button.windowID == window_id_) {
+        mouse_state_.states[sdl_event.button.button] = false;
+        mouse_state_.clicks[sdl_event.button.button] = sdl_event.button.clicks;
+      }
+    } break;
+    case SDL_EVENT_MOUSE_MOTION: {
+      if (sdl_event.motion.windowID == window_id_) {
+        float scale_x = mouse_state_.resolution.x / mouse_state_.screen.x;
+        float scale_y = mouse_state_.resolution.y / mouse_state_.screen.y;
+        float origin_x = sdl_event.motion.x - mouse_state_.screen_offset.x;
+        float origin_y = sdl_event.motion.y - mouse_state_.screen_offset.y;
+
+        mouse_state_.x = origin_x * scale_x;
+        mouse_state_.y = origin_y * scale_y;
+
+        if (mouse_state_.in_window && mouse_state_.focused) {
+          if (mouse_state_.visible)
+            SDL_ShowCursor();
+          else
+            SDL_HideCursor();
+        }
+      }
+    } break;
+    case SDL_EVENT_MOUSE_WHEEL: {
+      if (sdl_event.wheel.windowID == window_id_) {
+        int flip =
+            (sdl_event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1 : 1);
+        mouse_state_.scroll_x += sdl_event.wheel.x * flip;
+        mouse_state_.scroll_y += sdl_event.wheel.y * flip;
+      }
+    } break;
+    case SDL_EVENT_WINDOW_MOUSE_ENTER: {
+      mouse_state_.in_window = true;
+    } break;
+    case SDL_EVENT_WINDOW_MOUSE_LEAVE: {
+      mouse_state_.in_window = false;
+    } break;
+    case SDL_EVENT_WINDOW_FOCUS_GAINED: {
+      mouse_state_.focused = true;
+    } break;
+    case SDL_EVENT_WINDOW_FOCUS_LOST: {
+      mouse_state_.focused = false;
+    } break;
     default:
       break;
   }

@@ -10,6 +10,7 @@
 #include "content/public/audio.h"
 #include "content/public/graphics.h"
 #include "content/public/input.h"
+#include "content/public/mouse.h"
 #include "content/worker/content_params.h"
 
 #include <thread>
@@ -34,11 +35,13 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
 
   RGSSVersion rgss_version() { return config_->content_version(); }
   scoped_refptr<CoreConfigure> config() const { return config_; }
+  uint32_t user_event_id() { return user_event_id_; }
+  filesystem::Filesystem* filesystem() { return file_manager_.get(); }
+
   scoped_refptr<Graphics> graphics() const { return graphics_; }
   scoped_refptr<Input> input() const { return input_; }
   scoped_refptr<Audio> audio() const { return audio_; }
-  uint32_t user_event_id() { return user_event_id_; }
-  filesystem::Filesystem* filesystem() { return file_manager_.get(); }
+  scoped_refptr<Mouse> mouse() const { return mouse_; }
 
   base::WeakPtr<BindingRunner> AsWeakPtr() {
     return weak_ptr_factory_.GetWeakPtr();
@@ -54,6 +57,7 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   scoped_refptr<Graphics> graphics_;
   scoped_refptr<Input> input_;
   scoped_refptr<Audio> audio_;
+  scoped_refptr<Mouse> mouse_;
 
   base::Vec2i initial_resolution_;
   base::WeakPtr<ui::Widget> window_;

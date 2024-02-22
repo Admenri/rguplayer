@@ -9,6 +9,7 @@
 #include <list>
 
 #include "base/memory/ref_counted.h"
+#include "content/config/core_config.h"
 #include "ui/widget/widget.h"
 
 namespace content {
@@ -29,7 +30,8 @@ class Input final : public base::RefCounted<Input> {
 
   using KeySymMap = std::list<KeyBinding>;
 
-  Input(base::WeakPtr<ui::Widget> input_device);
+  Input(scoped_refptr<CoreConfigure> config,
+        base::WeakPtr<ui::Widget> input_device);
   ~Input();
 
   Input(const Input&) = delete;
@@ -65,6 +67,7 @@ class Input final : public base::RefCounted<Input> {
   KeySymMap key_bindings_;
   std::array<KeyState, SDL_NUM_SCANCODES> key_states_;
   std::array<KeyState, SDL_NUM_SCANCODES> recent_key_states_;
+  scoped_refptr<CoreConfigure> config_;
 
   struct {
     int active = 0;

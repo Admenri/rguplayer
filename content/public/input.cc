@@ -23,14 +23,28 @@ const Input::KeyBinding kDefaultKeyboardBindings[] = {
     {"A", SDL_SCANCODE_LSHIFT},     {"B", SDL_SCANCODE_ESCAPE},
     {"B", SDL_SCANCODE_KP_0},       {"B", SDL_SCANCODE_X},
     {"C", SDL_SCANCODE_SPACE},      {"C", SDL_SCANCODE_RETURN},
-    {"C", SDL_SCANCODE_Z},          {"X", SDL_SCANCODE_A},
-    {"Y", SDL_SCANCODE_S},          {"Z", SDL_SCANCODE_D},
-    {"L", SDL_SCANCODE_Q},          {"R", SDL_SCANCODE_W},
-
-    {"C", SDL_SCANCODE_C},          {"A", SDL_SCANCODE_Z}};
+    {"X", SDL_SCANCODE_A},          {"Y", SDL_SCANCODE_S},
+    {"Z", SDL_SCANCODE_D},          {"L", SDL_SCANCODE_Q},
+    {"R", SDL_SCANCODE_W},
+};
 
 const int kDefaultKeyboardBindingsSize =
     sizeof(kDefaultKeyboardBindings) / sizeof(kDefaultKeyboardBindings[0]);
+
+const Input::KeyBinding kKeyboardBindings1[] = {
+    {"A", SDL_SCANCODE_Z},
+    {"C", SDL_SCANCODE_C},
+};
+
+const int kKeyboardBindings1Size =
+    sizeof(kKeyboardBindings1) / sizeof(kKeyboardBindings1[0]);
+
+const Input::KeyBinding kKeyboardBindings2[] = {
+    {"C", SDL_SCANCODE_Z},
+};
+
+const int kKeyboardBindings2Size =
+    sizeof(kKeyboardBindings2) / sizeof(kKeyboardBindings2[0]);
 
 const std::string kArrowDirsSymbol[] = {
     "DOWN",
@@ -44,15 +58,24 @@ const int kArrowDirsSymbolSize =
 
 }  // namespace
 
-Input::Input(base::WeakPtr<ui::Widget> input_device) : window_(input_device) {
+Input::Input(scoped_refptr<CoreConfigure> config,
+             base::WeakPtr<ui::Widget> input_device)
+    : config_(config), window_(input_device) {
   memset(key_states_.data(), 0, key_states_.size() * sizeof(KeyState));
   memset(recent_key_states_.data(), 0,
          recent_key_states_.size() * sizeof(KeyState));
 
   /* Apply default keyboard bindings */
-  for (int i = 0; i < kDefaultKeyboardBindingsSize; ++i) {
+  for (int i = 0; i < kDefaultKeyboardBindingsSize; ++i)
     key_bindings_.push_back(kDefaultKeyboardBindings[i]);
-  }
+
+  if (config->content_version() == RGSSVersion::RGSS1)
+    for (int i = 0; i < kKeyboardBindings1Size; ++i)
+      key_bindings_.push_back(kKeyboardBindings1[i]);
+
+  if (config->content_version() >= RGSSVersion::RGSS2)
+    for (int i = 0; i < kKeyboardBindings2Size; ++i)
+      key_bindings_.push_back(kKeyboardBindings2[i]);
 }
 
 Input::~Input() {}

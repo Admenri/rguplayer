@@ -71,8 +71,9 @@ void BindingRunner::BindingFuncMain() {
   // Init Modules
   graphics_ = new Graphics(weak_ptr_factory_.GetWeakPtr(), renderer_,
                            initial_resolution_);
-  input_ = new Input(window_);
+  input_ = new Input(config_, window_);
   audio_ = new Audio(file_manager_->AsWeakPtr(), config_);
+  mouse_ = new Mouse(window_);
 
   // Before run main initialize
   binding_engine_->InitializeBinding(this);
@@ -88,6 +89,7 @@ void BindingRunner::BindingFuncMain() {
   graphics_.reset();
   input_.reset();
   audio_.reset();
+  mouse_.reset();
 
   // Destroy renderer on binding thread
   renderer_->DestroyRenderer();

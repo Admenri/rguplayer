@@ -137,9 +137,10 @@ GRAPHICS_DEFINE_ATTR(FrameRate);
 GRAPHICS_DEFINE_ATTR(FrameCount);
 GRAPHICS_DEFINE_ATTR(Brightness);
 
-#define MriDefineModuleAttr(klass, rb_name, ktype, ctype)       \
-  MriDefineModuleFunction(klass, rb_name, ktype##_get_##ctype); \
-  MriDefineModuleFunction(klass, rb_name "=", ktype##_set_##ctype);
+MRI_METHOD(graphics_play_movie) {
+  LOG(WARNING) << "Not implement Graphics#play_movie";
+  return Qnil;
+}
 
 void InitGraphicsBinding() {
   VALUE module = rb_define_module("Graphics");
@@ -155,6 +156,7 @@ void InitGraphicsBinding() {
   MriDefineModuleFunction(module, "width", graphics_width);
   MriDefineModuleFunction(module, "height", graphics_height);
   MriDefineModuleFunction(module, "resize_screen", graphics_resize_screen);
+  MriDefineModuleFunction(module, "play_movie", graphics_play_movie);
 
   MriDefineModuleAttr(module, "frame_rate", graphics, FrameRate);
   MriDefineModuleAttr(module, "frame_count", graphics, FrameCount);
