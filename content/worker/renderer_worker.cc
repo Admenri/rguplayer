@@ -89,7 +89,11 @@ void RenderRunner::InitGLContextInternal() {
   SDL_GL_MakeCurrent(host_window_->AsSDLWindow(), glcontext_);
   SDL_GL_SetSwapInterval(0);
 
-  renderer::GLES2Context::CreateForCurrentThread();
+  renderer::GLES2Context::ContextParams context_params;
+  context_params.enable_vertex_array = true;
+  context_params.enable_framebuffer_blit =
+      config_->angle_renderer() > content::CoreConfigure::ANGLERenderer::GLES;
+  renderer::GLES2Context::CreateForCurrentThread(context_params);
 
   if (config_->renderer_debug_output())
     renderer::GLES2Context::EnableDebugOutputForCurrentThread();

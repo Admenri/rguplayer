@@ -20,6 +20,11 @@ extern thread_local GLES2Context GL;
 
 class GLES2Context {
  public:
+  struct ContextParams {
+    bool enable_vertex_array = true;
+    bool enable_framebuffer_blit = true;
+  };
+
   GLES2Context() = default;
   ~GLES2Context() = default;
 
@@ -27,7 +32,7 @@ class GLES2Context {
   GLES2Context& operator=(const GLES2Context&) = delete;
 
   // Create the GLESContext on current thread
-  static void CreateForCurrentThread();
+  static void CreateForCurrentThread(const ContextParams& params);
 
   // KHR debug output
   static void EnableDebugOutputForCurrentThread();
@@ -46,7 +51,7 @@ class GLES2Context {
   PFNGLBLITFRAMEBUFFERANGLEPROC BlitFramebuffer = nullptr;
 
  private:
-  void InitGLESContext();
+  void InitGLESContext(const ContextParams& params);
   void EnableDebugOutput();
   void* GetGLProc(const std::string& fname);
 
