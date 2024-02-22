@@ -364,7 +364,6 @@ void BindingEngineMri::LoadPackedScripts() {
       VALUE script = rb_ary_entry(packed_scripts, i);
       const char* script_name = RSTRING_PTR(rb_ary_entry(script, 1));
       VALUE script_src = rb_ary_entry(script, 3);
-      LOG(INFO) << "[Binding] Load packed script: " << script_name;
 
       VALUE utf8_string =
           MriStringUTF8(RSTRING_PTR(script_src), RSTRING_LEN(script_src));

@@ -352,6 +352,12 @@ void Audio::Reset() {
 }
 
 void Audio::InitAudioDeviceInternal() {
+  if (config_->disable_audio()) {
+    LOG(INFO) << "Disabled audio output";
+    output_device_ = 0;
+    return;
+  }
+
   soloud_spec_.freq = 44100;
   soloud_spec_.format = SDL_AUDIO_F32;
   soloud_spec_.channels = 2;

@@ -41,6 +41,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   std::string& game_scripts() { return game_scripts_; }
 
   RGSSVersion& content_version() { return rgss_version_; }
+  bool& disable_audio() { return disable_audio_; }
 
   ANGLERenderer& angle_renderer() { return angle_renderer_; }
   bool& renderer_debug_output() { return renderer_debug_output_; }
@@ -57,6 +58,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   std::string game_scripts_;
 
   RGSSVersion rgss_version_;
+  bool disable_audio_;
 
   ANGLERenderer angle_renderer_;
   bool renderer_debug_output_;
