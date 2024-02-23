@@ -236,6 +236,13 @@ uint64_t Graphics::GetWindowHandle() {
   return window_handle;
 }
 
+void Graphics::ResizeWindow(int width, int height) {
+  auto* win = renderer()->window()->AsSDLWindow();
+
+  SDL_SetWindowSize(win, width, height);
+  SDL_SetWindowPosition(win, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+}
+
 RGSSVersion Graphics::content_version() const {
   return dispatcher_->rgss_version();
 }

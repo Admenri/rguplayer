@@ -181,3 +181,8 @@ Transpose代表是否进行矩阵转置
 FUNC_ADD FUNC_SUBTRACT FUNC_REVERSE_SUBTRACT MIN MAX
 ZERO ONE SRC_COLOR ONE_MINUS_SRC_COLOR SRC_ALPHA ONE_MINUS_SRC_ALPHA DST_ALPHA ONE_MINUS_DST_ALPHA DST_COLOR ONE_MINUS_DST_COLOR
 内置的OpenGL常量，具体参考官方文档设置合成方式
+
+## Module - Graphics
+resize_screen(Ineter width, Integer height)
+调整游戏窗口大小并居中，
+这里并非调整游戏画面的分辨率而是窗口的缩放大小

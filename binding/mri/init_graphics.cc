@@ -142,6 +142,14 @@ MRI_METHOD(graphics_play_movie) {
   return Qnil;
 }
 
+MRI_METHOD(graphics_resize_window) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+  int w, h;
+  MriParseArgsTo(argc, argv, "ii", &w, &h);
+  screen->ResizeWindow(w, h);
+  return Qnil;
+}
+
 void InitGraphicsBinding() {
   VALUE module = rb_define_module("Graphics");
 
@@ -161,6 +169,8 @@ void InitGraphicsBinding() {
   MriDefineModuleAttr(module, "frame_rate", graphics, FrameRate);
   MriDefineModuleAttr(module, "frame_count", graphics, FrameCount);
   MriDefineModuleAttr(module, "brightness", graphics, Brightness);
+
+  MriDefineModuleFunction(module, "resize_window", graphics_resize_window);
 }
 
 }  // namespace binding

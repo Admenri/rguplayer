@@ -63,6 +63,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   void FrameReset();
 
   uint64_t GetWindowHandle();
+  void ResizeWindow(int width, int height);
 
   RGSSVersion content_version() const;
   scoped_refptr<CoreConfigure> config() { return config_; }

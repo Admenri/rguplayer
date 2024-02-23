@@ -37,7 +37,7 @@ class DrawableParent {
   /* Notify on binding thread */
   void NotifyViewportChanged();
 
-  ViewportInfo& viewport_rect() { return viewport_rect_; }
+  inline ViewportInfo& viewport_rect() { return viewport_rect_; }
   base::LinkedList<Drawable>& link() { return drawables_; }
 
  private:
@@ -82,7 +82,7 @@ class Drawable : public base::LinkNode<Drawable> {
     return visible_;
   }
 
-  DrawableParent::ViewportInfo& parent_rect() {
+  inline DrawableParent::ViewportInfo& parent_rect() {
     return parent_->viewport_rect();
   }
 

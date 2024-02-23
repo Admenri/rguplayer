@@ -276,17 +276,18 @@ void Sprite::UpdateVisibilityInternal() {
     return;
   }
 
-  SDL_Rect screen_rect{0, 0, parent_rect().rect.width,
-                       parent_rect().rect.height};
+  auto& viewport = parent_rect();
+  SDL_Rect screen_rect = viewport.rect.ToSDLRect();
 
   SDL_Rect self_rect;
   self_rect.w = bitmap_->GetWidth();
   self_rect.h = bitmap_->GetHeight();
 
-  self_rect.x = transform_.GetPosition().x - transform_.GetOrigin().x -
-                parent_rect().GetRealOffset().x;
-  self_rect.y = transform_.GetPosition().y - transform_.GetOrigin().y -
-                parent_rect().GetRealOffset().y;
+  auto offset = viewport.GetRealOffset();
+  self_rect.x =
+      transform_.GetPosition().x - transform_.GetOrigin().x + offset.x;
+  self_rect.y =
+      transform_.GetPosition().y - transform_.GetOrigin().y + offset.y;
 
   need_invisible_ = !SDL_HasRectIntersection(&self_rect, &screen_rect);
 }

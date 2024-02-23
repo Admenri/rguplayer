@@ -328,7 +328,7 @@ class Rect {
            other.height == height;
   }
 
-  SDL_Rect ToSDLRect() const;
+  inline SDL_Rect ToSDLRect() const { return SDL_Rect{x, y, width, height}; }
   RectF ToFloatRect() const;
 
   base::Vec2i Position() const { return base::Vec2i(x, y); }

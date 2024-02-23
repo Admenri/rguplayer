@@ -6,8 +6,6 @@
 
 namespace base {
 
-SDL_Rect Rect::ToSDLRect() const { return SDL_Rect{x, y, width, height}; }
-
 RectF Rect::ToFloatRect() const {
   return RectF(static_cast<float>(x), static_cast<float>(y),
                static_cast<float>(width), static_cast<float>(height));
