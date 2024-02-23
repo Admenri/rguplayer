@@ -34,11 +34,14 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   CoreConfigure(const CoreConfigure&) = delete;
   CoreConfigure& operator=(const CoreConfigure&) = delete;
 
+  void LoadCommandLine(int argc, char** argv);
   bool LoadConfigure(const std::string& filename);
 
   std::string& game_rtp() { return game_rtp_; }
   std::string& game_title() { return game_title_; }
   std::string& game_scripts() { return game_scripts_; }
+  bool& game_debug() { return game_debug_; }
+  bool& game_battle_test() { return game_battle_test_; }
 
   RGSSVersion& content_version() { return rgss_version_; }
   bool& disable_audio() { return disable_audio_; }
@@ -56,6 +59,8 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   std::string game_rtp_;
   std::string game_title_;
   std::string game_scripts_;
+  bool game_debug_;
+  bool game_battle_test_;
 
   RGSSVersion rgss_version_;
   bool disable_audio_;

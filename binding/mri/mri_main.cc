@@ -201,7 +201,7 @@ void BindingEngineMri::InitializeBinding(
   rb_enc_set_default_internal(rb_enc_from_encoding(rb_utf8_encoding()));
   rb_enc_set_default_external(rb_enc_from_encoding(rb_utf8_encoding()));
 
-  MriInitException(binding_host->rgss_version() >= content::RGSSVersion::RGSS3);
+  MriInitException(config->content_version() >= content::RGSSVersion::RGSS3);
 
   InitCoreFileBinding();
   InitUtilityBinding();
@@ -214,7 +214,7 @@ void BindingEngineMri::InitializeBinding(
   InitGraphicsBinding();
   InitInputBinding();
   InitAudioBinding();
-  if (binding_host->rgss_version() >= content::RGSSVersion::RGSS2) {
+  if (config->content_version() >= content::RGSSVersion::RGSS2) {
     InitTilemap2Binding();
     InitWindow2Binding();
   } else {
@@ -228,7 +228,7 @@ void BindingEngineMri::InitializeBinding(
   InitRGUBinding();
   Init_zlib();
 
-  if (binding_host->rgss_version() < content::RGSSVersion::RGSS3) {
+  if (config->content_version() < content::RGSSVersion::RGSS3) {
     if (sizeof(void*) == 4) {
       MriDefineMethod(rb_cNilClass, "id", mri_return_id<4>);
       MriDefineMethod(rb_cTrueClass, "id", mri_return_id<2>);
@@ -248,7 +248,7 @@ void BindingEngineMri::InitializeBinding(
   MriDefineModuleFunction(rb_mKernel, "rgss_stop", mri_rgssstop);
   MriDefineModuleFunction(rb_mKernel, "p", mri_p);
 
-  switch (binding_host->rgss_version()) {
+  switch (config->content_version()) {
     case content::RGSSVersion::RGSS1:
       LOG(INFO) << "[Binding] Content Version: RGSS1";
       rb_eval_string(module_rpg1);
@@ -264,6 +264,13 @@ void BindingEngineMri::InitializeBinding(
     default:
       break;
   }
+
+  VALUE debug = MRI_BOOL_NEW(config->game_debug());
+  if (config->content_version() < content::RGSSVersion::RGSS2)
+    rb_gv_set("DEBUG", debug);
+  else if (config->content_version() >= content::RGSSVersion::RGSS2)
+    rb_gv_set("TEST", debug);
+  rb_gv_set("BTEST", MRI_BOOL_NEW(config->game_battle_test()));
 
   LOG(INFO) << "[Binding] CRuby Interpreter Version: " << RUBY_API_VERSION_CODE;
   LOG(INFO) << "[Binding] CRuby Interpreter Platform: " << RUBY_PLATFORM;

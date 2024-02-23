@@ -17,14 +17,18 @@ int main(int argc, char* argv[]) {
   if (last_sep != std::string::npos)
     app = app.substr(last_sep + 1);
 
-  LOG(INFO) << "[Entry] App: " << app;
+  LOG(INFO) << "[App] Path: " << app;
+
+  scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
+  config->LoadCommandLine(argc, argv);
 
   last_sep = app.find_last_of('.');
   if (last_sep != std::string::npos)
     app = app.substr(0, last_sep);
   std::string ini = app + ".ini";
 
-  scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
+  LOG(INFO) << "[App] Configure: " << ini;
+
   if (!config->LoadConfigure(ini))
     return 1;
 

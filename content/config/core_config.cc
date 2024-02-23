@@ -21,6 +21,23 @@ void ReplaceStringWidth(std::string& str, char before, char after) {
 
 }  // namespace
 
+void CoreConfigure::LoadCommandLine(int argc, char** argv) {
+  game_debug_ = false;
+  game_battle_test_ = false;
+
+  for (int i = 0; i < argc; i++) {
+    if (std::string(argv[i]) == "test" || std::string(argv[i]) == "debug")
+      game_debug_ = true;
+    if (std::string(argv[i]) == "btest")
+      game_battle_test_ = true;
+  }
+
+  if (game_debug_)
+    LOG(INFO) << "[App] Running debug test.";
+  if (game_battle_test_)
+    LOG(INFO) << "[App] Running battle test.";
+}
+
 bool CoreConfigure::LoadConfigure(const std::string& filename) {
   /* Parse configure */
   INIReader reader(filename);
