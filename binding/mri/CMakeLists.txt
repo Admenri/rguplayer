@@ -43,6 +43,8 @@ set(BINDING_MRI_SRC
   init_mouse.h
   init_geometry.cc
   init_geometry.h
+  init_shader.cc
+  init_shader.h
 
   mri_template.h
   mri_main.cc

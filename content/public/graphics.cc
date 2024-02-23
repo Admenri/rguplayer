@@ -7,6 +7,7 @@
 #include "content/config/core_config.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
+#include "content/public/shader.h"
 #include "content/worker/binding_worker.h"
 #include "content/worker/event_runner.h"
 #include "content/worker/renderer_worker.h"
@@ -439,16 +440,18 @@ void Graphics::RemoveDisposable(Disposable* disp) {
 }
 
 void Graphics::RenderEffectRequire(const base::Vec4& color,
-                                   const base::Vec4& tone) {
+                                   const base::Vec4& tone,
+                                   scoped_refptr<Shader> program) {
   ApplyViewportEffect(screen_buffer_[0], screen_buffer_[1], *screen_quad_,
-                      color, tone);
+                      color, tone, program);
 }
 
 void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
                                    renderer::TextureFrameBuffer& backend,
                                    renderer::QuadDrawable& quad,
                                    const base::Vec4& color,
-                                   const base::Vec4& tone) {
+                                   const base::Vec4& tone,
+                                   scoped_refptr<Shader> program) {
   const base::Rect& viewport_rect = renderer::GSM.states.scissor_rect.Current();
   const base::Rect& screen_rect = resolution_;
 
@@ -456,7 +459,7 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
       (tone.x != 0 || tone.y != 0 || tone.z != 0 || tone.w != 0);
   const bool has_color_effect = color.w != 0;
 
-  if (!has_tone_effect && !has_color_effect)
+  if (!program && !has_tone_effect && !has_color_effect)
     return;
 
   renderer::GSM.states.scissor.Push(false);
@@ -467,14 +470,31 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
   renderer::GSM.states.scissor.Pop();
 
   renderer::FrameBuffer::Bind(frontend.fbo);
-  auto& shader = renderer::GSM.shaders->viewport;
-  shader.Bind();
-  shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-  shader.SetTone(tone);
-  shader.SetColor(color);
+  if (program && !program->IsDisposed()) {
+    program->BindShader();
+    program->SetInternalUniform();
 
-  shader.SetTexture(backend.tex);
-  shader.SetTextureSize(screen_rect.Size());
+    GLint texture_location = program->GetUniformLocation("u_texture");
+    renderer::GLES2ShaderBase::SetTexture(texture_location, backend.tex.gl, 1);
+
+    GLint texture_size_location = program->GetUniformLocation("u_texSize");
+    renderer::GL.Uniform2f(texture_size_location, 1.0f / screen_rect.width,
+                           1.0f / screen_rect.height);
+
+    GLint color_location = program->GetUniformLocation("u_color");
+    renderer::GL.Uniform4f(color_location, color.x, color.y, color.z, color.w);
+
+    GLint tone_location = program->GetUniformLocation("u_tone");
+    renderer::GL.Uniform4f(tone_location, tone.x, tone.y, tone.z, tone.w);
+  } else {
+    auto& shader = renderer::GSM.shaders->viewport;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTone(tone);
+    shader.SetColor(color);
+    shader.SetTexture(backend.tex);
+    shader.SetTextureSize(screen_rect.Size());
+  }
 
   renderer::GSM.states.blend.Push(false);
   quad.Draw();

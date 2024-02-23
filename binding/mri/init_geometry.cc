@@ -5,6 +5,7 @@
 #include "binding/mri/init_geometry.h"
 
 #include "binding/mri/init_bitmap.h"
+#include "binding/mri/init_shader.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/mri_template.h"
 #include "content/public/geometry.h"
@@ -107,6 +108,25 @@ MRI_METHOD(geometry_set_color) {
   return Qnil;
 }
 
+MRI_METHOD(geometry_get_shader) {
+  scoped_refptr<content::Geometry> obj =
+      MriGetStructData<content::Geometry>(self);
+  return rb_iv_get(self, "_shader");
+}
+
+MRI_METHOD(geometry_set_shader) {
+  MriCheckArgc(argc, 1);
+  scoped_refptr<content::Geometry> obj =
+      MriGetStructData<content::Geometry>(self);
+  VALUE propObj = *argv;
+  scoped_refptr<content::Shader> prop;
+  if (!NIL_P(propObj))
+    prop = MriCheckStructData<content::Shader>(propObj, kShaderDataType);
+  MRI_GUARD(obj->SetShader(prop););
+  rb_iv_set(self, "_shader", *argv);
+  return propObj;
+}
+
 void InitGeometryBinding() {
   VALUE klass = rb_define_class("Geometry", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kGeometryDataType>);
@@ -123,6 +143,8 @@ void InitGeometryBinding() {
 
   MriDefineAttr(klass, "bitmap", geometry, bitmap);
   MriDefineAttr(klass, "blend_type", geometry, blendtype);
+
+  MriDefineAttr(klass, "shader", geometry, shader);
 }
 
 }  // namespace binding

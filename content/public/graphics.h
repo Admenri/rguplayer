@@ -17,6 +17,7 @@
 namespace content {
 
 class Bitmap;
+class Shader;
 class Disposable;
 class BindingRunner;
 
@@ -93,12 +94,15 @@ class Graphics final : public base::RefCounted<Graphics>,
   void AddDisposable(Disposable* disp);
   void RemoveDisposable(Disposable* disp);
 
-  void RenderEffectRequire(const base::Vec4& color, const base::Vec4& tone);
+  void RenderEffectRequire(const base::Vec4& color,
+                           const base::Vec4& tone,
+                           scoped_refptr<Shader> program);
   void ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
                            renderer::TextureFrameBuffer& backend,
                            renderer::QuadDrawable& quad,
                            const base::Vec4& color,
-                           const base::Vec4& tone);
+                           const base::Vec4& tone,
+                           scoped_refptr<Shader> program);
 
   void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();

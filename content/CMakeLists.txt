@@ -34,6 +34,8 @@ set(CORE_CONTENT_SRC
   public/mouse.h
   public/plane.cc
   public/plane.h
+  public/shader.cc
+  public/shader.h
   public/sprite.cc
   public/sprite.h
   public/table.cc

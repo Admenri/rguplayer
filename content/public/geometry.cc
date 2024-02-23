@@ -56,6 +56,14 @@ void Geometry::SetColor(size_t index, const base::Vec4 color) {
   SetColorInternal(index, color);
 }
 
+void Geometry::SetShader(scoped_refptr<Shader> shader) {
+  CheckIsDisposed();
+
+  if (shader_program_ == shader)
+    return;
+  shader_program_ = shader;
+}
+
 void Geometry::OnObjectDisposed() {
   RemoveFromList();
 
@@ -94,18 +102,47 @@ void Geometry::BeforeComposite() {
 void Geometry::Composite() {
   const bool texture_valid = bitmap_ && !bitmap_->IsDisposed();
 
-  auto& shader = renderer::GSM.shaders->geometry;
-  shader.Bind();
-  shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-  shader.SetTransOffset(parent_rect().GetRealOffset());
-  shader.SetTextureEmptyFlag(texture_valid ? 0.0f : 1.0f);
-  if (texture_valid) {
-    shader.SetTexture(bitmap_->AsGLType().tex);
-    shader.SetTextureSize(bitmap_->GetSize());
+  if (shader_program_ && !shader_program_->IsDisposed()) {
+    shader_program_->BindShader();
+    shader_program_->SetInternalUniform();
+
+    base::Vec2 trans_offset = parent_rect().GetRealOffset();
+    GLint offset_location =
+        shader_program_->GetUniformLocation("u_transOffset");
+    GLint flag_location =
+        shader_program_->GetUniformLocation("u_textureEmptyFlag");
+    renderer::GL.Uniform2f(offset_location, trans_offset.x, trans_offset.y);
+    renderer::GL.Uniform1f(flag_location, texture_valid ? 0.0f : 1.0f);
+
+    if (texture_valid) {
+      GLint texture_location = shader_program_->GetUniformLocation("u_texture");
+      GLint texture_size_location =
+          shader_program_->GetUniformLocation("u_texSize");
+
+      renderer::GLES2ShaderBase::SetTexture(texture_location,
+                                            bitmap_->AsGLType().tex.gl, 1);
+      renderer::GL.Uniform2f(texture_size_location, bitmap_->GetWidth(),
+                             bitmap_->GetHeight());
+    }
+  } else {
+    auto& shader = renderer::GSM.shaders->geometry;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTransOffset(parent_rect().GetRealOffset());
+    shader.SetTextureEmptyFlag(texture_valid ? 0.0f : 1.0f);
+    if (texture_valid) {
+      shader.SetTexture(bitmap_->AsGLType().tex);
+      shader.SetTextureSize(bitmap_->GetSize());
+    }
   }
 
   renderer::GSM.states.blend.Push(true);
-  renderer::GSM.states.blend_func.Push(blend_mode_);
+  renderer::GSM.states.blend_func.PushOnly();
+
+  if (shader_program_ && !shader_program_->IsDisposed())
+    shader_program_->SetBlendFunc();
+  else
+    renderer::GSM.states.blend_func.Set(blend_mode_);
 
   renderer::VertexArray<renderer::GeometryVertex>::Bind(vao_);
   renderer::GL.DrawArrays(GL_TRIANGLES, 0,

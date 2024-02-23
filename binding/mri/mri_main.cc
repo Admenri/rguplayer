@@ -17,6 +17,7 @@
 #include "binding/mri/init_mouse.h"
 #include "binding/mri/init_plane.h"
 #include "binding/mri/init_rgu.h"
+#include "binding/mri/init_shader.h"
 #include "binding/mri/init_sprite.h"
 #include "binding/mri/init_table.h"
 #include "binding/mri/init_tilemap.h"
@@ -221,6 +222,7 @@ void BindingEngineMri::InitializeBinding(
     InitWindowBinding();
   }
 
+  InitShaderBinding();
   InitGeometryBinding();
   InitMouseBinding();
   InitRGUBinding();

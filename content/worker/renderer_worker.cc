@@ -104,6 +104,14 @@ void RenderRunner::InitGLContextInternal() {
   renderer::GSM.InitStates();
   max_texture_size_ = renderer::GSM.GetMaxTextureSize();
 
+  renderer::GL.GetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &vertex_units_);
+  renderer::GL.GetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &fragment_units_);
+  renderer::GL.GetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
+                           &combined_units_);
+  LOG(INFO) << "[Content] MaxVertexTextureUnits: " << vertex_units_;
+  LOG(INFO) << "[Content] MaxFragmentTextureUnits: " << fragment_units_;
+  LOG(INFO) << "[Content] MaxCombinedTextureUnits: " << combined_units_;
+
   LOG(INFO) << "[Content] GLRenderer: " << renderer::GL.GetString(GL_RENDERER);
   LOG(INFO) << "[Content] GLVendor: " << renderer::GL.GetString(GL_VENDOR);
   LOG(INFO) << "[Content] GLVersion: " << renderer::GL.GetString(GL_VERSION);

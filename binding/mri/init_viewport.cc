@@ -5,6 +5,7 @@
 #include "binding/mri/init_viewport.h"
 
 #include "binding/mri/init_bitmap.h"
+#include "binding/mri/init_shader.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/mri_template.h"
 #include "content/public/viewport.h"
@@ -101,6 +102,25 @@ VIEWPORT_DEFINE_VAL_ATTR(Rect, _rect);
 VIEWPORT_DEFINE_VAL_ATTR(Color, _color);
 VIEWPORT_DEFINE_VAL_ATTR(Tone, _tone);
 
+MRI_METHOD(viewport_get_shader) {
+  scoped_refptr<content::Viewport> obj =
+      MriGetStructData<content::Viewport>(self);
+  return rb_iv_get(self, "_shader");
+}
+
+MRI_METHOD(viewport_set_shader) {
+  MriCheckArgc(argc, 1);
+  scoped_refptr<content::Viewport> obj =
+      MriGetStructData<content::Viewport>(self);
+  VALUE propObj = *argv;
+  scoped_refptr<content::Shader> prop;
+  if (!NIL_P(propObj))
+    prop = MriCheckStructData<content::Shader>(propObj, kShaderDataType);
+  MRI_GUARD(obj->SetShader(prop););
+  rb_iv_set(self, "_shader", *argv);
+  return propObj;
+}
+
 void InitViewportBinding() {
   VALUE klass = rb_define_class("Viewport", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kViewportDataType>);
@@ -117,6 +137,8 @@ void InitViewportBinding() {
   MriDefineAttr(klass, "rect", viewport, Rect);
   MriDefineAttr(klass, "color", viewport, Color);
   MriDefineAttr(klass, "tone", viewport, Tone);
+
+  MriDefineAttr(klass, "shader", viewport, shader);
 }
 
 }  // namespace binding

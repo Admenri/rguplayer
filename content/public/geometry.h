@@ -8,6 +8,7 @@
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
 #include "content/public/drawable.h"
+#include "content/public/shader.h"
 #include "content/public/viewport.h"
 #include "renderer/draw/drawable.h"
 
@@ -44,6 +45,10 @@ class Geometry : public base::RefCounted<Geometry>,
     return blend_mode_;
   }
 
+  /* Set custom shader program */
+  scoped_refptr<Shader> GetShader() const { return shader_program_; }
+  void SetShader(scoped_refptr<Shader> shader);
+
  private:
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Geometry"; }
@@ -65,6 +70,8 @@ class Geometry : public base::RefCounted<Geometry>,
   size_t vbo_size_ = 0;
 
   bool buffer_need_update_ = false;
+
+  scoped_refptr<Shader> shader_program_;
 };
 
 }  // namespace content

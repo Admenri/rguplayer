@@ -53,13 +53,13 @@ class GLES2ShaderBase : public GLES2Shader {
   GLES2ShaderBase();
 
   void SetProjectionMatrix(const base::Vec2i& size);
+  static void SetTexture(GLint location, GLuint tex, uint16_t unit);
 
  protected:
   bool Setup(const std::string& vertex_shader,
              const std::string& vertex_name,
              const std::string& frag_shader,
              const std::string& frag_name) override;
-  void SetTexture(GLint location, GLuint tex, uint16_t unit);
 
  private:
   GLint u_projectionMat_;

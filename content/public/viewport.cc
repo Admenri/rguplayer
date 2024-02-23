@@ -65,6 +65,14 @@ void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   SnapToBitmapInternal(target);
 }
 
+void Viewport::SetShader(scoped_refptr<Shader> shader) {
+  CheckIsDisposed();
+
+  if (shader_program_ == shader)
+    return;
+  shader_program_ = shader;
+}
+
 void Viewport::OnObjectDisposed() {
   RemoveFromList();
 
@@ -90,14 +98,15 @@ void Viewport::BeforeComposite() {
 }
 
 void Viewport::Composite() {
-  if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
+  if (!shader_program_ && Flashable::IsFlashing() && Flashable::EmptyFlashing())
     return;
 
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);
 
   DrawableParent::CompositeChildren();
-  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
+  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
+      (shader_program_ && !shader_program_->IsDisposed())) {
     base::Vec4 composite_color = color_->AsBase();
     base::Vec4 flash_color = Flashable::GetFlashColor();
     base::Vec4 target_color;
@@ -107,7 +116,8 @@ void Viewport::Composite() {
     else
       target_color = composite_color;
 
-    screen()->RenderEffectRequire(target_color, tone_->AsBase());
+    screen()->RenderEffectRequire(target_color, tone_->AsBase(),
+                                  shader_program_);
   }
 
   renderer::GSM.states.scissor_rect.Pop();
@@ -159,7 +169,8 @@ void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
   renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);
 
   CompositeChildren();
-  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
+  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
+      (shader_program_ && !shader_program_->IsDisposed())) {
     base::Vec4 composite_color = color_->AsBase();
     base::Vec4 flash_color = Flashable::GetFlashColor();
     base::Vec4 target_color;
@@ -171,7 +182,7 @@ void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
 
     screen()->ApplyViewportEffect(target->AsGLType(), viewport_buffer_,
                                   *viewport_quad_, target_color,
-                                  tone_->AsBase());
+                                  tone_->AsBase(), shader_program_);
   }
 
   renderer::GSM.states.scissor_rect.Pop();

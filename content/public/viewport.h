@@ -10,6 +10,7 @@
 #include "content/public/drawable.h"
 #include "content/public/flashable.h"
 #include "content/public/graphics.h"
+#include "content/public/shader.h"
 
 namespace content {
 
@@ -69,6 +70,10 @@ class Viewport : public base::RefCounted<Viewport>,
 
   void SnapToBitmap(scoped_refptr<Bitmap> target);
 
+  /* Set custom shader program */
+  scoped_refptr<Shader> GetShader() const { return shader_program_; }
+  void SetShader(scoped_refptr<Shader> shader);
+
  private:
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Viewport"; }
@@ -94,6 +99,8 @@ class Viewport : public base::RefCounted<Viewport>,
   renderer::TextureFrameBuffer viewport_buffer_;
 
   bool viewport_rect_need_update_ = false;
+
+  scoped_refptr<Shader> shader_program_;
 };
 
 class ViewportChild : public Drawable {
