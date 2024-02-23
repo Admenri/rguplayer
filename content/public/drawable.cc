@@ -81,7 +81,7 @@ void DrawableParent::NotifyPrepareComposite() {
   for (auto it = drawables_.tail(); it != drawables_.end();
        it = it->previous()) {
     auto* child = it->value();
-    if (child->GetVisible()) {
+    if (child->visible_) {
       // Init once for renderer data on RenderRunner
       if (!child->init_data_complete_) {
         child->InitDrawableData();
@@ -100,7 +100,7 @@ void DrawableParent::CompositeChildren() {
 
   for (auto it = drawables_.tail(); it != drawables_.end();
        it = it->previous()) {
-    if (it->value()->GetVisible())
+    if (it->value()->visible_)
       it->value()->Composite();
   }
 }

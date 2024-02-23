@@ -32,17 +32,18 @@ class Disposable {
     observers_.Notify();
   }
 
-  bool IsDisposed() const { return is_disposed_; }
+  inline bool IsDisposed() const { return is_disposed_; }
 
   base::CallbackListSubscription AddDisposeObserver(
       base::OnceClosure observer) {
     return observers_.Add(std::move(observer));
   }
 
-  void CheckIsDisposed() const {
-    if (IsDisposed())
+  inline void CheckIsDisposed() const {
+    if (is_disposed_) {
       throw base::Exception(base::Exception::ContentError,
                             "Disposed object: %s", DisposedObjectName().data());
+    }
   }
 
  protected:

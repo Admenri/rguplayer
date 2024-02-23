@@ -12,6 +12,7 @@ static char kGLESPrecisionDefine[] = "precision mediump float;";
 
 namespace shader {
 
+#include "renderer/shader/glsl/alphasprite.frag.xxd"
 #include "renderer/shader/glsl/alphatrans.frag.xxd"
 #include "renderer/shader/glsl/base.frag.xxd"
 #include "renderer/shader/glsl/base.vert.xxd"
@@ -236,8 +237,6 @@ BaseSpriteShader::BaseSpriteShader() {
   u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
   u_transformMat_ = GL.GetUniformLocation(program(), "u_transformMat");
   u_texture_ = GL.GetUniformLocation(program(), "u_texture");
-
-  u_opacity_ = GL.GetUniformLocation(program(), "u_opacity");
 }
 
 void BaseSpriteShader::SetTextureSize(const base::Vec2& tex_size) {
@@ -252,7 +251,34 @@ void BaseSpriteShader::SetTexture(GLID<Texture> tex) {
   GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
 }
 
-void BaseSpriteShader::SetOpacity(float opacity) {
+AlphaSpriteShader::AlphaSpriteShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::transform_vert, shader::transform_vert_len),
+      "transform_vert",
+      shader::FromRawData(shader::alphasprite_frag,
+                          shader::alphasprite_frag_len),
+      "alphasprite_frag");
+
+  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
+  u_transformMat_ = GL.GetUniformLocation(program(), "u_transformMat");
+  u_texture_ = GL.GetUniformLocation(program(), "u_texture");
+
+  u_opacity_ = GL.GetUniformLocation(program(), "u_opacity");
+}
+
+void AlphaSpriteShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void AlphaSpriteShader::SetTransformMatrix(const float* mat4) {
+  GL.UniformMatrix4fv(u_transformMat_, 1, GL_FALSE, mat4);
+}
+
+void AlphaSpriteShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+void AlphaSpriteShader::SetOpacity(float opacity) {
   GL.Uniform1f(u_opacity_, opacity);
 }
 

@@ -255,8 +255,8 @@ class Tone : public base::RefCounted<Tone>,
                       (float)blue_ / 255.0f, (float)gray_ / 255.0f);
   }
 
-  bool IsValid() {
-    return red_ != 0.0 || green_ != 0.0 || blue_ != 0.0 || gray_ != 0.0;
+  inline bool IsValid() const {
+    return !!red_ || !!green_ || !!blue_ || !!gray_;
   }
 
   std::string Serialize() override;
@@ -382,7 +382,7 @@ class Color : public base::RefCounted<Color>,
                      static_cast<uint8_t>(blue_), static_cast<uint8_t>(alpha_)};
   }
 
-  bool IsValid() { return alpha_ != 0.0; }
+  inline bool IsValid() const { return !!alpha_; }
 
   std::string Serialize() override;
   static scoped_refptr<Color> Deserialize(const std::string& data);

@@ -12,6 +12,7 @@ thread_local GlobalStateManager GSM;
 void GlobalStateManager::InitStates() {
   GL.Disable(GL_DEPTH_TEST);
   GL.GetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+  GL.ActiveTexture(GL_TEXTURE0);
 
   states.viewport.Init(base::Rect());
   states.program.Init(0);

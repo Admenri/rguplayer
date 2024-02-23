@@ -7,7 +7,6 @@
 
 #include "renderer/shader/gles2_shaders.h"
 #include "renderer/states/draw_states.h"
-#include "renderer/vertex/vertex_set.h"
 
 namespace renderer {
 
@@ -35,6 +34,7 @@ class GlobalStateManager final {
     HueShader hue;
     TilemapShader tilemap;
     BaseSpriteShader basesprite;
+    AlphaSpriteShader alphasprite;
     GeometryShader geometry;
   };
 

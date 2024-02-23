@@ -100,6 +100,20 @@ class BaseSpriteShader : public GLES2ShaderBase {
   void SetTextureSize(const base::Vec2& tex_size);
   void SetTransformMatrix(const float* mat4);
   void SetTexture(GLID<Texture> tex);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transformMat_;
+  GLint u_texture_;
+};
+
+class AlphaSpriteShader : public GLES2ShaderBase {
+ public:
+  AlphaSpriteShader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransformMatrix(const float* mat4);
+  void SetTexture(GLID<Texture> tex);
   void SetOpacity(float opacity);
 
  private:

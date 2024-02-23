@@ -58,8 +58,8 @@ void Sprite::Update() {
   CheckIsDisposed();
   Flashable::Update();
 
-  wave_.phase_ += wave_.speed_ / 180.0f;
-  wave_.need_update_ = true;
+  wave_.phase += wave_.speed / 180.0f;
+  wave_.need_update = true;
 }
 
 void Sprite::InitAttributeInternal() {
@@ -112,24 +112,20 @@ void Sprite::BeforeComposite() {
     }
   }
 
-  if (wave_.need_update_) {
+  if (wave_.need_update) {
     UpdateWaveQuadsInternal();
-    wave_.need_update_ = false;
+    wave_.need_update = false;
   }
 }
 
 void Sprite::Composite() {
-  if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
-    return;
-  if (!opacity_)
-    return;
-  if (!bitmap_ || bitmap_->IsDisposed())
-    return;
   if (need_invisible_)
+    return;
+  if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
     return;
 
   bool render_effect = color_->IsValid() || tone_->IsValid() ||
-                       Flashable::IsFlashing() || bush_.depth_ != 0;
+                       Flashable::IsFlashing() || bush_.depth != 0;
 
   auto& bitmap_size = bitmap_->AsGLType();
   if (render_effect) {
@@ -137,7 +133,6 @@ void Sprite::Composite() {
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
-    shader.SetTexture(bitmap_size.tex);
     shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
     shader.SetOpacity(opacity_ / 255.0f);
 
@@ -148,22 +143,30 @@ void Sprite::Composite() {
             : color);
     shader.SetTone(tone_->AsBase());
     shader.SetBushDepth(static_cast<float>(
-        src_rect_->GetY() + src_rect_->GetHeight() - bush_.depth_));
-    shader.SetBushOpacity(bush_.opacity_ / 255.0f);
+        src_rect_->GetY() + src_rect_->GetHeight() - bush_.depth));
+    shader.SetBushOpacity(bush_.opacity / 255.0f);
+  } else if (opacity_ != 255) {
+    auto& shader = renderer::GSM.shaders->alphasprite;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
+    shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
+    shader.SetOpacity(opacity_ / 255.0f);
   } else {
     auto& shader = renderer::GSM.shaders->basesprite;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
-    shader.SetTexture(bitmap_size.tex);
     shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
-    shader.SetOpacity(opacity_ / 255.0f);
   }
+
+  // Bind texture default
+  renderer::GL.BindTexture(GL_TEXTURE_2D, bitmap_->AsGLType().tex.gl);
 
   renderer::GSM.states.blend.Push(true);
   renderer::GSM.states.blend_func.Push(blend_mode_);
 
-  if (wave_.active_)
+  if (wave_.active)
     wave_quads_->Draw();
   else
     quad_->Draw();
@@ -186,8 +189,8 @@ void Sprite::UpdateWaveQuadsInternal() {
   auto emitWaveChunk = [this](renderer::CommonVertex*& vert, float phase,
                               int width, float zoomY, int chunkY,
                               int chunkLength) {
-    float wavePos = phase + (chunkY / (float)wave_.length_) * (float)(M_PI * 2);
-    float chunkX = std::sin(wavePos) * wave_.amp_;
+    float wavePos = phase + (chunkY / (float)wave_.length) * (float)(M_PI * 2);
+    float chunkX = std::sin(wavePos) * wave_.amp;
 
     float chunkOffset = chunkY / zoomY;
     base::RectF tex(static_cast<float>(src_rect_->GetX()),
@@ -205,18 +208,18 @@ void Sprite::UpdateWaveQuadsInternal() {
     vert += 4;
   };
 
-  if (!wave_.amp_) {
-    wave_.active_ = false;
+  if (!wave_.amp) {
+    wave_.active = false;
     return;
   }
 
-  wave_.active_ = true;
+  wave_.active = true;
 
   int width = src_rect_->GetWidth();
   int height = src_rect_->GetHeight();
   float zoomY = transform_.GetScale().y;
 
-  if (wave_.amp_ < -(width / 2)) {
+  if (wave_.amp < -(width / 2)) {
     wave_quads_->Resize(0);
     wave_quads_->Update();
 
@@ -238,7 +241,7 @@ void Sprite::UpdateWaveQuadsInternal() {
   wave_quads_->Resize(!!firstLength + chunks + !!lastLength);
   renderer::CommonVertex* vert = wave_quads_->vertices().data();
 
-  float phase = (wave_.phase_ * (float)M_PI) / 180.0f;
+  float phase = (wave_.phase * (float)M_PI) / 180.0f;
 
   if (firstLength > 0)
     emitWaveChunk(vert, phase, width, zoomY, 0, firstLength);
@@ -256,13 +259,13 @@ void Sprite::UpdateWaveQuadsInternal() {
 void Sprite::UpdateVisibilityInternal() {
   need_invisible_ = true;
 
-  if (!opacity_)
+  if (opacity_ == 0)
     return;
 
   if (!bitmap_ || bitmap_->IsDisposed())
     return;
 
-  if (wave_.active_) {
+  if (wave_.active) {
     need_invisible_ = false;
     return;
   }

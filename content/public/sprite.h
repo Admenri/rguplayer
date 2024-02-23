@@ -81,63 +81,63 @@ class Sprite : public base::RefCounted<Sprite>,
   /* Bush depth & opacity */
   void SetBushDepth(int depth) {
     CheckIsDisposed();
-    bush_.depth_ = depth;
+    bush_.depth = depth;
   }
 
   int GetBushDepth() {
     CheckIsDisposed();
-    return bush_.depth_;
+    return bush_.depth;
   }
 
   void SetBushOpacity(int bushOpacity) {
     CheckIsDisposed();
-    bush_.opacity_ = bushOpacity;
+    bush_.opacity = bushOpacity;
   }
 
   int GetBushOpacity() {
     CheckIsDisposed();
-    return bush_.opacity_;
+    return bush_.opacity;
   }
 
   /* Wave emit */
   void SetWaveAmp(int wave_amp) {
     CheckIsDisposed();
-    wave_.amp_ = wave_amp;
+    wave_.amp = wave_amp;
   }
 
   int GetWaveAmp() {
     CheckIsDisposed();
-    return wave_.amp_;
+    return wave_.amp;
   }
 
   void SetWaveLength(int length) {
     CheckIsDisposed();
-    wave_.length_ = length;
+    wave_.length = length;
   }
 
   int GetWaveLength() {
     CheckIsDisposed();
-    return wave_.length_;
+    return wave_.length;
   }
 
   void SetWaveSpeed(int speed) {
     CheckIsDisposed();
-    wave_.speed_ = speed;
+    wave_.speed = speed;
   }
 
   int GetWaveSpeed() {
     CheckIsDisposed();
-    return wave_.speed_;
+    return wave_.speed;
   }
 
   void SetWavePhase(float phase) {
     CheckIsDisposed();
-    wave_.phase_ = phase;
+    wave_.phase = phase;
   }
 
   float GetWavePhase() {
     CheckIsDisposed();
-    return wave_.phase_;
+    return wave_.phase;
   }
 
   scoped_refptr<Color> GetColor() const {
@@ -275,21 +275,20 @@ class Sprite : public base::RefCounted<Sprite>,
   base::TransformMatrix transform_;
 
   struct {
-    bool active_ = false;
+    bool active = false;
+    int amp = 0;
+    int length = 180;
+    int speed = 360;
+    float phase = 0.0f;
 
-    int amp_ = 0;
-    int length_ = 180;
-    int speed_ = 360;
-    float phase_ = 0.0f;
-
-    bool need_update_ = true;
+    bool need_update = true;
   } wave_;
 
   bool mirror_ = false;
 
   struct {
-    int depth_ = 0;
-    int opacity_ = 128;
+    int depth = 0;
+    int opacity = 128;
   } bush_;
 
   int opacity_ = 255;
