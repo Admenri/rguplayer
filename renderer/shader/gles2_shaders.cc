@@ -147,11 +147,7 @@ bool GLES2Shader::CompileShader(GLuint glshader,
   return true;
 }
 
-GLES2ShaderBase::GLES2ShaderBase()
-    : u_projectionMat_(0), projection_need_update_(true) {
-  projection_observer_ = GSM.viewport_observers.Add(base::BindRepeating(
-      [](bool* sign) { *sign = true; }, &projection_need_update_));
-}
+GLES2ShaderBase::GLES2ShaderBase() : u_projectionMat_(0) {}
 
 bool GLES2ShaderBase::Setup(const std::string& vertex_shader,
                             const std::string& vertex_name,
@@ -174,10 +170,6 @@ void GLES2ShaderBase::SetTexture(GLint location, GLuint tex, uint16_t unit) {
 }
 
 void GLES2ShaderBase::SetProjectionMatrix(const base::Vec2i& size) {
-  if (!projection_need_update_)
-    return;
-  projection_need_update_ = false;
-
   const float a = 2.f / size.x;
   const float b = 2.f / size.y;
   const float c = -2.f;

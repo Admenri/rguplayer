@@ -5,7 +5,6 @@
 #ifndef RENDERER_SHADER_GLES2_SHADERS_H_
 #define RENDERER_SHADER_GLES2_SHADERS_H_
 
-#include "base/bind/callback_list.h"
 #include "base/math/math.h"
 #include "base/math/transform.h"
 #include "renderer/context/gles2_context.h"
@@ -64,9 +63,6 @@ class GLES2ShaderBase : public GLES2Shader {
 
  private:
   GLint u_projectionMat_;
-
-  bool projection_need_update_;
-  base::CallbackListSubscription projection_observer_;
 };
 
 class BaseShader : public GLES2ShaderBase {

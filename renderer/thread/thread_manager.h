@@ -7,6 +7,7 @@
 
 #include "renderer/shader/gles2_shaders.h"
 #include "renderer/states/draw_states.h"
+#include "renderer/vertex/vertex_set.h"
 
 namespace renderer {
 
@@ -60,7 +61,6 @@ class GlobalStateManager final {
     GLClearColor clear_color;
   } states;
 
- public:
   std::unique_ptr<GLShaderWare> shaders;
 
   TextureFrameBuffer common_tfb;
@@ -70,8 +70,6 @@ class GlobalStateManager final {
   base::Vec2i generic_tex_size;
   int max_texture_size;
   bool enable_es_shaders;
-
-  base::RepeatingClosureList viewport_observers;
 
   std::unique_ptr<QuadIndexBuffer> quad_ibo;
 };
