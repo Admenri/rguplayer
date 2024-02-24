@@ -171,6 +171,10 @@ void GLES2ShaderBase::SetTexture(GLint location, GLuint tex, uint16_t unit) {
 }
 
 void GLES2ShaderBase::SetProjectionMatrix(const base::Vec2i& size) {
+  if (projection_cache_ == size)
+    return;
+  projection_cache_ = size;
+
   const float a = 2.f / size.x;
   const float b = 2.f / size.y;
   const float c = -2.f;

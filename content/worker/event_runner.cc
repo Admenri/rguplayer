@@ -62,15 +62,6 @@ void EventRunner::EventFilter(const SDL_Event& event) {
   /* Reset content */
   if (event.type == SDL_EVENT_KEY_UP &&
       event.window.windowID == window_->GetWindowID()) {
-    if (event.key.keysym.scancode == SDL_SCANCODE_F12) {
-      // Trigger reset process
-      dispatcher_->RequestReset();
-    }
-  }
-
-  /* Enable FPS display */
-  if (event.type == SDL_EVENT_KEY_UP &&
-      event.window.windowID == window_->GetWindowID()) {
     if (event.key.keysym.scancode == SDL_SCANCODE_F2) {
       // Switch fps display mode
       fps_counter_.enable_display = !fps_counter_.enable_display;
@@ -80,6 +71,9 @@ void EventRunner::EventFilter(const SDL_Event& event) {
         fps = fps_counter_.average_fps;
 
       UpdateFPSDisplay(fps);
+    } else if (event.key.keysym.scancode == SDL_SCANCODE_F12) {
+      // Trigger reset process
+      dispatcher_->RequestReset();
     }
   }
 

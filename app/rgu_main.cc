@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
   std::unique_ptr<ui::Widget> win = std::make_unique<ui::Widget>();
   ui::Widget::InitParams win_params;
 
-  win_params.size = config->initial_resolution();
+  win_params.size = config->window_size();
   win_params.title = config->game_title();
   win_params.resizable = true;
   win_params.hpixeldensity = false;

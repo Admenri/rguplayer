@@ -49,6 +49,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   ANGLERenderer& angle_renderer() { return angle_renderer_; }
   bool& renderer_debug_output() { return renderer_debug_output_; }
   base::Vec2i& initial_resolution() { return initial_resolution_; }
+  base::Vec2i& window_size() { return window_size_; }
   bool& allow_frame_skip() { return allow_frame_skip_; }
   bool& smooth_scale() { return smooth_scale_; }
   bool& keep_ratio() { return keep_ratio_; }
@@ -68,6 +69,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   ANGLERenderer angle_renderer_;
   bool renderer_debug_output_;
   base::Vec2i initial_resolution_;
+  base::Vec2i window_size_;
   bool allow_frame_skip_;
   bool smooth_scale_;
   bool keep_ratio_;

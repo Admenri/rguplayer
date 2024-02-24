@@ -4,6 +4,7 @@
 
 #include "content/public/graphics.h"
 
+#include "components/fpslimiter/fpslimiter.h"
 #include "content/config/core_config.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
@@ -31,13 +32,18 @@ Graphics::Graphics(base::WeakPtr<BindingRunner> dispatcher,
       average_fps_(0),
       fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)),
       fps_display_{0, SDL_GetPerformanceCounter()} {
-  // Initial resolution
   viewport_rect().rect = initial_resolution;
 
-  // Init font attributes
   Font::InitStaticFont();
-
+  SDL_GL_GetSwapInterval(&vsync_interval_);
   InitScreenBufferInternal();
+
+  // Enum display info
+  int display_count;
+  SDL_DisplayID* display_list = SDL_GetDisplays(&display_count);
+  for (int i = 0; i < display_count; ++i)
+    LOG(INFO) << "[Graphics] Display Device" << i << ": "
+              << SDL_GetDisplayName(display_list[i]);
 }
 
 Graphics::~Graphics() {
@@ -122,11 +128,10 @@ void Graphics::FadeIn(int duration) {
 void Graphics::Update() {
   if (!frozen_) {
     if (fps_manager_->RequireFrameSkip()) {
-      if (config_->allow_frame_skip()) {
+      if (config_->allow_frame_skip())
         return FrameProcessInternal();
-      } else {
+      else
         fps_manager_->Reset();
-      }
     }
 
     CompositeScreenInternal();
@@ -241,6 +246,33 @@ void Graphics::ResizeWindow(int width, int height) {
 
   SDL_SetWindowSize(win, width, height);
   SDL_SetWindowPosition(win, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+}
+
+bool Graphics::GetFullscreen() {
+  auto win = renderer()->window();
+  return win->IsFullscreen();
+}
+
+void Graphics::SetFullscreen(bool fullscreen) {
+  auto win = renderer()->window();
+  win->SetFullscreen(fullscreen);
+}
+
+void Graphics::SetVSync(int interval) {
+  vsync_interval_ = interval;
+  SetSwapIntervalInternal();
+}
+
+int Graphics::GetVSync() {
+  return vsync_interval_;
+}
+
+bool Graphics::GetFrameSkip() {
+  return config_->allow_frame_skip();
+}
+
+void Graphics::SetFrameSkip(bool skip) {
+  config_->allow_frame_skip() = skip;
 }
 
 RGSSVersion Graphics::content_version() const {
@@ -532,6 +564,11 @@ void Graphics::UpdateWindowViewportInternal() {
 
   display_viewport_.x = (window_size_.x - display_viewport_.width) / 2.0f;
   display_viewport_.y = (window_size_.y - display_viewport_.height) / 2.0f;
+}
+
+void Graphics::SetSwapIntervalInternal() {
+  if (SDL_GL_SetSwapInterval(vsync_interval_))
+    LOG(WARNING) << "[Graphics] " << SDL_GetError();
 }
 
 }  // namespace content

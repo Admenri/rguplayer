@@ -84,6 +84,10 @@ bool CoreConfigure::LoadConfigure(const std::string& filename) {
   initial_resolution_.y =
       reader.GetInteger("Renderer", "ScreenHeight",
                         rgss_version_ >= RGSSVersion::RGSS2 ? 416 : 480);
+  window_size_.x =
+      reader.GetInteger("Renderer", "WindowWidth", initial_resolution_.x);
+  window_size_.y =
+      reader.GetInteger("Renderer", "WindowHeight", initial_resolution_.y);
   allow_frame_skip_ = reader.GetBoolean("Renderer", "AllowFrameSkip", false);
   smooth_scale_ = reader.GetBoolean("Renderer", "SmoothScale", true);
   keep_ratio_ = reader.GetBoolean("Renderer", "KeepRatio", true);

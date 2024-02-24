@@ -133,9 +133,27 @@ MRI_METHOD(graphics_resize_screen) {
     return Qnil;                              \
   }
 
+#define GRAPHICS_DEFINE_ATTR_BOOL(name)       \
+  MRI_METHOD(graphics_get_##name) {           \
+    scoped_refptr<content::Graphics> screen = \
+        MriGetGlobalRunner()->graphics();     \
+    return MRI_BOOL_NEW(screen->Get##name()); \
+  }                                           \
+  MRI_METHOD(graphics_set_##name) {           \
+    scoped_refptr<content::Graphics> screen = \
+        MriGetGlobalRunner()->graphics();     \
+    bool v;                                   \
+    MriParseArgsTo(argc, argv, "b", &v);      \
+    screen->Set##name(v);                     \
+    return Qnil;                              \
+  }
+
 GRAPHICS_DEFINE_ATTR(FrameRate);
 GRAPHICS_DEFINE_ATTR(FrameCount);
 GRAPHICS_DEFINE_ATTR(Brightness);
+GRAPHICS_DEFINE_ATTR(VSync);
+GRAPHICS_DEFINE_ATTR_BOOL(Fullscreen);
+GRAPHICS_DEFINE_ATTR_BOOL(FrameSkip);
 
 MRI_METHOD(graphics_play_movie) {
   LOG(WARNING) << "Not implement Graphics#play_movie";
@@ -148,6 +166,12 @@ MRI_METHOD(graphics_resize_window) {
   MriParseArgsTo(argc, argv, "ii", &w, &h);
   screen->ResizeWindow(w, h);
   return Qnil;
+}
+
+MRI_METHOD(graphics_window_handle) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  return UINT2NUM(screen->GetWindowHandle());
 }
 
 void InitGraphicsBinding() {
@@ -170,7 +194,11 @@ void InitGraphicsBinding() {
   MriDefineModuleAttr(module, "frame_count", graphics, FrameCount);
   MriDefineModuleAttr(module, "brightness", graphics, Brightness);
 
+  MriDefineModuleFunction(module, "window_handle", graphics_window_handle);
   MriDefineModuleFunction(module, "resize_window", graphics_resize_window);
+  MriDefineModuleAttr(module, "vsync", graphics, VSync);
+  MriDefineModuleAttr(module, "fullscreen", graphics, Fullscreen);
+  MriDefineModuleAttr(module, "frame_skip", graphics, FrameSkip);
 }
 
 }  // namespace binding

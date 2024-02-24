@@ -124,8 +124,12 @@ void Sprite::Composite() {
   if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
     return;
 
-  bool render_effect = color_->IsValid() || tone_->IsValid() ||
-                       Flashable::IsFlashing() || bush_.depth != 0;
+  const bool color_effect = color_->IsValid();
+  const bool tone_effect = tone_->IsValid();
+  const bool flash_effect = Flashable::IsFlashing();
+  const bool bush_effect = bush_.depth != 0;
+  const bool render_effect =
+      color_effect || tone_effect || flash_effect || bush_effect;
 
   auto& bitmap_size = bitmap_->AsGLType();
   if (render_effect) {

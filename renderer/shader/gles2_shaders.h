@@ -63,6 +63,8 @@ class GLES2ShaderBase : public GLES2Shader {
 
  private:
   GLint u_projectionMat_;
+
+  base::Vec2i projection_cache_;
 };
 
 class BaseShader : public GLES2ShaderBase {

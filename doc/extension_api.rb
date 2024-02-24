@@ -186,3 +186,15 @@ ZERO ONE SRC_COLOR ONE_MINUS_SRC_COLOR SRC_ALPHA ONE_MINUS_SRC_ALPHA DST_ALPHA O
 resize_screen(Ineter width, Integer height)
 调整游戏窗口大小并居中，
 这里并非调整游戏画面的分辨率而是窗口的缩放大小
+
+vsync vsync=
+设置画面切换间隔，-1为自适应垂直同步，0为关闭，1为开启垂直同步
+
+fullscreen fullscreen=
+设置窗口全屏属性，可以手动按下Enter + Alt
+
+window_handle -> Numeric
+获取当前平台下的窗口句柄
+
+frame_skip frame_skip=
+设置是否允许跳帧

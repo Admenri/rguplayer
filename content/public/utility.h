@@ -24,7 +24,7 @@ class ValueNotification {
   }
 
  protected:
-  inline void UpdateData() { observers_.Notify(); }
+  virtual void UpdateData() { observers_.Notify(); }
 
  private:
   base::RepeatingClosureList observers_;
@@ -158,12 +158,13 @@ class Tone : public base::RefCounted<Tone>,
              public Serializable,
              public ValueNotification {
  public:
-  Tone() : red_(0.0), green_(0.0), blue_(0.0), gray_(0.0) {}
+  Tone() : red_(0.0), green_(0.0), blue_(0.0), gray_(0.0), valid_(false) {}
   Tone(double red, double green, double blue, double gray = 255.0)
       : red_(std::clamp(red, -255.0, 255.0)),
         green_(std::clamp(green, -255.0, 255.0)),
         blue_(std::clamp(blue, -255.0, 255.0)),
-        gray_(std::clamp(gray, 0.0, 255.0)) {}
+        gray_(std::clamp(gray, 0.0, 255.0)),
+        valid_(!!red_ || !!green_ || !!blue_ || !!gray_) {}
 
   Tone(const Tone& other) {
     red_ = other.red_;
@@ -172,12 +173,12 @@ class Tone : public base::RefCounted<Tone>,
     gray_ = other.gray_;
   }
 
-  const Tone& operator=(const Tone& other) {
+  Tone& operator=(const Tone& other) {
     red_ = other.red_;
     green_ = other.green_;
     blue_ = other.blue_;
     gray_ = other.gray_;
-    return other;
+    return *this;
   }
 
   bool IsSame(const Tone& other) {
@@ -255,44 +256,51 @@ class Tone : public base::RefCounted<Tone>,
                       (float)blue_ / 255.0f, (float)gray_ / 255.0f);
   }
 
-  inline bool IsValid() const {
-    return !!red_ || !!green_ || !!blue_ || !!gray_;
-  }
+  inline bool IsValid() const { return valid_; }
 
   std::string Serialize() override;
   static scoped_refptr<Tone> Deserialize(const std::string& data);
 
  private:
+  void UpdateData() override {
+    ValueNotification::UpdateData();
+    valid_ = !!red_ || !!green_ || !!blue_ || !!gray_;
+  }
+
   double red_;
   double green_;
   double blue_;
   double gray_;
+  bool valid_;
 };
 
 class Color : public base::RefCounted<Color>,
               public Serializable,
               public ValueNotification {
  public:
-  Color() : red_(0.0), green_(0.0), blue_(0.0), alpha_(0.0) {}
+  Color() : red_(0.0), green_(0.0), blue_(0.0), alpha_(0.0), valid_(false) {}
   Color(double red, double green, double blue, double alpha = 255.0)
       : red_(std::clamp(red, 0.0, 255.0)),
         green_(std::clamp(green, 0.0, 255.0)),
         blue_(std::clamp(blue, 0.0, 255.0)),
-        alpha_(std::clamp(alpha, 0.0, 255.0)) {}
+        alpha_(std::clamp(alpha, 0.0, 255.0)),
+        valid_(!!alpha_) {}
 
   Color(const Color& other) {
     red_ = other.red_;
     green_ = other.green_;
     blue_ = other.blue_;
     alpha_ = other.alpha_;
+    valid_ = other.valid_;
   }
 
-  const Color& operator=(const Color& other) {
+  Color& operator=(const Color& other) {
     red_ = other.red_;
     green_ = other.green_;
     blue_ = other.blue_;
     alpha_ = other.alpha_;
-    return other;
+    valid_ = other.valid_;
+    return *this;
   }
 
   bool IsSame(const Color& other) {
@@ -382,16 +390,23 @@ class Color : public base::RefCounted<Color>,
                      static_cast<uint8_t>(blue_), static_cast<uint8_t>(alpha_)};
   }
 
-  inline bool IsValid() const { return !!alpha_; }
+  inline bool IsValid() const { return valid_; }
 
   std::string Serialize() override;
   static scoped_refptr<Color> Deserialize(const std::string& data);
 
  private:
+  void UpdateData() override {
+    ValueNotification::UpdateData();
+    valid_ = !!alpha_;
+  }
+
   double red_;
   double green_;
   double blue_;
   double alpha_;
+
+  bool valid_ = true;
 };
 
 }  // namespace content

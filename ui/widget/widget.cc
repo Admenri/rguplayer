@@ -84,7 +84,7 @@ void Widget::Init(InitParams params) {
 }
 
 void Widget::SetFullscreen(bool fullscreen) {
-  SDL_SetWindowFullscreen(window_, fullscreen ? 0 : SDL_WINDOW_FULLSCREEN);
+  SDL_SetWindowFullscreen(window_, fullscreen);
 }
 
 void Widget::SetTitle(const std::string& window_title) {
@@ -116,6 +116,17 @@ bool Widget::GetKeyState(::SDL_Scancode scancode) const {
 }
 
 void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
+  if (sdl_event.type == SDL_EVENT_KEY_DOWN) {
+    if (sdl_event.key.windowID == window_id_) {
+      if (sdl_event.key.keysym.scancode == SDL_SCANCODE_RETURN &&
+          (sdl_event.key.keysym.mod & SDL_KMOD_ALT)) {
+        // Toggle fullscreen
+        SetFullscreen(!IsFullscreen());
+        return;
+      }
+    }
+  }
+
   switch (sdl_event.type) {
     case SDL_EVENT_KEY_DOWN:
       if (sdl_event.key.windowID == window_id_)

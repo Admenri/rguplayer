@@ -7,12 +7,15 @@
 
 #include "base/memory/weak_ptr.h"
 #include "components/filesystem/filesystem.h"
-#include "components/fpslimiter/fpslimiter.h"
 #include "content/config/core_config.h"
 #include "content/public/drawable.h"
 #include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/thread/thread_manager.h"
+
+namespace fpslimiter {
+class FPSLimiter;
+}
 
 namespace content {
 
@@ -56,14 +59,21 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   void SetFrameRate(int rate);
   int GetFrameRate() const;
-
   void SetFrameCount(int64_t count);
   int GetFrameCount() const;
-
   void FrameReset();
 
   uint64_t GetWindowHandle();
   void ResizeWindow(int width, int height);
+
+  bool GetFullscreen();
+  void SetFullscreen(bool fullscreen);
+
+  void SetVSync(int interval);
+  int GetVSync();
+
+  bool GetFrameSkip();
+  void SetFrameSkip(bool skip);
 
   RGSSVersion content_version() const;
   scoped_refptr<CoreConfigure> config() { return config_; }
@@ -108,6 +118,8 @@ class Graphics final : public base::RefCounted<Graphics>,
   void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();
 
+  void SetSwapIntervalInternal();
+
   renderer::TextureFrameBuffer screen_buffer_[2];
   renderer::TextureFrameBuffer frozen_snapshot_;
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;
@@ -133,6 +145,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   base::Rect display_viewport_;
   base::Vec2i window_size_;
+  int vsync_interval_;
 
   base::WeakPtrFactory<Graphics> weak_ptr_factory_{this};
 };
