@@ -182,6 +182,83 @@ FUNC_ADD FUNC_SUBTRACT FUNC_REVERSE_SUBTRACT MIN MAX
 ZERO ONE SRC_COLOR ONE_MINUS_SRC_COLOR SRC_ALPHA ONE_MINUS_SRC_ALPHA DST_ALPHA ONE_MINUS_DST_ALPHA DST_COLOR ONE_MINUS_DST_COLOR
 内置的OpenGL常量，具体参考官方文档设置合成方式
 
+以下给出引擎内置的Shader供用户参考：
+## Geometry - VertexShader:
+uniform mat4 u_projectionMat;
+
+uniform vec2 u_texSize;
+uniform vec2 u_transOffset;
+
+attribute vec4 a_position;
+attribute vec2 a_texCoord;
+attribute vec4 a_color;
+
+varying vec2 v_texCoord;
+varying vec4 v_color;
+
+void main() {
+	gl_Position = u_projectionMat * vec4(a_position.xy + u_transOffset, a_position.z, a_position.w);
+
+	v_texCoord = a_texCoord * u_texSize;
+	v_color = a_color;
+}
+
+## Geometry - FragmentShader
+uniform sampler2D u_texture;
+uniform float u_textureEmptyFlag;
+
+varying vec2 v_texCoord;
+varying vec4 v_color;
+
+void main() {
+	vec4 frag = texture2D(u_texture, v_texCoord);
+	frag.rgb = mix(frag.rgb, v_color.rgb, v_color.a);
+	frag.a += u_textureEmptyFlag;
+
+	gl_FragColor = frag;
+}
+
+## Viewport - VertexShader
+uniform mat4 u_projectionMat;
+
+uniform vec2 u_texSize;
+uniform vec2 u_transOffset;
+
+attribute vec2 a_position;
+attribute vec2 a_texCoord;
+
+varying vec2 v_texCoord;
+
+void main() {
+	gl_Position = u_projectionMat * vec4(a_position + u_transOffset, 0.0, 1.0);
+
+	v_texCoord = a_texCoord * u_texSize;
+}
+
+## Viewport - FragmentShader
+uniform sampler2D u_texture;
+
+uniform vec4 u_color;
+uniform vec4 u_tone;
+
+varying vec2 v_texCoord;
+
+const vec3 lumaF = vec3(.299, .587, .114);
+
+void main() {
+	vec4 frag = texture2D(u_texture, v_texCoord);
+
+	/* Tone */
+	float luma = dot(frag.rgb, lumaF);
+	frag.rgb = mix(frag.rgb, vec3(luma), u_tone.w);
+	frag.rgb += u_tone.rgb;
+
+	/* Color */
+	frag.rgb = mix(frag.rgb, u_color.rgb, u_color.a);
+
+	gl_FragColor = frag;
+}
+
 ## Module - Graphics
 resize_screen(Ineter width, Integer height)
 调整游戏窗口大小并居中，
