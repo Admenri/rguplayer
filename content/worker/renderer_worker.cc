@@ -92,7 +92,7 @@ void RenderRunner::InitGLContextInternal() {
   renderer::GLES2Context::ContextParams context_params;
   context_params.enable_vertex_array = true;
   context_params.enable_framebuffer_blit =
-      config_->angle_renderer() > content::CoreConfigure::ANGLERenderer::GLES;
+      config_->angle_renderer() != content::CoreConfigure::ANGLERenderer::D3D9;
   renderer::GLES2Context::CreateForCurrentThread(context_params);
 
   if (config_->renderer_debug_output())
