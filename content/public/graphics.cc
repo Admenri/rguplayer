@@ -129,9 +129,12 @@ void Graphics::Update() {
   if (!frozen_) {
     if (fps_manager_->RequireFrameSkip()) {
       if (config_->allow_frame_skip())
+        // Skip render frame
         return FrameProcessInternal();
-      else
+      else {
+        // Reset frame interval diff
         fps_manager_->Reset();
+      }
     }
 
     CompositeScreenInternal();
