@@ -320,7 +320,7 @@ void Bitmap::SetFont(scoped_refptr<Font> font) {
 SDL_Surface* Bitmap::SurfaceRequired() {
   CheckIsDisposed();
 
-  if (!surface_need_update_)
+  if (!surface_need_update_ && surface_buffer_)
     return surface_buffer_;
   surface_need_update_ = false;
 

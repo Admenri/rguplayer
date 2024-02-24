@@ -364,7 +364,6 @@ MRI_METHOD(bitmap_save_png) {
 
   SDL_Surface* auto_surf = nullptr;
   MRI_GUARD(auto_surf = obj->SurfaceRequired(););
-
   IMG_SavePNG(auto_surf, path.c_str());
 
   return self;

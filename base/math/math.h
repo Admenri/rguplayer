@@ -56,6 +56,9 @@ class Vec2i {
   Vec2i operator/(const Vec2i& value) const {
     return Vec2i(x / value.x, y / value.y);
   }
+  Vec2i operator%(const Vec2i& value) const {
+    return Vec2i(x % value.x, y % value.y);
+  }
 
   void inspect() const { LOG(INFO) << "Vec2i(" << x << ", " << y << ")"; }
 
@@ -139,6 +142,10 @@ class Vec3i {
 
   Vec3i operator/(const Vec3i& value) const {
     return Vec3i(x / value.x, y / value.y, z / value.z);
+  }
+
+  Vec3i operator%(const Vec3i& value) const {
+    return Vec3i(x % value.x, y % value.y, z % value.z);
   }
 
   void inspect() const {
@@ -237,6 +244,10 @@ class Vec4i {
 
   Vec4i operator/(const Vec4i& value) const {
     return Vec4i(x / value.x, y / value.y, z / value.z, w / value.w);
+  }
+
+  Vec4i operator%(const Vec4i& value) const {
+    return Vec4i(x % value.x, y % value.y, z % value.z, w % value.w);
   }
 
   void inspect() const {

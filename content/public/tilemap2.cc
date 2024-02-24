@@ -838,18 +838,16 @@ void Tilemap2::CreateTileAtlasInternal() {
 void Tilemap2::UpdateTilemapViewportInternal() {
   auto& viewport_rect = ground_->parent_rect();
 
-  const base::Vec2i tilemap_origin = origin_;
+  const base::Vec2i tilemap_origin = origin_ + viewport_rect.origin;
   const base::Vec2i viewport_size = viewport_rect.rect.Size();
 
   base::Rect new_tilemap_viewport;
   new_tilemap_viewport.x = tilemap_origin.x / tile_size_;
   new_tilemap_viewport.y = tilemap_origin.y / tile_size_ - 1;
-
   new_tilemap_viewport.width =
       (viewport_size.x / tile_size_) + !!(viewport_size.x % tile_size_) + 1;
   new_tilemap_viewport.height =
       (viewport_size.y / tile_size_) + !!(viewport_size.y % tile_size_) + 2;
-
   if (new_tilemap_viewport != tilemap_viewport_) {
     tilemap_viewport_ = new_tilemap_viewport;
     buffer_need_update_ = true;
@@ -857,8 +855,9 @@ void Tilemap2::UpdateTilemapViewportInternal() {
     flash_layer_->SetViewport(tilemap_viewport_);
   }
 
-  tilemap_offset_ = viewport_rect.GetRealOffset() -
-                    vwrap(tilemap_origin, tile_size_) -
+  const base::Vec2i display_offset =
+      tilemap_origin % base::Vec2i(tile_size_, tile_size_);
+  tilemap_offset_ = viewport_rect.rect.Position() - display_offset -
                     base::Vec2i(0, tile_size_);
 }
 

@@ -25,10 +25,6 @@ inline int vwrap(int value, int range) {
   return res < 0 ? res + range : res;
 };
 
-inline base::Vec2i vwrap(const base::Vec2i& value, int range) {
-  return base::Vec2i(vwrap(value.x, range), vwrap(value.y, range));
-}
-
 inline int16_t TableGetWrapped(scoped_refptr<content::Table> t,
                                int x,
                                int y,
