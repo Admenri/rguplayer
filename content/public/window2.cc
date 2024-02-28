@@ -333,14 +333,14 @@ void Window2::OnObjectDisposed() {
 }
 
 void Window2::InitDrawableData() {
-  base_quad_.reset(new renderer::QuadDrawable());
-  content_quad_.reset(new renderer::QuadDrawable());
-  arrows_quads_.reset(
-      new renderer::QuadDrawableArray<renderer::CommonVertex>());
-  cursor_quads_.reset(
-      new renderer::QuadDrawableArray<renderer::CommonVertex>());
-  base_tex_quad_array_.reset(
-      new renderer::QuadDrawableArray<renderer::CommonVertex>());
+  base_quad_ = std::make_unique<renderer::QuadDrawable>();
+  content_quad_ = std::make_unique<renderer::QuadDrawable>();
+  arrows_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  cursor_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  base_tex_quad_array_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
 
   arrows_quads_->Resize(5);
   pause_vertex_ = nullptr;

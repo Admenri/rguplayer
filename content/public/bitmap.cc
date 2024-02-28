@@ -561,7 +561,7 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
                                         renderer::GSM.common_tfb.height);
 
   renderer::Blt::BeginDraw(renderer::GSM.common_tfb);
-  renderer::Blt::TexSource(AsGLType());
+  renderer::Blt::TexSource(tex_fbo_);
   renderer::Blt::BltDraw(pos, pos.Size());
   renderer::Blt::EndDraw();
 

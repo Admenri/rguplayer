@@ -283,12 +283,12 @@ void Window::OnObjectDisposed() {
 }
 
 void Window::InitDrawableData() {
-  base_quad_.reset(new renderer::QuadDrawable());
-  content_quad_.reset(new renderer::QuadDrawable());
-  controls_quads_.reset(
-      new renderer::QuadDrawableArray<renderer::CommonVertex>());
-  base_tex_quad_array_.reset(
-      new renderer::QuadDrawableArray<renderer::CommonVertex>());
+  base_quad_ = std::make_unique<renderer::QuadDrawable>();
+  content_quad_ = std::make_unique<renderer::QuadDrawable>();
+  controls_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  base_tex_quad_array_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
 
   base_tfb_ = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(base_tfb_, 32, 32);

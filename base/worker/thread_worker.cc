@@ -23,13 +23,17 @@ ThreadWorker::ThreadWorker(bool sync_worker)
     : sync_(sync_worker),
       task_runner_(sync_worker ? new SyncSequencedTaskRunner() : nullptr) {}
 
-ThreadWorker::~ThreadWorker() { Stop(); }
+ThreadWorker::~ThreadWorker() {
+  Stop();
+}
 
 void ThreadWorker::Start(RunLoop::MessagePumpType message_type) {
-  if (sync_) return;
-  thread_.reset(new std::jthread(ThreadWorker::ThreadFunc, message_type,
-                                 std::ref(start_flag_),
-                                 std::ref(task_runner_)));
+  if (sync_)
+    return;
+
+  thread_ = std::make_unique<std::jthread>(ThreadWorker::ThreadFunc,
+                                           message_type, std::ref(start_flag_),
+                                           std::ref(task_runner_));
 }
 
 void ThreadWorker::Stop() {
@@ -38,10 +42,11 @@ void ThreadWorker::Stop() {
 }
 
 void ThreadWorker::WaitUntilStart() {
-  if (sync_) return;
-  while (!start_flag_.IsSet()) {
+  if (sync_)
+    return;
+
+  while (!start_flag_.IsSet())
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  }
 }
 
 scoped_refptr<base::SequencedTaskRunner> ThreadWorker::task_runner() {
@@ -49,7 +54,8 @@ scoped_refptr<base::SequencedTaskRunner> ThreadWorker::task_runner() {
 }
 
 void ThreadWorker::ThreadFunc(
-    std::stop_token token, RunLoop::MessagePumpType message_type,
+    std::stop_token token,
+    RunLoop::MessagePumpType message_type,
     base::AtomicFlag& start_flag,
     scoped_refptr<base::SequencedTaskRunner>& runner) {
   base::RunLoop run_loop(message_type);
@@ -57,7 +63,8 @@ void ThreadWorker::ThreadFunc(
   start_flag.Set();
 
   for (;;) {
-    if (token.stop_requested()) break;
+    if (token.stop_requested())
+      break;
 
     if (!run_loop.DoLoop()) {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
