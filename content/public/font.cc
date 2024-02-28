@@ -166,8 +166,8 @@ Font::Font()
       italic_(GetDefaultItalic()),
       outline_(GetDefaultOutline()),
       shadow_(GetDefaultShadow()),
-      color_(GetDefaultColor()),
-      out_color_(GetDefaultOutColor()),
+      color_(new Color(*GetDefaultColor())),
+      out_color_(new Color(*GetDefaultOutColor())),
       font_(nullptr),
       font_id_(-1) {}
 
@@ -178,8 +178,8 @@ Font::Font(const std::vector<std::string>& name)
       italic_(GetDefaultItalic()),
       outline_(GetDefaultOutline()),
       shadow_(GetDefaultShadow()),
-      color_(GetDefaultColor()),
-      out_color_(GetDefaultOutColor()),
+      color_(new Color(*GetDefaultColor())),
+      out_color_(new Color(*GetDefaultOutColor())),
       font_(nullptr),
       font_id_(-1) {}
 
@@ -190,8 +190,8 @@ Font::Font(const std::vector<std::string>& name, int size)
       italic_(GetDefaultItalic()),
       outline_(GetDefaultOutline()),
       shadow_(GetDefaultShadow()),
-      color_(GetDefaultColor()),
-      out_color_(GetDefaultOutColor()),
+      color_(new Color(*GetDefaultColor())),
+      out_color_(new Color(*GetDefaultOutColor())),
       font_(nullptr),
       font_id_(-1) {}
 
@@ -202,8 +202,8 @@ Font::Font(const Font& other)
       italic_(other.italic_),
       outline_(other.outline_),
       shadow_(other.shadow_),
-      color_(other.color_),
-      out_color_(other.out_color_),
+      color_(new Color(*other.color_)),
+      out_color_(new Color(*other.out_color_)),
       font_(other.font_),
       font_id_(other.font_id_) {}
 
@@ -214,8 +214,8 @@ const Font& Font::operator=(const Font& other) {
   italic_ = other.italic_;
   outline_ = other.outline_;
   shadow_ = other.shadow_;
-  color_ = other.color_;
-  out_color_ = other.out_color_;
+  *color_ = *other.color_;
+  *out_color_ = *other.out_color_;
   font_ = other.font_;
   font_id_ = other.font_id_;
   return other;

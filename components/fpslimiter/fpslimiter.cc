@@ -26,23 +26,23 @@ void FPSLimiter::SetFrameRate(int frame_rate) {
 }
 
 void FPSLimiter::Delay() {
-  uint64_t end_ticks = last_ticks_ + interval_ticks_;
-  uint64_t begin_ticks = SDL_GetPerformanceCounter();
+  uint64_t expect_ticks = last_ticks_ + interval_ticks_;
+  uint64_t real_ticks = SDL_GetPerformanceCounter();
   uint64_t diff_counter = 0;
 
-  if (begin_ticks < end_ticks) [[likely]] {
-    uint64_t delta_ticks = (end_ticks - begin_ticks) - error_ticks_;
+  if (expect_ticks > real_ticks) [[likely]] {
+    uint64_t delta_ticks = (expect_ticks - real_ticks) - error_ticks_;
     time_t delay_ns = static_cast<time_t>(delta_ticks * freq_ns_);
 
     if (delay_ns > 0)
       SDL_DelayNS(delay_ns);
 
     last_ticks_ = SDL_GetPerformanceCounter();
-    uint64_t real_delay_counter = last_ticks_ - begin_ticks;
+    uint64_t real_delay_counter = last_ticks_ - real_ticks;
     error_ticks_ = static_cast<int64_t>(real_delay_counter - delta_ticks);
     diff_counter = last_ticks_;
   } else [[unlikely]] {
-    last_ticks_ = begin_ticks;
+    last_ticks_ = real_ticks;
     error_ticks_ = 0;
   }
 

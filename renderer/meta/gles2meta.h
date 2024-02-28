@@ -39,7 +39,7 @@ struct Buffer {
 
   inline static void BufferData(GLsizeiptr size = 0,
                                 const void* data = nullptr,
-                                GLenum usage = GL_STATIC_DRAW) {
+                                GLenum usage = GL_DYNAMIC_DRAW) {
     GL.BufferData(target, size, data, usage);
   }
 
