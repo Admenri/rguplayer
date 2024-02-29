@@ -330,7 +330,7 @@ void Graphics::CompositeScreenInternal() {
   DrawableParent::CompositeChildren();
 
   if (brightness_ < 255) {
-    auto& shader = renderer::GSM.shaders->flat;
+    auto& shader = renderer::GSM.shaders()->flat;
     shader.Bind();
     shader.SetProjectionMatrix(resolution_);
     shader.SetColor(base::Vec4(0, 0, 0, (255 - brightness_) / 255.0f));
@@ -415,8 +415,8 @@ void Graphics::TransitionSceneInternal(int duration,
   // Snap to backend buffer
   CompositeScreenInternal();
 
-  auto& alpha_shader = renderer::GSM.shaders->alpha_trans;
-  auto& vague_shader = renderer::GSM.shaders->vague_shader;
+  auto& alpha_shader = renderer::GSM.shaders()->alpha_trans;
+  auto& vague_shader = renderer::GSM.shaders()->vague_shader;
 
   if (!trans_bitmap) {
     alpha_shader.Bind();
@@ -437,8 +437,8 @@ void Graphics::TransitionSceneInternal(int duration,
 void Graphics::TransitionSceneInternalLoop(int i,
                                            int duration,
                                            scoped_refptr<Bitmap> trans_bitmap) {
-  auto& alpha_shader = renderer::GSM.shaders->alpha_trans;
-  auto& vague_shader = renderer::GSM.shaders->vague_shader;
+  auto& alpha_shader = renderer::GSM.shaders()->alpha_trans;
+  auto& vague_shader = renderer::GSM.shaders()->vague_shader;
   float progress = i * (1.0f / duration);
 
   if (!trans_bitmap) {
@@ -529,7 +529,7 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
     GLint tone_location = program->GetUniformLocation("u_tone");
     renderer::GL.Uniform4f(tone_location, tone.x, tone.y, tone.z, tone.w);
   } else {
-    auto& shader = renderer::GSM.shaders->viewport;
+    auto& shader = renderer::GSM.shaders()->viewport;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTone(tone);

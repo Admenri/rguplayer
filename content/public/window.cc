@@ -347,7 +347,7 @@ void Window::Composite() {
   renderer::GSM.states.scissor_rect.PushOnly();
   renderer::GSM.states.scissor_rect.SetIntersect(clip_rect);
 
-  auto& shader = renderer::GSM.shaders->base_alpha;
+  auto& shader = renderer::GSM.shaders()->base_alpha;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTexture(base_tfb_.tex);
@@ -452,7 +452,7 @@ void Window::UpdateBaseTexInternal() {
   renderer::GSM.states.viewport.Push(rect_.Size());
   renderer::GSM.states.blend.Push(false);
 
-  auto& shader = renderer::GSM.shaders->base_alpha;
+  auto& shader = renderer::GSM.shaders()->base_alpha;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTexture(windowskin_->AsGLType().tex);
@@ -612,7 +612,7 @@ void Window::CompositeControls() {
   renderer::GSM.states.scissor_rect.PushOnly();
   renderer::GSM.states.scissor_rect.SetIntersect(window_rect);
 
-  auto& shader = renderer::GSM.shaders->base_alpha;
+  auto& shader = renderer::GSM.shaders()->base_alpha;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
 

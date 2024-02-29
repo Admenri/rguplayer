@@ -133,7 +133,7 @@ void Sprite::Composite() {
 
   auto& bitmap_size = bitmap_->AsGLType();
   if (render_effect) {
-    auto& shader = renderer::GSM.shaders->sprite;
+    auto& shader = renderer::GSM.shaders()->sprite;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
@@ -150,14 +150,14 @@ void Sprite::Composite() {
         src_rect_->GetY() + src_rect_->GetHeight() - bush_.depth));
     shader.SetBushOpacity(bush_.opacity / 255.0f);
   } else if (opacity_ != 255) {
-    auto& shader = renderer::GSM.shaders->alphasprite;
+    auto& shader = renderer::GSM.shaders()->alphasprite;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
     shader.SetTextureSize(base::Vec2i(bitmap_size.width, bitmap_size.height));
     shader.SetOpacity(opacity_ / 255.0f);
   } else {
-    auto& shader = renderer::GSM.shaders->basesprite;
+    auto& shader = renderer::GSM.shaders()->basesprite;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());

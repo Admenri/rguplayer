@@ -102,7 +102,7 @@ void Shader::CompileInternal(const std::string& vertex_shader,
     std::vector<GLint> shader_sizes;
 
     // Common header source
-    if (renderer::GSM.enable_es_shaders) {
+    if (renderer::GSM.enable_es_shaders()) {
       std::string gles_define(kGLESPrecisionDefine);
       shader_srcs.push_back(
           reinterpret_cast<const GLchar*>(gles_define.c_str()));

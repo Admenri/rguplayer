@@ -434,7 +434,7 @@ void Window2::Composite() {
       base::Rect(trans_offset, rect_.Size()));
 
   /* Stretch background & frame */
-  auto& shader = renderer::GSM.shaders->base_alpha;
+  auto& shader = renderer::GSM.shaders()->base_alpha;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTransOffset(trans_offset);
@@ -627,7 +627,7 @@ void Window2::UpdateBaseTextureInternal() {
   renderer::GSM.states.viewport.Push(rect_.Size());
   renderer::GSM.states.blend.Push(false);
 
-  auto& shader = renderer::GSM.shaders->plane;
+  auto& shader = renderer::GSM.shaders()->plane;
 
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
@@ -650,7 +650,7 @@ void Window2::UpdateBaseTextureInternal() {
 
   renderer::GSM.states.blend_func.Set(renderer::GLBlendType::Normal);
 
-  auto& frame_shader = renderer::GSM.shaders->base;
+  auto& frame_shader = renderer::GSM.shaders()->base;
   frame_shader.Bind();
   frame_shader.SetProjectionMatrix(
       renderer::GSM.states.viewport.Current().Size());

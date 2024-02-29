@@ -385,8 +385,8 @@ void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
                                 scoped_refptr<Bitmap> src_bitmap,
                                 const base::Rect& src_rect,
                                 float opacity) {
-  renderer::GSM.EnsureCommonTFB(dest_rect.width, dest_rect.height);
-  auto& dst_tex = renderer::GSM.common_tfb;
+  auto& dst_tex =
+      renderer::GSM.EnsureCommonTFB(dest_rect.width, dest_rect.height);
 
   renderer::Blt::BeginDraw(dst_tex);
   renderer::Blt::TexSource(tex_fbo_);
@@ -406,7 +406,7 @@ void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
       (static_cast<float>(src_bitmap->GetHeight()) / src_rect.height) *
       (static_cast<float>(dest_rect.height) / dst_tex.height);
 
-  auto& shader = renderer::GSM.shaders->texblt;
+  auto& shader = renderer::GSM.shaders()->texblt;
 
   renderer::GSM.states.viewport.Push(size_);
   renderer::GSM.states.blend.Push(false);
@@ -422,7 +422,7 @@ void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
   shader.SetOffsetScale(offset_scale);
   shader.SetOpacity(opacity);
 
-  auto* quad = renderer::GSM.common_quad.get();
+  auto* quad = renderer::GSM.common_quad();
   quad->SetPositionRect(dest_rect);
   quad->SetTexCoordRect(src_rect);
   quad->Draw();
@@ -454,12 +454,12 @@ void Bitmap::GradientFillRectInternal(const base::Rect& rect,
   renderer::GSM.states.viewport.Push(size_);
   renderer::GSM.states.blend.Push(false);
 
-  auto& shader = renderer::GSM.shaders->color;
+  auto& shader = renderer::GSM.shaders()->color;
   shader.Bind();
   shader.SetProjectionMatrix(size_);
   shader.SetTransOffset(base::Vec2i());
 
-  auto* quad = renderer::GSM.common_quad.get();
+  auto* quad = renderer::GSM.common_quad();
   quad->SetPositionRect(rect);
 
   if (vertical) {
@@ -490,8 +490,7 @@ void Bitmap::SetPixelInternal(int x, int y, const base::Vec4& color) {
 }
 
 void Bitmap::HueChangeInternal(int hue) {
-  renderer::GSM.EnsureCommonTFB(size_.x, size_.y);
-  auto& dst_tex = renderer::GSM.common_tfb;
+  auto& dst_tex = renderer::GSM.EnsureCommonTFB(size_.x, size_.y);
 
   while (hue < 0)
     hue += 359;
@@ -501,7 +500,7 @@ void Bitmap::HueChangeInternal(int hue) {
   renderer::FrameBuffer::Clear();
 
   renderer::GSM.states.viewport.Push(size_);
-  auto& shader = renderer::GSM.shaders->hue;
+  auto& shader = renderer::GSM.shaders()->hue;
   shader.Bind();
   shader.SetProjectionMatrix(size_);
   shader.SetTexture(tex_fbo_.tex);
@@ -509,7 +508,7 @@ void Bitmap::HueChangeInternal(int hue) {
   shader.SetTransOffset(base::Vec2i());
   shader.SetHueAdjustValue(static_cast<float>(hue) / 360.0f);
 
-  auto* quad = renderer::GSM.common_quad.get();
+  auto* quad = renderer::GSM.common_quad();
   quad->SetTexCoordRect(base::Vec2(size_));
   quad->SetPositionRect(base::Vec2(size_));
   quad->Draw();
@@ -556,19 +555,21 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
   zoom_x = std::min(zoom_x, 1.0f);
   base::Rect pos(align_x, align_y, txt_surf->w * zoom_x, txt_surf->h);
 
-  renderer::GSM.EnsureCommonTFB(pos.width, pos.height);
-  base::Vec2i origin_size = base::Vec2i(renderer::GSM.common_tfb.width,
-                                        renderer::GSM.common_tfb.height);
+  auto& common_frame_buffer =
+      renderer::GSM.EnsureCommonTFB(pos.width, pos.height);
+  base::Vec2i origin_size =
+      base::Vec2i(common_frame_buffer.width, common_frame_buffer.height);
 
-  renderer::Blt::BeginDraw(renderer::GSM.common_tfb);
+  renderer::Blt::BeginDraw(common_frame_buffer);
   renderer::Blt::TexSource(tex_fbo_);
   renderer::Blt::BltDraw(pos, pos.Size());
   renderer::Blt::EndDraw();
 
   base::Vec2i rendered_text_size;
-  renderer::GSM.EnsureGenericTex(txt_surf->w, txt_surf->h, rendered_text_size);
+  auto& generic_tex = renderer::GSM.EnsureGenericTex(txt_surf->w, txt_surf->h,
+                                                     rendered_text_size);
 
-  renderer::Texture::Bind(renderer::GSM.generic_tex);
+  renderer::Texture::Bind(generic_tex);
   renderer::Texture::TexSubImage2D(0, 0, txt_surf->w, txt_surf->h, GL_RGBA,
                                    txt_surf->pixels);
 
@@ -583,17 +584,17 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
 
   renderer::FrameBuffer::Bind(tex_fbo_.fbo);
 
-  auto& shader = renderer::GSM.shaders->texblt;
+  auto& shader = renderer::GSM.shaders()->texblt;
   shader.Bind();
   shader.SetProjectionMatrix(size_);
   shader.SetTransOffset(base::Vec2i());
-  shader.SetSrcTexture(renderer::GSM.generic_tex);
+  shader.SetSrcTexture(generic_tex);
   shader.SetTextureSize(rendered_text_size);
-  shader.SetDstTexture(renderer::GSM.common_tfb.tex);
+  shader.SetDstTexture(common_frame_buffer.tex);
   shader.SetOffsetScale(offset_scale);
   shader.SetOpacity(fopacity / 255.0f);
 
-  auto* quad = renderer::GSM.common_quad.get();
+  auto* quad = renderer::GSM.common_quad();
   quad->SetPositionRect(pos);
   quad->SetTexCoordRect(text_surf_size);
   quad->Draw();

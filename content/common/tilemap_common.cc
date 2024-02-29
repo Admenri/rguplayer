@@ -18,7 +18,7 @@ void TilemapFlashLayer::BeforeComposite() {
 void TilemapFlashLayer::Composite(const base::Vec2i offset, float alpha) {
   renderer::GSM.states.blend_func.Push(renderer::GLBlendType::Addition);
 
-  auto& shader = renderer::GSM.shaders->flash_tile;
+  auto& shader = renderer::GSM.shaders()->flash_tile;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTransOffset(offset);
@@ -80,7 +80,7 @@ void TilemapFlashLayer::UpdateBuffer() {
          vertices.size() * sizeof(renderer::CommonVertex));
   quads_->Update();
 
-  renderer::GSM.quad_ibo->EnsureSize(quad_size);
+  renderer::GSM.quad_ibo()->EnsureSize(quad_size);
 }
 
 }  // namespace content

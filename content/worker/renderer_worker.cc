@@ -28,11 +28,25 @@ void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
   config_ = config;
   host_window_ = host_window;
 
+  worker_ = std::make_unique<base::ThreadWorker>();
+  worker_->Start(base::RunLoop::MessagePumpType::Worker);
+  worker_->WaitUntilStart();
+
   InitGLContextInternal();
 }
 
 void RenderRunner::DestroyRenderer() {
   QuitGLContextInternal();
+
+  worker_.reset();
+}
+
+void RenderRunner::PostTask(base::OnceClosure task) {
+  worker_->task_runner()->PostTask(std::move(task));
+}
+
+void RenderRunner::WaitForSync() {
+  worker_->task_runner()->WaitForSync();
 }
 
 void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
@@ -98,11 +112,11 @@ void RenderRunner::InitGLContextInternal() {
   if (config_->renderer_debug_output())
     renderer::GLES2Context::EnableDebugOutputForCurrentThread();
 
-  renderer::GSM.enable_es_shaders =
+  renderer::GSM.enable_es_shaders() =
       (config_->angle_renderer() !=
        content::CoreConfigure::ANGLERenderer::Default);
   renderer::GSM.InitStates();
-  max_texture_size_ = renderer::GSM.GetMaxTextureSize();
+  max_texture_size_ = renderer::GSM.max_texture_size();
 
   renderer::GL.GetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &vertex_units_);
   renderer::GL.GetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &fragment_units_);

@@ -53,7 +53,6 @@ set(CORE_RENDERER_SRC
   context/gles2_context.cc
   context/gles2_context.h
   draw/drawable.h
-  meta/gles2meta.cc
   meta/gles2meta.h
   quad/quad_array.h
   quad/quad_drawable.cc

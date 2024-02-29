@@ -17,7 +17,7 @@ namespace content {
 
 class CoreConfigure;
 
-class RenderRunner : public base::RefCounted<RenderRunner> {
+class RenderRunner : public base::SequencedTaskRunner {
  public:
   RenderRunner() = default;
 
@@ -27,6 +27,9 @@ class RenderRunner : public base::RefCounted<RenderRunner> {
   void InitRenderer(scoped_refptr<CoreConfigure> config,
                     base::WeakPtr<ui::Widget> host_window);
   void DestroyRenderer();
+
+  void PostTask(base::OnceClosure task) override;
+  void WaitForSync() override;
 
   int max_texture_size() const { return max_texture_size_; }
   int vertex_texture_units() const { return vertex_units_; }
@@ -41,6 +44,7 @@ class RenderRunner : public base::RefCounted<RenderRunner> {
   void QuitGLContextInternal();
 
   scoped_refptr<CoreConfigure> config_;
+  std::unique_ptr<base::ThreadWorker> worker_;
 
   base::WeakPtr<ui::Widget> host_window_;
   SDL_GLContext glcontext_;

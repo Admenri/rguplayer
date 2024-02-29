@@ -554,7 +554,7 @@ class TilemapGroundLayer2 : public ViewportChild {
   void InitDrawableData() override { tilemap_->InitDrawableData(); }
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
   void Composite() override {
-    auto& shader = renderer::GSM.shaders->tilemap2;
+    auto& shader = renderer::GSM.shaders()->tilemap2;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTextureSize(
@@ -594,7 +594,7 @@ class TilemapAboveLayer2 : public ViewportChild {
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
-    auto& shader = renderer::GSM.shaders->base;
+    auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTextureSize(
@@ -1254,7 +1254,7 @@ void Tilemap2::ParseMapDataBufferInternal() {
   }
 
   tilemap_quads_->Update();
-  renderer::GSM.quad_ibo->EnsureSize(quad_size);
+  renderer::GSM.quad_ibo()->EnsureSize(quad_size);
 }
 
 void Tilemap2::DrawFlashLayerInternal() {

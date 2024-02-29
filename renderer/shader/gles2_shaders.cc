@@ -115,7 +115,7 @@ bool GLES2Shader::CompileShader(GLuint glshader,
   std::vector<GLint> shader_sizes;
 
   // Common header source
-  if (GSM.enable_es_shaders) {
+  if (GSM.enable_es_shaders()) {
     shader_srcs.push_back(
         reinterpret_cast<const GLchar*>(kGLESPrecisionDefine));
     shader_sizes.push_back(

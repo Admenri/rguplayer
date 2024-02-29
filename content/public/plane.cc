@@ -112,7 +112,7 @@ void Plane::Composite() {
     return;
 
   if (color_->IsValid() || tone_->IsValid() || opacity_ != 255) {
-    auto& shader = renderer::GSM.shaders->plane;
+    auto& shader = renderer::GSM.shaders()->plane;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransOffset(parent_rect().GetRealOffset());
@@ -123,7 +123,7 @@ void Plane::Composite() {
     shader.SetTone(tone_->AsBase());
     shader.SetOpacity(opacity_ / 255.0f);
   } else {
-    auto& shader = renderer::GSM.shaders->base;
+    auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransOffset(parent_rect().GetRealOffset());
@@ -183,7 +183,7 @@ void Plane::UpdateQuadArray() {
 
   auto element_size =
       base::Vec2i(static_cast<int>(item_x), static_cast<int>(item_y));
-  auto& shader = renderer::GSM.shaders->base;
+  auto& shader = renderer::GSM.shaders()->base;
   shader.Bind();
   shader.SetProjectionMatrix(element_size);
   shader.SetTexture(bitmap_->AsGLType().tex);

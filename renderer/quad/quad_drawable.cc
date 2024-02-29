@@ -36,7 +36,7 @@ void QuadIndexBuffer::EnsureSize(size_t count) {
   IndexBuffer::Unbind();
 }
 
-QuadDrawable::QuadDrawable() : CommonVertexDrawable(GSM.quad_ibo->ibo) {}
+QuadDrawable::QuadDrawable() : CommonVertexDrawable(GSM.quad_ibo()->ibo) {}
 
 void QuadDrawable::SetPositionRect(const base::RectF& pos) {
   if (position_cache_ == pos)
@@ -99,7 +99,7 @@ void Blt::BeginScreen(const base::Rect& rect) {
 
   FrameBuffer::Unbind();
   GSM.states.viewport.Push(rect);
-  auto& shader = GSM.shaders->base;
+  auto& shader = GSM.shaders()->base;
   shader.Bind();
   shader.SetProjectionMatrix(rect.Size());
   shader.SetTransOffset(base::Vec2i());
@@ -112,7 +112,7 @@ void Blt::BeginDraw(const TextureFrameBuffer& dest_tfb) {
   FrameBuffer::Bind(dest_tfb.fbo);
   auto size = base::Vec2i(dest_tfb.width, dest_tfb.height);
   GSM.states.viewport.Push(size);
-  auto& shader = GSM.shaders->base;
+  auto& shader = GSM.shaders()->base;
   shader.Bind();
   shader.SetProjectionMatrix(size);
   shader.SetTransOffset(base::Vec2i());
@@ -122,7 +122,7 @@ void Blt::TexSource(const TextureFrameBuffer& src_tfb) {
   if (GL.BlitFramebuffer)
     return GL.BindFramebuffer(GL_READ_FRAMEBUFFER, src_tfb.fbo.gl);
 
-  auto& shader = GSM.shaders->base;
+  auto& shader = GSM.shaders()->base;
   shader.SetTexture(src_tfb.tex);
   shader.SetTextureSize(base::Vec2i(src_tfb.width, src_tfb.height));
 }
@@ -139,7 +139,7 @@ void Blt::BltDraw(const base::RectF& src_rect,
 
   if (smooth)
     Texture::SetFilter(GL_LINEAR);
-  auto* quad = GSM.common_quad.get();
+  auto* quad = GSM.common_quad();
   GSM.states.blend.Push(false);
   quad->SetPositionRect(dest_rect);
   quad->SetTexCoordRect(src_rect);
@@ -161,7 +161,7 @@ void Blt::BltDraw(const base::Rect& src_rect,
 
   if (smooth)
     Texture::SetFilter(GL_LINEAR);
-  auto* quad = GSM.common_quad.get();
+  auto* quad = GSM.common_quad();
   GSM.states.blend.Push(false);
   quad->SetPositionRect(dest_rect);
   quad->SetTexCoordRect(src_rect);

@@ -67,7 +67,7 @@ struct VertexArray {
   GLID<VertexBuffer> vbo;
   GLID<IndexBuffer> ibo;
 
-  inline static void SetAttrib(VertexArray& vao) {
+  inline static void SetAttrib(const VertexArray& vao) {
     VertexBuffer::Bind(vao.vbo);
     IndexBuffer::Bind(vao.ibo);
 
@@ -89,13 +89,13 @@ struct VertexArray {
     }
   }
 
-  inline static void Uninit(VertexArray& vao) {
+  inline static void Uninit(const VertexArray& vao) {
     if (GL.GenVertexArrays) {
       GL.DeleteVertexArrays(1, &vao.id.gl);
     }
   }
 
-  inline static void Bind(VertexArray& vao) {
+  inline static void Bind(const VertexArray& vao) {
     if (GL.GenVertexArrays) {
       GL.BindVertexArray(vao.id.gl);
     } else {

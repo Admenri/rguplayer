@@ -122,7 +122,7 @@ class TilemapGroundLayer : public ViewportChild {
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
-    auto& shader = renderer::GSM.shaders->tilemap;
+    auto& shader = renderer::GSM.shaders()->tilemap;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTextureSize(
@@ -163,7 +163,7 @@ class TilemapZLayer : public ViewportChild {
     if (!tilemap_ || !tilemap_->above_offsets_.size())
       return;
 
-    auto& shader = renderer::GSM.shaders->base;
+    auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTextureSize(

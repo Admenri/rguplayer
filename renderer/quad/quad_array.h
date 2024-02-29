@@ -15,7 +15,7 @@ class QuadDrawableArray final {
  public:
   QuadDrawableArray() {
     vao_.vbo = VertexBuffer::Gen();
-    vao_.ibo = GSM.quad_ibo->ibo;
+    vao_.ibo = GSM.quad_ibo()->ibo;
 
     VertexArray<VertexType>::Init(vao_);
   }
@@ -47,7 +47,7 @@ class QuadDrawableArray final {
       vbo_size_ = buffer_size;
 
       // Ensure ibo max index
-      GSM.quad_ibo->EnsureSize(quad_size_);
+      GSM.quad_ibo()->EnsureSize(quad_size_);
     } else {
       // As subdata upload
       VertexBuffer::BufferSubData(0, buffer_size, vertices_.data());

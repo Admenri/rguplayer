@@ -46,10 +46,8 @@ class GlobalStateManager final {
   void InitStates();
   void QuitStates();
 
-  void EnsureCommonTFB(int width, int height);
-  void EnsureGenericTex(int width, int height, base::Vec2i& out_size);
-
-  int GetMaxTextureSize() const { return max_texture_size; }
+  TextureFrameBuffer& EnsureCommonTFB(int width, int height);
+  GLID<Texture>& EnsureGenericTex(int width, int height, base::Vec2i& out_size);
 
   struct {
     GLViewport viewport;
@@ -61,17 +59,24 @@ class GlobalStateManager final {
     GLClearColor clear_color;
   } states;
 
-  std::unique_ptr<GLShaderWare> shaders;
+  GLShaderWare* shaders() const { return shaders_.get(); }
+  QuadDrawable* common_quad() const { return common_quad_.get(); }
+  QuadIndexBuffer* quad_ibo() const { return quad_ibo_.get(); }
+  int& max_texture_size() { return max_texture_size_; }
+  bool& enable_es_shaders() { return enable_es_shaders_; }
 
-  TextureFrameBuffer common_tfb;
-  std::unique_ptr<QuadDrawable> common_quad;
+ private:
+  std::unique_ptr<GLShaderWare> shaders_;
 
-  GLID<Texture> generic_tex;
-  base::Vec2i generic_tex_size;
-  int max_texture_size;
-  bool enable_es_shaders;
+  TextureFrameBuffer common_tfb_;
+  std::unique_ptr<QuadDrawable> common_quad_;
+  std::unique_ptr<QuadIndexBuffer> quad_ibo_;
 
-  std::unique_ptr<QuadIndexBuffer> quad_ibo;
+  GLID<Texture> generic_tex_;
+  base::Vec2i generic_tex_size_;
+
+  int max_texture_size_;
+  bool enable_es_shaders_;
 };
 
 }  // namespace renderer

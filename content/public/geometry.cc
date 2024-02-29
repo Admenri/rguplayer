@@ -125,7 +125,7 @@ void Geometry::Composite() {
                              bitmap_->GetHeight());
     }
   } else {
-    auto& shader = renderer::GSM.shaders->geometry;
+    auto& shader = renderer::GSM.shaders()->geometry;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransOffset(parent_rect().GetRealOffset());
