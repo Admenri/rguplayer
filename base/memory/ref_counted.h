@@ -219,7 +219,7 @@ class RefCountedThreadSafeBase {
 #endif
   }
 
-  ALWAYS_INLINE void AddRefImpl() const {
+  BASE_ALWAYS_INLINE void AddRefImpl() const {
 #if DCHECK_IS_ON()
     DCHECK(!in_dtor_);
     DCHECK(!needs_adopt_ref_)
@@ -230,7 +230,7 @@ class RefCountedThreadSafeBase {
     ref_count_.Increment();
   }
 
-  ALWAYS_INLINE void AddRefWithCheckImpl() const {
+  BASE_ALWAYS_INLINE void AddRefWithCheckImpl() const {
 #if DCHECK_IS_ON()
     DCHECK(!in_dtor_);
     DCHECK(!needs_adopt_ref_)
@@ -241,7 +241,7 @@ class RefCountedThreadSafeBase {
     CHECK(ref_count_.Increment() > 0);
   }
 
-  ALWAYS_INLINE bool ReleaseImpl() const {
+  BASE_ALWAYS_INLINE bool ReleaseImpl() const {
 #if DCHECK_IS_ON()
     DCHECK(!in_dtor_);
     DCHECK(!ref_count_.IsZero());

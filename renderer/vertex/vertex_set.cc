@@ -28,4 +28,15 @@ const VertexItemAttribute GeometryVertexInfo[] = {
 const int GeometryVertexInfoSize =
     sizeof(GeometryVertexInfo) / sizeof(GeometryVertexInfo[0]);
 
+template <>
+const VertexItemAttribute* VertexInfo<CommonVertex>::attrs = CommonVertexInfo;
+template <>
+const int VertexInfo<CommonVertex>::attr_size = CommonVertexInfoSize;
+
+template <>
+const VertexItemAttribute* VertexInfo<GeometryVertex>::attrs =
+    GeometryVertexInfo;
+template <>
+const int VertexInfo<GeometryVertex>::attr_size = GeometryVertexInfoSize;
+
 }  // namespace renderer

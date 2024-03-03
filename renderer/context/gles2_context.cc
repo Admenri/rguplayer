@@ -94,6 +94,9 @@ void* GLES2Context::GetGLProc(const std::string& fname) {
   glfname += suffix_;
 
   void* fptr = reinterpret_cast<void*>(SDL_GL_GetProcAddress(glfname.c_str()));
+  if (!fptr)
+    LOG(INFO) << "[Renderer] Error: " << SDL_GetError();
+
   return fptr;
 }
 

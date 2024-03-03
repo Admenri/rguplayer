@@ -15,7 +15,7 @@
 
 namespace binding {
 
-using MriException = enum {
+enum MriException {
   ContentError = 0,
   OpenGLError,
   SDLError,

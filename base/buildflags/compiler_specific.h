@@ -68,27 +68,27 @@
 
 // Annotate a function indicating it should not be inlined.
 // Use like:
-//   NOINLINE void DoStuff() { ... }
+//   BASE_NOINLINE void DoStuff() { ... }
 #if defined(COMPILER_GCC)
-#define NOINLINE __attribute__((noinline))
+#define BASE_NOINLINE __attribute__((noinline))
 #elif defined(COMPILER_MSVC)
-#define NOINLINE __declspec(noinline)
+#define BASE_NOINLINE __declspec(noinline)
 #else
-#define NOINLINE
+#define BASE_NOINLINE
 #endif
 
 #if defined(COMPILER_GCC) && defined(NDEBUG)
-#define ALWAYS_INLINE inline __attribute__((__always_inline__))
+#define BASE_ALWAYS_INLINE inline __attribute__((__always_inline__))
 #elif defined(COMPILER_MSVC) && defined(NDEBUG)
-#define ALWAYS_INLINE __forceinline
+#define BASE_ALWAYS_INLINE __forceinline
 #else
-#define ALWAYS_INLINE inline
+#define BASE_ALWAYS_INLINE inline
 #endif
 
 // Annotate a function indicating it should never be tail called. Useful to make
 // sure callers of the annotated function are never omitted from call-stacks.
 // To provide the complementary behavior (prevent the annotated function from
-// being omitted) look at NOINLINE. Also note that this doesn't prevent code
+// being omitted) look at BASE_NOINLINE. Also note that this doesn't prevent code
 // folding of multiple identical caller functions into a single signature. To
 // prevent code folding, see NO_CODE_FOLDING() in base/debug/alias.h.
 // Use like:
@@ -163,11 +163,11 @@
 // Sanitizers annotations.
 #if defined(__has_attribute)
 #if __has_attribute(no_sanitize)
-#define NO_SANITIZE(what) __attribute__((no_sanitize(what)))
+#define BASE_NO_SANITIZE(what) __attribute__((no_sanitize(what)))
 #endif
 #endif
-#if !defined(NO_SANITIZE)
-#define NO_SANITIZE(what)
+#if !defined(BASE_NO_SANITIZE)
+#define BASE_NO_SANITIZE(what)
 #endif
 
 // MemorySanitizer annotations.
@@ -203,9 +203,9 @@
 #if !defined(DISABLE_CFI_ICALL)
 #if defined(OS_WIN)
 // Windows also needs __declspec(guard(nocf)).
-#define DISABLE_CFI_ICALL NO_SANITIZE("cfi-icall") __declspec(guard(nocf))
+#define DISABLE_CFI_ICALL BASE_NO_SANITIZE("cfi-icall") __declspec(guard(nocf))
 #else
-#define DISABLE_CFI_ICALL NO_SANITIZE("cfi-icall")
+#define DISABLE_CFI_ICALL BASE_NO_SANITIZE("cfi-icall")
 #endif
 #endif
 #if !defined(DISABLE_CFI_ICALL)

@@ -221,7 +221,7 @@ scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
   CheckIsDisposed();
 
   SurfaceRequired();
-  int bpp = surface_buffer_->format->BytesPerPixel;
+  int bpp = surface_buffer_->format->bytes_per_pixel;
   uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
                    y * surface_buffer_->pitch + x * bpp;
 
@@ -238,7 +238,7 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
   auto data = color->AsNormal();
 
   if (surface_buffer_) {
-    int bpp = surface_buffer_->format->BytesPerPixel;
+    int bpp = surface_buffer_->format->bytes_per_pixel;
     uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
                      y * surface_buffer_->pitch + x * bpp;
     *reinterpret_cast<uint32_t*>(pixel) =

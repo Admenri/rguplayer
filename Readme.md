@@ -27,7 +27,7 @@
 - 引擎的音频处理基于SoLoud库，音频数据通过soloud核心处理后输出到SDL的音频设备接口
 - 引擎的脚本处理部分使用了Ruby 3.2.2的解释器
 
-## 开发中截图
+## 截图
 
 <img src="app/test/1.png" height="300">
 
@@ -43,12 +43,21 @@
  - 第三方依赖库部分使用Git拉取，部分需要用户自行编译处理。
  - 项目中需要使用Python3来生成自动编译文件，请确保系统中已安装Python3。
 
-※ 开发中暂不提供编译步骤。
+### Windows (Visual Studio 2019)
+ - 可以直接使用vs内置的cmake功能进行快捷构建
+
+### Linux (Ubuntu23.10)
+ - 首先通过git clone拉取项目源码，
+ - 接着git clone在third_party中用到的第三方库源码
+ - 注意SDL_ttf中还有freetype
+ - 然后保证系统安装了opengl开发库和ruby开发库
+ - 在目录执行：cmake -S . -B out 以生成工程
+ - 之后执行cmake --build out执行构建
 
 ## 系统支持
 
-- Microsoft Windows
-- Linux
+- Microsoft Windows 7 later
+- Linux 6.5.0
 - Android
 - 其他平台支持计划中
 

@@ -155,7 +155,7 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
     fullpath += std::string(origdir);
     fullpath += "/";
   }
-  fullpath += filename;
+  fullpath += fname;
 
   PHYSFS_File* file = PHYSFS_openRead(fullpath.c_str());
   if (!file) {
@@ -179,6 +179,8 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
 Filesystem::Filesystem(const std::string& argv0) {
   if (!PHYSFS_init(argv0.data())) {
     LOG(INFO) << "[Filesystem] Failed to load Physfs.";
+  } else {
+    LOG(INFO) << "[Filesystem] BasePath: " << PHYSFS_getBaseDir();
   }
 }
 
@@ -198,7 +200,6 @@ bool Filesystem::Exists(const std::string& filename) {
 
 void Filesystem::OpenRead(const std::string& file_path, OpenCallback callback) {
   std::string filename(file_path);
-  ToLower(filename);
   std::string dir, file, ext;
 
   size_t last_slash_pos = filename.find_last_of('/');
@@ -216,14 +217,16 @@ void Filesystem::OpenRead(const std::string& file_path, OpenCallback callback) {
 
   OpenReadEnumData data;
   data.callback = callback;
-
   data.full = filename;
   data.dir = dir;
   data.file = file;
+  ToLower(data.file);
   data.ext = ext;
   data.ops = SDL_CreateRW();
 
-  PHYSFS_enumerate(dir.c_str(), OpenReadEnumCallback, &data);
+  if (!PHYSFS_enumerate(dir.c_str(), OpenReadEnumCallback, &data))
+    LOG(INFO) << "[Filesystem] " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode());
+
   SDL_DestroyRW(data.ops);
 
   if (!data.physfs_error.empty())
@@ -232,7 +235,7 @@ void Filesystem::OpenRead(const std::string& file_path, OpenCallback callback) {
 
   if (data.match_count <= 0)
     throw base::Exception(base::Exception::NoFileError, "No file match: %s",
-                          filename.c_str());
+                          file_path.c_str());
 }
 
 void Filesystem::OpenReadRaw(const std::string& filename,

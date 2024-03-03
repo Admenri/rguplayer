@@ -7,13 +7,24 @@
 #include "SDL_image.h"
 #include "SDL_ttf.h"
 
+namespace {
+
+void ReplaceStringWidth(std::string& str, char before, char after) {
+  for (size_t i = 0; i < str.size(); ++i)
+    if (str[i] == before)
+      str[i] = after;
+}
+
+} // namespace
+
 int main(int argc, char* argv[]) {
 #if defined(OS_WIN)
   ::SetConsoleOutputCP(CP_UTF8);
 #endif  //! defined(OS_WIN)
 
   std::string app(argv[0]);
-  auto last_sep = app.find_last_of('\\');
+  ReplaceStringWidth(app, '\\', '/');
+  auto last_sep = app.find_last_of('/');
   if (last_sep != std::string::npos)
     app = app.substr(last_sep + 1);
 
@@ -41,7 +52,6 @@ int main(int argc, char* argv[]) {
   }
 
   SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
-  SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 
   SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO);
@@ -57,7 +67,6 @@ int main(int argc, char* argv[]) {
   win_params.title = config->game_title();
   win_params.resizable = true;
   win_params.hpixeldensity = false;
-
   win->Init(std::move(win_params));
 
   std::unique_ptr<content::WorkerTreeCompositor> cc(

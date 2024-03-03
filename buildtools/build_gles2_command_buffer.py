@@ -43,6 +43,6 @@ elif args.body:
   converted_functions.append(autogen_comments)
   for function in functions:
     if function != "":
-      converted_functions.append("{} = reinterpret_cast<{}>(GetGLProc(\"{}\"));\nif (!{}) LOG(ERROR) << \"Cannot find GLES function:{}\";\n".format(function, "PFNGL" + function.upper() + "PROC", function, function, function))
+      converted_functions.append("{} = reinterpret_cast<{}>(GetGLProc(\"{}\"));\nif (!{}) LOG(ERROR) << \"Cannot find GLES function: gl{}\";\n".format(function, "PFNGL" + function.upper() + "PROC", function, function, function))
   with open(args.output, "w") as file:
     file.writelines(converted_functions)

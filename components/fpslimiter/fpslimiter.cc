@@ -8,6 +8,7 @@
 #include "base/debug/logging.h"
 
 #include <algorithm>
+#include <cmath>
 
 #define NS_PER_S 1e9
 

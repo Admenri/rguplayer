@@ -76,6 +76,9 @@ void Widget::Init(InitParams params) {
   SDL_SetBooleanProperty(property_id, "always-on-top", params.always_on_top);
 
   window_ = SDL_CreateWindowWithProperties(property_id);
+  if (!window_)
+    LOG(INFO) << "[UI] " << SDL_GetError();
+
   SDL_SetProperty(SDL_GetWindowProperties(window_), kNativeWidgetKey, this);
 
   SDL_DestroyProperties(property_id);
