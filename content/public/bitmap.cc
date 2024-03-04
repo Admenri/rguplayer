@@ -220,6 +220,9 @@ void Bitmap::ClearRect(const base::Rect& rect) {
 scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
   CheckIsDisposed();
 
+  if (x < 0 || x >= size_.x || y < 0 || y >= size_.y)
+    return nullptr;
+
   SurfaceRequired();
   int bpp = surface_buffer_->format->bytes_per_pixel;
   uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
@@ -235,8 +238,10 @@ scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
 void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
   CheckIsDisposed();
 
-  auto data = color->AsNormal();
+  if (x < 0 || x >= size_.x || y < 0 || y >= size_.y)
+    return;
 
+  auto data = color->AsNormal();
   if (surface_buffer_) {
     int bpp = surface_buffer_->format->bytes_per_pixel;
     uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +

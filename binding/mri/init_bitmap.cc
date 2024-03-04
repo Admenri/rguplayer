@@ -247,6 +247,8 @@ MRI_METHOD(bitmap_get_pixel) {
 
   scoped_refptr<content::Color> pixel;
   MRI_GUARD(pixel = obj->GetPixel(x, y););
+  if (!pixel)
+    return Qnil;
 
   return MriWrapObject(pixel, kColorDataType);
 }

@@ -15,7 +15,7 @@ void ReplaceStringWidth(std::string& str, char before, char after) {
       str[i] = after;
 }
 
-} // namespace
+}  // namespace
 
 int main(int argc, char* argv[]) {
 #if defined(OS_WIN)

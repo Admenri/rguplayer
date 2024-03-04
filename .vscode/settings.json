@@ -1,0 +1,8 @@
+{
+    "clang-format.fallbackStyle": "Chromium",
+    "C_Cpp.clang_format_style": "{ TableWidth: 2 }",
+    "editor.defaultFormatter": "xaver.clang-format",
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "C_Cpp.formatting": "clangFormat"
+}
