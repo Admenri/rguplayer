@@ -71,17 +71,14 @@
 
 ## 第三方库使用
 
-- Chromium - https://www.chromium.org/chromium-projects/
 - SDL - https://github.com/libsdl-org/SDL
 - SDL_image - https://github.com/libsdl-org/SDL_image
 - SDL_ttf - https://github.com/libsdl-org/SDL_ttf
 - ANGLE - https://chromium.googlesource.com/angle/angle
 - CRuby - https://www.ruby-lang.org/zh_cn/
-- MRuby - https://mruby.org/
 - Physfs - https://github.com/icculus/physfs
 - concurrentqueue - https://github.com/cameron314/concurrentqueue
 - aom - https://aomedia.googlesource.com/aom
-- json - https://github.com/nlohmann/json
 - zlib - https://github.com/madler/zlib
 - inih - https://github.com/jtilly/inih
 - soloud - https://github.com/jarikomppa/soloud
@@ -91,4 +88,4 @@
 - AFDian: https://afdian.net/a/rguplayer
 - Mail: 2755482106@qq.com
 
-© 2024 Admenri
+© 2023-2024 Admenri
