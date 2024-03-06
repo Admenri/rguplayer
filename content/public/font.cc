@@ -16,9 +16,8 @@
 
 namespace content {
 
-std::array<std::string, 2> kFontLookupDirs = {
+std::array<std::string, 1> kFontLookupDirs = {
     "Fonts/",
-    "C:/Windows/Fonts/",
 };
 
 namespace {
@@ -334,22 +333,13 @@ SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
     SDL_Surface* format_surf = surf;
     if (surf->format->format != SDL_PIXELFORMAT_ABGR8888) {
       format_surf = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_ABGR8888);
-
       SDL_DestroySurface(surf);
+      surf = format_surf;
     }
-    surf = format_surf;
   };
 
   std::string src_text = FixupString(text);
-  if (src_text.empty())
-    return nullptr;
-
-  int space_count = 0;
-  for (auto& c : src_text)
-    if (c == ' ')
-      ++space_count;
-
-  if (space_count >= src_text.size())
+  if (src_text.empty() || src_text == " ")
     return nullptr;
 
   TTF_Font* font = AsSDLFont();
@@ -435,7 +425,6 @@ void Font::MakeFontIDInternal() {
   auto& cache = g_default_font_state->path_cache;
   std::vector<std::string> load_names(name_);
   load_names.push_back("Default.ttf");
-
   for (auto& name : load_names) {
     std::string font_find_path;
     if (!FindFontInternal(name, &font_find_path))

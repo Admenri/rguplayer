@@ -33,17 +33,9 @@ Graphics::Graphics(base::WeakPtr<BindingRunner> dispatcher,
       fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)),
       fps_display_{0, SDL_GetPerformanceCounter()} {
   viewport_rect().rect = initial_resolution;
-
   Font::InitStaticFont();
-  SDL_GL_GetSwapInterval(&vsync_interval_);
-  InitScreenBufferInternal();
 
-  // Enum display info
-  int display_count;
-  SDL_DisplayID* display_list = SDL_GetDisplays(&display_count);
-  for (int i = 0; i < display_count; ++i)
-    LOG(INFO) << "[Graphics] Display Device" << i << ": "
-              << SDL_GetDisplayName(display_list[i]);
+  InitScreenBufferInternal();
 }
 
 Graphics::~Graphics() {
@@ -287,6 +279,8 @@ filesystem::Filesystem* Graphics::filesystem() {
 }
 
 void Graphics::InitScreenBufferInternal() {
+  SDL_GL_GetSwapInterval(&vsync_interval_);
+
   screen_buffer_[0] = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(screen_buffer_[0], resolution_.x,
                                       resolution_.y);
