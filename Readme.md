@@ -47,8 +47,8 @@
  - 可以直接使用vs内置的cmake功能进行快捷构建
 
 ### Linux (Ubuntu23.10)
- - 首先通过git clone拉取项目源码，
- - 接着git clone在third_party中用到的第三方库源码
+ - 首先通过git clone拉取项目源码: git clone https://github.com/Admenri/rguplayer.git
+ - 接着git clone在third_party中用到的第三方库源码: git submodule init | git submodule update
  - 注意SDL_ttf中还有freetype
  - 然后保证系统安装了opengl开发库和ruby开发库
  - 在目录执行：cmake -S . -B out 以生成工程
