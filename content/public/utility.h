@@ -12,6 +12,8 @@
 #include "base/memory/ref_counted.h"
 #include "content/common/serializable.h"
 
+#include "SDL_pixels.h"
+
 namespace content {
 
 class ValueNotification {
@@ -385,6 +387,7 @@ class Color : public base::RefCounted<Color>,
     return base::Vec4(static_cast<float>(red_), static_cast<float>(green_),
                       static_cast<float>(blue_), static_cast<float>(alpha_));
   }
+
   SDL_Color AsSDLColor() {
     return SDL_Color{static_cast<uint8_t>(red_), static_cast<uint8_t>(green_),
                      static_cast<uint8_t>(blue_), static_cast<uint8_t>(alpha_)};

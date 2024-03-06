@@ -7,14 +7,6 @@ include_directories("${PROJECT_SOURCE_DIR}")
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 set(CMAKE_CXX_STANDARD 20)
 
-option(CORE_ENABLE_VIDEO "Enable Core Video Decode Functions" false)
-
-#--------------------------------------------------------------------------------
-# Generate config header
-#--------------------------------------------------------------------------------
-
-configure_file(buildtools/build_config.h.in gen/buildtools/build_config.h)
-
 #--------------------------------------------------------------------------------
 # Platform and compiler check
 #--------------------------------------------------------------------------------
@@ -70,13 +62,6 @@ set(PHYSFS_BUILD_STATIC TRUE)
 set(PHYSFS_BUILD_SHARED FALSE)
 add_subdirectory(third_party/physfs)
 include_directories(third_party/physfs/src)
-
-## AOM
-if (CORE_ENABLE_VIDEO)
-  set(BUILD_SHARED_LIBS off)
-  include_directories(third_party/aom)
-  add_subdirectory(third_party/aom)
-endif()
 
 ## Zlib
 add_subdirectory(third_party/zlib)
