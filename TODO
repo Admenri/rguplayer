@@ -1,9 +1,9 @@
-2024.2.17:
+2024.3.6:
 
 * F1 Menu
 - 未实现F1按键绑定菜单
 
-* Bitmap：
+* Bitmap
 - 模糊未实现
 
 * Graphics
@@ -14,3 +14,6 @@
 
 * Audio
 - 需要重新设计
+
+* CRuby
+- 创建一个cmake版本mri
