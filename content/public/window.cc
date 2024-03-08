@@ -272,14 +272,14 @@ void Window::OnObjectDisposed() {
   weak_ptr_factory_.InvalidateWeakPtrs();
 
   RemoveFromList();
-
   control_layer_.reset();
-  base_quad_.reset();
-  content_quad_.reset();
-  controls_quads_.reset();
-  base_tex_quad_array_.reset();
 
-  renderer::TextureFrameBuffer::Del(base_tfb_);
+  screen()->renderer()->DeleteSoon(std::move(base_quad_));
+  screen()->renderer()->DeleteSoon(std::move(content_quad_));
+  screen()->renderer()->DeleteSoon(std::move(controls_quads_));
+  screen()->renderer()->DeleteSoon(std::move(base_tex_quad_array_));
+  screen()->renderer()->PostTask(
+      base::BindOnce(&renderer::TextureFrameBuffer::Del, base_tfb_));
 }
 
 void Window::InitDrawableData() {
@@ -449,13 +449,15 @@ void Window::UpdateBaseTexInternal() {
   if (!windowskin_ || windowskin_->IsDisposed())
     return;
 
+  auto& tex_fbo = Graphics::texture_pool().at(windowskin_->GetTexID());
+
   renderer::GSM.states.viewport.Push(rect_.Size());
   renderer::GSM.states.blend.Push(false);
 
   auto& shader = renderer::GSM.shaders()->base_alpha;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-  shader.SetTexture(windowskin_->AsGLType().tex);
+  shader.SetTexture(tex_fbo.tex);
   shader.SetTextureSize(windowskin_->GetSize());
   shader.SetTransOffset(base::Vec2());
   renderer::Texture::SetFilter(GL_LINEAR);
@@ -617,8 +619,10 @@ void Window::CompositeControls() {
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
 
   if (windowskin_ && !windowskin_->IsDisposed()) {
+    auto& skin_tex_fbo = Graphics::texture_pool().at(windowskin_->GetTexID());
+
     shader.SetTransOffset(offset);
-    shader.SetTexture(windowskin_->AsGLType().tex);
+    shader.SetTexture(skin_tex_fbo.tex);
     shader.SetTextureSize(windowskin_->GetSize());
     renderer::Texture::SetFilter(GL_LINEAR);
 
@@ -627,10 +631,11 @@ void Window::CompositeControls() {
   }
 
   if (contents_ && !contents_->IsDisposed()) {
+    auto& content_tex_fbo = Graphics::texture_pool().at(contents_->GetTexID());
     renderer::GSM.states.scissor_rect.SetIntersect(contents_rect);
 
     shader.SetTransOffset(offset + (base::Vec2i(16, 16) - origin_));
-    shader.SetTexture(contents_->AsGLType().tex);
+    shader.SetTexture(content_tex_fbo.tex);
     shader.SetTextureSize(contents_->GetSize());
 
     content_quad_->Draw();

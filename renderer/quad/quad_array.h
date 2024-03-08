@@ -61,12 +61,13 @@ class QuadDrawableArray final {
   }
 
   void Draw(size_t offset, size_t count) {
-    VertexArray<VertexType>::Bind(vao_);
+    if (!count)
+      return;
 
+    VertexArray<VertexType>::Bind(vao_);
     const char* _offset = (const char*)0 + offset * 6 * sizeof(uint16_t);
     GL.DrawElements(GL_TRIANGLES, (GLsizei)(count * 6), GL_UNSIGNED_SHORT,
                     _offset);
-
     VertexArray<VertexType>::Unbind();
   }
 

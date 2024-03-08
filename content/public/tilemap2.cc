@@ -777,9 +777,10 @@ void Tilemap2::OnObjectDisposed() {
 
   weak_ptr_factory_.InvalidateWeakPtrs();
 
-  tilemap_quads_.reset();
-  flash_layer_.reset();
-  renderer::TextureFrameBuffer::Del(atlas_tfb_);
+  screen()->renderer()->DeleteSoon(std::move(flash_layer_));
+  screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
+  screen()->renderer()->PostTask(
+      base::BindOnce(&renderer::TextureFrameBuffer::Del, atlas_tfb_));
 }
 
 void Tilemap2::BeforeTilemapComposite() {
@@ -817,8 +818,10 @@ void Tilemap2::CreateTileAtlasInternal() {
         atlas_info.dst.x * tile_size_, atlas_info.dst.y * tile_size_,
         atlas_info.src.size.x * tile_size_, atlas_info.src.size.y * tile_size_);
 
+    auto& tex_fbo = Graphics::texture_pool().at(atlas_bitmap->GetTexID());
+
     renderer::Blt::BeginDraw(atlas_tfb_);
-    renderer::Blt::TexSource(atlas_bitmap->AsGLType());
+    renderer::Blt::TexSource(tex_fbo);
     renderer::Blt::BltDraw(src_rect, dst_rect);
     renderer::Blt::EndDraw();
   }

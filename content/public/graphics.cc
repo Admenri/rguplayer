@@ -18,6 +18,14 @@
 
 namespace content {
 
+namespace {
+thread_local Graphics::TexturePool g_texture_pool_;
+}  // namespace
+
+Graphics::TexturePool& Graphics::texture_pool() {
+  return g_texture_pool_;
+}
+
 Graphics::Graphics(base::WeakPtr<BindingRunner> dispatcher,
                    scoped_refptr<RenderRunner> renderer,
                    const base::Vec2i& initial_resolution)
@@ -29,19 +37,21 @@ Graphics::Graphics(base::WeakPtr<BindingRunner> dispatcher,
       brightness_(255),
       frame_count_(0),
       frame_rate_(dispatcher->rgss_version() >= RGSSVersion::RGSS2 ? 60 : 40),
-      average_fps_(0),
-      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)),
-      fps_display_{0, SDL_GetPerformanceCounter()} {
+      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)) {
   viewport_rect().rect = initial_resolution;
   Font::InitStaticFont();
 
-  InitScreenBufferInternal();
+  renderer->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
+                                    base::Unretained(this)));
+  renderer->WaitForSync();
 }
 
 Graphics::~Graphics() {
-  Font::DestroyStaticFont();
+  renderer()->PostTask(
+      base::BindOnce(&Graphics::DestroyBufferInternal, base::Unretained(this)));
+  renderer()->WaitForSync();
 
-  DestroyBufferInternal();
+  Font::DestroyStaticFont();
 }
 
 int Graphics::GetBrightness() const {
@@ -54,14 +64,18 @@ void Graphics::SetBrightness(int brightness) {
 }
 
 void Graphics::Wait(int duration) {
-  for (int i = 0; i < duration; ++i) {
+  for (int i = 0; i < duration; ++i)
     Update();
-  }
 }
 
 scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
   scoped_refptr<Bitmap> snap = new Bitmap(this, resolution_.x, resolution_.y);
-  SnapToBitmapInternal(snap);
+
+  renderer()->PostTask(base::BindOnce(&Graphics::SnapToBitmapInternal,
+                                      base::Unretained(this),
+                                      snap->GetTexID()));
+  renderer()->WaitForSync();
+
   return snap;
 }
 
@@ -73,7 +87,10 @@ void Graphics::FadeOut(int duration) {
     SetBrightness(current_brightness -
                   current_brightness * (i / static_cast<float>(duration)));
     if (frozen_) {
-      PresentScreenInternal(frozen_snapshot_);
+      renderer()->PostTask(base::BindOnce(&Graphics::PresentScreenInternal,
+                                          base::Unretained(this),
+                                          frozen_snapshot_));
+      renderer()->WaitForSync();
 
       FrameProcessInternal();
       if (dispatcher_->CheckFlags())
@@ -100,7 +117,10 @@ void Graphics::FadeIn(int duration) {
                   diff * (i / static_cast<float>(duration)));
 
     if (frozen_) {
-      PresentScreenInternal(frozen_snapshot_);
+      renderer()->PostTask(base::BindOnce(&Graphics::PresentScreenInternal,
+                                          base::Unretained(this),
+                                          frozen_snapshot_));
+      renderer()->WaitForSync();
 
       FrameProcessInternal();
       if (dispatcher_->CheckFlags())
@@ -129,8 +149,12 @@ void Graphics::Update() {
       }
     }
 
-    CompositeScreenInternal();
-    PresentScreenInternal(screen_buffer_[0]);
+    renderer()->PostTask(base::BindOnce(&Graphics::CompositeScreenInternal,
+                                        base::Unretained(this)));
+    renderer()->PostTask(base::BindOnce(&Graphics::PresentScreenInternal,
+                                        base::Unretained(this),
+                                        screen_buffer_[0]));
+    renderer()->WaitForSync();
   }
 
   FrameProcessInternal();
@@ -143,9 +167,11 @@ void Graphics::Update() {
 void Graphics::ResizeScreen(const base::Vec2i& resolution) {
   if (resolution_ == resolution)
     return;
-
   resolution_ = resolution;
-  ResizeResolutionInternal();
+
+  renderer()->PostTask(base::BindOnce(&Graphics::ResizeResolutionInternal,
+                                      base::Unretained(this)));
+  renderer()->WaitForSync();
 }
 
 void Graphics::Reset() {
@@ -165,10 +191,13 @@ void Graphics::Reset() {
 }
 
 void Graphics::Freeze() {
-  if (frozen_)
-    return;
-  FreezeSceneInternal();
-  frozen_ = true;
+  if (!frozen_) {
+    frozen_ = true;
+
+    renderer()->PostTask(
+        base::BindOnce(&Graphics::FreezeSceneInternal, base::Unretained(this)));
+    renderer()->WaitForSync();
+  }
 }
 
 void Graphics::Transition(int duration,
@@ -183,17 +212,26 @@ void Graphics::Transition(int duration,
   SetBrightness(255);
   vague = std::clamp<int>(vague, 1, 256);
 
-  TransitionSceneInternal(duration, trans_bitmap, vague);
-  renderer::GSM.states.blend.Push(false);
+  renderer()->PostTask(base::BindOnce(&Graphics::TransitionSceneInternal,
+                                      base::Unretained(this), duration,
+                                      !!trans_bitmap.get(), vague));
+  renderer()->PostTask(
+      base::BindOnce([]() { renderer::GSM.states.blend.Push(false); }));
+
   for (int i = 0; i < duration; ++i) {
-    TransitionSceneInternalLoop(i, duration, trans_bitmap);
+    renderer()->PostTask(base::BindOnce(
+        &Graphics::TransitionSceneInternalLoop, base::Unretained(this), i,
+        duration, reinterpret_cast<uint64_t>(trans_bitmap.get())));
     FrameProcessInternal();
 
     /* Break draw loop for quit flag */
     if (dispatcher_->CheckFlags())
       break;
   }
-  renderer::GSM.states.blend.Pop();
+
+  renderer()->PostTask(
+      base::BindOnce([]() { renderer::GSM.states.blend.Pop(); }));
+  renderer()->WaitForSync();
 
   /* Transition process complete */
   frozen_ = false;
@@ -280,6 +318,7 @@ filesystem::Filesystem* Graphics::filesystem() {
 
 void Graphics::InitScreenBufferInternal() {
   SDL_GL_GetSwapInterval(&vsync_interval_);
+  g_texture_pool_.clear();
 
   screen_buffer_[0] = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(screen_buffer_[0], resolution_.x,
@@ -385,10 +424,12 @@ void Graphics::PresentScreenInternal(
   SDL_GL_SwapWindow(window->AsSDLWindow());
 }
 
-void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
+void Graphics::SnapToBitmapInternal(uint64_t target) {
+  auto& tex_fbo = Graphics::texture_pool().at(target);
+
   CompositeScreenInternal();
 
-  renderer::Blt::BeginDraw(target->AsGLType());
+  renderer::Blt::BeginDraw(tex_fbo);
   renderer::Blt::TexSource(screen_buffer_[0]);
   renderer::Blt::BltDraw(resolution_, resolution_);
   renderer::Blt::EndDraw();
@@ -404,7 +445,7 @@ void Graphics::FreezeSceneInternal() {
 }
 
 void Graphics::TransitionSceneInternal(int duration,
-                                       scoped_refptr<Bitmap> trans_bitmap,
+                                       bool has_bitmap,
                                        int vague) {
   // Snap to backend buffer
   CompositeScreenInternal();
@@ -412,7 +453,7 @@ void Graphics::TransitionSceneInternal(int duration,
   auto& alpha_shader = renderer::GSM.shaders()->alpha_trans;
   auto& vague_shader = renderer::GSM.shaders()->vague_shader;
 
-  if (!trans_bitmap) {
+  if (!has_bitmap) {
     alpha_shader.Bind();
     alpha_shader.SetProjectionMatrix(
         renderer::GSM.states.viewport.Current().Size());
@@ -430,7 +471,9 @@ void Graphics::TransitionSceneInternal(int duration,
 
 void Graphics::TransitionSceneInternalLoop(int i,
                                            int duration,
-                                           scoped_refptr<Bitmap> trans_bitmap) {
+                                           uint64_t trans_bitmap) {
+  auto& tex_fbo = Graphics::texture_pool().at(trans_bitmap);
+
   auto& alpha_shader = renderer::GSM.shaders()->alpha_trans;
   auto& vague_shader = renderer::GSM.shaders()->vague_shader;
   float progress = i * (1.0f / duration);
@@ -444,7 +487,7 @@ void Graphics::TransitionSceneInternalLoop(int i,
     vague_shader.Bind();
     vague_shader.SetFrozenTexture(frozen_snapshot_.tex);
     vague_shader.SetCurrentTexture(screen_buffer_[0].tex);
-    vague_shader.SetTransTexture(trans_bitmap->AsGLType().tex);
+    vague_shader.SetTransTexture(tex_fbo.tex);
     vague_shader.SetProgress(progress);
   }
 

@@ -84,8 +84,9 @@ void Plane::SetZoomY(double zoom_y) {
 void Plane::OnObjectDisposed() {
   RemoveFromList();
 
-  quad_array_.reset();
-  renderer::TextureFrameBuffer::Del(layer_tfb_);
+  screen()->renderer()->DeleteSoon(std::move(quad_array_));
+  screen()->renderer()->PostTask(
+      base::BindOnce(&renderer::TextureFrameBuffer::Del, layer_tfb_));
 }
 
 void Plane::InitDrawableData() {
@@ -181,12 +182,14 @@ void Plane::UpdateQuadArray() {
   renderer::FrameBuffer::Bind(layer_tfb_.fbo);
   renderer::FrameBuffer::Clear();
 
+  auto& tex_fbo = Graphics::texture_pool().at(bitmap_->GetTexID());
+
   auto element_size =
       base::Vec2i(static_cast<int>(item_x), static_cast<int>(item_y));
   auto& shader = renderer::GSM.shaders()->base;
   shader.Bind();
   shader.SetProjectionMatrix(element_size);
-  shader.SetTexture(bitmap_->AsGLType().tex);
+  shader.SetTexture(tex_fbo.tex);
   shader.SetTextureSize(tex);
   shader.SetTransOffset(base::Vec2i());
 

@@ -10,12 +10,7 @@
 namespace content {
 
 Viewport::Viewport(scoped_refptr<Graphics> screen)
-    : GraphicElement(screen),
-      Disposable(screen),
-      Drawable(screen.get(), 0, true) {
-  viewport_rect().rect = screen->GetSize();
-  InitViewportInternal();
-}
+    : Viewport(screen, screen->GetSize()) {}
 
 Viewport::Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect)
     : GraphicElement(screen),
@@ -62,7 +57,9 @@ void Viewport::SetRect(scoped_refptr<Rect> rect) {
 void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   CheckIsDisposed();
 
-  SnapToBitmapInternal(target);
+  screen()->renderer()->PostTask(base::BindOnce(
+      &Viewport::SnapToBitmapInternal, base::Unretained(this), target));
+  screen()->renderer()->WaitForSync();
 }
 
 void Viewport::SetShader(scoped_refptr<Shader> shader) {
@@ -76,8 +73,9 @@ void Viewport::SetShader(scoped_refptr<Shader> shader) {
 void Viewport::OnObjectDisposed() {
   RemoveFromList();
 
-  viewport_quad_.reset();
-  renderer::TextureFrameBuffer::Del(viewport_buffer_);
+  screen()->renderer()->DeleteSoon(std::move(viewport_quad_));
+  screen()->renderer()->PostTask(
+      base::BindOnce(&renderer::TextureFrameBuffer::Del, viewport_buffer_));
 }
 
 void Viewport::InitDrawableData() {
@@ -158,7 +156,8 @@ void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
 
   NotifyPrepareComposite();
 
-  renderer::FrameBuffer::Bind(target->AsGLType().fbo);
+  auto& tex_fbo = Graphics::texture_pool().at(target->GetTexID());
+  renderer::FrameBuffer::Bind(tex_fbo.fbo);
   renderer::GSM.states.clear_color.Set(base::Vec4());
   renderer::FrameBuffer::Clear();
 
@@ -180,9 +179,9 @@ void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
     else
       target_color = composite_color;
 
-    screen()->ApplyViewportEffect(target->AsGLType(), viewport_buffer_,
-                                  *viewport_quad_, target_color,
-                                  tone_->AsBase(), shader_program_);
+    screen()->ApplyViewportEffect(tex_fbo, viewport_buffer_, *viewport_quad_,
+                                  target_color, tone_->AsBase(),
+                                  shader_program_);
   }
 
   renderer::GSM.states.scissor_rect.Pop();

@@ -28,11 +28,27 @@ void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
   config_ = config;
   host_window_ = host_window;
 
-  InitGLContextInternal();
+  worker_ = std::make_unique<base::ThreadWorker>();
+  worker_->Start(base::RunLoop::MessagePumpType::Worker);
+  worker_->WaitUntilStart();
+
+  PostTask(base::BindOnce(&RenderRunner::InitGLContextInternal,
+                          base::Unretained(this)));
+  WaitForSync();
 }
 
 void RenderRunner::DestroyRenderer() {
-  QuitGLContextInternal();
+  PostTask(base::BindOnce(&RenderRunner::QuitGLContextInternal,
+                          base::Unretained(this)));
+  WaitForSync();
+}
+
+void RenderRunner::PostTask(base::OnceClosure task) {
+  worker_->task_runner()->PostTask(std::move(task));
+}
+
+void RenderRunner::WaitForSync() {
+  worker_->task_runner()->WaitForSync();
 }
 
 void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
