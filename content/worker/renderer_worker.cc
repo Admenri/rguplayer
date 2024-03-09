@@ -41,6 +41,8 @@ void RenderRunner::DestroyRenderer() {
   PostTask(base::BindOnce(&RenderRunner::QuitGLContextInternal,
                           base::Unretained(this)));
   WaitForSync();
+
+  worker_.reset();
 }
 
 void RenderRunner::PostTask(base::OnceClosure task) {

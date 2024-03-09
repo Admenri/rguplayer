@@ -35,6 +35,7 @@ add_subdirectory(third_party/SDL)
 
 ## SDL_image
 set(BUILD_SHARED_LIBS off)
+set(SDL3IMAGE_VENDORED off)
 add_subdirectory(third_party/SDL_image)
 include_directories(third_party/SDL_image/include/SDL3_image)
 
@@ -45,11 +46,33 @@ add_subdirectory(third_party/SDL_ttf)
 include_directories(third_party/SDL_ttf/include/SDL3_ttf)
 
 ## CRuby-Mri
-find_package(Ruby REQUIRED)
 add_library(mri_ruby UNKNOWN IMPORTED)
-set(RUBY_INCLUDE_PATH "${Ruby_INCLUDE_DIRS}" "${Ruby_CONFIG_INCLUDE_DIR}")
-set(RUBY_LIBRARY_PATH "${Ruby_LIBRARIES}")
-message(${RUBY_INCLUDE_PATH} ${RUBY_LIBRARY_PATH})
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(RUBY_INCLUDE_PATH
+      "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
+      "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x86/"
+    )
+    set(RUBY_LIBRARY_PATH
+      "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x86/vcruntime140-ruby320-static.lib"
+    )
+  elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(RUBY_INCLUDE_PATH
+      "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
+      "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x64/"
+    )
+    set(RUBY_LIBRARY_PATH
+      "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x64/x64-vcruntime140-ruby320-static.lib"
+    )
+  else()
+    message("No Implement")
+  endif()
+else()
+  find_package(Ruby REQUIRED)
+  set(RUBY_INCLUDE_PATH "${Ruby_INCLUDE_DIRS}" "${Ruby_CONFIG_INCLUDE_DIR}")
+  set(RUBY_LIBRARY_PATH "${Ruby_LIBRARIES}")
+  message(${RUBY_INCLUDE_PATH} ${RUBY_LIBRARY_PATH})
+endif()
 set_target_properties(mri_ruby PROPERTIES
                       IMPORTED_LOCATION "${RUBY_LIBRARY_PATH}"
                       INTERFACE_INCLUDE_DIRECTORIES "${RUBY_INCLUDE_PATH}")

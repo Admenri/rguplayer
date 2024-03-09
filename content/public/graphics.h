@@ -103,8 +103,9 @@ class Graphics final : public base::RefCounted<Graphics>,
   void FreezeSceneInternal();
   void TransitionSceneInternal(int duration, bool has_bitmap, int vague);
   void TransitionSceneInternalLoop(int i, int duration, uint64_t trans_bitmap);
-  void SetSwapIntervalInternal();
   void SnapToBitmapInternal(uint64_t target);
+  void UpdateScreenInternal(int* paint_raiser);
+  void SetSwapIntervalInternal();
 
   // Disposable called
   void AddDisposable(Disposable* disp);

@@ -64,6 +64,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   bool game_battle_test_;
 
   RGSSVersion rgss_version_;
+  bool sync_renderer_;
   bool disable_audio_;
 
   ANGLERenderer angle_renderer_;

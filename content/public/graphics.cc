@@ -138,6 +138,8 @@ void Graphics::FadeIn(int duration) {
 }
 
 void Graphics::Update() {
+  int paint_semaphore = false;
+
   if (!frozen_) {
     if (fps_manager_->RequireFrameSkip()) {
       if (config_->allow_frame_skip())
@@ -149,18 +151,19 @@ void Graphics::Update() {
       }
     }
 
-    renderer()->PostTask(base::BindOnce(&Graphics::CompositeScreenInternal,
-                                        base::Unretained(this)));
-    renderer()->PostTask(base::BindOnce(&Graphics::PresentScreenInternal,
+    renderer()->PostTask(base::BindOnce(&Graphics::UpdateScreenInternal,
                                         base::Unretained(this),
-                                        screen_buffer_[0]));
-    renderer()->WaitForSync();
+                                        &paint_semaphore));
   }
 
+  // Delay clamp frame rate
   FrameProcessInternal();
 
+  // Try sync screen update
+  while (!paint_semaphore)
+    SDL_DelayNS(10);
+
   /* Check flags */
-  dispatcher_->CheckFlags();
   dispatcher_->RaiseFlags();
 }
 
@@ -609,6 +612,12 @@ void Graphics::UpdateWindowViewportInternal() {
 void Graphics::SetSwapIntervalInternal() {
   if (SDL_GL_SetSwapInterval(vsync_interval_))
     LOG(WARNING) << "[Graphics] " << SDL_GetError();
+}
+
+void Graphics::UpdateScreenInternal(int* paint_raiser) {
+  CompositeScreenInternal();
+  PresentScreenInternal(screen_buffer_[0]);
+  *paint_raiser = true;
 }
 
 }  // namespace content

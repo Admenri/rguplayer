@@ -551,8 +551,8 @@ void Bitmap::StretchBltInternal(uint64_t self,
                                 uint64_t src,
                                 const base::Rect& src_rect,
                                 float opacity) {
-  auto& tex_fbo = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(self));
-  auto& src_tex = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(src));
+  auto& tex_fbo = Graphics::texture_pool().at(self);
+  auto& src_tex = Graphics::texture_pool().at(src);
   base::Vec2i size(tex_fbo.width, tex_fbo.height);
   base::Vec2i src_size(src_tex.width, src_tex.height);
 
@@ -603,7 +603,7 @@ void Bitmap::StretchBltInternal(uint64_t self,
 void Bitmap::FillRectInternal(uint64_t self,
                               const base::Rect& rect,
                               const base::Vec4& color) {
-  auto& tex_fbo = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(self));
+  auto& tex_fbo = Graphics::texture_pool().at(self);
 
   renderer::FrameBuffer::Bind(tex_fbo.fbo);
   renderer::GSM.states.scissor.Push(true);
@@ -622,7 +622,7 @@ void Bitmap::GradientFillRectInternal(uint64_t self,
                                       const base::Vec4& color1,
                                       const base::Vec4& color2,
                                       bool vertical) {
-  auto& tex_fbo = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(self));
+  auto& tex_fbo = Graphics::texture_pool().at(self);
   base::Vec2i size(tex_fbo.width, tex_fbo.height);
 
   renderer::FrameBuffer::Bind(tex_fbo.fbo);
@@ -659,7 +659,7 @@ void Bitmap::SetPixelInternal(uint64_t self,
                               int x,
                               int y,
                               const base::Vec4& color) {
-  auto& tex_fbo = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(self));
+  auto& tex_fbo = Graphics::texture_pool().at(self);
 
   std::array<uint8_t, 4> pixel = {
       static_cast<uint8_t>(color.x), static_cast<uint8_t>(color.y),
@@ -670,7 +670,7 @@ void Bitmap::SetPixelInternal(uint64_t self,
 }
 
 void Bitmap::HueChangeInternal(uint64_t self, int hue) {
-  auto& tex_fbo = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(self));
+  auto& tex_fbo = Graphics::texture_pool().at(self);
   base::Vec2i size(tex_fbo.width, tex_fbo.height);
 
   auto& dst_tex = renderer::GSM.EnsureCommonTFB(size.x, size.y);
@@ -715,7 +715,7 @@ void Bitmap::DrawTextInternal(uint64_t self,
                               bool has_outline,
                               const SDL_Color& color,
                               const SDL_Color& out_color) {
-  auto& tex_fbo = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(self));
+  auto& tex_fbo = Graphics::texture_pool().at(self);
   base::Vec2i size(tex_fbo.width, tex_fbo.height);
 
   std::mutex* lock = nullptr;
@@ -794,7 +794,7 @@ void Bitmap::DrawTextInternal(uint64_t self,
 }
 
 void Bitmap::GetSurfaceInternal(uint64_t self, SDL_Surface* output) {
-  auto& tex_fbo = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(self));
+  auto& tex_fbo = Graphics::texture_pool().at(self);
   base::Vec2i size(tex_fbo.width, tex_fbo.height);
 
   renderer::GSM.states.viewport.Push(size);
@@ -805,7 +805,7 @@ void Bitmap::GetSurfaceInternal(uint64_t self, SDL_Surface* output) {
 }
 
 void Bitmap::UpdateSurfaceInternal(uint64_t self, SDL_Surface* output) {
-  auto& tex_fbo = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(self));
+  auto& tex_fbo = Graphics::texture_pool().at(self);
   base::Vec2i size(tex_fbo.width, tex_fbo.height);
 
   renderer::Texture::Bind(tex_fbo.tex);

@@ -55,8 +55,9 @@ bool CoreConfigure::LoadConfigure(const std::string& filename) {
   ReplaceStringWidth(game_scripts_, '\\', '/');
 
   /* Core config */
-  disable_audio_ = reader.GetBoolean("Core", "DisableAudio", false);
-  rgss_version_ = (RGSSVersion)reader.GetInteger("Core", "RGSSVerison", 0);
+  sync_renderer_ = reader.GetBoolean("Kernel", "SynchronizeRenderer", true);
+  disable_audio_ = reader.GetBoolean("Kernel", "DisableAudio", false);
+  rgss_version_ = (RGSSVersion)reader.GetInteger("Kernel", "RGSSVerison", 0);
   if (rgss_version_ == RGSSVersion::Null) {
     if (!game_scripts_.empty()) {
       rgss_version_ = RGSSVersion::RGSS1;

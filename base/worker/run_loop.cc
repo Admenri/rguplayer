@@ -21,6 +21,28 @@ std::thread::id g_ui_thread_id;
 
 }  // namespace
 
+class Semaphore {
+ public:
+  explicit Semaphore() : mutex_(), cv_(), count_(0) {}
+
+  void Acquire() {
+    std::unique_lock lock(mutex_);
+    ++count_;
+    cv_.wait(lock, [this] { return count_ == 0; });
+  }
+
+  void Release() {
+    std::scoped_lock lock(mutex_);
+    --count_;
+    cv_.notify_all();
+  }
+
+ private:
+  std::mutex mutex_;
+  std::condition_variable cv_;
+  int count_;
+};
+
 class RunnerImpl : public SequencedTaskRunner {
  public:
   RunnerImpl(base::WeakPtr<RunLoop> runner) : runner_(runner) {}
@@ -36,9 +58,9 @@ class RunnerImpl : public SequencedTaskRunner {
 
   void WaitForSync() override {
     if (runner_) {
-      PostTask(base::BindOnce(&moodycamel::LightweightSemaphore::signal,
-                              base::Unretained(&semaphore_), 1));
-      semaphore_.wait();
+      PostTask(
+          base::BindOnce(&Semaphore::Release, base::Unretained(&semaphore_)));
+      semaphore_.Acquire();
     }
   }
 
@@ -46,7 +68,7 @@ class RunnerImpl : public SequencedTaskRunner {
   friend class RunLoop;
   base::WeakPtr<RunLoop> runner_;
   moodycamel::BlockingConcurrentQueue<base::OnceClosure> task_queue_;
-  moodycamel::LightweightSemaphore semaphore_;
+  Semaphore semaphore_;
 };
 
 bool RunLoop::IsInUIThread() {
