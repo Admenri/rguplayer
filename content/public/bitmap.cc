@@ -426,6 +426,7 @@ void Bitmap::DrawText(const base::Rect& rect,
                       TextAlign align) {
   CheckIsDisposed();
 
+  font_->AsSDLFont();
   const int font_id = font_->font_id();
   const int font_size = font_->GetSize();
   const bool is_bold = font_->GetBold();

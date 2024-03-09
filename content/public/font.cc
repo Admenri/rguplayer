@@ -31,7 +31,7 @@ struct DefaultFontState {
   scoped_refptr<Color> default_out_color = nullptr;
 
   // Storage map: <FontID, Size> -> FontObject
-  std::map<std::pair<int, int>, TTF_Font*> font_cache;
+  std::map<std::pair<int, int>, std::pair<TTF_Font*, TTF_Font*>> font_cache;
   std::vector<std::string> path_cache;
 };
 
@@ -52,7 +52,7 @@ bool FindFontInternal(const std::string& name, std::string* out_path) {
   return false;
 }
 
-TTF_Font* LoadFontInternal(int font_id, int size) {
+TTF_Font* LoadFontInternal(int font_id, int size, bool dup) {
   auto& cache = g_default_font_state->font_cache;
   auto& paths = g_default_font_state->path_cache;
   TTF_Font* font = nullptr;
@@ -63,7 +63,7 @@ TTF_Font* LoadFontInternal(int font_id, int size) {
     while (!font) {
       auto it = cache.find({font_id, size});
       if (it != cache.end()) {
-        font = it->second;
+        font = dup ? it->second.first : it->second.second;
         return font;
       } else if (loaded)
         break;
@@ -73,7 +73,8 @@ TTF_Font* LoadFontInternal(int font_id, int size) {
       auto* font_ptr = TTF_OpenFont(font_path.c_str(), size);
       auto* font_dup_ptr = TTF_OpenFont(font_path.c_str(), size);
       if (font_ptr) {
-        cache.emplace(std::pair{font_id, size}, font_ptr);
+        cache.emplace(std::pair{font_id, size},
+                      std::pair{font_ptr, font_dup_ptr});
         loaded = true;
       }
     }
@@ -94,8 +95,10 @@ void Font::InitStaticFont() {
 
 void Font::DestroyStaticFont() {
   auto& cache = g_default_font_state->font_cache;
-  for (auto& it : cache)
-    TTF_CloseFont(it.second);
+  for (auto& it : cache) {
+    TTF_CloseFont(it.second.first);
+    TTF_CloseFont(it.second.second);
+  }
 
   g_default_font_state.reset();
 }
@@ -281,8 +284,7 @@ scoped_refptr<Color> Font::GetOutColor() const {
 TTF_Font* Font::AsSDLFont() {
   if (font_id_ < 0)
     MakeFontIDInternal();
-
-  TTF_Font* font = LoadFontInternal(font_id_, size_);
+  TTF_Font* font = LoadFontInternal(font_id_, size_, false);
   if (!font)
     return nullptr;
 
@@ -298,7 +300,7 @@ TTF_Font* Font::AsSDLFont() {
 }
 
 TTF_Font* Font::AsSDLFont(int id, int size) {
-  TTF_Font* font = LoadFontInternal(id, size);
+  TTF_Font* font = LoadFontInternal(id, size, true);
   return font;
 }
 
