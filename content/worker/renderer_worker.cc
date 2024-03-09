@@ -28,7 +28,7 @@ void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
   config_ = config;
   host_window_ = host_window;
 
-  worker_ = std::make_unique<base::ThreadWorker>();
+  worker_ = std::make_unique<base::ThreadWorker>(config_->sync_renderer());
   worker_->Start(base::RunLoop::MessagePumpType::Worker);
   worker_->WaitUntilStart();
 

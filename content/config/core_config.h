@@ -44,6 +44,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   bool& game_battle_test() { return game_battle_test_; }
 
   RGSSVersion& content_version() { return rgss_version_; }
+  bool& sync_renderer() { return sync_renderer_; }
   bool& disable_audio() { return disable_audio_; }
 
   ANGLERenderer& angle_renderer() { return angle_renderer_; }
