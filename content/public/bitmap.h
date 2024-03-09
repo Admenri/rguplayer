@@ -119,10 +119,17 @@ class Bitmap : public base::RefCounted<Bitmap>,
                                const base::Vec4& color);
   static void HueChangeInternal(uint64_t self, int hue);
   static void DrawTextInternal(uint64_t self,
-                               scoped_refptr<Font> font,
                                const base::Rect& rect,
                                const std::string& str,
-                               TextAlign align);
+                               TextAlign align,
+                               int font_id,
+                               int font_size,
+                               bool is_bold,
+                               bool is_italic,
+                               bool has_shadow,
+                               bool has_outline,
+                               const SDL_Color& color,
+                               const SDL_Color& out_color);
   static void GetSurfaceInternal(uint64_t self, SDL_Surface* output);
   static void UpdateSurfaceInternal(uint64_t self, SDL_Surface* output);
 
@@ -133,8 +140,6 @@ class Bitmap : public base::RefCounted<Bitmap>,
   SDL_Surface* surface_cache_;
 
   base::RepeatingClosureList observers_;
-
-  base::WeakPtrFactory<Bitmap> weak_ptr_factory_{this};
 };
 
 }  // namespace content

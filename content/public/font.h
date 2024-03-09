@@ -5,6 +5,7 @@
 #ifndef CONTENT_PUBLIC_FONT_H_
 #define CONTENT_PUBLIC_FONT_H_
 
+#include "SDL_pixels.h"
 #include "SDL_ttf.h"
 
 #include <string>
@@ -62,15 +63,12 @@ class Font : public base::RefCounted<Font> {
   void SetOutColor(scoped_refptr<Color> color);
   scoped_refptr<Color> GetOutColor() const;
 
-  void EnsureLoadFont();
+  int font_id() const { return font_id_; }
   TTF_Font* AsSDLFont();
-  std::string FixupString(const std::string& text);
-  SDL_Surface* RenderText(const std::string& text, uint8_t* font_opacity);
+  static TTF_Font* AsSDLFont(int id, int size);
 
  private:
-  void LoadFontInternal();
   void MakeFontIDInternal();
-  static bool FindFontInternal(const std::string& name, std::string* out_path);
 
   std::vector<std::string> name_;
   int size_;
@@ -82,7 +80,6 @@ class Font : public base::RefCounted<Font> {
   scoped_refptr<Color> out_color_;
 
   int font_id_;
-  TTF_Font* font_;
 };
 
 }  // namespace content

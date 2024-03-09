@@ -15,6 +15,8 @@
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
 
+#define OutlineSize 1
+
 namespace content {
 
 namespace {
@@ -51,6 +53,128 @@ uint16_t utf8_to_ucs2(const char* _input, const char** end_ptr) {
   }
 
   return -1;
+}
+
+void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
+  SDL_Surface* out =
+      SDL_CreateSurface(in->w + 1, in->h + 1, in->format->format);
+  float fr = color.r / 255.0f, fg = color.g / 255.0f, fb = color.b / 255.0f;
+
+  for (int y = 0; y < in->h + 1; ++y) {
+    for (int x = 0; x < in->w + 1; ++x) {
+      uint32_t src = 0, shd = 0,
+               *outP = (uint32_t*)((uint8_t*)out->pixels + y * out->pitch) + x;
+
+      if (y < in->h && x < in->w)
+        src = ((uint32_t*)((uint8_t*)in->pixels + y * in->pitch))[x];
+      if (y > 0 && x > 0)
+        shd = ((uint32_t*)((uint8_t*)in->pixels + (y - 1) * in->pitch))[x - 1] &
+              in->format->Amask;
+
+      if (x == 0 || y == 0 || src & in->format->Amask) {
+        *outP = (x == in->w || y == in->h) ? shd : src;
+        continue;
+      }
+
+      uint8_t srcA = (src & in->format->Amask) >> in->format->Ashift;
+      float fSrcA = srcA / 255.0f,
+            fShdA = ((shd & in->format->Amask) >> in->format->Ashift) / 255.0f;
+      float fa = fSrcA + fShdA * (1.0f - fSrcA), co3 = fSrcA / fa;
+
+      *outP = SDL_MapRGBA(
+          in->format,
+          static_cast<uint8_t>(std::clamp(fr * co3, 0.0f, 1.0f) * 255),
+          static_cast<uint8_t>(std::clamp(fg * co3, 0.0f, 1.0f) * 255),
+          static_cast<uint8_t>(std::clamp(fb * co3, 0.0f, 1.0f) * 255),
+          static_cast<uint8_t>(std::clamp(fa, 0.0f, 1.0f) * 255));
+    }
+  }
+
+  SDL_DestroySurface(in);
+  in = out;
+}
+
+std::string FixupString(const std::string& text) {
+  std::string str(text);
+
+  for (size_t i = 0; i < str.size(); ++i)
+    if (str[i] == '\r' || str[i] == '\n')
+      str[i] = ' ';
+
+  return str;
+}
+
+SDL_Surface* RenderText(const std::string& text,
+                        uint8_t* font_opacity,
+                        TTF_Font* font,
+                        bool is_bold,
+                        bool is_italic,
+                        bool has_shadow,
+                        bool has_outline,
+                        const SDL_Color& color,
+                        const SDL_Color& out_color) {
+  if (!font)
+    return nullptr;
+
+  int font_style = TTF_STYLE_NORMAL;
+  if (is_bold)
+    font_style |= TTF_STYLE_BOLD;
+  if (is_italic)
+    font_style |= TTF_STYLE_ITALIC;
+  TTF_SetFontStyle(font, font_style);
+
+  auto ensure_format = [](SDL_Surface*& surf) {
+    if (!surf)
+      return;
+
+    SDL_Surface* format_surf = surf;
+    if (surf->format->format != SDL_PIXELFORMAT_ABGR8888) {
+      format_surf = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_ABGR8888);
+      SDL_DestroySurface(surf);
+      surf = format_surf;
+    }
+  };
+
+  std::string src_text = FixupString(text);
+  if (src_text.empty() || src_text == " ")
+    return nullptr;
+
+  SDL_Color font_color = color;
+  SDL_Color outline_color = out_color;
+  if (font_opacity)
+    *font_opacity = font_color.a;
+
+  font_color.a = 255;
+  outline_color.a = 255;
+
+  SDL_Surface* raw_surf =
+      TTF_RenderUTF8_Blended(font, src_text.c_str(), font_color);
+  if (!raw_surf)
+    return nullptr;
+  ensure_format(raw_surf);
+
+  if (has_shadow)
+    RenderShadowSurface(raw_surf, font_color);
+
+  if (has_outline) {
+    SDL_Surface* outline = nullptr;
+    TTF_SetFontOutline(font, OutlineSize);
+    outline = TTF_RenderUTF8_Blended(font, src_text.c_str(), outline_color);
+    if (!outline) {
+      SDL_DestroySurface(raw_surf);
+      return nullptr;
+    }
+
+    ensure_format(outline);
+    SDL_Rect outRect = {OutlineSize, OutlineSize, raw_surf->w, raw_surf->h};
+    SDL_SetSurfaceBlendMode(raw_surf, SDL_BLENDMODE_BLEND);
+    SDL_BlitSurface(raw_surf, NULL, outline, &outRect);
+    SDL_DestroySurface(raw_surf);
+    raw_surf = outline;
+    TTF_SetFontOutline(font, 0);
+  }
+
+  return raw_surf;
 }
 
 }  // namespace
@@ -302,10 +426,19 @@ void Bitmap::DrawText(const base::Rect& rect,
                       TextAlign align) {
   CheckIsDisposed();
 
-  font_->EnsureLoadFont();
+  const int font_id = font_->font_id();
+  const int font_size = font_->GetSize();
+  const bool is_bold = font_->GetBold();
+  const bool is_italic = font_->GetItalic();
+  const bool has_shadow = font_->GetShadow();
+  const bool has_outline = font_->GetOutline();
+  const SDL_Color font_color = font_->GetColor()->AsSDLColor();
+  const SDL_Color out_color = font_->GetOutColor()->AsSDLColor();
+
   screen()->renderer()->PostTask(base::BindOnce(
-      &Bitmap::DrawTextInternal, reinterpret_cast<uint64_t>(this), font_, rect,
-      str, align));
+      &Bitmap::DrawTextInternal, reinterpret_cast<uint64_t>(this), rect, str,
+      align, font_id, font_size, is_bold, is_italic, has_shadow, has_outline,
+      font_color, out_color));
 
   NeedUpdateSurface();
 }
@@ -313,16 +446,16 @@ void Bitmap::DrawText(const base::Rect& rect,
 scoped_refptr<Rect> Bitmap::TextSize(const std::string& str) {
   CheckIsDisposed();
 
+  int w = 0, h = 0;
   TTF_Font* font = font_->AsSDLFont();
-  std::string src_text = font_->FixupString(str);
-
-  int w, h;
-  TTF_SizeUTF8(font, src_text.c_str(), &w, &h);
-
-  const char* end_char = nullptr;
-  uint16_t ucs2 = utf8_to_ucs2(str.c_str(), &end_char);
-  if (font_->GetItalic() && *end_char == '\0')
-    TTF_GlyphMetrics(font, ucs2, 0, 0, 0, 0, &w);
+  if (font && !str.empty()) {
+    std::string src_text = FixupString(str);
+    TTF_SizeUTF8(font, src_text.c_str(), &w, &h);
+    const char* end_char = nullptr;
+    uint16_t ucs2 = utf8_to_ucs2(str.c_str(), &end_char);
+    if (font_->GetItalic() && *end_char == '\0')
+      TTF_GlyphMetrics(font, ucs2, 0, 0, 0, 0, &w);
+  }
 
   return new Rect(base::Rect(0, 0, w, h));
 }
@@ -570,21 +703,31 @@ void Bitmap::HueChangeInternal(uint64_t self, int hue) {
 }
 
 void Bitmap::DrawTextInternal(uint64_t self,
-                              scoped_refptr<Font> font,
                               const base::Rect& rect,
                               const std::string& str,
-                              TextAlign align) {
+                              TextAlign align,
+                              int font_id,
+                              int font_size,
+                              bool is_bold,
+                              bool is_italic,
+                              bool has_shadow,
+                              bool has_outline,
+                              const SDL_Color& color,
+                              const SDL_Color& out_color) {
   auto& tex_fbo = Graphics::texture_pool().at(reinterpret_cast<uint64_t>(self));
   base::Vec2i size(tex_fbo.width, tex_fbo.height);
 
-  uint8_t fopacity;
-  SDL_Surface* txt_surf = font->RenderText(str, &fopacity);
+  std::mutex* lock = nullptr;
+  TTF_Font* font_obj = Font::AsSDLFont(font_id, font_size);
 
+  uint8_t fopacity;
+  SDL_Surface* txt_surf =
+      RenderText(str, &fopacity, font_obj, is_bold, is_italic, has_shadow,
+                 has_outline, color, out_color);
   if (!txt_surf)
     return;
 
   int align_x = rect.x, align_y = rect.y + (rect.height - txt_surf->h) / 2;
-
   switch (align) {
     default:
     case TextAlign::Left:

@@ -303,7 +303,6 @@ void BindingEngineMri::FinalizeBinding() {
 
 void BindingEngineMri::LoadPackedScripts() {
   scoped_refptr<content::CoreConfigure> config = binding_->config();
-
   VALUE packed_scripts;
 
   try {
