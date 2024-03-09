@@ -1,4 +1,5 @@
 
+#include "base/buildflags/compiler_specific.h"
 #include "binding/mri/mri_main.h"
 #include "content/config/core_config.h"
 #include "content/worker/content_compositor.h"
@@ -6,6 +7,10 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
+
+#if defined(OS_LINUX)
+#include "app/icon.xxd"
+#endif  //! defined(OS_LINUX)
 
 namespace {
 
@@ -68,6 +73,20 @@ int main(int argc, char* argv[]) {
   win_params.resizable = true;
   win_params.hpixeldensity = false;
   win->Init(std::move(win_params));
+
+#if defined(OS_LINUX)
+  auto* icon_ops =
+      SDL_RWFromConstMem(rgu_favicon_64_png, rgu_favicon_64_png_len);
+
+  if (icon_ops) {
+    auto* icon = IMG_Load_RW(icon_ops, SDL_TRUE);
+
+    if (icon) {
+      SDL_SetWindowIcon(win->AsSDLWindow(), icon);
+      SDL_DestroySurface(icon);
+    }
+  }
+#endif  //! defined(OS_LINUX)
 
   std::unique_ptr<content::WorkerTreeCompositor> cc(
       new content::WorkerTreeCompositor);
