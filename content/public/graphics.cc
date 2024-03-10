@@ -138,8 +138,6 @@ void Graphics::FadeIn(int duration) {
 }
 
 void Graphics::Update() {
-  int paint_semaphore = false;
-
   if (!frozen_) {
     if (fps_manager_->RequireFrameSkip()) {
       if (config_->allow_frame_skip())
@@ -151,17 +149,17 @@ void Graphics::Update() {
       }
     }
 
+    int paint_semaphore = false;
     renderer()->PostTask(base::BindOnce(&Graphics::UpdateScreenInternal,
                                         base::Unretained(this),
                                         &paint_semaphore));
+    // Try sync screen update
+    while (!paint_semaphore)
+      SDL_DelayNS(10);
   }
 
   // Delay clamp frame rate
   FrameProcessInternal();
-
-  // Try sync screen update
-  while (!paint_semaphore)
-    SDL_DelayNS(10);
 
   /* Check flags */
   dispatcher_->RaiseFlags();
@@ -356,7 +354,7 @@ void Graphics::CompositeScreenInternal() {
   DrawableParent::NotifyPrepareComposite();
 
   renderer::FrameBuffer::Bind(screen_buffer_[0].fbo);
-  renderer::GSM.states.clear_color.Set(base::Vec4());
+  renderer::FrameBuffer::ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   renderer::FrameBuffer::Clear();
 
   renderer::GSM.states.scissor_rect.Set(resolution_);

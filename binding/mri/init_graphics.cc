@@ -35,8 +35,7 @@ MRI_METHOD(graphics_transition) {
 
   scoped_refptr<content::Bitmap> transmap;
   if (!filename.empty())
-    transmap = new content::Bitmap(screen, filename);
-
+    MRI_GUARD(transmap = new content::Bitmap(screen, filename););
   MRI_GUARD(screen->Transition(duration, transmap, vague););
 
   return Qnil;
