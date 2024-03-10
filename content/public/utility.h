@@ -130,15 +130,17 @@ class Rect : public base::RefCounted<Rect>,
     UpdateData();
   }
 
-  base::Rect AsBase() {
-    if (width_ < 0) {
-      width_ = -width_;
-      x_ -= width_;
-    }
+  base::Rect AsBase(bool flip = false) {
+    if (flip) {
+      if (width_ < 0) {
+        width_ = -width_;
+        x_ -= width_;
+      }
 
-    if (height_ < 0) {
-      height_ = -height_;
-      y_ -= height_;
+      if (height_ < 0) {
+        height_ = -height_;
+        y_ -= height_;
+      }
     }
 
     return base::Rect(x_, y_, width_, height_);
