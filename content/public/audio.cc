@@ -347,6 +347,19 @@ void Audio::Reset() {
     return;
 
   core_.stopAll();
+
+  bgm_.source.reset();
+  bgm_.filename.clear();
+  bgm_.play_handle = 0;
+
+  bgs_.source.reset();
+  bgs_.filename.clear();
+  bgs_.play_handle = 0;
+
+  me_.source.reset();
+  me_.filename.clear();
+  me_.play_handle = 0;
+
   se_cache_.clear();
 }
 
