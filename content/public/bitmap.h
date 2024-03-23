@@ -90,56 +90,41 @@ class Bitmap : public base::RefCounted<Bitmap>,
     return observers_.Add(std::move(observer));
   }
 
-  uint64_t GetTexID() const { return reinterpret_cast<uint64_t>(this); }
+  renderer::TextureFrameBuffer& GetTexture() { return texture_; }
 
  protected:
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Bitmap"; }
 
  private:
-  static void InitBitmapInternal(
-      uint64_t self,
+  void InitBitmapInternal(
       const std::variant<base::Vec2i, SDL_Surface*>& initial_data);
-  static void StretchBltInternal(uint64_t self,
-                                 const base::Rect& dest_rect,
-                                 uint64_t src_bitmap,
-                                 const base::Rect& src_rect,
-                                 float opacity);
-  static void FillRectInternal(uint64_t self,
-                               const base::Rect& rect,
-                               const base::Vec4& color);
-  static void GradientFillRectInternal(uint64_t self,
-                                       const base::Rect& rect,
-                                       const base::Vec4& color1,
-                                       const base::Vec4& color2,
-                                       bool vertical);
-  static void SetPixelInternal(uint64_t self,
-                               int x,
-                               int y,
-                               const base::Vec4& color);
-  static void HueChangeInternal(uint64_t self, int hue);
-  static void DrawTextInternal(uint64_t self,
-                               const base::Rect& rect,
-                               const std::string& str,
-                               TextAlign align,
-                               int font_id,
-                               int font_size,
-                               bool is_bold,
-                               bool is_italic,
-                               bool has_shadow,
-                               bool has_outline,
-                               const SDL_Color& color,
-                               const SDL_Color& out_color);
-  static void GetSurfaceInternal(uint64_t self, SDL_Surface* output);
-  static void UpdateSurfaceInternal(uint64_t self, SDL_Surface* output);
+  void StretchBltInternal(const base::Rect& dest_rect,
+                          scoped_refptr<Bitmap> src_bitmap,
+                          const base::Rect& src_rect,
+                          float opacity);
+  void FillRectInternal(const base::Rect& rect, const base::Vec4& color);
+  void GradientFillRectInternal(const base::Rect& rect,
+                                const base::Vec4& color1,
+                                const base::Vec4& color2,
+                                bool vertical);
+  void GetSurfaceInternal();
+  void SetPixelInternal(int x, int y, const base::Vec4& color);
+  void HueChangeInternal(int hue);
+  void DrawTextInternal(const base::Rect& rect,
+                        const std::string& str,
+                        TextAlign align);
+  void UpdateSurfaceInternal();
 
   void NeedUpdateSurface();
 
   base::Vec2i size_;
+  renderer::TextureFrameBuffer texture_;
   scoped_refptr<Font> font_;
-  SDL_Surface* surface_cache_;
-
   base::RepeatingClosureList observers_;
+  SDL_Surface* surface_buffer_;
+
+  base::WeakPtrFactory<Bitmap> weak_ptr_factory_{this};
 };
 
 }  // namespace content

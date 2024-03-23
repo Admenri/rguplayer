@@ -303,36 +303,35 @@ void Audio::MEFade(int time) {
 }
 
 void Audio::SEPlay(const std::string& filename, int volume, int pitch) {
-  if (!output_device_) {
-    LOG(WARNING) << "[Content] Warning: try to play stream on disabled device.";
+  if (!output_device_)
     return;
+
+  auto cache = se_cache_.find(filename);
+  if (cache != se_cache_.end()) {
+    // From cache
+    auto handle = core_.play(*cache->second);
+    core_.setVolume(handle, volume / 100.0f);
+    core_.setRelativePlaySpeed(handle, pitch / 100.0f);
+  } else {
+    // Load from filesystem
+    std::unique_ptr<SoLoud::Wav> source(new SoLoud::Wav());
+    file_reader_->OpenRead(
+        filename,
+        base::BindRepeating(
+            [](SoLoud::Wav* source, SDL_RWops* ops, const std::string& ext) {
+              size_t out_size;
+              uint8_t* mem = static_cast<uint8_t*>(
+                  read_mem_file(ops, &out_size, SDL_TRUE));
+              return source->loadMem(mem, out_size) == SoLoud::SO_NO_ERROR;
+            },
+            source.get()));
+
+    // Play new stream
+    auto handle = core_.play(*source);
+    core_.setVolume(handle, volume / 100.0f);
+    core_.setRelativePlaySpeed(handle, pitch / 100.0f);
+    se_cache_.insert(std::make_pair(filename, std::move(source)));
   }
-
-  // Load from filesystem
-  std::unique_ptr<SoLoud::Wav> source(new SoLoud::Wav());
-  file_reader_->OpenRead(
-      filename,
-      base::BindRepeating(
-          [](SoLoud::Wav* source, SDL_RWops* ops, const std::string& ext) {
-            size_t out_size;
-            uint8_t* mem =
-                static_cast<uint8_t*>(read_mem_file(ops, &out_size, SDL_TRUE));
-            return source->loadMem(mem, out_size) == SoLoud::SO_NO_ERROR;
-          },
-          source.get()));
-
-  // Clean stoped se
-  auto dit = std::remove_if(se_cache_.begin(), se_cache_.end(),
-                            [&](const std::unique_ptr<SoLoud::Wav>& it) {
-                              return !core_.countAudioSource(*it);
-                            });
-  se_cache_.erase(dit, se_cache_.end());
-
-  // Play new stream
-  auto handle = core_.play(*source);
-  core_.setVolume(handle, volume / 100.0f);
-  core_.setRelativePlaySpeed(handle, pitch / 100.0f);
-  se_cache_.push_back(std::move(source));
 }
 
 void Audio::SEStop() {
@@ -340,7 +339,7 @@ void Audio::SEStop() {
     return;
 
   for (auto& it : se_cache_)
-    core_.stopAudioSource(*it);
+    core_.stopAudioSource(*it.second);
 }
 
 void Audio::Reset() {

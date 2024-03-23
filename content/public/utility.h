@@ -130,8 +130,8 @@ class Rect : public base::RefCounted<Rect>,
     UpdateData();
   }
 
-  base::Rect AsBase(bool flip = false) {
-    if (flip) {
+  base::Rect AsBase(bool normalize = false) {
+    if (normalize) {
       if (width_ < 0) {
         width_ = -width_;
         x_ -= width_;

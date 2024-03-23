@@ -4,9 +4,9 @@
 
 #include "content/public/bitmap.h"
 
-#include "SDL_image.h"
-
 #include <array>
+
+#include "SDL_image.h"
 
 #include "base/exceptions/exception.h"
 #include "components/filesystem/filesystem.h"
@@ -14,8 +14,6 @@
 #include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
-
-#define OutlineSize 1
 
 namespace content {
 
@@ -55,188 +53,65 @@ uint16_t utf8_to_ucs2(const char* _input, const char** end_ptr) {
   return -1;
 }
 
-void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
-  SDL_Surface* out =
-      SDL_CreateSurface(in->w + 1, in->h + 1, in->format->format);
-  float fr = color.r / 255.0f, fg = color.g / 255.0f, fb = color.b / 255.0f;
-
-  for (int y = 0; y < in->h + 1; ++y) {
-    for (int x = 0; x < in->w + 1; ++x) {
-      uint32_t src = 0, shd = 0,
-               *outP = (uint32_t*)((uint8_t*)out->pixels + y * out->pitch) + x;
-
-      if (y < in->h && x < in->w)
-        src = ((uint32_t*)((uint8_t*)in->pixels + y * in->pitch))[x];
-      if (y > 0 && x > 0)
-        shd = ((uint32_t*)((uint8_t*)in->pixels + (y - 1) * in->pitch))[x - 1] &
-              in->format->Amask;
-
-      if (x == 0 || y == 0 || src & in->format->Amask) {
-        *outP = (x == in->w || y == in->h) ? shd : src;
-        continue;
-      }
-
-      uint8_t srcA = (src & in->format->Amask) >> in->format->Ashift;
-      float fSrcA = srcA / 255.0f,
-            fShdA = ((shd & in->format->Amask) >> in->format->Ashift) / 255.0f;
-      float fa = fSrcA + fShdA * (1.0f - fSrcA), co3 = fSrcA / fa;
-
-      *outP = SDL_MapRGBA(
-          in->format,
-          static_cast<uint8_t>(std::clamp(fr * co3, 0.0f, 1.0f) * 255),
-          static_cast<uint8_t>(std::clamp(fg * co3, 0.0f, 1.0f) * 255),
-          static_cast<uint8_t>(std::clamp(fb * co3, 0.0f, 1.0f) * 255),
-          static_cast<uint8_t>(std::clamp(fa, 0.0f, 1.0f) * 255));
-    }
-  }
-
-  SDL_DestroySurface(in);
-  in = out;
-}
-
-std::string FixupString(const std::string& text) {
-  std::string str(text);
-
-  for (size_t i = 0; i < str.size(); ++i)
-    if (str[i] == '\r' || str[i] == '\n')
-      str[i] = ' ';
-
-  return str;
-}
-
-SDL_Surface* RenderText(const std::string& text,
-                        uint8_t* font_opacity,
-                        TTF_Font* font,
-                        bool is_bold,
-                        bool is_italic,
-                        bool has_shadow,
-                        bool has_outline,
-                        const SDL_Color& color,
-                        const SDL_Color& out_color) {
-  if (!font)
-    return nullptr;
-
-  int font_style = TTF_STYLE_NORMAL;
-  if (is_bold)
-    font_style |= TTF_STYLE_BOLD;
-  if (is_italic)
-    font_style |= TTF_STYLE_ITALIC;
-  TTF_SetFontStyle(font, font_style);
-
-  auto ensure_format = [](SDL_Surface*& surf) {
-    if (!surf)
-      return;
-
-    SDL_Surface* format_surf = surf;
-    if (surf->format->format != SDL_PIXELFORMAT_ABGR8888) {
-      format_surf = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_ABGR8888);
-      SDL_DestroySurface(surf);
-      surf = format_surf;
-    }
-  };
-
-  std::string src_text = FixupString(text);
-  if (src_text.empty() || src_text == " ")
-    return nullptr;
-
-  SDL_Color font_color = color;
-  SDL_Color outline_color = out_color;
-  if (font_opacity)
-    *font_opacity = font_color.a;
-
-  font_color.a = 255;
-  outline_color.a = 255;
-
-  SDL_Surface* raw_surf =
-      TTF_RenderUTF8_Blended(font, src_text.c_str(), font_color);
-  if (!raw_surf)
-    return nullptr;
-  ensure_format(raw_surf);
-
-  if (has_shadow)
-    RenderShadowSurface(raw_surf, font_color);
-
-  if (has_outline) {
-    SDL_Surface* outline = nullptr;
-    TTF_SetFontOutline(font, OutlineSize);
-    outline = TTF_RenderUTF8_Blended(font, src_text.c_str(), outline_color);
-    if (!outline) {
-      SDL_DestroySurface(raw_surf);
-      return nullptr;
-    }
-
-    ensure_format(outline);
-    SDL_Rect outRect = {OutlineSize, OutlineSize, raw_surf->w, raw_surf->h};
-    SDL_SetSurfaceBlendMode(raw_surf, SDL_BLENDMODE_BLEND);
-    SDL_BlitSurface(raw_surf, NULL, outline, &outRect);
-    SDL_DestroySurface(raw_surf);
-    raw_surf = outline;
-    TTF_SetFontOutline(font, 0);
-  }
-
-  return raw_surf;
-}
-
 }  // namespace
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
     : GraphicElement(host),
       Disposable(host),
       font_(new Font()),
-      surface_cache_(nullptr) {
-  if (width <= 0 || height <= 0)
+      surface_buffer_(nullptr) {
+  if (width <= 0 || height <= 0) {
     throw base::Exception(base::Exception::ContentError,
                           "Invalid bitmap create size: (%dx%d)", width, height);
+  }
 
   if (width > screen()->renderer()->max_texture_size() ||
-      height > screen()->renderer()->max_texture_size())
+      height > screen()->renderer()->max_texture_size()) {
     throw base::Exception(base::Exception::OpenGLError,
                           "Unable to create large bitmap: (%dx%d)", width,
                           height);
+  }
 
   size_ = base::Vec2i(width, height);
-  host->renderer()->PostTask(base::BindOnce(
-      &Bitmap::InitBitmapInternal, reinterpret_cast<uint64_t>(this), size_));
+  InitBitmapInternal(size_);
 }
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
     : GraphicElement(host),
       Disposable(host),
       font_(new Font()),
-      surface_cache_(nullptr) {
-  SDL_Surface* surf = nullptr;
-
+      surface_buffer_(nullptr) {
   auto file_handler = base::BindRepeating(
       [](SDL_Surface** surf, SDL_RWops* ops, const std::string& ext) {
         *surf = IMG_LoadTyped_RW(ops, SDL_TRUE, ext.c_str());
 
         return !!*surf;
       },
-      &surf);
-
+      &surface_buffer_);
   host->filesystem()->OpenRead(filename, file_handler);
 
-  if (!surf)
+  if (!surface_buffer_) {
     throw base::Exception(base::Exception::ContentError,
                           "Failed to load image: '%s': %s", filename.c_str(),
                           SDL_GetError());
-
-  if (surf->w + surf->h > screen()->renderer()->max_texture_size() * 2)
-    throw base::Exception(base::Exception::OpenGLError,
-                          "Unable to load large image: (%dx%d)", surf->w,
-                          surf->h);
-
-  size_ = base::Vec2i(surf->w, surf->h);
-
-  if (surf->format->format != SDL_PIXELFORMAT_ABGR8888) {
-    SDL_Surface* conv =
-        SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_ABGR8888);
-    SDL_DestroySurface(surf);
-    surf = conv;
   }
 
-  host->renderer()->PostTask(base::BindOnce(
-      &Bitmap::InitBitmapInternal, reinterpret_cast<uint64_t>(this), surf));
+  if (surface_buffer_->w > screen()->renderer()->max_texture_size() ||
+      surface_buffer_->h > screen()->renderer()->max_texture_size()) {
+    throw base::Exception(base::Exception::OpenGLError,
+                          "Unable to load large image: (%dx%d)",
+                          surface_buffer_->w, surface_buffer_->h);
+  }
+
+  size_ = base::Vec2i(surface_buffer_->w, surface_buffer_->h);
+  if (surface_buffer_->format->format != SDL_PIXELFORMAT_ABGR8888) {
+    SDL_Surface* conv =
+        SDL_ConvertSurfaceFormat(surface_buffer_, SDL_PIXELFORMAT_ABGR8888);
+    SDL_DestroySurface(surface_buffer_);
+    surface_buffer_ = conv;
+  }
+
+  InitBitmapInternal(surface_buffer_);
 }
 
 Bitmap::~Bitmap() {
@@ -295,10 +170,7 @@ void Bitmap::StretchBlt(const base::Rect& dest_rect,
   if (src_bitmap->IsDisposed() || !opacity)
     return;
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Bitmap::StretchBltInternal, reinterpret_cast<uint64_t>(this), dest_rect,
-      reinterpret_cast<uint64_t>(src_bitmap.get()), src_rect,
-      opacity / 255.0f));
+  StretchBltInternal(dest_rect, src_bitmap, src_rect, opacity / 255.0f);
 
   NeedUpdateSurface();
 }
@@ -309,9 +181,7 @@ void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
   if (rect.width <= 0 || rect.height <= 0)
     return;
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&Bitmap::FillRectInternal,
-                     reinterpret_cast<uint64_t>(this), rect, color->AsBase()));
+  FillRectInternal(rect, color->AsBase());
 
   NeedUpdateSurface();
 }
@@ -325,9 +195,7 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
   if (rect.width <= 0 || rect.height <= 0)
     return;
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Bitmap::GradientFillRectInternal, reinterpret_cast<uint64_t>(this), rect,
-      color1->AsBase(), color2->AsBase(), vertical));
+  GradientFillRectInternal(rect, color1->AsBase(), color2->AsBase(), vertical);
 
   NeedUpdateSurface();
 }
@@ -335,9 +203,7 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
 void Bitmap::Clear() {
   CheckIsDisposed();
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&Bitmap::FillRectInternal,
-                     reinterpret_cast<uint64_t>(this), size_, base::Vec4()));
+  FillRectInternal(size_, base::Vec4());
 
   NeedUpdateSurface();
 }
@@ -345,9 +211,7 @@ void Bitmap::Clear() {
 void Bitmap::ClearRect(const base::Rect& rect) {
   CheckIsDisposed();
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&Bitmap::FillRectInternal,
-                     reinterpret_cast<uint64_t>(this), rect, base::Vec4()));
+  FillRectInternal(rect, base::Vec4());
 
   NeedUpdateSurface();
 }
@@ -359,12 +223,12 @@ scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
     return nullptr;
 
   SurfaceRequired();
-  int bpp = surface_cache_->format->bytes_per_pixel;
-  uint8_t* pixel = static_cast<uint8_t*>(surface_cache_->pixels) +
-                   y * surface_cache_->pitch + x * bpp;
+  int bpp = surface_buffer_->format->bytes_per_pixel;
+  uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
+                   y * surface_buffer_->pitch + x * bpp;
 
   uint8_t color[4];
-  SDL_GetRGBA(*reinterpret_cast<uint32_t*>(pixel), surface_cache_->format,
+  SDL_GetRGBA(*reinterpret_cast<uint32_t*>(pixel), surface_buffer_->format,
               &color[0], &color[1], &color[2], &color[3]);
 
   return new Color(color[0], color[1], color[2], color[3]);
@@ -377,18 +241,17 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
     return;
 
   auto data = color->AsNormal();
-  if (surface_cache_) {
-    int bpp = surface_cache_->format->bytes_per_pixel;
-    uint8_t* pixel = static_cast<uint8_t*>(surface_cache_->pixels) +
-                     y * surface_cache_->pitch + x * bpp;
+  if (surface_buffer_) {
+    int bpp = surface_buffer_->format->bytes_per_pixel;
+    uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
+                     y * surface_buffer_->pitch + x * bpp;
     *reinterpret_cast<uint32_t*>(pixel) =
-        SDL_MapRGBA(surface_cache_->format, static_cast<uint8_t>(data.x),
+        SDL_MapRGBA(surface_buffer_->format, static_cast<uint8_t>(data.x),
                     static_cast<uint8_t>(data.y), static_cast<uint8_t>(data.z),
                     static_cast<uint8_t>(data.w));
   }
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Bitmap::SetPixelInternal, reinterpret_cast<uint64_t>(this), x, y, data));
+  SetPixelInternal(x, y, data);
 
   NeedUpdateSurface();
 }
@@ -399,8 +262,7 @@ void Bitmap::HueChange(int hue) {
   if (hue % 360 == 0)
     return;
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Bitmap::HueChangeInternal, reinterpret_cast<uint64_t>(this), hue));
+  HueChangeInternal(hue);
 
   NeedUpdateSurface();
 }
@@ -426,20 +288,8 @@ void Bitmap::DrawText(const base::Rect& rect,
                       TextAlign align) {
   CheckIsDisposed();
 
-  font_->AsSDLFont();
-  const int font_id = font_->font_id();
-  const int font_size = font_->GetSize();
-  const bool is_bold = font_->GetBold();
-  const bool is_italic = font_->GetItalic();
-  const bool has_shadow = font_->GetShadow();
-  const bool has_outline = font_->GetOutline();
-  const SDL_Color font_color = font_->GetColor()->AsSDLColor();
-  const SDL_Color out_color = font_->GetOutColor()->AsSDLColor();
-
-  screen()->renderer()->PostTask(base::BindOnce(
-      &Bitmap::DrawTextInternal, reinterpret_cast<uint64_t>(this), rect, str,
-      align, font_id, font_size, is_bold, is_italic, has_shadow, has_outline,
-      font_color, out_color));
+  font_->EnsureLoadFont();
+  DrawTextInternal(rect, str, align);
 
   NeedUpdateSurface();
 }
@@ -447,16 +297,16 @@ void Bitmap::DrawText(const base::Rect& rect,
 scoped_refptr<Rect> Bitmap::TextSize(const std::string& str) {
   CheckIsDisposed();
 
-  int w = 0, h = 0;
   TTF_Font* font = font_->AsSDLFont();
-  if (font && !str.empty()) {
-    std::string src_text = FixupString(str);
-    TTF_SizeUTF8(font, src_text.c_str(), &w, &h);
-    const char* end_char = nullptr;
-    uint16_t ucs2 = utf8_to_ucs2(str.c_str(), &end_char);
-    if (font_->GetItalic() && *end_char == '\0')
-      TTF_GlyphMetrics(font, ucs2, 0, 0, 0, 0, &w);
-  }
+  std::string src_text = font_->FixupString(str);
+
+  int w, h;
+  TTF_SizeUTF8(font, src_text.c_str(), &w, &h);
+
+  const char* end_char = nullptr;
+  uint16_t ucs2 = utf8_to_ucs2(str.c_str(), &end_char);
+  if (font_->GetItalic() && *end_char == '\0')
+    TTF_GlyphMetrics(font, ucs2, 0, 0, 0, 0, &w);
 
   return new Rect(base::Rect(0, 0, w, h));
 }
@@ -474,26 +324,19 @@ void Bitmap::SetFont(scoped_refptr<Font> font) {
 SDL_Surface* Bitmap::SurfaceRequired() {
   CheckIsDisposed();
 
-  if (surface_cache_)
-    return surface_cache_;
-  surface_cache_ =
+  if (surface_buffer_)
+    return surface_buffer_;
+  surface_buffer_ =
       SDL_CreateSurface(size_.x, size_.y, SDL_PIXELFORMAT_ABGR8888);
+  GetSurfaceInternal();
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&Bitmap::GetSurfaceInternal,
-                     reinterpret_cast<uint64_t>(this), surface_cache_));
-  screen()->renderer()->WaitForSync();
-
-  return surface_cache_;
+  return surface_buffer_;
 }
 
 void Bitmap::UpdateSurface() {
   CheckIsDisposed();
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&Bitmap::UpdateSurfaceInternal,
-                     reinterpret_cast<uint64_t>(this), surface_cache_));
-  screen()->renderer()->WaitForSync();
+  UpdateSurfaceInternal();
 
   NeedUpdateSurface();
 }
@@ -502,65 +345,51 @@ void Bitmap::OnObjectDisposed() {
   // Dispose notify
   observers_.Notify();
 
-  if (surface_cache_) {
-    SDL_DestroySurface(surface_cache_);
-    surface_cache_ = nullptr;
+  if (surface_buffer_) {
+    SDL_DestroySurface(surface_buffer_);
+    surface_buffer_ = nullptr;
   }
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      [](uint64_t self) {
-        auto it = Graphics::texture_pool().find(self);
-        renderer::TextureFrameBuffer::Del(it->second);
-        Graphics::texture_pool().erase(it);
-      },
-      reinterpret_cast<uint64_t>(this)));
+  renderer::TextureFrameBuffer::Del(texture_);
 }
 
 void Bitmap::InitBitmapInternal(
-    uint64_t self,
     const std::variant<base::Vec2i, SDL_Surface*>& initial_data) {
   // Alloc new texture memory
-  auto tex_fbo = renderer::TextureFrameBuffer::Gen();
+  texture_ = renderer::TextureFrameBuffer::Gen();
   bool need_clear = false;
 
   if (std::holds_alternative<base::Vec2i>(initial_data)) {
     auto size = std::get<base::Vec2i>(initial_data);
-    renderer::TextureFrameBuffer::Alloc(tex_fbo, size.x, size.y);
+    renderer::TextureFrameBuffer::Alloc(texture_, size.x, size.y);
     // Clear texture cache
     need_clear = true;
   } else if (std::holds_alternative<SDL_Surface*>(initial_data)) {
-    SDL_Surface* surf = std::get<SDL_Surface*>(initial_data);
-    renderer::TextureFrameBuffer::Alloc(tex_fbo, surf->w, surf->h);
-    renderer::Texture::TexImage2D(surf->w, surf->h, GL_RGBA, surf->pixels);
-    SDL_DestroySurface(surf);
+    surface_buffer_ = std::get<SDL_Surface*>(initial_data);
+    renderer::TextureFrameBuffer::Alloc(texture_, surface_buffer_->w,
+                                        surface_buffer_->h);
+    renderer::Texture::TexImage2D(surface_buffer_->w, surface_buffer_->h,
+                                  GL_RGBA, surface_buffer_->pixels);
+
   } else {
     NOTREACHED();
   }
 
   // Link framebuffer
-  renderer::TextureFrameBuffer::LinkFrameBuffer(tex_fbo);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(texture_);
   if (need_clear)
     renderer::FrameBuffer::Clear();
-
-  // Emplace in graphics context
-  Graphics::texture_pool().emplace(self, tex_fbo);
 }
 
-void Bitmap::StretchBltInternal(uint64_t self,
-                                const base::Rect& dest_rect,
-                                uint64_t src,
+void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
+                                scoped_refptr<Bitmap> src_bitmap,
                                 const base::Rect& src_rect,
                                 float opacity) {
-  auto& tex_fbo = Graphics::texture_pool().at(self);
-  auto& src_tex = Graphics::texture_pool().at(src);
-  base::Vec2i size(tex_fbo.width, tex_fbo.height);
-  base::Vec2i src_size(src_tex.width, src_tex.height);
-
   auto& dst_tex =
       renderer::GSM.EnsureCommonTFB(dest_rect.width, dest_rect.height);
 
   renderer::Blt::BeginDraw(dst_tex);
-  renderer::Blt::TexSource(tex_fbo);
+  renderer::Blt::TexSource(texture_);
   renderer::Blt::BltDraw(dest_rect, dest_rect.Size());
   renderer::Blt::EndDraw();
 
@@ -568,25 +397,27 @@ void Bitmap::StretchBltInternal(uint64_t self,
    * (texCoord - src_offset) * src_dst_factor
    */
   base::Vec4 offset_scale;
-  offset_scale.x = static_cast<float>(src_rect.x) / src_size.x;
-  offset_scale.y = static_cast<float>(src_rect.y) / src_size.y;
-  offset_scale.z = (static_cast<float>(src_size.x) / src_rect.width) *
-                   (static_cast<float>(dest_rect.width) / dst_tex.width);
-  offset_scale.w = (static_cast<float>(src_size.y) / src_rect.height) *
-                   (static_cast<float>(dest_rect.height) / dst_tex.height);
+  offset_scale.x = static_cast<float>(src_rect.x) / src_bitmap->GetWidth();
+  offset_scale.y = static_cast<float>(src_rect.y) / src_bitmap->GetHeight();
+  offset_scale.z =
+      (static_cast<float>(src_bitmap->GetWidth()) / src_rect.width) *
+      (static_cast<float>(dest_rect.width) / dst_tex.width);
+  offset_scale.w =
+      (static_cast<float>(src_bitmap->GetHeight()) / src_rect.height) *
+      (static_cast<float>(dest_rect.height) / dst_tex.height);
 
   auto& shader = renderer::GSM.shaders()->texblt;
 
-  renderer::GSM.states.viewport.Push(size);
+  renderer::GSM.states.viewport.Push(size_);
   renderer::GSM.states.blend.Push(false);
 
-  renderer::FrameBuffer::Bind(tex_fbo.fbo);
+  renderer::FrameBuffer::Bind(texture_.fbo);
 
   shader.Bind();
-  shader.SetProjectionMatrix(size);
+  shader.SetProjectionMatrix(size_);
   shader.SetTransOffset(base::Vec2i());
-  shader.SetSrcTexture(src_tex.tex);
-  shader.SetTextureSize(src_size);
+  shader.SetSrcTexture(src_bitmap->texture_.tex);
+  shader.SetTextureSize(src_bitmap->size_);
   shader.SetDstTexture(dst_tex.tex);
   shader.SetOffsetScale(offset_scale);
   shader.SetOpacity(opacity);
@@ -600,12 +431,9 @@ void Bitmap::StretchBltInternal(uint64_t self,
   renderer::GSM.states.viewport.Pop();
 }
 
-void Bitmap::FillRectInternal(uint64_t self,
-                              const base::Rect& rect,
-                              const base::Vec4& color) {
-  auto& tex_fbo = Graphics::texture_pool().at(self);
+void Bitmap::FillRectInternal(const base::Rect& rect, const base::Vec4& color) {
+  renderer::FrameBuffer::Bind(texture_.fbo);
 
-  renderer::FrameBuffer::Bind(tex_fbo.fbo);
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.Push(rect);
 
@@ -617,21 +445,18 @@ void Bitmap::FillRectInternal(uint64_t self,
   renderer::GSM.states.scissor.Pop();
 }
 
-void Bitmap::GradientFillRectInternal(uint64_t self,
-                                      const base::Rect& rect,
+void Bitmap::GradientFillRectInternal(const base::Rect& rect,
                                       const base::Vec4& color1,
                                       const base::Vec4& color2,
                                       bool vertical) {
-  auto& tex_fbo = Graphics::texture_pool().at(self);
-  base::Vec2i size(tex_fbo.width, tex_fbo.height);
+  renderer::FrameBuffer::Bind(texture_.fbo);
 
-  renderer::FrameBuffer::Bind(tex_fbo.fbo);
-  renderer::GSM.states.viewport.Push(size);
+  renderer::GSM.states.viewport.Push(size_);
   renderer::GSM.states.blend.Push(false);
 
   auto& shader = renderer::GSM.shaders()->color;
   shader.Bind();
-  shader.SetProjectionMatrix(size);
+  shader.SetProjectionMatrix(size_);
   shader.SetTransOffset(base::Vec2i());
 
   auto* quad = renderer::GSM.common_quad();
@@ -655,25 +480,17 @@ void Bitmap::GradientFillRectInternal(uint64_t self,
   renderer::GSM.states.blend.Pop();
 }
 
-void Bitmap::SetPixelInternal(uint64_t self,
-                              int x,
-                              int y,
-                              const base::Vec4& color) {
-  auto& tex_fbo = Graphics::texture_pool().at(self);
-
+void Bitmap::SetPixelInternal(int x, int y, const base::Vec4& color) {
   std::array<uint8_t, 4> pixel = {
       static_cast<uint8_t>(color.x), static_cast<uint8_t>(color.y),
       static_cast<uint8_t>(color.z), static_cast<uint8_t>(color.w)};
 
-  renderer::Texture::Bind(tex_fbo.tex);
+  renderer::Texture::Bind(texture_.tex);
   renderer::Texture::TexSubImage2D(x, y, 1, 1, GL_RGBA, pixel.data());
 }
 
-void Bitmap::HueChangeInternal(uint64_t self, int hue) {
-  auto& tex_fbo = Graphics::texture_pool().at(self);
-  base::Vec2i size(tex_fbo.width, tex_fbo.height);
-
-  auto& dst_tex = renderer::GSM.EnsureCommonTFB(size.x, size.y);
+void Bitmap::HueChangeInternal(int hue) {
+  auto& dst_tex = renderer::GSM.EnsureCommonTFB(size_.x, size_.y);
 
   while (hue < 0)
     hue += 359;
@@ -682,53 +499,46 @@ void Bitmap::HueChangeInternal(uint64_t self, int hue) {
   renderer::FrameBuffer::Bind(dst_tex.fbo);
   renderer::FrameBuffer::Clear();
 
-  renderer::GSM.states.viewport.Push(size);
+  renderer::GSM.states.viewport.Push(size_);
   auto& shader = renderer::GSM.shaders()->hue;
   shader.Bind();
-  shader.SetProjectionMatrix(size);
-  shader.SetTexture(tex_fbo.tex);
-  shader.SetTextureSize(size);
+  shader.SetProjectionMatrix(size_);
+  shader.SetTexture(texture_.tex);
+  shader.SetTextureSize(size_);
   shader.SetTransOffset(base::Vec2i());
   shader.SetHueAdjustValue(static_cast<float>(hue) / 360.0f);
 
   auto* quad = renderer::GSM.common_quad();
-  quad->SetTexCoordRect(base::Vec2(size));
-  quad->SetPositionRect(base::Vec2(size));
+  quad->SetTexCoordRect(base::Vec2(size_));
+  quad->SetPositionRect(base::Vec2(size_));
   quad->Draw();
   renderer::GSM.states.viewport.Pop();
 
-  renderer::Blt::BeginDraw(tex_fbo);
+  renderer::Blt::BeginDraw(texture_);
   renderer::Blt::TexSource(dst_tex);
-  renderer::Blt::BltDraw(size, size);
+  renderer::Blt::BltDraw(size_, size_);
   renderer::Blt::EndDraw();
 }
 
-void Bitmap::DrawTextInternal(uint64_t self,
-                              const base::Rect& rect,
+void Bitmap::GetSurfaceInternal() {
+  renderer::GSM.states.viewport.Push(size_);
+  renderer::FrameBuffer::Bind(texture_.fbo);
+  renderer::GL.ReadPixels(0, 0, size_.x, size_.y, GL_RGBA, GL_UNSIGNED_BYTE,
+                          surface_buffer_->pixels);
+  renderer::GSM.states.viewport.Pop();
+}
+
+void Bitmap::DrawTextInternal(const base::Rect& rect,
                               const std::string& str,
-                              TextAlign align,
-                              int font_id,
-                              int font_size,
-                              bool is_bold,
-                              bool is_italic,
-                              bool has_shadow,
-                              bool has_outline,
-                              const SDL_Color& color,
-                              const SDL_Color& out_color) {
-  auto& tex_fbo = Graphics::texture_pool().at(self);
-  base::Vec2i size(tex_fbo.width, tex_fbo.height);
-
-  std::mutex* lock = nullptr;
-  TTF_Font* font_obj = Font::AsSDLFont(font_id, font_size);
-
+                              TextAlign align) {
   uint8_t fopacity;
-  SDL_Surface* txt_surf =
-      RenderText(str, &fopacity, font_obj, is_bold, is_italic, has_shadow,
-                 has_outline, color, out_color);
+  SDL_Surface* txt_surf = font_->RenderText(str, &fopacity);
+
   if (!txt_surf)
     return;
 
   int align_x = rect.x, align_y = rect.y + (rect.height - txt_surf->h) / 2;
+
   switch (align) {
     default:
     case TextAlign::Left:
@@ -751,7 +561,7 @@ void Bitmap::DrawTextInternal(uint64_t self,
       base::Vec2i(common_frame_buffer.width, common_frame_buffer.height);
 
   renderer::Blt::BeginDraw(common_frame_buffer);
-  renderer::Blt::TexSource(tex_fbo);
+  renderer::Blt::TexSource(texture_);
   renderer::Blt::BltDraw(pos, pos.Size());
   renderer::Blt::EndDraw();
 
@@ -769,14 +579,14 @@ void Bitmap::DrawTextInternal(uint64_t self,
 
   base::Vec2 text_surf_size = base::Vec2i(txt_surf->w, txt_surf->h);
 
-  renderer::GSM.states.viewport.Push(size);
+  renderer::GSM.states.viewport.Push(size_);
   renderer::GSM.states.blend.Push(false);
 
-  renderer::FrameBuffer::Bind(tex_fbo.fbo);
+  renderer::FrameBuffer::Bind(texture_.fbo);
 
   auto& shader = renderer::GSM.shaders()->texblt;
   shader.Bind();
-  shader.SetProjectionMatrix(size);
+  shader.SetProjectionMatrix(size_);
   shader.SetTransOffset(base::Vec2i());
   shader.SetSrcTexture(generic_tex);
   shader.SetTextureSize(rendered_text_size);
@@ -793,33 +603,22 @@ void Bitmap::DrawTextInternal(uint64_t self,
   renderer::GSM.states.viewport.Pop();
 }
 
-void Bitmap::GetSurfaceInternal(uint64_t self, SDL_Surface* output) {
-  auto& tex_fbo = Graphics::texture_pool().at(self);
-  base::Vec2i size(tex_fbo.width, tex_fbo.height);
-
-  renderer::GSM.states.viewport.Push(size);
-  renderer::FrameBuffer::Bind(tex_fbo.fbo);
-  renderer::GL.ReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE,
-                          output->pixels);
-  renderer::GSM.states.viewport.Pop();
-}
-
-void Bitmap::UpdateSurfaceInternal(uint64_t self, SDL_Surface* output) {
-  auto& tex_fbo = Graphics::texture_pool().at(self);
-  base::Vec2i size(tex_fbo.width, tex_fbo.height);
-
-  renderer::Texture::Bind(tex_fbo.tex);
-  renderer::Texture::TexImage2D(size.x, size.y, GL_RGBA, output->pixels);
-}
-
 void Bitmap::NeedUpdateSurface() {
-  // Clear pixel cache
-  if (surface_cache_) {
-    SDL_DestroySurface(surface_cache_);
-    surface_cache_ = nullptr;
+  // For get pixel cache
+  if (surface_buffer_) {
+    SDL_DestroySurface(surface_buffer_);
+    surface_buffer_ = nullptr;
   }
 
   observers_.Notify();
+}
+
+void Bitmap::UpdateSurfaceInternal() {
+  if (surface_buffer_ && surface_buffer_->pixels) {
+    renderer::Texture::Bind(texture_.tex);
+    renderer::Texture::TexImage2D(size_.x, size_.y, GL_RGBA,
+                                  surface_buffer_->pixels);
+  }
 }
 
 }  // namespace content

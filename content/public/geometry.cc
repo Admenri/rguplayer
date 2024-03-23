@@ -28,7 +28,6 @@ void Geometry::SetBitmap(scoped_refptr<Bitmap> bitmap) {
 
 void Geometry::Resize(size_t count) {
   CheckIsDisposed();
-
   triangle_vertices_.resize(count * 3);
   triangle_count_ = count;
   buffer_need_update_ = true;
@@ -71,12 +70,8 @@ void Geometry::OnObjectDisposed() {
   triangle_vertices_.clear();
   triangle_count_ = 0;
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      [](renderer::VertexArray<renderer::GeometryVertex> vao) {
-        renderer::VertexArray<renderer::GeometryVertex>::Uninit(vao);
-        renderer::VertexBuffer::Del(vao.vbo);
-      },
-      std::move(vao_)));
+  renderer::VertexArray<renderer::GeometryVertex>::Uninit(vao_);
+  renderer::VertexBuffer::Del(vao_.vbo);
 }
 
 void Geometry::InitDrawableData() {
@@ -120,14 +115,12 @@ void Geometry::Composite() {
     renderer::GL.Uniform1f(flag_location, texture_valid ? 0.0f : 1.0f);
 
     if (texture_valid) {
-      auto& tex_fbo = Graphics::texture_pool().at(bitmap_->GetTexID());
-
       GLint texture_location = shader_program_->GetUniformLocation("u_texture");
       GLint texture_size_location =
           shader_program_->GetUniformLocation("u_texSize");
 
-      renderer::GLES2ShaderBase::SetTexture(texture_location, tex_fbo.tex.gl,
-                                            1);
+      renderer::GLES2ShaderBase::SetTexture(texture_location,
+                                            bitmap_->GetTexture().tex.gl, 1);
       renderer::GL.Uniform2f(texture_size_location, bitmap_->GetWidth(),
                              bitmap_->GetHeight());
     }
@@ -138,8 +131,7 @@ void Geometry::Composite() {
     shader.SetTransOffset(parent_rect().GetRealOffset());
     shader.SetTextureEmptyFlag(texture_valid ? 0.0f : 1.0f);
     if (texture_valid) {
-      auto& tex_fbo = Graphics::texture_pool().at(bitmap_->GetTexID());
-      shader.SetTexture(tex_fbo.tex);
+      shader.SetTexture(bitmap_->GetTexture().tex);
       shader.SetTextureSize(bitmap_->GetSize());
     }
   }

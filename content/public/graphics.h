@@ -13,8 +13,6 @@
 #include "content/worker/renderer_worker.h"
 #include "renderer/thread/thread_manager.h"
 
-#include <unordered_map>
-
 namespace fpslimiter {
 class FPSLimiter;
 }
@@ -78,17 +76,11 @@ class Graphics final : public base::RefCounted<Graphics>,
   void SetFrameSkip(bool skip);
 
   RGSSVersion content_version() const;
-
   scoped_refptr<CoreConfigure> config() { return config_; }
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
   base::WeakPtr<ui::Widget> window() { return renderer_->window(); }
-  int max_texture_size() const { return renderer_->max_texture_size(); }
-
   filesystem::Filesystem* filesystem();
-
-  using TexturePool =
-      std::unordered_map<uint64_t, renderer::TextureFrameBuffer>;
-  static TexturePool& texture_pool();
+  int max_texture_size() const { return renderer_->max_texture_size(); }
 
  private:
   friend class Viewport;
@@ -96,22 +88,22 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   void InitScreenBufferInternal();
   void DestroyBufferInternal();
-
   void CompositeScreenInternal();
   void ResizeResolutionInternal();
   void PresentScreenInternal(const renderer::TextureFrameBuffer& screen_buffer);
+  void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
   void FreezeSceneInternal();
-  void TransitionSceneInternal(int duration, bool has_bitmap, int vague);
-  void TransitionSceneInternalLoop(int i, int duration, uint64_t trans_bitmap);
-  void SnapToBitmapInternal(uint64_t target);
-  void UpdateScreenInternal(int* paint_raiser);
-  void SetSwapIntervalInternal();
+  void TransitionSceneInternal(int duration,
+                               scoped_refptr<Bitmap> trans_bitmap,
+                               int vague);
+  void TransitionSceneInternalLoop(int i,
+                                   int duration,
+                                   scoped_refptr<Bitmap> trans_bitmap);
+  void FrameProcessInternal();
 
-  // Disposable called
   void AddDisposable(Disposable* disp);
   void RemoveDisposable(Disposable* disp);
 
-  // Viewport called
   void RenderEffectRequire(const base::Vec4& color,
                            const base::Vec4& tone,
                            scoped_refptr<Shader> program);
@@ -122,9 +114,10 @@ class Graphics final : public base::RefCounted<Graphics>,
                            const base::Vec4& tone,
                            scoped_refptr<Shader> program);
 
-  void FrameProcessInternal();
   void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();
+
+  void SetSwapIntervalInternal();
 
   renderer::TextureFrameBuffer screen_buffer_[2];
   renderer::TextureFrameBuffer frozen_snapshot_;
@@ -140,7 +133,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   int brightness_;
   uint64_t frame_count_;
   int frame_rate_;
-
   std::unique_ptr<fpslimiter::FPSLimiter> fps_manager_;
 
   base::Rect display_viewport_;

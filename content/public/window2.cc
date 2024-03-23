@@ -323,13 +323,13 @@ void Window2::SetTone(scoped_refptr<Tone> tone) {
 void Window2::OnObjectDisposed() {
   RemoveFromList();
 
-  screen()->renderer()->DeleteSoon(std::move(base_quad_));
-  screen()->renderer()->DeleteSoon(std::move(content_quad_));
-  screen()->renderer()->DeleteSoon(std::move(arrows_quads_));
-  screen()->renderer()->DeleteSoon(std::move(cursor_quads_));
-  screen()->renderer()->DeleteSoon(std::move(base_tex_quad_array_));
-  screen()->renderer()->PostTask(
-      base::BindOnce(&renderer::TextureFrameBuffer::Del, base_tfb_));
+  base_quad_.reset();
+  content_quad_.reset();
+  arrows_quads_.reset();
+  cursor_quads_.reset();
+  base_tex_quad_array_.reset();
+
+  renderer::TextureFrameBuffer::Del(base_tfb_);
 }
 
 void Window2::InitDrawableData() {
@@ -451,9 +451,7 @@ void Window2::Composite() {
 
     /* Controls draw */
     if (openness_ >= 255) {
-      auto& skin_tex_fbo = Graphics::texture_pool().at(windowskin_->GetTexID());
-
-      shader.SetTexture(skin_tex_fbo.tex);
+      shader.SetTexture(windowskin_->GetTexture().tex);
       shader.SetTextureSize(windowskin_->GetSize());
 
       if (arrows_quad_count_)
@@ -494,13 +492,12 @@ void Window2::Composite() {
   if (contents_valid && contents_opacity_ > 0) {
     if (screen()->content_version() < RGSSVersion::RGSS3)
       renderer::GSM.states.scissor_rect.SetIntersect(padding_trans_rect);
-    auto& content_tex_fbo = Graphics::texture_pool().at(contents_->GetTexID());
 
     base::Vec2i content_trans = padding_trans_rect.Position();
     content_trans = content_trans - base::Vec2i(ox_, oy_);
 
     shader.SetTransOffset(content_trans);
-    shader.SetTexture(content_tex_fbo.tex);
+    shader.SetTexture(contents_->GetTexture().tex);
     shader.SetTextureSize(contents_->GetSize());
 
     content_quad_->Draw();
@@ -630,14 +627,14 @@ void Window2::UpdateBaseTextureInternal() {
   renderer::GSM.states.viewport.Push(rect_.Size());
   renderer::GSM.states.blend.Push(false);
 
-  auto& skin_tex_fbo = Graphics::texture_pool().at(windowskin_->GetTexID());
   auto& shader = renderer::GSM.shaders()->plane;
+
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTone(tone_->AsBase());
   shader.SetColor(base::Vec4());
   shader.SetOpacity(back_opacity_ / 255.0f);
-  shader.SetTexture(skin_tex_fbo.tex);
+  shader.SetTexture(windowskin_->GetTexture().tex);
   shader.SetTextureSize(windowskin_->GetSize());
   shader.SetTransOffset(base::Vec2());
   renderer::Texture::SetFilter(GL_LINEAR);
@@ -657,7 +654,7 @@ void Window2::UpdateBaseTextureInternal() {
   frame_shader.Bind();
   frame_shader.SetProjectionMatrix(
       renderer::GSM.states.viewport.Current().Size());
-  frame_shader.SetTexture(skin_tex_fbo.tex);
+  frame_shader.SetTexture(windowskin_->GetTexture().tex);
   frame_shader.SetTextureSize(windowskin_->GetSize());
   frame_shader.SetTransOffset(base::Vec2());
 

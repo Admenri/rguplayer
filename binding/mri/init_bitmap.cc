@@ -396,24 +396,24 @@ MRI_METHOD(bitmap_process_pixel) {
 MRI_METHOD(pixelarray_get_color) {
   scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
 
-  int index = 0;
+  int index;
   MriParseArgsTo(argc, argv, "i", &index);
 
   SDL_Surface* surf = obj->SurfaceRequired();
   uint32_t pixel = *(static_cast<uint32_t*>(surf->pixels) + index);
 
-  return LONG2FIX(pixel);
+  return ULONG2NUM(pixel);
 }
 
 MRI_METHOD(pixelarray_set_color) {
   scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
 
-  int index = 0;
-  uint32_t pixel = 0;
-  MriParseArgsTo(argc, argv, "ii", &index, &pixel);
+  int index;
+  VALUE pixel;
+  MriParseArgsTo(argc, argv, "io", &index, &pixel);
 
   SDL_Surface* surf = obj->SurfaceRequired();
-  *(static_cast<uint32_t*>(surf->pixels) + index) = pixel;
+  *(static_cast<uint32_t*>(surf->pixels) + index) = NUM2ULONG(pixel);
 
   return Qnil;
 }

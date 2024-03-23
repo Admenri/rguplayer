@@ -352,15 +352,12 @@ void Tilemap::SetOY(int oy) {
 }
 
 void Tilemap::OnObjectDisposed() {
-  ground_layer_.reset();
-  above_layers_.clear();
-
   weak_ptr_factory_.InvalidateWeakPtrs();
 
-  screen()->renderer()->DeleteSoon(std::move(flash_layer_));
-  screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
-  screen()->renderer()->PostTask(
-      base::BindOnce(&renderer::TextureFrameBuffer::Del, atlas_tfb_));
+  tilemap_quads_.reset();
+  flash_layer_.reset();
+
+  renderer::TextureFrameBuffer::Del(atlas_tfb_);
 }
 
 void Tilemap::InitTilemapData() {
@@ -407,7 +404,6 @@ void Tilemap::MakeAtlasInternal() {
       continue;
     }
 
-    auto& tex_fbo = Graphics::texture_pool().at(it.bitmap->GetTexID());
     auto autotile_size = it.bitmap->GetSize();
 
     base::Rect dst_pos(autotile_size);
@@ -428,8 +424,9 @@ void Tilemap::MakeAtlasInternal() {
       it.type = AutotileType::SingleAnimated;
 
       base::Vec2i single_size(tile_size_, tile_size_);
+
       renderer::Blt::BeginDraw(atlas_tfb_);
-      renderer::Blt::TexSource(tex_fbo);
+      renderer::Blt::TexSource(it.bitmap->GetTexture());
       for (int i = 0; i < 4; ++i) {
         renderer::Blt::BltDraw(
             base::Rect(base::Vec2i(tile_size_ * i, 0), single_size),
@@ -444,7 +441,7 @@ void Tilemap::MakeAtlasInternal() {
     }
 
     renderer::Blt::BeginDraw(atlas_tfb_);
-    renderer::Blt::TexSource(tex_fbo);
+    renderer::Blt::TexSource(it.bitmap->GetTexture());
     renderer::Blt::BltDraw(autotile_size, dst_pos);
     renderer::Blt::EndDraw();
 
@@ -460,10 +457,8 @@ void Tilemap::MakeAtlasInternal() {
   dst_rect.x = 12 * tile_size_;
   dst_rect.y = 0;
 
-  auto& tex_fbo = Graphics::texture_pool().at(tileset_->GetTexID());
-
   renderer::Blt::BeginDraw(atlas_tfb_);
-  renderer::Blt::TexSource(tex_fbo);
+  renderer::Blt::TexSource(tileset_->GetTexture());
   renderer::Blt::BltDraw(tileset_size, dst_rect);
   renderer::Blt::EndDraw();
 }

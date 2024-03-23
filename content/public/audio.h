@@ -75,7 +75,7 @@ class Audio final : public base::RefCounted<Audio> {
   SlotInfo bgm_;
   SlotInfo bgs_;
   SlotInfo me_;
-  std::list<std::unique_ptr<SoLoud::Wav>> se_cache_;
+  std::unordered_map<std::string, std::unique_ptr<SoLoud::Wav>> se_cache_;
 
   base::WeakPtr<filesystem::Filesystem> file_reader_;
   scoped_refptr<CoreConfigure> config_;

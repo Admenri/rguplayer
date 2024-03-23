@@ -33,10 +33,7 @@ void Shader::Compile(const std::string& vertex_shader,
   bind_textures_.clear();
   bind_textures_.resize(screen()->renderer()->fragment_texture_units());
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&Shader::CompileInternal, base::Unretained(this),
-                     vertex_shader, fragment_shader));
-  screen()->renderer()->WaitForSync();
+  CompileInternal(vertex_shader, fragment_shader);
 }
 
 void Shader::SetBlend(GLenum mode,
@@ -54,54 +51,38 @@ void Shader::SetBlend(GLenum mode,
 void Shader::SetParam(const std::string& uniform,
                       const std::vector<float>& params,
                       int count) {
-  screen()->renderer()->PostTask(base::BindOnce(&Shader::SetParam1Internal,
-                                                base::Unretained(this), uniform,
-                                                params, count));
-  screen()->renderer()->WaitForSync();
+  SetParam1Internal(uniform, params, count);
 }
 
 void Shader::SetParam(const std::string& uniform,
                       const std::vector<int>& params,
                       int count) {
-  screen()->renderer()->PostTask(base::BindOnce(&Shader::SetParam2Internal,
-                                                base::Unretained(this), uniform,
-                                                params, count));
-  screen()->renderer()->WaitForSync();
+  SetParam2Internal(uniform, params, count);
 }
 
 void Shader::SetParam(const std::string& uniform,
                       const std::vector<float>& matrix,
                       int count,
                       bool transpose) {
-  screen()->renderer()->PostTask(base::BindOnce(&Shader::SetParam3Internal,
-                                                base::Unretained(this), uniform,
-                                                matrix, count, transpose));
-  screen()->renderer()->WaitForSync();
+  SetParam3Internal(uniform, matrix, count, transpose);
 }
 
 void Shader::SetParam(const std::string& uniform,
                       scoped_refptr<Bitmap> texture,
                       int index) {
-  screen()->renderer()->PostTask(base::BindOnce(&Shader::SetParam4Internal,
-                                                base::Unretained(this), uniform,
-                                                texture, index));
-  screen()->renderer()->WaitForSync();
+  SetParam4Internal(uniform, texture, index);
 }
 
 void Shader::OnObjectDisposed() {
   location_cache_.clear();
   bind_textures_.clear();
 
-  screen()->renderer()->PostTask(base::BindOnce(
-      [](GLuint vs, GLuint fs, GLuint prog) {
-        if (vs)
-          renderer::GL.DeleteShader(vs);
-        if (fs)
-          renderer::GL.DeleteShader(fs);
-        if (prog)
-          renderer::GL.DeleteProgram(prog);
-      },
-      vertex_shader_, frag_shader_, program_));
+  if (vertex_shader_)
+    renderer::GL.DeleteShader(vertex_shader_);
+  if (frag_shader_)
+    renderer::GL.DeleteShader(frag_shader_);
+  if (program_)
+    renderer::GL.DeleteProgram(program_);
 }
 
 void Shader::CompileInternal(const std::string& vertex_shader,
@@ -346,10 +327,9 @@ void Shader::SetInternalUniform() {
   // Apply bind texture unit
   for (int unit = 0; unit < bind_textures_.size(); ++unit) {
     auto& it = bind_textures_[unit];
-    if (it.location >= 0 && it.texture && !it.texture->IsDisposed()) {
-      auto& tex_fbo = Graphics::texture_pool().at(it.texture->GetTexID());
-      renderer::GLES2ShaderBase::SetTexture(it.location, tex_fbo.tex.gl, unit);
-    }
+    if (it.location >= 0 && it.texture && !it.texture->IsDisposed())
+      renderer::GLES2ShaderBase::SetTexture(
+          it.location, it.texture->GetTexture().tex.gl, unit);
   }
 }
 

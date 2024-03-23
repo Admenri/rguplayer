@@ -78,8 +78,8 @@ void Sprite::InitAttributeInternal() {
 void Sprite::OnObjectDisposed() {
   RemoveFromList();
 
-  screen()->renderer()->DeleteSoon(std::move(quad_));
-  screen()->renderer()->DeleteSoon(std::move(wave_quads_));
+  quad_.reset();
+  wave_quads_.reset();
 }
 
 void Sprite::InitDrawableData() {
@@ -133,14 +133,14 @@ void Sprite::Composite() {
   const bool render_effect =
       color_effect || tone_effect || flash_effect || bush_effect;
 
-  auto& tex_fbo = Graphics::texture_pool().at(bitmap_->GetTexID());
-
+  auto& bitmap_texture = bitmap_->GetTexture();
   if (render_effect) {
     auto& shader = renderer::GSM.shaders()->sprite;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
-    shader.SetTextureSize(base::Vec2i(tex_fbo.width, tex_fbo.height));
+    shader.SetTextureSize(
+        base::Vec2i(bitmap_texture.width, bitmap_texture.height));
     shader.SetOpacity(opacity_ / 255.0f);
 
     const base::Vec4 color = color_->AsBase();
@@ -157,18 +157,20 @@ void Sprite::Composite() {
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
-    shader.SetTextureSize(base::Vec2i(tex_fbo.width, tex_fbo.height));
+    shader.SetTextureSize(
+        base::Vec2i(bitmap_texture.width, bitmap_texture.height));
     shader.SetOpacity(opacity_ / 255.0f);
   } else {
     auto& shader = renderer::GSM.shaders()->basesprite;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
-    shader.SetTextureSize(base::Vec2i(tex_fbo.width, tex_fbo.height));
+    shader.SetTextureSize(
+        base::Vec2i(bitmap_texture.width, bitmap_texture.height));
   }
 
   // Bind texture default
-  renderer::GL.BindTexture(GL_TEXTURE_2D, tex_fbo.tex.gl);
+  renderer::GL.BindTexture(GL_TEXTURE_2D, bitmap_->GetTexture().tex.gl);
 
   renderer::GSM.states.blend.Push(true);
   renderer::GSM.states.blend_func.Push(blend_mode_);
