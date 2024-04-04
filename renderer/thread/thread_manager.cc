@@ -52,11 +52,11 @@ void GlobalStateManager::QuitStates() {
 }
 
 TextureFrameBuffer& GlobalStateManager::EnsureCommonTFB(int width, int height) {
-  if (common_tfb_.width >= width && common_tfb_.height >= height)
+  if (common_tfb_.size.x >= width && common_tfb_.size.y >= height)
     return common_tfb_;
 
-  width = std::max(width, common_tfb_.width);
-  height = std::max(height, common_tfb_.height);
+  width = std::max(width, common_tfb_.size.x);
+  height = std::max(height, common_tfb_.size.y);
 
   TextureFrameBuffer::Alloc(common_tfb_, width, height);
   return common_tfb_;

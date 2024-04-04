@@ -117,7 +117,7 @@ void Plane::Composite() {
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransOffset(parent_rect().GetRealOffset());
     shader.SetTexture(layer_tfb_.tex);
-    shader.SetTextureSize(base::Vec2i(layer_tfb_.width, layer_tfb_.height));
+    shader.SetTextureSize(layer_tfb_.size);
 
     shader.SetColor(color_->AsBase());
     shader.SetTone(tone_->AsBase());
@@ -128,7 +128,7 @@ void Plane::Composite() {
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransOffset(parent_rect().GetRealOffset());
     shader.SetTexture(layer_tfb_.tex);
-    shader.SetTextureSize(base::Vec2i(layer_tfb_.width, layer_tfb_.height));
+    shader.SetTextureSize(layer_tfb_.size);
   }
 
   renderer::GSM.states.blend.Push(true);

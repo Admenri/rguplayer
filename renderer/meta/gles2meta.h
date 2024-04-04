@@ -122,12 +122,13 @@ struct FrameBuffer {
                             GL_TEXTURE_2D, tex.gl, 0);
   }
 
-  inline static void ClearColor(GLclampf r = 0.0,
-                                GLclampf g = 0.0,
-                                GLclampf b = 0.0,
-                                GLclampf a = 0.0) {
+  inline static void ClearColor(GLclampf r = 0.0f,
+                                GLclampf g = 0.0f,
+                                GLclampf b = 0.0f,
+                                GLclampf a = 0.0f) {
     GL.ClearColor(r, g, b, a);
   }
+
   inline static void Clear() { GL.Clear(GL_COLOR_BUFFER_BIT); }
 };
 
@@ -137,7 +138,7 @@ using IndexBuffer = Buffer<GL_ELEMENT_ARRAY_BUFFER>;
 struct TextureFrameBuffer {
   GLID<Texture> tex;
   GLID<FrameBuffer> fbo;
-  GLsizei width = 0, height = 0;
+  base::Vec2i size;
 
   inline static TextureFrameBuffer Gen() {
     TextureFrameBuffer tfb;
@@ -160,13 +161,9 @@ struct TextureFrameBuffer {
   inline static void Alloc(TextureFrameBuffer& tfb,
                            GLsizei width,
                            GLsizei height) {
-    if (width == tfb.width && height == tfb.height)
-      return;
-
     Texture::Bind(tfb.tex);
     Texture::TexImage2D(width, height, GL_RGBA);
-    tfb.width = width;
-    tfb.height = height;
+    tfb.size = base::Vec2i(width, height);
   }
 
   inline static void LinkFrameBuffer(const TextureFrameBuffer& tfb) {

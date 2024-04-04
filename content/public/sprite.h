@@ -10,6 +10,7 @@
 #include "content/public/disposable.h"
 #include "content/public/flashable.h"
 #include "content/public/graphics.h"
+#include "content/public/utility.h"
 #include "content/public/viewport.h"
 #include "renderer/quad/quad_array.h"
 

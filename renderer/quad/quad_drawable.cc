@@ -111,7 +111,7 @@ void Blt::BeginDraw(const TextureFrameBuffer& dest_tfb) {
     return GL.BindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_tfb.fbo.gl);
 
   FrameBuffer::Bind(dest_tfb.fbo);
-  auto size = base::Vec2i(dest_tfb.width, dest_tfb.height);
+  const auto& size = dest_tfb.size;
   GSM.states.viewport.Push(size);
   auto& shader = GSM.shaders()->base;
   shader.Bind();
@@ -125,7 +125,7 @@ void Blt::TexSource(const TextureFrameBuffer& src_tfb) {
 
   auto& shader = GSM.shaders()->base;
   shader.SetTexture(src_tfb.tex);
-  shader.SetTextureSize(base::Vec2i(src_tfb.width, src_tfb.height));
+  shader.SetTextureSize(src_tfb.size);
 }
 
 void Blt::BltDraw(const base::RectF& src_rect,

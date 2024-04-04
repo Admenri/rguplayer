@@ -5,6 +5,7 @@
 #include "content/public/viewport.h"
 
 #include "content/public/bitmap.h"
+#include "content/public/utility.h"
 #include "renderer/quad/quad_drawable.h"
 
 namespace content {

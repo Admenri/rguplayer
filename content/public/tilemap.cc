@@ -125,8 +125,7 @@ class TilemapGroundLayer : public ViewportChild {
     auto& shader = renderer::GSM.shaders()->tilemap;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-    shader.SetTextureSize(
-        base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
+    shader.SetTextureSize(tilemap_->atlas_tfb_.size);
     shader.SetTexture(tilemap_->atlas_tfb_.tex);
     shader.SetTransOffset(tilemap_->tilemap_offset_);
     shader.SetAnimateIndex(tilemap_->frame_index_);
@@ -166,8 +165,7 @@ class TilemapZLayer : public ViewportChild {
     auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-    shader.SetTextureSize(
-        base::Vec2i(tilemap_->atlas_tfb_.width, tilemap_->atlas_tfb_.height));
+    shader.SetTextureSize(tilemap_->atlas_tfb_.size);
     shader.SetTexture(tilemap_->atlas_tfb_.tex);
     shader.SetTransOffset(tilemap_->tilemap_offset_);
 

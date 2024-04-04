@@ -401,10 +401,10 @@ void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
   offset_scale.y = static_cast<float>(src_rect.y) / src_bitmap->GetHeight();
   offset_scale.z =
       (static_cast<float>(src_bitmap->GetWidth()) / src_rect.width) *
-      (static_cast<float>(dest_rect.width) / dst_tex.width);
+      (static_cast<float>(dest_rect.width) / dst_tex.size.x);
   offset_scale.w =
       (static_cast<float>(src_bitmap->GetHeight()) / src_rect.height) *
-      (static_cast<float>(dest_rect.height) / dst_tex.height);
+      (static_cast<float>(dest_rect.height) / dst_tex.size.y);
 
   auto& shader = renderer::GSM.shaders()->texblt;
 
@@ -557,8 +557,7 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
 
   auto& common_frame_buffer =
       renderer::GSM.EnsureCommonTFB(pos.width, pos.height);
-  base::Vec2i origin_size =
-      base::Vec2i(common_frame_buffer.width, common_frame_buffer.height);
+  base::Vec2i origin_size = common_frame_buffer.size;
 
   renderer::Blt::BeginDraw(common_frame_buffer);
   renderer::Blt::TexSource(texture_);

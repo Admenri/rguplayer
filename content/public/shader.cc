@@ -321,7 +321,8 @@ void Shader::SetInternalUniform() {
   const float a = 2.f / viewport_size.x;
   const float b = 2.f / viewport_size.y;
   const float c = -2.f;
-  GLfloat mat[16] = {a, 0, 0, 0, 0, b, 0, 0, 0, 0, c, 0, -1, -1, -1, 1};
+
+  GLfloat mat[] = {a, 0, 0, 0, 0, b, 0, 0, 0, 0, c, 0, -1, -1, -1, 1};
   renderer::GL.UniformMatrix4fv(projection_location, 1, GL_FALSE, mat);
 
   // Apply bind texture unit

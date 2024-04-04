@@ -139,8 +139,7 @@ void Sprite::Composite() {
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
-    shader.SetTextureSize(
-        base::Vec2i(bitmap_texture.width, bitmap_texture.height));
+    shader.SetTextureSize(bitmap_texture.size);
     shader.SetOpacity(opacity_ / 255.0f);
 
     const base::Vec4 color = color_->AsBase();
@@ -157,16 +156,14 @@ void Sprite::Composite() {
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
-    shader.SetTextureSize(
-        base::Vec2i(bitmap_texture.width, bitmap_texture.height));
+    shader.SetTextureSize(bitmap_texture.size);
     shader.SetOpacity(opacity_ / 255.0f);
   } else {
     auto& shader = renderer::GSM.shaders()->basesprite;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
-    shader.SetTextureSize(
-        base::Vec2i(bitmap_texture.width, bitmap_texture.height));
+    shader.SetTextureSize(bitmap_texture.size);
   }
 
   // Bind texture default

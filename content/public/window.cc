@@ -351,7 +351,7 @@ void Window::Composite() {
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
   shader.SetTexture(base_tfb_.tex);
-  shader.SetTextureSize(base::Vec2i(base_tfb_.width, base_tfb_.height));
+  shader.SetTextureSize(base_tfb_.size);
   shader.SetTransOffset(offset);
   renderer::Texture::SetFilter(GL_LINEAR);
 
