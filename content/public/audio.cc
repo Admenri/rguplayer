@@ -10,7 +10,7 @@ namespace content {
 
 namespace {
 
-void* read_mem_file(SDL_RWops* src, size_t* datasize, bool freesrc) {
+void* read_mem_file(SDL_IOStream* src, size_t* datasize, bool freesrc) {
   const int FILE_CHUNK_SIZE = 1024;
   Sint64 size, size_total;
   size_t size_read;
@@ -22,7 +22,7 @@ void* read_mem_file(SDL_RWops* src, size_t* datasize, bool freesrc) {
     return NULL;
   }
 
-  size = SDL_RWsize(src);
+  size = SDL_GetIOSize(src);
   if (size < 0) {
     size = FILE_CHUNK_SIZE;
     loading_chunks = SDL_TRUE;
@@ -55,7 +55,7 @@ void* read_mem_file(SDL_RWops* src, size_t* datasize, bool freesrc) {
       }
     }
 
-    size_read = SDL_RWread(src, data + size_total, (size_t)(size - size_total));
+    size_read = SDL_ReadIO(src, data + size_total, (size_t)(size - size_total));
     if (size_read > 0) {
       size_total += size_read;
       continue;
@@ -72,7 +72,7 @@ void* read_mem_file(SDL_RWops* src, size_t* datasize, bool freesrc) {
 
 done:
   if (freesrc && src) {
-    SDL_RWclose(src);
+    SDL_CloseIO(src);
   }
   return data;
 }
@@ -162,7 +162,7 @@ void Audio::BGMPlay(const std::string& filename,
     file_reader_->OpenRead(
         filename,
         base::BindRepeating(
-            [](SoLoud::Wav* source, SDL_RWops* ops, const std::string& ext) {
+            [](SoLoud::Wav* source, SDL_IOStream* ops, const std::string& ext) {
               size_t out_size;
               uint8_t* mem = static_cast<uint8_t*>(
                   read_mem_file(ops, &out_size, SDL_TRUE));
@@ -218,7 +218,7 @@ void Audio::BGSPlay(const std::string& filename,
     file_reader_->OpenRead(
         filename,
         base::BindRepeating(
-            [](SoLoud::Wav* source, SDL_RWops* ops, const std::string& ext) {
+            [](SoLoud::Wav* source, SDL_IOStream* ops, const std::string& ext) {
               size_t out_size;
               uint8_t* mem = static_cast<uint8_t*>(
                   read_mem_file(ops, &out_size, SDL_TRUE));
@@ -271,7 +271,7 @@ void Audio::MEPlay(const std::string& filename, int volume, int pitch) {
     file_reader_->OpenRead(
         filename,
         base::BindRepeating(
-            [](SoLoud::Wav* source, SDL_RWops* ops, const std::string& ext) {
+            [](SoLoud::Wav* source, SDL_IOStream* ops, const std::string& ext) {
               size_t out_size;
               uint8_t* mem = static_cast<uint8_t*>(
                   read_mem_file(ops, &out_size, SDL_TRUE));
@@ -318,7 +318,7 @@ void Audio::SEPlay(const std::string& filename, int volume, int pitch) {
     file_reader_->OpenRead(
         filename,
         base::BindRepeating(
-            [](SoLoud::Wav* source, SDL_RWops* ops, const std::string& ext) {
+            [](SoLoud::Wav* source, SDL_IOStream* ops, const std::string& ext) {
               size_t out_size;
               uint8_t* mem = static_cast<uint8_t*>(
                   read_mem_file(ops, &out_size, SDL_TRUE));

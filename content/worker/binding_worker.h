@@ -26,12 +26,13 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
 
   void InitBindingComponents(ContentInitParams& params);
   void BindingMain(uint32_t event_id);
+
   void RequestQuit();
   void RequestReset();
   void ClearResetFlag();
 
-  bool CheckFlags();
-  void RaiseFlags();
+  bool CheckRunnerFlags();
+  void RaiseRunnerFlags();
 
   RGSSVersion rgss_version() { return config_->content_version(); }
   scoped_refptr<CoreConfigure> config() const { return config_; }
@@ -61,8 +62,8 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
 
   base::Vec2i initial_resolution_;
   base::WeakPtr<ui::Widget> window_;
-  base::AtomicFlag quit_atomic_;
-  base::AtomicFlag reset_atomic_;
+  std::atomic_bool quit_atomic_;
+  std::atomic_bool reset_atomic_;
   uint32_t user_event_id_;
 
   std::string argv0_;

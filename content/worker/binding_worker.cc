@@ -26,34 +26,34 @@ void BindingRunner::BindingMain(uint32_t event_id) {
 }
 
 void BindingRunner::RequestQuit() {
-  quit_atomic_.Set();
+  quit_atomic_ = true;
   runner_thread_->join();
   runner_thread_.reset();
 }
 
 void BindingRunner::RequestReset() {
-  reset_atomic_.Set();
+  reset_atomic_ = true;
 }
 
 void BindingRunner::ClearResetFlag() {
-  reset_atomic_.UnsafeResetForTesting();
+  reset_atomic_ = false;
 }
 
-bool BindingRunner::CheckFlags() {
+bool BindingRunner::CheckRunnerFlags() {
   bool quit_required = false;
-  quit_required |= quit_atomic_.IsSet();
-  quit_required |= reset_atomic_.IsSet();
+  quit_required |= quit_atomic_;
+  quit_required |= reset_atomic_;
 
   return quit_required;
 }
 
-void BindingRunner::RaiseFlags() {
+void BindingRunner::RaiseRunnerFlags() {
   if (!binding_engine_)
     return;
 
-  if (quit_atomic_.IsSet())
+  if (quit_atomic_)
     binding_engine_->QuitRequired();
-  if (reset_atomic_.IsSet())
+  if (reset_atomic_)
     binding_engine_->ResetRequired();
 }
 

@@ -9,7 +9,7 @@
 #include "base/memory/ref_counted.h"
 #include "base/memory/weak_ptr.h"
 
-#include "SDL_rwops.h"
+#include "SDL_iostream.h"
 
 namespace filesystem {
 
@@ -26,11 +26,9 @@ class Filesystem {
   bool Exists(const std::string& filename);
 
   using OpenCallback =
-      base::RepeatingCallback<bool(SDL_RWops*, const std::string&)>;
+      base::RepeatingCallback<bool(SDL_IOStream*, const std::string&)>;
   void OpenRead(const std::string& file_path, OpenCallback callback);
-  void OpenReadRaw(const std::string& filename,
-                   SDL_RWops& ops,
-                   bool free_on_close);
+  SDL_IOStream* OpenReadRaw(const std::string& filename);
 
   base::WeakPtr<Filesystem> AsWeakPtr() {
     return weak_ptr_factory_.GetWeakPtr();

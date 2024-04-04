@@ -5,11 +5,10 @@
 #include "components/filesystem/filesystem.h"
 
 #include "base/exceptions/exception.h"
+
 #include "physfs.h"
 
 namespace filesystem {
-
-const Uint32 SDL_RWOPS_PHYSFS = SDL_RWOPS_UNKNOWN + 16;
 
 namespace {
 
@@ -29,20 +28,20 @@ const char* FindFileExtName(const char* filename) {
   return nullptr;
 }
 
-inline PHYSFS_File* PHYSPtr(SDL_RWops* ops) {
-  return static_cast<PHYSFS_File*>(ops->hidden.unknown.data1);
+inline PHYSFS_File* PHYSPtr(void* udata) {
+  return static_cast<PHYSFS_File*>(udata);
 }
 
-Sint64 PHYS_RWopsSize(SDL_RWops* ops) {
-  PHYSFS_File* f = PHYSPtr(ops);
+Sint64 PHYS_RWopsSize(void* userdata) {
+  PHYSFS_File* f = PHYSPtr(userdata);
   if (!f)
     return -1;
 
   return PHYSFS_fileLength(f);
 }
 
-Sint64 PHYS_RWopsSeek(SDL_RWops* ops, int64_t offset, int whence) {
-  PHYSFS_File* f = PHYSPtr(ops);
+Sint64 PHYS_RWopsSeek(void* userdata, int64_t offset, int whence) {
+  PHYSFS_File* f = PHYSPtr(userdata);
   if (!f)
     return -1;
 
@@ -50,13 +49,13 @@ Sint64 PHYS_RWopsSeek(SDL_RWops* ops, int64_t offset, int whence) {
 
   switch (whence) {
     default:
-    case SDL_RW_SEEK_SET:
+    case SDL_IO_SEEK_SET:
       base = 0;
       break;
-    case SDL_RW_SEEK_CUR:
+    case SDL_IO_SEEK_CUR:
       base = PHYSFS_tell(f);
       break;
-    case SDL_RW_SEEK_END:
+    case SDL_IO_SEEK_END:
       base = PHYSFS_fileLength(f);
       break;
   }
@@ -65,8 +64,11 @@ Sint64 PHYS_RWopsSeek(SDL_RWops* ops, int64_t offset, int whence) {
   return (result != 0) ? PHYSFS_tell(f) : -1;
 }
 
-size_t PHYS_RWopsRead(SDL_RWops* ops, void* buffer, size_t size) {
-  PHYSFS_File* f = PHYSPtr(ops);
+size_t PHYS_RWopsRead(void* userdata,
+                      void* buffer,
+                      size_t size,
+                      SDL_IOStatus* status) {
+  PHYSFS_File* f = PHYSPtr(userdata);
   if (!f)
     return 0;
 
@@ -74,8 +76,11 @@ size_t PHYS_RWopsRead(SDL_RWops* ops, void* buffer, size_t size) {
   return (result != -1) ? result : 0;
 }
 
-size_t PHYS_RWopsWrite(SDL_RWops* ops, const void* buffer, size_t size) {
-  PHYSFS_File* f = PHYSPtr(ops);
+size_t PHYS_RWopsWrite(void* userdata,
+                       const void* buffer,
+                       size_t size,
+                       SDL_IOStatus* status) {
+  PHYSFS_File* f = PHYSPtr(userdata);
   if (!f)
     return 0;
 
@@ -84,35 +89,24 @@ size_t PHYS_RWopsWrite(SDL_RWops* ops, const void* buffer, size_t size) {
   return (result != -1) ? result : 0;
 }
 
-int PHYS_RWopsClose(SDL_RWops* ops) {
-  PHYSFS_File* f = PHYSPtr(ops);
+int PHYS_RWopsClose(void* userdata) {
+  PHYSFS_File* f = PHYSPtr(userdata);
   if (!f)
     return -1;
 
   int result = PHYSFS_close(f);
-  ops->hidden.unknown.data1 = 0;
-
   return (result != 0) ? 0 : -1;
 }
 
-int PHYS_RWopsCloseFree(SDL_RWops* ops) {
-  int result = PHYS_RWopsClose(ops);
-  SDL_DestroyRW(ops);
+SDL_IOStream* WrapperRWops(PHYSFS_File* handle) {
+  SDL_IOStreamInterface iface{0};
+  iface.size = PHYS_RWopsSize;
+  iface.seek = PHYS_RWopsSeek;
+  iface.read = PHYS_RWopsRead;
+  iface.write = PHYS_RWopsWrite;
+  iface.close = PHYS_RWopsClose;
 
-  return result;
-}
-
-void WrapperRWops(PHYSFS_File* handle, SDL_RWops& ops, bool auto_free) {
-  ops.type = SDL_RWOPS_PHYSFS;
-  ops.size = PHYS_RWopsSize;
-  ops.seek = PHYS_RWopsSeek;
-  ops.read = PHYS_RWopsRead;
-  ops.write = PHYS_RWopsWrite;
-  ops.close = PHYS_RWopsClose;
-  if (auto_free)
-    ops.close = PHYS_RWopsCloseFree;
-
-  ops.hidden.unknown.data1 = handle;
+  return SDL_OpenIO(&iface, handle);
 }
 
 struct OpenReadEnumData {
@@ -121,8 +115,6 @@ struct OpenReadEnumData {
   std::string dir;
   std::string file;
   std::string ext;
-
-  SDL_RWops* ops = nullptr;
 
   bool search_complete = false;
   int match_count = 0;
@@ -165,9 +157,9 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
     return PHYSFS_ENUM_ERROR;
   }
 
-  WrapperRWops(file, *enum_data->ops, false);
-  if (enum_data->callback.Run(enum_data->ops,
-                              FindFileExtName(filename.c_str())))
+  SDL_IOStream* ops = WrapperRWops(file);
+  // Free on user callback side
+  if (enum_data->callback.Run(ops, FindFileExtName(filename.c_str())))
     enum_data->search_complete = true;
 
   enum_data->match_count++;
@@ -222,12 +214,10 @@ void Filesystem::OpenRead(const std::string& file_path, OpenCallback callback) {
   data.file = file;
   ToLower(data.file);
   data.ext = ext;
-  data.ops = SDL_CreateRW();
 
   if (!PHYSFS_enumerate(dir.c_str(), OpenReadEnumCallback, &data))
-    LOG(INFO) << "[Filesystem] " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode());
-
-  SDL_DestroyRW(data.ops);
+    LOG(INFO) << "[Filesystem] "
+              << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode());
 
   if (!data.physfs_error.empty())
     throw base::Exception(base::Exception::FilesystemError, "PhysFS: %s",
@@ -238,15 +228,13 @@ void Filesystem::OpenRead(const std::string& file_path, OpenCallback callback) {
                           file_path.c_str());
 }
 
-void Filesystem::OpenReadRaw(const std::string& filename,
-                             SDL_RWops& ops,
-                             bool free_on_close) {
+SDL_IOStream* Filesystem::OpenReadRaw(const std::string& filename) {
   PHYSFS_File* file = PHYSFS_openRead(filename.c_str());
   if (!file)
     throw base::Exception(base::Exception::NoFileError,
                           "Failed to load file: %s", filename.c_str());
 
-  WrapperRWops(file, ops, free_on_close);
+  return WrapperRWops(file);
 }
 
 }  // namespace filesystem

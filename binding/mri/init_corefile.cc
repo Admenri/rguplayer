@@ -11,18 +11,15 @@ namespace binding {
 namespace {
 
 struct CoreFileInfo {
-  SDL_RWops* ops;
+  SDL_IOStream* ops;
   bool closed;
-  bool free;
 };
 
 VALUE CreateCoreFileFrom(const std::string& filename, bool mri_exc) {
-  SDL_RWops* ops = SDL_CreateRW();
+  SDL_IOStream* ops = nullptr;
   try {
-    MriGetGlobalRunner()->filesystem()->OpenReadRaw(filename, *ops, false);
+    ops = MriGetGlobalRunner()->filesystem()->OpenReadRaw(filename);
   } catch (base::Exception& e) {
-    SDL_DestroyRW(ops);
-
     if (mri_exc) {
       MriProcessException(e);
     } else
@@ -31,12 +28,7 @@ VALUE CreateCoreFileFrom(const std::string& filename, bool mri_exc) {
 
   CoreFileInfo* info = new CoreFileInfo;
   info->ops = ops;
-  info->closed = true;
-  info->free = true;
-
-  if (!info->ops) {
-    delete info;
-  }
+  info->closed = false;
 
   VALUE klass = rb_const_get(rb_cObject, rb_intern("CoreFile"));
   VALUE obj = rb_obj_alloc(klass);
@@ -48,13 +40,8 @@ VALUE CreateCoreFileFrom(const std::string& filename, bool mri_exc) {
 void CoreFileFreeInstance(void* ptr) {
   CoreFileInfo* info = static_cast<CoreFileInfo*>(ptr);
 
-  if (!info->closed) {
-    SDL_RWclose(info->ops);
-  }
-
-  if (info->free) {
-    SDL_DestroyRW(info->ops);
-  }
+  if (!info->closed)
+    SDL_CloseIO(info->ops);
 
   delete info;
 }
@@ -84,17 +71,17 @@ MRI_METHOD(corefile_read) {
   MriParseArgsTo(argc, argv, "i", &length);
 
   if (length == -1) {
-    Sint64 cur = SDL_RWtell(info->ops);
-    Sint64 end = SDL_RWseek(info->ops, 0, SEEK_END);
+    Sint64 cur = SDL_TellIO(info->ops);
+    Sint64 end = SDL_SeekIO(info->ops, 0, SDL_IO_SEEK_END);
     length = end - cur;
-    SDL_RWseek(info->ops, cur, SEEK_SET);
+    SDL_SeekIO(info->ops, cur, SDL_IO_SEEK_SET);
   }
 
   if (!length)
     return Qnil;
 
   VALUE data = rb_str_new(0, length);
-  SDL_RWread(info->ops, RSTRING_PTR(data), length);
+  SDL_ReadIO(info->ops, RSTRING_PTR(data), length);
 
   return data;
 }
@@ -103,7 +90,7 @@ MRI_METHOD(corefile_getbyte) {
   CoreFileInfo* info = MriGetStructData<CoreFileInfo>(self);
 
   unsigned char byte;
-  size_t result = SDL_RWread(info->ops, &byte, 1);
+  size_t result = SDL_ReadIO(info->ops, &byte, 1);
 
   return (result == 1) ? rb_fix_new(byte) : Qnil;
 }
@@ -116,7 +103,7 @@ MRI_METHOD(corefile_close) {
   CoreFileInfo* info = MriGetStructData<CoreFileInfo>(self);
 
   if (!info->closed) {
-    SDL_RWclose(info->ops);
+    SDL_CloseIO(info->ops);
     info->closed = true;
   }
 

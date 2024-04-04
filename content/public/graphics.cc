@@ -74,7 +74,7 @@ void Graphics::FadeOut(int duration) {
       PresentScreenInternal(frozen_snapshot_);
 
       FrameProcessInternal();
-      if (dispatcher_->CheckFlags())
+      if (dispatcher_->CheckRunnerFlags())
         break;
     } else {
       Update();
@@ -85,7 +85,7 @@ void Graphics::FadeOut(int duration) {
   SetBrightness(0);
 
   /* Raise flags */
-  dispatcher_->RaiseFlags();
+  dispatcher_->RaiseRunnerFlags();
 }
 
 void Graphics::FadeIn(int duration) {
@@ -101,7 +101,7 @@ void Graphics::FadeIn(int duration) {
       PresentScreenInternal(frozen_snapshot_);
 
       FrameProcessInternal();
-      if (dispatcher_->CheckFlags())
+      if (dispatcher_->CheckRunnerFlags())
         break;
     } else {
       Update();
@@ -112,7 +112,7 @@ void Graphics::FadeIn(int duration) {
   SetBrightness(255);
 
   /* Raise flags */
-  dispatcher_->RaiseFlags();
+  dispatcher_->RaiseRunnerFlags();
 }
 
 void Graphics::Update() {
@@ -135,8 +135,8 @@ void Graphics::Update() {
   FrameProcessInternal();
 
   /* Check flags */
-  dispatcher_->CheckFlags();
-  dispatcher_->RaiseFlags();
+  dispatcher_->CheckRunnerFlags();
+  dispatcher_->RaiseRunnerFlags();
 }
 
 void Graphics::ResizeScreen(const base::Vec2i& resolution) {
@@ -189,7 +189,7 @@ void Graphics::Transition(int duration,
     FrameProcessInternal();
 
     /* Break draw loop for quit flag */
-    if (dispatcher_->CheckFlags())
+    if (dispatcher_->CheckRunnerFlags())
       break;
   }
   renderer::GSM.states.blend.Pop();
@@ -198,7 +198,7 @@ void Graphics::Transition(int duration,
   frozen_ = false;
 
   /* Raise signal notify */
-  dispatcher_->RaiseFlags();
+  dispatcher_->RaiseRunnerFlags();
 }
 
 void Graphics::SetFrameRate(int rate) {

@@ -59,8 +59,6 @@ void GLES2Context::InitGLESContext(const ContextParams& params) {
       suffix_.clear();
     else if (SDL_GL_ExtensionSupported("GL_EXT_framebuffer_blit"))
       suffix_ = "EXT";
-    else if (SDL_GL_ExtensionSupported("GL_NV_framebuffer_blit"))
-      suffix_ = "NV";
     else
       suffix_.clear();
     BIND_GLES_FUN(BlitFramebuffer);

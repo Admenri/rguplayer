@@ -82,8 +82,8 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
       font_(new Font()),
       surface_buffer_(nullptr) {
   auto file_handler = base::BindRepeating(
-      [](SDL_Surface** surf, SDL_RWops* ops, const std::string& ext) {
-        *surf = IMG_LoadTyped_RW(ops, SDL_TRUE, ext.c_str());
+      [](SDL_Surface** surf, SDL_IOStream* ops, const std::string& ext) {
+        *surf = IMG_LoadTyped_IO(ops, SDL_TRUE, ext.c_str());
 
         return !!*surf;
       },
