@@ -11,10 +11,10 @@ process_pixel() { |PixelArray pixels| block }
 获取指定位置的像素数据，返回一个点的像素数据整数，需要自己解析为单个通道值
 本引擎的位图格式统一为ABGR8888
 
-[Integer index, Integer pixel]=
+[Integer index] = Integer pixel
 向指定位置的像素设置新的像素，像素格式参考上一个函数
 
-size
+size -> Numeric
 获取位图的像素大小，实际为 长 * 宽 * 4
 
 save_data(String buffer)
@@ -158,9 +158,11 @@ dispose disposed?
 compile(String vertex_shader, String fragment_shader)
 编译提供的shader源码并链接为shader程序
 其中的错误信息会在控制台输出，编译错误时不会影响游戏逻辑继续运行
+可以重复执行，重新编译后会重置当前着色器设置的参数
 
 set_blend(Integer blend_equal_mode, Integer srcRGB, Integer dstRGB, Integer srcAlpha, Integer dstAlpha)
 设置着色器的合成方式，可设置的参数参考文档：
+如果没有设置，则按默认的正常合成方式合成图像
 https://registry.khronos.org/OpenGL-Refpages/es3.0/html/glBlendEquation.xhtml
 https://registry.khronos.org/OpenGL-Refpages/es3.0/html/glBlendFuncSeparate.xhtml
 

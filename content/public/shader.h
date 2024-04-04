@@ -79,7 +79,8 @@ class Shader : public base::RefCounted<Shader>,
 
   struct TextureUnit {
     scoped_refptr<Bitmap> texture = nullptr;
-    GLint location = 0;
+    GLint location = -1;
+    GLint unit = 0;
   };
 
   std::vector<TextureUnit> bind_textures_;

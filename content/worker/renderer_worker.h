@@ -41,7 +41,6 @@ class RenderRunner : public base::RefCounted<RenderRunner> {
   void QuitGLContextInternal();
 
   scoped_refptr<CoreConfigure> config_;
-
   base::WeakPtr<ui::Widget> host_window_;
   SDL_GLContext glcontext_;
   int max_texture_size_;

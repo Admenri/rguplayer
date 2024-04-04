@@ -10,6 +10,7 @@
 
 namespace content {
 
+// Set engine RGSS kernel adapt version
 enum class RGSSVersion : int {
   Null = 0,
   RGSS1 = 1,
@@ -19,9 +20,9 @@ enum class RGSSVersion : int {
 
 class CoreConfigure : public base::RefCounted<CoreConfigure> {
  public:
+  // ANGLE Graphics API backend choose
   enum class ANGLERenderer : int32_t {
-    Default = 0,
-    GLES,
+    DefaultES = 0,
     D3D9,
     D3D11,
     Vulkan,

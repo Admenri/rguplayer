@@ -36,55 +36,44 @@ void RenderRunner::DestroyRenderer() {
 }
 
 void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
-  if (renderer == content::CoreConfigure::ANGLERenderer::Default) {
-    LOG(INFO) << "[Renderer] Use default OpenGL driver for renderer.";
+  if (renderer == content::CoreConfigure::ANGLERenderer::DefaultES)
     return;
-  }
 
   SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
-  if (renderer == content::CoreConfigure::ANGLERenderer::GLES) {
-    LOG(INFO) << "[Renderer] Use OpenGL ES driver for renderer.";
-    return;
-  }
+  SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 
   g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
   switch (renderer) {
-    default:
     case content::CoreConfigure::ANGLERenderer::D3D9:
-      LOG(INFO) << "[Renderer] Use ANGLE D3D9 Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE);
       break;
     case content::CoreConfigure::ANGLERenderer::D3D11:
-      LOG(INFO) << "[Renderer] Use ANGLE D3D11 Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE);
       break;
     case content::CoreConfigure::ANGLERenderer::Vulkan:
-      LOG(INFO) << "[Renderer] Use ANGLE Vulkan Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
       break;
     case content::CoreConfigure::ANGLERenderer::Metal:
-      LOG(INFO) << "[Renderer] Use ANGLE Metal Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE);
       break;
     case content::CoreConfigure::ANGLERenderer::Software:
-      LOG(INFO) << "[Renderer] Use ANGLE Software Renderer.";
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
       g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE);
       g_angle_attrib.push_back(
           EGL_PLATFORM_ANGLE_DEVICE_TYPE_SWIFTSHADER_ANGLE);
       break;
+    default:
+      break;
   }
-  g_angle_attrib.push_back(EGL_NONE);
 
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-  SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
+  g_angle_attrib.push_back(EGL_NONE);
   SDL_EGL_SetEGLAttributeCallbacks(GetANGLEAttribArray, nullptr, nullptr);
 }
 
 void RenderRunner::InitGLContextInternal() {
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-  SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, SDL_TRUE);
+  SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, SDL_TRUE);
 
   glcontext_ = SDL_GL_CreateContext(host_window_->AsSDLWindow());
   SDL_GL_MakeCurrent(host_window_->AsSDLWindow(), glcontext_);
@@ -99,9 +88,8 @@ void RenderRunner::InitGLContextInternal() {
   if (config_->renderer_debug_output())
     renderer::GLES2Context::EnableDebugOutputForCurrentThread();
 
-  renderer::GSM.enable_es_shaders() =
-      (config_->angle_renderer() !=
-       content::CoreConfigure::ANGLERenderer::Default);
+  // Always enable opengl es mode for ANGLE backend
+  renderer::GSM.enable_es_shaders() = true;
   renderer::GSM.InitStates();
   max_texture_size_ = renderer::GSM.max_texture_size();
 

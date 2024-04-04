@@ -4,6 +4,8 @@
 
 #include "content/public/audio.h"
 
+#include "base/exceptions/exception.h"
+
 #include "SDL_timer.h"
 
 namespace content {
@@ -127,248 +129,169 @@ SoLoud::result soloud_sdlbackend_init(SoLoud::Soloud* aSoloud,
 Audio::Audio(base::WeakPtr<filesystem::Filesystem> file_reader,
              scoped_refptr<CoreConfigure> config)
     : file_reader_(file_reader), config_(config) {
-  InitAudioDeviceInternal();
+  if (config_->disable_audio()) {
+    LOG(INFO) << "[Content] Disable Audio module.";
+    output_device_ = 0;
+    return;
+  }
 
-  if (output_device_)
-    me_watcher_.reset(new std::jthread(&Audio::MeMonitorInternal, this));
+  audio_runner_ = std::make_unique<base::ThreadWorker>();
+  audio_runner_->Start(base::RunLoop::MessagePumpType::Worker);
+  audio_runner_->WaitUntilStart();
+
+  // Running audio module on audio thread
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::InitAudioDeviceInternal, base::Unretained(this)));
+  audio_runner_->task_runner()->WaitForSync();
 }
 
 Audio::~Audio() {
   if (!output_device_)
     return;
 
-  quit_flag_ = true;
-  me_watcher_->join();
-
-  DestroyAudioDeviceInternal();
+  audio_runner_->task_runner()->PostTask(base::BindOnce(
+      &Audio::DestroyAudioDeviceInternal, base::Unretained(this)));
+  audio_runner_->task_runner()->WaitForSync();
 }
 
 void Audio::SetupMidi() {
   // TODO: unsupport MIDI
+  LOG(WARNING) << "[Content] Unsupport MIDI device setup.";
 }
 
 void Audio::BGMPlay(const std::string& filename,
                     int volume,
                     int pitch,
                     double pos) {
-  if (!output_device_) {
-    LOG(WARNING) << "[Content] Warning: try to play stream on disabled device.";
+  if (!output_device_)
     return;
-  }
 
-  if (!bgm_.source || bgm_.filename != filename) {
-    bgm_.source.reset(new SoLoud::Wav());
-    bgm_.filename = filename;
-    file_reader_->OpenRead(
-        filename,
-        base::BindRepeating(
-            [](SoLoud::Wav* source, SDL_IOStream* ops, const std::string& ext) {
-              size_t out_size;
-              uint8_t* mem = static_cast<uint8_t*>(
-                  read_mem_file(ops, &out_size, SDL_TRUE));
-              return source->loadMem(mem, out_size) == SoLoud::SO_NO_ERROR;
-            },
-            bgm_.source.get()));
-    bgm_.source->setLooping(true);
-    bgm_.play_handle = core_.play(*bgm_.source, volume / 100.0f);
-  } else
-    core_.setVolume(bgm_.play_handle, volume / 100.0f);
-
-  core_.setRelativePlaySpeed(bgm_.play_handle, pitch / 100.0f);
-  if (pos)
-    core_.seek(bgm_.play_handle, pos);
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::PlaySlotInternal, base::Unretained(this), &bgm_,
+                     filename, volume, pitch, pos));
 }
 
 void Audio::BGMStop() {
   if (!output_device_)
     return;
 
-  bgm_.source.reset();
-  bgm_.filename.clear();
-  bgm_.play_handle = 0;
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::StopSlotInternal, base::Unretained(this), &bgm_));
 }
 
 void Audio::BGMFade(int time) {
   if (!output_device_)
     return;
 
-  core_.fadeVolume(bgm_.play_handle, 0, time * 0.001);
-  core_.scheduleStop(bgm_.play_handle, time * 0.001);
+  audio_runner_->task_runner()->PostTask(base::BindOnce(
+      &Audio::FadeSlotInternal, base::Unretained(this), &bgm_, time));
 }
 
 double Audio::BGMPos() {
   if (!output_device_)
     return 0.0;
 
-  return core_.getStreamPosition(bgm_.play_handle);
+  double pos = 0.0;
+  audio_runner_->task_runner()->PostTask(base::BindOnce(
+      &Audio::GetSlotPosInternal, base::Unretained(this), &bgm_, &pos));
+  audio_runner_->task_runner()->WaitForSync();
+
+  return pos;
 }
 
 void Audio::BGSPlay(const std::string& filename,
                     int volume,
                     int pitch,
                     double pos) {
-  if (!output_device_) {
-    LOG(WARNING) << "[Content] Warning: try to play stream on disabled device.";
+  if (!output_device_)
     return;
-  }
 
-  if (!bgs_.source || bgs_.filename != filename) {
-    bgs_.source.reset(new SoLoud::Wav());
-    bgs_.filename = filename;
-    file_reader_->OpenRead(
-        filename,
-        base::BindRepeating(
-            [](SoLoud::Wav* source, SDL_IOStream* ops, const std::string& ext) {
-              size_t out_size;
-              uint8_t* mem = static_cast<uint8_t*>(
-                  read_mem_file(ops, &out_size, SDL_TRUE));
-              return source->loadMem(mem, out_size) == SoLoud::SO_NO_ERROR;
-            },
-            bgs_.source.get()));
-    bgs_.source->setLooping(true);
-    bgs_.play_handle = core_.play(*bgs_.source, volume / 100.0f);
-  } else
-    core_.setVolume(bgs_.play_handle, volume / 100.0f);
-
-  core_.setRelativePlaySpeed(bgs_.play_handle, pitch / 100.0f);
-  if (pos)
-    core_.seek(bgs_.play_handle, pos);
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::PlaySlotInternal, base::Unretained(this), &bgs_,
+                     filename, volume, pitch, pos));
 }
 
 void Audio::BGSStop() {
   if (!output_device_)
     return;
 
-  bgs_.source.reset();
-  bgs_.filename.clear();
-  bgs_.play_handle = 0;
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::StopSlotInternal, base::Unretained(this), &bgs_));
 }
 
 void Audio::BGSFade(int time) {
   if (!output_device_)
     return;
 
-  core_.fadeVolume(bgs_.play_handle, 0, time * 0.001);
-  core_.scheduleStop(bgs_.play_handle, time * 0.001);
+  audio_runner_->task_runner()->PostTask(base::BindOnce(
+      &Audio::FadeSlotInternal, base::Unretained(this), &bgs_, time));
 }
 
 double Audio::BGSPos() {
   if (!output_device_)
     return 0.0;
 
-  return core_.getStreamPosition(bgs_.play_handle);
+  double pos = 0.0;
+  audio_runner_->task_runner()->PostTask(base::BindOnce(
+      &Audio::GetSlotPosInternal, base::Unretained(this), &bgs_, &pos));
+  audio_runner_->task_runner()->WaitForSync();
+
+  return pos;
 }
 
 void Audio::MEPlay(const std::string& filename, int volume, int pitch) {
-  if (!output_device_) {
-    LOG(WARNING) << "[Content] Warning: try to play stream on disabled device.";
+  if (!output_device_)
     return;
-  }
 
-  if (!me_.source || me_.filename != filename) {
-    me_.source.reset(new SoLoud::Wav());
-    me_.filename = filename;
-    file_reader_->OpenRead(
-        filename,
-        base::BindRepeating(
-            [](SoLoud::Wav* source, SDL_IOStream* ops, const std::string& ext) {
-              size_t out_size;
-              uint8_t* mem = static_cast<uint8_t*>(
-                  read_mem_file(ops, &out_size, SDL_TRUE));
-              return source->loadMem(mem, out_size) == SoLoud::SO_NO_ERROR;
-            },
-            me_.source.get()));
-    me_.play_handle = core_.play(*me_.source, volume / 100.0f);
-  } else
-    core_.setVolume(me_.play_handle, volume / 100.0f);
-
-  core_.setRelativePlaySpeed(me_.play_handle, pitch / 100.0f);
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::PlaySlotInternal, base::Unretained(this), &me_,
+                     filename, volume, pitch, 0.0));
 }
 
 void Audio::MEStop() {
   if (!output_device_)
     return;
 
-  me_.source.reset();
-  me_.filename.clear();
-  me_.play_handle = 0;
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::StopSlotInternal, base::Unretained(this), &me_));
 }
 
 void Audio::MEFade(int time) {
   if (!output_device_)
     return;
 
-  core_.fadeVolume(me_.play_handle, 0, time * 0.001);
-  core_.scheduleStop(me_.play_handle, time * 0.001);
+  audio_runner_->task_runner()->PostTask(base::BindOnce(
+      &Audio::FadeSlotInternal, base::Unretained(this), &me_, time));
 }
 
 void Audio::SEPlay(const std::string& filename, int volume, int pitch) {
   if (!output_device_)
     return;
 
-  auto cache = se_cache_.find(filename);
-  if (cache != se_cache_.end()) {
-    // From cache
-    auto handle = core_.play(*cache->second);
-    core_.setVolume(handle, volume / 100.0f);
-    core_.setRelativePlaySpeed(handle, pitch / 100.0f);
-  } else {
-    // Load from filesystem
-    std::unique_ptr<SoLoud::Wav> source(new SoLoud::Wav());
-    file_reader_->OpenRead(
-        filename,
-        base::BindRepeating(
-            [](SoLoud::Wav* source, SDL_IOStream* ops, const std::string& ext) {
-              size_t out_size;
-              uint8_t* mem = static_cast<uint8_t*>(
-                  read_mem_file(ops, &out_size, SDL_TRUE));
-              return source->loadMem(mem, out_size) == SoLoud::SO_NO_ERROR;
-            },
-            source.get()));
-
-    // Play new stream
-    auto handle = core_.play(*source);
-    core_.setVolume(handle, volume / 100.0f);
-    core_.setRelativePlaySpeed(handle, pitch / 100.0f);
-    se_cache_.insert(std::make_pair(filename, std::move(source)));
-  }
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::EmitSoundInternal, base::Unretained(this),
+                     filename, volume, pitch));
 }
 
 void Audio::SEStop() {
   if (!output_device_)
     return;
 
-  for (auto& it : se_cache_)
-    core_.stopAudioSource(*it.second);
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::StopEmitInternal, base::Unretained(this)));
 }
 
 void Audio::Reset() {
   if (!output_device_)
     return;
 
-  core_.stopAll();
-
-  bgm_.source.reset();
-  bgm_.filename.clear();
-  bgm_.play_handle = 0;
-
-  bgs_.source.reset();
-  bgs_.filename.clear();
-  bgs_.play_handle = 0;
-
-  me_.source.reset();
-  me_.filename.clear();
-  me_.play_handle = 0;
-
-  se_cache_.clear();
+  audio_runner_->task_runner()->PostTask(
+      base::BindOnce(&Audio::ResetInternal, base::Unretained(this)));
+  audio_runner_->task_runner()->WaitForSync();
 }
 
 void Audio::InitAudioDeviceInternal() {
-  if (config_->disable_audio()) {
-    LOG(INFO) << "Disabled audio output";
-    output_device_ = 0;
-    return;
-  }
+  LOG(INFO) << "[Content] Running audio thread.";
 
   soloud_spec_.freq = 44100;
   soloud_spec_.format = SDL_AUDIO_F32;
@@ -382,11 +305,19 @@ void Audio::InitAudioDeviceInternal() {
     return;
   }
 
-  if (core_.init(soloud_sdlbackend_init, this, 0, 0) != SoLoud::SO_NO_ERROR)
+  if (core_.init(soloud_sdlbackend_init, this, 0, 0) != SoLoud::SO_NO_ERROR) {
     LOG(INFO) << "[Content] Failed to initialize audio core.";
+    return;
+  }
+
+  // Me playing monitor thread
+  me_watcher_.reset(new std::jthread(&Audio::MeMonitorInternal, this));
 }
 
 void Audio::DestroyAudioDeviceInternal() {
+  quit_flag_ = true;
+  me_watcher_->join();
+
   SDL_CloseAudioDevice(output_device_);
   LOG(INFO) << "[Content] Finalize audio core.";
 }
@@ -407,6 +338,117 @@ void Audio::MeMonitorInternal() {
 
     SDL_Delay(10);
   }
+}
+
+void Audio::PlaySlotInternal(SlotInfo* slot,
+                             const std::string& filename,
+                             int volume,
+                             int pitch,
+                             double pos) {
+  if (!core_.isValidVoiceHandle(slot->play_handle) || !slot->source ||
+      slot->filename != filename) {
+    slot->source.reset(new SoLoud::Wav());
+    slot->filename = filename;
+
+    try {
+      file_reader_->OpenRead(filename,
+                             base::BindRepeating(
+                                 [](SoLoud::Wav* source, SDL_IOStream* ops,
+                                    const std::string& ext) {
+                                   size_t out_size;
+                                   uint8_t* mem = static_cast<uint8_t*>(
+                                       read_mem_file(ops, &out_size, SDL_TRUE));
+                                   return source->loadMem(mem, out_size) ==
+                                          SoLoud::SO_NO_ERROR;
+                                 },
+                                 slot->source.get()));
+    } catch (const base::Exception& exception) {
+      LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
+    }
+
+    slot->source->setLooping(true);
+    slot->play_handle = core_.play(*slot->source, volume / 100.0f);
+  } else
+    core_.setVolume(slot->play_handle, volume / 100.0f);
+
+  core_.setRelativePlaySpeed(slot->play_handle, pitch / 100.0f);
+  if (pos)
+    core_.seek(slot->play_handle, pos);
+}
+
+void Audio::StopSlotInternal(SlotInfo* slot) {
+  slot->source.reset();
+  slot->filename.clear();
+  slot->play_handle = 0;
+}
+
+void Audio::FadeSlotInternal(SlotInfo* slot, int time) {
+  core_.fadeVolume(slot->play_handle, 0, time * 0.001);
+  core_.scheduleStop(slot->play_handle, time * 0.001);
+}
+
+void Audio::GetSlotPosInternal(SlotInfo* slot, double* out) {
+  *out = core_.getStreamPosition(slot->play_handle);
+}
+
+void Audio::EmitSoundInternal(const std::string& filename,
+                              int volume,
+                              int pitch) {
+  auto cache = se_cache_.find(filename);
+  if (cache != se_cache_.end()) {
+    // From cache
+    auto handle = core_.play(*cache->second);
+    core_.setVolume(handle, volume / 100.0f);
+    core_.setRelativePlaySpeed(handle, pitch / 100.0f);
+  } else {
+    // Load from filesystem
+    std::unique_ptr<SoLoud::Wav> source(new SoLoud::Wav());
+
+    try {
+      file_reader_->OpenRead(filename,
+                             base::BindRepeating(
+                                 [](SoLoud::Wav* source, SDL_IOStream* ops,
+                                    const std::string& ext) {
+                                   size_t out_size;
+                                   uint8_t* mem = static_cast<uint8_t*>(
+                                       read_mem_file(ops, &out_size, SDL_TRUE));
+                                   return source->loadMem(mem, out_size) ==
+                                          SoLoud::SO_NO_ERROR;
+                                 },
+                                 source.get()));
+    } catch (const base::Exception& exception) {
+      LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
+    }
+
+    // Play new stream
+    auto handle = core_.play(*source);
+    core_.setVolume(handle, volume / 100.0f);
+    core_.setRelativePlaySpeed(handle, pitch / 100.0f);
+    se_cache_.insert(std::make_pair(filename, std::move(source)));
+  }
+}
+
+void Audio::StopEmitInternal() {
+  for (auto& it : se_cache_)
+    core_.stopAudioSource(*it.second);
+}
+
+void Audio::ResetInternal() {
+  core_.stopAll();
+
+  bgm_.source.reset();
+  bgm_.filename.clear();
+  bgm_.play_handle = 0;
+
+  bgs_.source.reset();
+  bgs_.filename.clear();
+  bgs_.play_handle = 0;
+
+  me_.source.reset();
+  me_.filename.clear();
+  me_.play_handle = 0;
+
+  se_cache_.clear();
 }
 
 }  // namespace content

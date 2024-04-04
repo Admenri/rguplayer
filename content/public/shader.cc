@@ -31,7 +31,6 @@ void Shader::Compile(const std::string& vertex_shader,
                      const std::string& fragment_shader) {
   location_cache_.clear();
   bind_textures_.clear();
-  bind_textures_.resize(screen()->renderer()->fragment_texture_units());
 
   CompileInternal(vertex_shader, fragment_shader);
 }
@@ -305,9 +304,13 @@ void Shader::SetParam3Internal(const std::string& uniform,
 void Shader::SetParam4Internal(const std::string& uniform,
                                scoped_refptr<Bitmap> texture,
                                int index) {
-  auto& unit = bind_textures_[index];
-  unit.texture = texture;
-  unit.location = GetUniformLocation(uniform);
+  TextureUnit tex_unit;
+
+  tex_unit.texture = texture;
+  tex_unit.location = GetUniformLocation(uniform);
+  tex_unit.unit = index;
+
+  bind_textures_.push_back(std::move(tex_unit));
 }
 
 void Shader::BindShader() {
@@ -318,19 +321,18 @@ void Shader::SetInternalUniform() {
   // Apply viewport projection
   base::Vec2 viewport_size = renderer::GSM.states.viewport.Current().Size();
   GLint projection_location = GetUniformLocation("u_projectionMat");
-  const float a = 2.f / viewport_size.x;
-  const float b = 2.f / viewport_size.y;
-  const float c = -2.f;
+  const float a = 2.0f / viewport_size.x;
+  const float b = 2.0f / viewport_size.y;
+  const float c = -2.0f;
 
   GLfloat mat[] = {a, 0, 0, 0, 0, b, 0, 0, 0, 0, c, 0, -1, -1, -1, 1};
   renderer::GL.UniformMatrix4fv(projection_location, 1, GL_FALSE, mat);
 
   // Apply bind texture unit
-  for (int unit = 0; unit < bind_textures_.size(); ++unit) {
-    auto& it = bind_textures_[unit];
-    if (it.location >= 0 && it.texture && !it.texture->IsDisposed())
+  for (auto& it : bind_textures_) {
+    if (it.location >= 0 && (it.texture && !it.texture->IsDisposed()))
       renderer::GLES2ShaderBase::SetTexture(
-          it.location, it.texture->GetTexture().tex.gl, unit);
+          it.location, it.texture->GetTexture().tex.gl, it.unit);
   }
 }
 
