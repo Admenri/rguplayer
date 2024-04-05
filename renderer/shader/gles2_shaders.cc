@@ -681,14 +681,9 @@ GeometryShader::GeometryShader() {
       shader::FromRawData(shader::geometry_frag, shader::geometry_frag_len),
       "base_frag");
 
-  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
   u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
   u_texture_ = GL.GetUniformLocation(program(), "u_texture");
   u_textureEmptyFlag_ = GL.GetUniformLocation(program(), "u_textureEmptyFlag");
-}
-
-void GeometryShader::SetTextureSize(const base::Vec2& tex_size) {
-  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
 }
 
 void GeometryShader::SetTransOffset(const base::Vec2& offset) {

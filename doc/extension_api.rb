@@ -130,11 +130,11 @@ resize(Integer size)
 set_position(Numeric index, Integer x, Integer y, Numeric z, Numeric w)
 为编号为index的顶点设置属性
 总顶点容量为三角形容量x3
-坐标中的x, y是屏幕坐标，会自动变换为RGSS的坐标系
+坐标中的x, y是屏幕坐标，比如写100，视口是200，会自动换算成0.5
 坐标中的z, w是glsl中的坐标，一般z为0，w为1
 
 set_texcoord(Numeric index, Integer tex_x, Integer tex_y)
-设置顶点的纹理坐标
+设置顶点的纹理坐标（0.0 - 1.0）
 
 set_color(Numeric index, Color color)
 设置顶点的颜色数据
@@ -192,9 +192,11 @@ ZERO ONE SRC_COLOR ONE_MINUS_SRC_COLOR SRC_ALPHA ONE_MINUS_SRC_ALPHA DST_ALPHA O
 注意以下Shader中的uniform变量已被引擎内部使用，
 请不要重复设置：
 ### Geometry - VertexShader:
+u_projectionMat是引擎提供的视口透视矩阵，无需用户提供
+u_transOffset是视口xy相对屏幕左上角的偏移
+
 uniform mat4 u_projectionMat;
 
-uniform vec2 u_texSize;
 uniform vec2 u_transOffset;
 
 attribute vec4 a_position;
@@ -207,11 +209,14 @@ varying vec4 v_color;
 void main() {
 	gl_Position = u_projectionMat * vec4(a_position.xy + u_transOffset, a_position.z, a_position.w);
 
-	v_texCoord = a_texCoord * u_texSize;
+	v_texCoord = a_texCoord;
 	v_color = a_color;
 }
 
 ### Geometry - FragmentShader
+其中u_texture是Geometry设置的bitmap属性
+u_textureEmptyFlag会根据用户是否提供bitmap选择为0或1
+
 precision mediump float;
 
 uniform sampler2D u_texture;
@@ -229,6 +234,10 @@ void main() {
 }
 
 ### Viewport - VertexShader
+u_projectionMat是引擎提供的视口透视矩阵，无需用户提供
+u_texSize是片段着色器u_texture的大小的倒数
+u_transOffset是视口xy相对屏幕左上角的偏移
+
 uniform mat4 u_projectionMat;
 
 uniform vec2 u_texSize;
@@ -246,6 +255,9 @@ void main() {
 }
 
 ### Viewport - FragmentShader
+其中u_texture是目标视口内的图形快照，
+处理后重新画回原位置实现视口特效
+
 precision mediump float;
 
 uniform sampler2D u_texture;

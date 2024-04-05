@@ -10,8 +10,8 @@ Geometry::Geometry(scoped_refptr<Graphics> screen,
                    scoped_refptr<Viewport> viewport)
     : GraphicElement(screen),
       Disposable(screen),
-      ViewportChild(screen, viewport) {
-  triangle_count_ = 64;
+      ViewportChild(screen, viewport),
+      triangle_count_(64) {
   triangle_vertices_.resize(triangle_count_ * 3);
   buffer_need_update_ = true;
 }
@@ -116,13 +116,8 @@ void Geometry::Composite() {
 
     if (texture_valid) {
       GLint texture_location = shader_program_->GetUniformLocation("u_texture");
-      GLint texture_size_location =
-          shader_program_->GetUniformLocation("u_texSize");
-
       renderer::GLES2ShaderBase::SetTexture(texture_location,
                                             bitmap_->GetTexture().tex.gl, 1);
-      renderer::GL.Uniform2f(texture_size_location, bitmap_->GetWidth(),
-                             bitmap_->GetHeight());
     }
   } else {
     auto& shader = renderer::GSM.shaders()->geometry;
@@ -130,10 +125,8 @@ void Geometry::Composite() {
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransOffset(parent_rect().GetRealOffset());
     shader.SetTextureEmptyFlag(texture_valid ? 0.0f : 1.0f);
-    if (texture_valid) {
+    if (texture_valid)
       shader.SetTexture(bitmap_->GetTexture().tex);
-      shader.SetTextureSize(bitmap_->GetSize());
-    }
   }
 
   renderer::GSM.states.blend.Push(true);
