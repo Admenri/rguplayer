@@ -9,8 +9,6 @@
 
 namespace content {
 
-static char kGLESPrecisionDefine[] = "precision mediump float;";
-
 Shader::Shader(scoped_refptr<Graphics> screen)
     : GraphicElement(screen),
       Disposable(screen),
@@ -33,6 +31,13 @@ void Shader::Compile(const std::string& vertex_shader,
   bind_textures_.clear();
 
   CompileInternal(vertex_shader, fragment_shader);
+}
+
+void Shader::Reset() {
+  location_cache_.clear();
+  bind_textures_.clear();
+
+  ResetInternal();
 }
 
 void Shader::SetBlend(GLenum mode,
@@ -100,14 +105,6 @@ void Shader::CompileInternal(const std::string& vertex_shader,
     std::vector<const GLchar*> shader_srcs;
     std::vector<GLint> shader_sizes;
 
-    // Common header source
-    if (renderer::GSM.enable_es_shaders()) {
-      std::string gles_define(kGLESPrecisionDefine);
-      shader_srcs.push_back(
-          reinterpret_cast<const GLchar*>(gles_define.c_str()));
-      shader_sizes.push_back(static_cast<GLint>(gles_define.size()));
-    }
-
     // Setup shader source
     shader_srcs.push_back(
         reinterpret_cast<const GLchar*>(shader_source.c_str()));
@@ -141,6 +138,20 @@ void Shader::CompileInternal(const std::string& vertex_shader,
   if (!compile_shader(frag_shader_, fragment_shader))
     return;
 
+  // Link program
+  LinkProgramInternal();
+}
+
+void Shader::ResetInternal() {
+  if (program_)
+    renderer::GL.DeleteProgram(program_);
+  program_ = renderer::GL.CreateProgram();
+
+  // Link program
+  LinkProgramInternal();
+}
+
+void Shader::LinkProgramInternal() {
   renderer::GL.AttachShader(program_, vertex_shader_);
   renderer::GL.AttachShader(program_, frag_shader_);
 
@@ -304,13 +315,17 @@ void Shader::SetParam3Internal(const std::string& uniform,
 void Shader::SetParam4Internal(const std::string& uniform,
                                scoped_refptr<Bitmap> texture,
                                int index) {
-  TextureUnit tex_unit;
-
-  tex_unit.texture = texture;
-  tex_unit.location = GetUniformLocation(uniform);
-  tex_unit.unit = index;
-
-  bind_textures_.push_back(std::move(tex_unit));
+  const GLint location = GetUniformLocation(uniform);
+  auto it = bind_textures_.find(index);
+  if (it != bind_textures_.end()) {
+    it->second.texture = texture;
+    it->second.location = location;
+  } else {
+    TextureUnit tex_unit;
+    tex_unit.texture = texture;
+    tex_unit.location = location;
+    bind_textures_.emplace(index, std::move(tex_unit));
+  }
 }
 
 void Shader::BindShader() {
@@ -330,9 +345,11 @@ void Shader::SetInternalUniform() {
 
   // Apply bind texture unit
   for (auto& it : bind_textures_) {
-    if (it.location >= 0 && (it.texture && !it.texture->IsDisposed()))
+    auto& tex_unit = it.second;
+    if (tex_unit.location >= 0 &&
+        (tex_unit.texture && !tex_unit.texture->IsDisposed()))
       renderer::GLES2ShaderBase::SetTexture(
-          it.location, it.texture->GetTexture().tex.gl, it.unit);
+          tex_unit.location, tex_unit.texture->GetTexture().tex.gl, it.first);
   }
 }
 

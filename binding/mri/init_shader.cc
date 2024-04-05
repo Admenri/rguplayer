@@ -21,15 +21,32 @@ MRI_METHOD(shader_initialize) {
   shader->AddRef();
   MriSetStructData(self, shader.get());
 
+  VALUE tex_pool = rb_hash_new();
+  rb_iv_set(self, "_textures", tex_pool);
+
   return self;
 }
 
 MRI_METHOD(shader_compile) {
   scoped_refptr<content::Shader> obj = MriGetStructData<content::Shader>(self);
 
+  VALUE tex_pool = rb_iv_get(self, "_textures");
+  rb_hash_clear(tex_pool);
+
   std::string vert, frag;
   MriParseArgsTo(argc, argv, "ss", &vert, &frag);
-  obj->Compile(vert, frag);
+  MRI_GUARD(obj->Compile(vert, frag););
+
+  return self;
+}
+
+MRI_METHOD(shader_reset) {
+  scoped_refptr<content::Shader> obj = MriGetStructData<content::Shader>(self);
+
+  VALUE tex_pool = rb_iv_get(self, "_textures");
+  rb_hash_clear(tex_pool);
+
+  MRI_GUARD(obj->Reset(););
 
   return self;
 }
@@ -39,13 +56,15 @@ MRI_METHOD(shader_set_blend) {
 
   int mode, sRGB, dRGB, sAlpha, dAlpha;
   MriParseArgsTo(argc, argv, "iiiii", &mode, &sRGB, &dRGB, &sAlpha, &dAlpha);
-  obj->SetBlend(mode, sRGB, dRGB, sAlpha, dAlpha);
+  MRI_GUARD(obj->SetBlend(mode, sRGB, dRGB, sAlpha, dAlpha););
 
   return self;
 }
 
 MRI_METHOD(shader_set_param) {
   scoped_refptr<content::Shader> obj = MriGetStructData<content::Shader>(self);
+
+  MRI_GUARD_BEGIN;
 
   std::string uniform;
   if (argc == 3) {
@@ -69,6 +88,10 @@ MRI_METHOD(shader_set_param) {
       if (!NIL_P(bitmap))
         texture = MriCheckStructData<content::Bitmap>(bitmap, kBitmapDataType);
       obj->SetParam(uniform, texture, unit);
+
+      // Add ruby ref
+      VALUE tex_pool = rb_iv_get(self, "_textures");
+      rb_hash_aset(tex_pool, INT2FIX(unit), bitmap);
     }
   } else {
     // Matrix param
@@ -87,6 +110,8 @@ MRI_METHOD(shader_set_param) {
     obj->SetParam(uniform, matrix_data, element, transpose);
   }
 
+  MRI_GUARD_END;
+
   return self;
 }
 
@@ -98,6 +123,7 @@ void InitShaderBinding() {
 
   MriDefineMethod(klass, "initialize", shader_initialize);
   MriDefineMethod(klass, "compile", shader_compile);
+  MriDefineMethod(klass, "reset", shader_reset);
   MriDefineMethod(klass, "set_blend", shader_set_blend);
   MriDefineMethod(klass, "set_param", shader_set_param);
 

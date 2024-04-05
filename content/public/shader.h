@@ -27,6 +27,7 @@ class Shader : public base::RefCounted<Shader>,
 
   void Compile(const std::string& vertex_shader,
                const std::string& fragment_shader);
+  void Reset();
   void SetBlend(GLenum mode,
                 GLenum srcRGB,
                 GLenum dstRGB,
@@ -57,6 +58,8 @@ class Shader : public base::RefCounted<Shader>,
 
   void CompileInternal(const std::string& vertex_shader,
                        const std::string& fragment_shader);
+  void ResetInternal();
+  void LinkProgramInternal();
   void SetParam1Internal(const std::string& uniform,
                          const std::vector<float>& params,
                          int count);
@@ -80,10 +83,9 @@ class Shader : public base::RefCounted<Shader>,
   struct TextureUnit {
     scoped_refptr<Bitmap> texture = nullptr;
     GLint location = -1;
-    GLint unit = 0;
   };
 
-  std::vector<TextureUnit> bind_textures_;
+  std::unordered_map<int, TextureUnit> bind_textures_;
   GLuint vertex_shader_, frag_shader_, program_;
   GLenum equal_mode_, srcRGB_, dstRGB_, srcAlpha_, dstAlpha_;
   std::unordered_map<std::string, GLint> location_cache_;

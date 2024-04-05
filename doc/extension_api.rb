@@ -160,6 +160,10 @@ compile(String vertex_shader, String fragment_shader)
 其中的错误信息会在控制台输出，编译错误时不会影响游戏逻辑继续运行
 可以重复执行，重新编译后会重置当前着色器设置的参数
 
+reset
+重置Shader程序，清除所有已设置的uniform变量，
+包括纹理的Bitmap也会释放（不会dispose）
+
 set_blend(Integer blend_equal_mode, Integer srcRGB, Integer dstRGB, Integer srcAlpha, Integer dstAlpha)
 设置着色器的合成方式，可设置的参数参考文档：
 如果没有设置，则按默认的正常合成方式合成图像
@@ -185,7 +189,9 @@ ZERO ONE SRC_COLOR ONE_MINUS_SRC_COLOR SRC_ALPHA ONE_MINUS_SRC_ALPHA DST_ALPHA O
 内置的OpenGL常量，具体参考官方文档设置合成方式
 
 以下给出引擎内置的Shader供用户参考：
-## Geometry - VertexShader:
+注意以下Shader中的uniform变量已被引擎内部使用，
+请不要重复设置：
+### Geometry - VertexShader:
 uniform mat4 u_projectionMat;
 
 uniform vec2 u_texSize;
@@ -205,7 +211,9 @@ void main() {
 	v_color = a_color;
 }
 
-## Geometry - FragmentShader
+### Geometry - FragmentShader
+precision mediump float;
+
 uniform sampler2D u_texture;
 uniform float u_textureEmptyFlag;
 
@@ -220,7 +228,7 @@ void main() {
 	gl_FragColor = frag;
 }
 
-## Viewport - VertexShader
+### Viewport - VertexShader
 uniform mat4 u_projectionMat;
 
 uniform vec2 u_texSize;
@@ -237,7 +245,9 @@ void main() {
 	v_texCoord = a_texCoord * u_texSize;
 }
 
-## Viewport - FragmentShader
+### Viewport - FragmentShader
+precision mediump float;
+
 uniform sampler2D u_texture;
 
 uniform vec4 u_color;
