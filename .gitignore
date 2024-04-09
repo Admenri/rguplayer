@@ -353,3 +353,6 @@ FodyWeavers.xsd
 
 # Windows CRuby
 /third_party/ruby/
+
+# Private crypto
+/crypto/

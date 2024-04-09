@@ -8,6 +8,10 @@
 
 #include "physfs.h"
 
+#if USE_ADMENRI_ARCHIVER
+#include "crypto/admenri_archiver.h"
+#endif  // USE_ADMENRI_ARCHIVER
+
 namespace filesystem {
 
 namespace {
@@ -174,6 +178,16 @@ Filesystem::Filesystem(const std::string& argv0) {
   } else {
     LOG(INFO) << "[Filesystem] BasePath: " << PHYSFS_getBaseDir();
   }
+
+#if USE_ADMENRI_ARCHIVER
+  if (!PHYSFS_registerArchiver(&kAdmenriArchiverADP)) {
+    LOG(INFO)
+        << "[Filesystem] Failed to load register Official ADP crypted library.";
+  } else {
+    LOG(INFO)
+        << "[Filesystem] [Official] Use Admenri ADP crypted archiver library.";
+  }
+#endif  //! USE_ADMENRI_ARCHIVER
 }
 
 Filesystem::~Filesystem() {
