@@ -54,11 +54,15 @@ class Audio final : public base::RefCounted<Audio> {
 
   void Reset();
 
+  void SetGlobalVolume(int volume = 100);
+
   SDL_AudioDeviceID& output_device() { return output_device_; }
   SDL_AudioStream*& soloud_stream() { return soloud_stream_; }
   SDL_AudioSpec& soloud_spec() { return soloud_spec_; }
 
  private:
+  friend class Stream;
+
   struct SlotInfo {
     std::unique_ptr<SoLoud::Wav> source;
     std::string filename;
@@ -73,7 +77,8 @@ class Audio final : public base::RefCounted<Audio> {
                         const std::string& filename,
                         int volume = 100,
                         int pitch = 100,
-                        double pos = 0);
+                        double pos = 0,
+                        bool loop = true);
   void StopSlotInternal(SlotInfo* slot);
   void FadeSlotInternal(SlotInfo* slot, int time);
   void GetSlotPosInternal(SlotInfo* slot, double* out);
@@ -101,6 +106,8 @@ class Audio final : public base::RefCounted<Audio> {
   scoped_refptr<CoreConfigure> config_;
   std::unique_ptr<std::jthread> me_watcher_;
   std::atomic_bool quit_flag_;
+
+  base::WeakPtrFactory<Audio> weak_ptr_factory_{this};
 };
 
 }  // namespace content

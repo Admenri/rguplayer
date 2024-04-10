@@ -159,6 +159,13 @@ MRI_METHOD(graphics_play_movie) {
   return Qnil;
 }
 
+MRI_METHOD(graphics_reset) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+  screen->Reset();
+
+  return Qnil;
+}
+
 MRI_METHOD(graphics_resize_window) {
   scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
   int w, h;
@@ -188,6 +195,7 @@ void InitGraphicsBinding() {
   MriDefineModuleFunction(module, "height", graphics_height);
   MriDefineModuleFunction(module, "resize_screen", graphics_resize_screen);
   MriDefineModuleFunction(module, "play_movie", graphics_play_movie);
+  MriDefineModuleFunction(module, "__reset__", graphics_reset);
 
   MriDefineModuleAttr(module, "frame_rate", graphics, FrameRate);
   MriDefineModuleAttr(module, "frame_count", graphics, FrameCount);

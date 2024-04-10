@@ -133,6 +133,23 @@ MRI_METHOD(audio_se_stop) {
   return Qnil;
 }
 
+MRI_METHOD(audio_reset) {
+  scoped_refptr<content::Audio> audio = MriGetGlobalRunner()->audio();
+  audio->Reset();
+
+  return Qnil;
+}
+
+MRI_METHOD(audio_set_volume) {
+  scoped_refptr<content::Audio> audio = MriGetGlobalRunner()->audio();
+
+  int volume;
+  MriParseArgsTo(argc, argv, "i", &volume);
+  audio->SetGlobalVolume(volume);
+
+  return Qnil;
+}
+
 void InitAudioBinding() {
   VALUE module = rb_define_module("Audio");
 
@@ -142,18 +159,18 @@ void InitAudioBinding() {
   MriDefineModuleFunction(module, "bgm_stop", audio_bgm_stop);
   MriDefineModuleFunction(module, "bgm_fade", audio_bgm_fade);
   MriDefineModuleFunction(module, "bgm_pos", audio_bgm_pos);
-
   MriDefineModuleFunction(module, "bgs_play", audio_bgs_play);
   MriDefineModuleFunction(module, "bgs_stop", audio_bgs_stop);
   MriDefineModuleFunction(module, "bgs_fade", audio_bgs_fade);
   MriDefineModuleFunction(module, "bgs_pos", audio_bgs_pos);
-
   MriDefineModuleFunction(module, "me_play", audio_me_play);
   MriDefineModuleFunction(module, "me_stop", audio_me_stop);
   MriDefineModuleFunction(module, "me_fade", audio_me_fade);
-
   MriDefineModuleFunction(module, "se_play", audio_se_play);
   MriDefineModuleFunction(module, "se_stop", audio_se_stop);
+  MriDefineModuleFunction(module, "__reset__", audio_reset);
+
+  MriDefineModuleFunction(module, "set_volume", audio_set_volume);
 }
 
 }  // namespace binding

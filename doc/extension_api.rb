@@ -284,7 +284,7 @@ void main() {
 }
 
 ## Module - Graphics
-resize_screen(Ineter width, Integer height)
+resize_screen(Integer width, Integer height)
 调整游戏窗口大小并居中，
 这里并非调整游戏画面的分辨率而是窗口的缩放大小
 
@@ -299,3 +299,7 @@ window_handle -> Numeric
 
 frame_skip frame_skip=
 设置是否允许跳帧
+
+## Module - Audio
+set_volume(Integer volume = 100)
+设置游戏的全局音量

@@ -168,7 +168,7 @@ void Audio::BGMPlay(const std::string& filename,
 
   audio_runner_->task_runner()->PostTask(
       base::BindOnce(&Audio::PlaySlotInternal, base::Unretained(this), &bgm_,
-                     filename, volume, pitch, pos));
+                     filename, volume, pitch, pos, true));
 }
 
 void Audio::BGMStop() {
@@ -208,7 +208,7 @@ void Audio::BGSPlay(const std::string& filename,
 
   audio_runner_->task_runner()->PostTask(
       base::BindOnce(&Audio::PlaySlotInternal, base::Unretained(this), &bgs_,
-                     filename, volume, pitch, pos));
+                     filename, volume, pitch, pos, true));
 }
 
 void Audio::BGSStop() {
@@ -245,7 +245,7 @@ void Audio::MEPlay(const std::string& filename, int volume, int pitch) {
 
   audio_runner_->task_runner()->PostTask(
       base::BindOnce(&Audio::PlaySlotInternal, base::Unretained(this), &me_,
-                     filename, volume, pitch, 0.0));
+                     filename, volume, pitch, 0, false));
 }
 
 void Audio::MEStop() {
@@ -288,6 +288,10 @@ void Audio::Reset() {
   audio_runner_->task_runner()->PostTask(
       base::BindOnce(&Audio::ResetInternal, base::Unretained(this)));
   audio_runner_->task_runner()->WaitForSync();
+}
+
+void Audio::SetGlobalVolume(int volume) {
+  core_.setGlobalVolume(volume);
 }
 
 void Audio::InitAudioDeviceInternal() {
@@ -344,7 +348,8 @@ void Audio::PlaySlotInternal(SlotInfo* slot,
                              const std::string& filename,
                              int volume,
                              int pitch,
-                             double pos) {
+                             double pos,
+                             bool loop) {
   if (!core_.isValidVoiceHandle(slot->play_handle) || !slot->source ||
       slot->filename != filename) {
     slot->source.reset(new SoLoud::Wav());
@@ -366,7 +371,7 @@ void Audio::PlaySlotInternal(SlotInfo* slot,
       LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
     }
 
-    slot->source->setLooping(true);
+    slot->source->setLooping(loop);
     slot->play_handle = core_.play(*slot->source, volume / 100.0f);
   } else
     core_.setVolume(slot->play_handle, volume / 100.0f);
