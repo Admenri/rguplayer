@@ -17,15 +17,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_executable(rgu WIN32 rgu_main.cc resources/app.rc)
   target_link_libraries(rgu PUBLIC ${RGU_DEP_LIBS})
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-
   add_executable(rgu rgu_main.cc)
   target_link_libraries(rgu PUBLIC ${RGU_DEP_LIBS})
-
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Android")
-
-  add_library(rgu SHARED rgu_main.cc)
-  target_link_libraries(rgu PUBLIC ${RGU_DEP_LIBS})
-
+  add_library(main SHARED rgu_main.cc)
+  target_link_libraries(main PUBLIC ${RGU_DEP_LIBS})
 endif()
 
 execute_process(
