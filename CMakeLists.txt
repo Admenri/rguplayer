@@ -66,10 +66,6 @@ set(SDL3TTF_VENDORED ON)
 add_subdirectory(third_party/SDL_ttf)
 include_directories(third_party/SDL_ttf/include/SDL3_ttf)
 
-## SDL_net
-add_subdirectory(third_party/SDL_net)
-include_directories(third_party/SDL_net/include/SDL3_net)
-
 ## CRuby-Mri
 if(CMAKE_SYSTEM_NAME STREQUAL "Android")
   add_subdirectory(third_party/cmake-ruby)

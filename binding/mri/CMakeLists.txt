@@ -56,4 +56,4 @@ set(BINDING_MRI_SRC
 )
 
 add_library(binding_mri ${BINDING_MRI_SRC})
-target_link_libraries(binding_mri core_base core_renderer core_content mri_ruby zlibstatic)
+target_link_libraries(binding_mri PUBLIC core_base core_renderer core_content core_ui mri_ruby zlibstatic)

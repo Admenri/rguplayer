@@ -7,7 +7,6 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_main.h"
-#include "SDL_net.h"
 #include "SDL_ttf.h"
 
 #if defined(OS_LINUX)
@@ -64,7 +63,6 @@ int main(int argc, char* argv[]) {
   SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   TTF_Init();
-  SDLNet_Init();
 
   // Init ANGLE vendor settings
   content::RenderRunner::InitANGLERenderer(config->angle_renderer());
@@ -106,10 +104,8 @@ int main(int argc, char* argv[]) {
   cc->ContentMain();
 
   cc.reset();
-
   win.reset();
 
-  SDLNet_Quit();
   TTF_Quit();
   IMG_Quit();
   SDL_Quit();

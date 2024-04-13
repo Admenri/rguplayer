@@ -166,7 +166,7 @@ void MriInitException(bool rgss3) {
 
 void MriProcessException(const base::Exception& exception) {
   VALUE rb_eCustom = g_exception_list[exception.GetType()];
-  rb_raise(rb_eCustom, exception.GetErrorMessage().c_str());
+  rb_raise(rb_eCustom, "%s", exception.GetErrorMessage().c_str());
 }
 
 void MriCheckArgc(int actual, int expected) {

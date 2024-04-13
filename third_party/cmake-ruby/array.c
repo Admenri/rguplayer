@@ -132,7 +132,7 @@ static ID id_cmp, id_div, id_power;
 #define ARY_SET(a, i, v) RARRAY_ASET((assert(!ARY_SHARED_P(a)), (a)), (i), (v))
 
 void
-rb_mem_clear(register VALUE *mem, register long size)
+rb_mem_clear(VALUE *mem, long size)
 {
     while (size--) {
 	*mem++ = Qnil;

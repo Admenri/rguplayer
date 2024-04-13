@@ -79,7 +79,13 @@
 #define SIZEOF_DOUBLE 8
 #define SIZEOF_TIME_T 8
 #define SIZEOF_CLOCK_T 8
-#endif // ARCH_32BIT
+#endif //!ARCH_32BIT
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 #define PACKED_STRUCT(x) x __attribute__((packed))
 #define PACKED_STRUCT_UNALIGNED(x) x
 #define PRI_LL_PREFIX "ll"

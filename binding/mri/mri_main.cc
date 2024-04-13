@@ -37,7 +37,9 @@
 #include "zlib.h"
 
 extern "C" {
+#if RAPI_FULL >= 300
 void rb_call_builtin_inits();
+#endif
 
 void Init_zlib(void);
 }
@@ -196,7 +198,10 @@ void BindingEngineMri::InitializeBinding(
   ruby_init();
 
   ruby_init_loadpath();
+
+#if RAPI_FULL >= 300
   rb_call_builtin_inits();
+#endif
 
   rb_enc_set_default_internal(rb_enc_from_encoding(rb_utf8_encoding()));
   rb_enc_set_default_external(rb_enc_from_encoding(rb_utf8_encoding()));

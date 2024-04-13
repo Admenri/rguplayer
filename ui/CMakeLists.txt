@@ -11,5 +11,5 @@ set(UI_SRC
 )
 
 add_library(core_ui ${UI_SRC})
-target_link_libraries(core_ui core_base)
+target_link_libraries(core_ui PUBLIC core_base)
 

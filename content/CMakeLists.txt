@@ -68,11 +68,11 @@ add_library(core_content ${CORE_CONTENT_SRC})
 target_link_libraries(core_content PUBLIC
                       core_base
                       core_renderer
+                      core_ui
                       components_filesystem
                       components_fpslimiter
                       SDL3_image::SDL3_image
                       SDL3_ttf::SDL3_ttf
-                      SDL3_net::SDL3_net
                       soloud)
 
 if (MSVC)

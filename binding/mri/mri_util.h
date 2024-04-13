@@ -76,7 +76,11 @@ void MriFreeInstanceRef(void* ptr) {
 
 template <const rb_data_type_t* DataType>
 VALUE MriClassAllocate(VALUE klass) {
+#if RAPI_FULL >= 230
   return rb_data_typed_object_wrap(klass, nullptr, DataType);
+#else
+  return rb_data_typed_object_alloc(klass, nullptr, DataType);
+#endif
 }
 
 scoped_refptr<content::BindingRunner> MriGetGlobalRunner();

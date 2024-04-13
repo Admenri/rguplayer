@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.18.0)
 
-# Define the project and the language it uses
-project(mri_ruby C)
-
 # Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -89,17 +86,11 @@ set(MRI_SOURCE_FILES
 # Define the library to be built and its sources
 add_library(mri_ruby SHARED ${MRI_SOURCE_FILES})
 
-# Compiler options
-target_compile_options(mri_ruby PRIVATE -DRUBY_EXPORT -pthread)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=register")
-
 # Conditional flags based on target architecture
-if(${ANDROID_ABI} MATCHES "armeabi")
-  target_compile_options(mri_ruby PRIVATE -DARCH_32BIT)
-elseif(${ANDROID_ABI} MATCHES "arm64-v8a")
-  target_compile_options(mri_ruby PRIVATE -DARCH_64BIT)
-elseif(${ANDROID_ABI} MATCHES  "x86_64")
-  target_compile_options(mri_ruby PRIVATE -DARCH_64BIT)
-elseif(${ANDROID_ABI} MATCHES  "x86")
-  target_compile_options(mri_ruby PRIVATE -DARCH_32BIT)
+if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+  target_compile_options(mri_ruby PUBLIC -DARCH_32BIT -DRUBY_EXPORT -pthread)
+  message("${ANDROID_ABI} ruby 32 bit build")
+else()
+  target_compile_options(mri_ruby PUBLIC -DARCH_64BIT -DRUBY_EXPORT -pthread)
+  message("${ANDROID_ABI} ruby 64 bit build")
 endif()
