@@ -49,11 +49,20 @@ set(CORE_BASE_SRC
 )
 
 add_library(core_base ${CORE_BASE_SRC} ${CORE_BASE_THIRD_PARTY})
-if(SDL_STATIC)
-target_link_libraries(core_base PUBLIC SDL3::SDL3-static)
-else()
-target_link_libraries(core_base PUBLIC SDL3-shared)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+  set(LOG_LIBS
+    android
+    log
+  )
 endif()
+
+if(SDL_STATIC)
+target_link_libraries(core_base PUBLIC SDL3::SDL3-static ${LOG_LIBS})
+else()
+target_link_libraries(core_base PUBLIC SDL3-shared ${LOG_LIBS})
+endif()
+
 if (MSVC)
   target_compile_options(core_base PRIVATE /O2 /WX "$<$<CXX_COMPILER_ID:MSVC>:-utf-8>")
 else()

@@ -19,6 +19,23 @@ void ReplaceStringWidth(std::string& str, char before, char after) {
       str[i] = after;
 }
 
+char* IniStreamReader(char* str, int num, void* stream) {
+  SDL_IOStream* io = static_cast<SDL_IOStream*>(stream);
+
+  memset(str, 0, num);
+  char c;
+  int i = 0;
+
+  while (i < num - 1 && SDL_ReadIO(io, &c, 1)) {
+    str[i++] = c;
+    if (c == '\n')
+      break;
+  }
+
+  str[i] = '\0';
+  return i ? str : nullptr;
+}
+
 }  // namespace
 
 void CoreConfigure::LoadCommandLine(int argc, char** argv) {
@@ -40,7 +57,12 @@ void CoreConfigure::LoadCommandLine(int argc, char** argv) {
 
 bool CoreConfigure::LoadConfigure(const std::string& filename) {
   /* Parse configure */
-  INIReader reader(filename);
+  auto* io = SDL_IOFromFile(filename.c_str(), "r");
+  if (!io)
+    return false;
+
+  INIReader reader(io, IniStreamReader);
+  SDL_CloseIO(io);
   if (reader.ParseError()) {
     std::string str = "Failed to load configure file: " + filename;
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Core", str.c_str(),

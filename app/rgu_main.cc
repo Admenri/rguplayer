@@ -28,6 +28,8 @@ int main(int argc, char* argv[]) {
   ::SetConsoleOutputCP(CP_UTF8);
 #endif  //! defined(OS_WIN)
 
+  scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
+#ifndef __ANDROID__
   std::string app(argv[0]);
   ReplaceStringWidth(app, '\\', '/');
   auto last_sep = app.find_last_of('/');
@@ -35,17 +37,17 @@ int main(int argc, char* argv[]) {
     app = app.substr(last_sep + 1);
 
   LOG(INFO) << "[App] Path: " << app;
-
-  scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
   config->LoadCommandLine(argc, argv);
 
   last_sep = app.find_last_of('.');
   if (last_sep != std::string::npos)
     app = app.substr(0, last_sep);
   std::string ini = app + ".ini";
+#else
+  std::string ini = "Game.ini";
+#endif
 
   LOG(INFO) << "[App] Configure: " << ini;
-
   if (!config->LoadConfigure(ini))
     return 1;
 
