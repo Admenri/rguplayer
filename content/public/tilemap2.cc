@@ -846,7 +846,7 @@ void Tilemap2::UpdateTilemapViewportInternal() {
       (viewport_size.x / tile_size_) + !!(viewport_size.x % tile_size_) + 1;
   new_tilemap_viewport.height =
       (viewport_size.y / tile_size_) + !!(viewport_size.y % tile_size_) + 2;
-  if (new_tilemap_viewport != tilemap_viewport_) {
+  if (!(new_tilemap_viewport == tilemap_viewport_)) {
     tilemap_viewport_ = new_tilemap_viewport;
     buffer_need_update_ = true;
 

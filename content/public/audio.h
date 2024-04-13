@@ -15,6 +15,7 @@
 #include "soloud.h"
 #include "soloud_wav.h"
 
+#include <unordered_map>
 #include <list>
 
 namespace content {
@@ -104,7 +105,7 @@ class Audio final : public base::RefCounted<Audio> {
 
   base::WeakPtr<filesystem::Filesystem> file_reader_;
   scoped_refptr<CoreConfigure> config_;
-  std::unique_ptr<std::jthread> me_watcher_;
+  std::unique_ptr<std::thread> me_watcher_;
   std::atomic_bool quit_flag_;
 
   base::WeakPtrFactory<Audio> weak_ptr_factory_{this};

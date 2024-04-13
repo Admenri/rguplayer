@@ -30,14 +30,15 @@ class ThreadWorker {
   bool IsSyncMode() { return sync_; }
 
  private:
-  static void ThreadFunc(std::stop_token token,
+  static void ThreadFunc(base::AtomicFlag& token,
                          RunLoop::MessagePumpType message_type,
                          base::AtomicFlag& start_flag,
                          scoped_refptr<base::SequencedTaskRunner>& runner);
-  std::unique_ptr<std::jthread> thread_;
+  std::unique_ptr<std::thread> thread_;
 
   scoped_refptr<base::SequencedTaskRunner> task_runner_;
   base::AtomicFlag start_flag_;
+  base::AtomicFlag stop_flag_;
   bool sync_;
 
   base::WeakPtrFactory<ThreadWorker> weak_ptr_factory_{this};

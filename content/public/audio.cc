@@ -315,12 +315,13 @@ void Audio::InitAudioDeviceInternal() {
   }
 
   // Me playing monitor thread
-  me_watcher_.reset(new std::jthread(&Audio::MeMonitorInternal, this));
+  me_watcher_.reset(new std::thread(&Audio::MeMonitorInternal, this));
 }
 
 void Audio::DestroyAudioDeviceInternal() {
   quit_flag_ = true;
   me_watcher_->join();
+  me_watcher_.reset();
 
   SDL_CloseAudioDevice(output_device_);
   LOG(INFO) << "[Content] Finalize audio core.";

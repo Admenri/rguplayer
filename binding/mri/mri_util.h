@@ -7,6 +7,7 @@
 
 #include "ruby.h"
 #include "ruby/encoding.h"
+#include "ruby/version.h"
 
 #include "base/exceptions/exception.h"
 #include "content/worker/binding_worker.h"
@@ -27,19 +28,41 @@ enum MriException {
   MriExceptionNum,
 };
 
+#ifdef RUBY_API_VERSION_MAJOR
+#define RAPI_MAJOR RUBY_API_VERSION_MAJOR
+#define RAPI_MINOR RUBY_API_VERSION_MINOR
+#define RAPI_TEENY RUBY_API_VERSION_TEENY
+#else
+#define RAPI_MAJOR RUBY_VERSION_MAJOR
+#define RAPI_MINOR RUBY_VERSION_MINOR
+#define RAPI_TEENY RUBY_VERSION_TEENY
+#endif
+#define RAPI_FULL ((RAPI_MAJOR * 100) + (RAPI_MINOR * 10) + RAPI_TEENY)
+
+#if RAPI_FULL >= 210
+#define DEF_TYPE_FLAGS 0
+#else
+#define DEF_TYPE_FLAGS
+#endif
+
+#if RAPI_FULL < 270
+#define MRI_DEFINE_DATATYPE(Klass, Name, Free) \
+  const rb_data_type_t k##Klass##DataType = {  \
+      Name, {0, Free, 0, {0, 0}}, 0, 0, DEF_TYPE_FLAGS}
+#else
+#define MRI_DEFINE_DATATYPE(Klass, Name, Free) \
+  const rb_data_type_t k##Klass##DataType = {  \
+      Name, {0, Free, 0, 0, 0}, 0, 0, DEF_TYPE_FLAGS}
+#endif
+
 #define MRI_DECLARE_DATATYPE(Klass) \
   extern const rb_data_type_t k##Klass##DataType;
-#define MRI_DEFINE_DATATYPE(Klass, Name, FreeFunc) \
-  const rb_data_type_t k##Klass##DataType = {      \
-      Name, {0, FreeFunc, 0, 0, 0}, 0, 0, 0}
 
 #define MRI_DEFINE_DATATYPE_PTR(Klass, Name, FreeTy) \
-  const rb_data_type_t k##Klass##DataType = {        \
-      Name, {0, MriFreeInstance<FreeTy>, 0, 0, 0}, 0, 0, 0}
+  MRI_DEFINE_DATATYPE(Klass, Name, MriFreeInstance<FreeTy>)
 
 #define MRI_DEFINE_DATATYPE_REF(Klass, Name, FreeTy) \
-  const rb_data_type_t k##Klass##DataType = {        \
-      Name, {0, MriFreeInstanceRef<FreeTy>, 0, 0, 0}, 0, 0, 0}
+  MRI_DEFINE_DATATYPE(Klass, Name, MriFreeInstanceRef<FreeTy>)
 
 template <typename Ty>
 void MriFreeInstance(void* ptr) {

@@ -31,13 +31,18 @@ void ThreadWorker::Start(RunLoop::MessagePumpType message_type) {
   if (sync_)
     return;
 
-  thread_ = std::make_unique<std::jthread>(ThreadWorker::ThreadFunc,
-                                           message_type, std::ref(start_flag_),
-                                           std::ref(task_runner_));
+  thread_ = std::make_unique<std::thread>(
+      ThreadWorker::ThreadFunc, std::ref(stop_flag_), message_type,
+      std::ref(start_flag_), std::ref(task_runner_));
 }
 
 void ThreadWorker::Stop() {
-  thread_.reset();
+  if (thread_) {
+    stop_flag_.Set();
+    thread_->join();
+    thread_.reset();
+  }
+
   task_runner_.reset();
 }
 
@@ -54,7 +59,7 @@ scoped_refptr<base::SequencedTaskRunner> ThreadWorker::task_runner() {
 }
 
 void ThreadWorker::ThreadFunc(
-    std::stop_token token,
+    base::AtomicFlag& stop_flag,
     RunLoop::MessagePumpType message_type,
     base::AtomicFlag& start_flag,
     scoped_refptr<base::SequencedTaskRunner>& runner) {
@@ -63,7 +68,7 @@ void ThreadWorker::ThreadFunc(
   start_flag.Set();
 
   for (;;) {
-    if (token.stop_requested())
+    if (stop_flag.IsSet())
       break;
 
     if (!run_loop.DoLoop()) {

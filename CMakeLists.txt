@@ -5,7 +5,7 @@ project(rgu_player VERSION 1.0.0)
 include_directories("${PROJECT_SOURCE_DIR}")
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 #--------------------------------------------------------------------------------
 # Platform and compiler check
@@ -73,6 +73,7 @@ include_directories(third_party/SDL_net/include/SDL3_net)
 ## CRuby-Mri
 if(CMAKE_SYSTEM_NAME STREQUAL "Android")
   add_subdirectory(third_party/cmake-ruby)
+  include_directories(third_party/cmake-ruby/include)
 else()
   add_library(mri_ruby UNKNOWN IMPORTED)
   if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
