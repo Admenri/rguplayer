@@ -22,6 +22,7 @@
 #include "binding/mri/init_table.h"
 #include "binding/mri/init_tilemap.h"
 #include "binding/mri/init_tilemap2.h"
+#include "binding/mri/init_touch.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/init_viewport.h"
 #include "binding/mri/init_window.h"
@@ -230,6 +231,7 @@ void BindingEngineMri::InitializeBinding(
   InitShaderBinding();
   InitGeometryBinding();
   InitMouseBinding();
+  InitTouchBinding();
   InitRGUBinding();
   Init_zlib();
 

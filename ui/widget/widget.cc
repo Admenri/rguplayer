@@ -121,6 +121,10 @@ bool Widget::GetKeyState(::SDL_Scancode scancode) const {
   return key_states_[scancode];
 }
 
+void Widget::EmulateKeyState(::SDL_Scancode scancode, bool pressed) {
+  key_states_[scancode] = pressed;
+}
+
 void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
   if (sdl_event.type == SDL_EVENT_KEY_DOWN) {
     if (sdl_event.key.windowID == window_id_) {
@@ -179,23 +183,34 @@ void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
       }
     } break;
     case SDL_EVENT_FINGER_DOWN: {
-      if (sdl_event.wheel.windowID == window_id_) {
+      if (sdl_event.tfinger.windowID == window_id_) {
         int i = sdl_event.tfinger.fingerID;
         if (i < MAX_FINGERS)
           finger_states_[i].down = true;
       }
     }  // fallthrough
     case SDL_EVENT_FINGER_MOTION: {
-      if (sdl_event.wheel.windowID == window_id_) {
+      if (sdl_event.tfinger.windowID == window_id_) {
+        int w, h;
+        SDL_GetWindowSize(window_, &w, &h);
         int i = sdl_event.tfinger.fingerID;
         if (i < MAX_FINGERS) {
-          finger_states_[i].x = sdl_event.tfinger.x;
-          finger_states_[i].y = sdl_event.tfinger.y;
+          float scale_x = mouse_state_.resolution.x / mouse_state_.screen.x;
+          float scale_y = mouse_state_.resolution.y / mouse_state_.screen.y;
+          float origin_x =
+              sdl_event.tfinger.x * w - mouse_state_.screen_offset.x;
+          float origin_y =
+              sdl_event.tfinger.y * h - mouse_state_.screen_offset.y;
+
+          finger_states_[i].x = origin_x * scale_x;
+          finger_states_[i].y = origin_y * scale_y;
+
+          LOG(INFO) << finger_states_[i].x << " --- " << finger_states_[i].y;
         }
       }
     } break;
     case SDL_EVENT_FINGER_UP: {
-      if (sdl_event.wheel.windowID == window_id_) {
+      if (sdl_event.tfinger.windowID == window_id_) {
         int i = sdl_event.tfinger.fingerID;
         if (i < MAX_FINGERS)
           memset(&finger_states_[i], 0, sizeof(finger_states_[0]));

@@ -60,6 +60,8 @@ class Input final : public base::RefCounted<Input> {
   int Dir4();
   int Dir8();
 
+  void EmulateKeyState(int scancode, bool pressed);
+
  private:
   void UpdateDir4Internal();
   void UpdateDir8Internal();

@@ -28,6 +28,8 @@ set(BINDING_MRI_SRC
   init_tilemap.h
   init_tilemap2.cc
   init_tilemap2.h
+  init_touch.cc
+  init_touch.h
   init_utility.cc
   init_utility.h
   init_viewport.cc

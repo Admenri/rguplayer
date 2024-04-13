@@ -192,6 +192,17 @@ MRI_METHOD(input_set_keys_from) {
   return Qnil;
 }
 
+MRI_METHOD(input_emulate) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  int scancode;
+  bool down;
+  MriParseArgsTo(argc, argv, "ib", &scancode, &down);
+  input->EmulateKeyState(scancode, down);
+
+  return Qnil;
+}
+
 void InitInputBinding() {
   VALUE module = rb_define_module("Input");
 
@@ -215,6 +226,8 @@ void InitInputBinding() {
   MriDefineModuleFunction(module, "get_key_name", input_get_key_name);
   MriDefineModuleFunction(module, "get_keys_from_flag", input_get_keys_from);
   MriDefineModuleFunction(module, "set_keys_from_flag", input_set_keys_from);
+
+  MriDefineModuleFunction(module, "emulate", input_emulate);
 
   for (int i = 0; i < kKeyboardBindingsSize; ++i) {
     auto& binding_set = kKeyboardBindings[i];

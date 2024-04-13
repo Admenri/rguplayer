@@ -45,6 +45,8 @@ set(CORE_CONTENT_SRC
   public/tilemap2.cc
   public/tilemap2.h
   public/tilequad.h
+  public/touch.cc
+  public/touch.h
   public/utility.cc
   public/utility.h
   public/viewport.cc

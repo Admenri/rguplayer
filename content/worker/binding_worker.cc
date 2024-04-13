@@ -74,6 +74,7 @@ void BindingRunner::BindingFuncMain() {
   input_ = new Input(config_, window_);
   audio_ = new Audio(file_manager_->AsWeakPtr(), config_);
   mouse_ = new Mouse(window_);
+  touch_ = new Touch(config_, window_);
 
   // Before run main initialize
   binding_engine_->InitializeBinding(this);
@@ -90,6 +91,7 @@ void BindingRunner::BindingFuncMain() {
   input_.reset();
   audio_.reset();
   mouse_.reset();
+  touch_.reset();
 
   // Destroy renderer on binding thread
   renderer_->DestroyRenderer();

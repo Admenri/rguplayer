@@ -56,6 +56,9 @@ get_keys_from_flag(String flags) -> Array
 set_keys_from_flag(String flags, Array keys)
 设置按键绑定的位置，可实现F1的相同功能
 
+emulate(Integer scancode, Boolean down)
+在引擎层模拟设置一个按键的状态，适用于没有键盘输入的设备
+
 ## Module - RGU : 引擎内置扩展模块
 CONTENTVERSION -> Integer
 常量：引擎识别的RGSS版本（1-3）
@@ -300,6 +303,20 @@ window_handle -> Numeric
 frame_skip frame_skip=
 设置是否允许跳帧
 
+display_width display_height
+获取游戏窗口的大小
+
 ## Module - Audio
 set_volume(Integer volume = 100)
 设置游戏的全局音量
+
+## Module - Touch
+max_fingers -> Integer
+获取最多可识别的手指数量（一般为10）
+
+finger_x(id) finger_y(id) -> Numeric
+获取指定槽位的触屏输入横纵坐标，与鼠标坐标一样会转换为游戏内坐标
+※按照整个窗口来计算，并非游戏窗口计算
+
+finger_press?(id) -> Boolean
+获取指定槽位的触屏按下状态

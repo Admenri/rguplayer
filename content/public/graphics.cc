@@ -269,6 +269,14 @@ void Graphics::SetFrameSkip(bool skip) {
   config_->allow_frame_skip() = skip;
 }
 
+int Graphics::GetDisplayWidth() {
+  return renderer()->window()->GetSize().x;
+}
+
+int Graphics::GetDisplayHeight() {
+  return renderer()->window()->GetSize().y;
+}
+
 RGSSVersion Graphics::content_version() const {
   return dispatcher_->rgss_version();
 }

@@ -75,6 +75,9 @@ class Graphics final : public base::RefCounted<Graphics>,
   bool GetFrameSkip();
   void SetFrameSkip(bool skip);
 
+  int GetDisplayWidth();
+  int GetDisplayHeight();
+
   RGSSVersion content_version() const;
   scoped_refptr<CoreConfigure> config() { return config_; }
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }

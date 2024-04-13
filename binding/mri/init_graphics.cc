@@ -180,6 +180,18 @@ MRI_METHOD(graphics_window_handle) {
   return UINT2NUM(screen->GetWindowHandle());
 }
 
+MRI_METHOD(graphics_display_width) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  return rb_fix_new(screen->GetDisplayWidth());
+}
+
+MRI_METHOD(graphics_display_height) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  return rb_fix_new(screen->GetDisplayHeight());
+}
+
 void InitGraphicsBinding() {
   VALUE module = rb_define_module("Graphics");
 
@@ -206,6 +218,9 @@ void InitGraphicsBinding() {
   MriDefineModuleAttr(module, "vsync", graphics, VSync);
   MriDefineModuleAttr(module, "fullscreen", graphics, Fullscreen);
   MriDefineModuleAttr(module, "frame_skip", graphics, FrameSkip);
+
+  MriDefineModuleFunction(module, "display_width", graphics_display_width);
+  MriDefineModuleFunction(module, "display_height", graphics_display_height);
 }
 
 }  // namespace binding

@@ -45,7 +45,7 @@ class Widget {
 
   struct FingerState {
     bool down;
-    float x, y;
+    int x, y;
   };
 
   enum class WindowPlacement {
@@ -112,6 +112,7 @@ class Widget {
   SDL_WindowID GetWindowID() const { return window_id_; }
 
   bool GetKeyState(::SDL_Scancode scancode) const;
+  void EmulateKeyState(::SDL_Scancode scancode, bool pressed);
   MouseState& GetMouseState() { return mouse_state_; }
   std::array<FingerState, MAX_FINGERS>& GetTouchState() {
     return finger_states_;

@@ -4,6 +4,8 @@
 
 #include "content/public/input.h"
 
+#include "SDL_events.h"
+
 namespace content {
 
 namespace {
@@ -243,6 +245,10 @@ int Input::Dir4() {
 
 int Input::Dir8() {
   return dir8_state_.active;
+}
+
+void Input::EmulateKeyState(int scancode, bool pressed) {
+  window_->EmulateKeyState((::SDL_Scancode)scancode, pressed);
 }
 
 void Input::UpdateDir4Internal() {
