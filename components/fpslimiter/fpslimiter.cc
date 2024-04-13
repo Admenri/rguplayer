@@ -32,11 +32,12 @@ void FPSLimiter::Delay() {
   uint64_t diff_counter = 0;
 
   if (expect_ticks > real_ticks) [[likely]] {
-    uint64_t delta_ticks = (expect_ticks - real_ticks) - error_ticks_;
+    int64_t delta_ticks = (expect_ticks - real_ticks) - error_ticks_;
     time_t delay_ns = static_cast<time_t>(delta_ticks * freq_ns_);
 
-    if (delay_ns > 0)
+    if (delay_ns > 0 && delay_ns < NS_PER_S) {
       SDL_DelayNS(delay_ns);
+    }
 
     last_ticks_ = SDL_GetPerformanceCounter();
     uint64_t real_delay_counter = last_ticks_ - real_ticks;
