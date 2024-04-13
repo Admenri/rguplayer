@@ -204,8 +204,6 @@ void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
 
           finger_states_[i].x = origin_x * scale_x;
           finger_states_[i].y = origin_y * scale_y;
-
-          LOG(INFO) << finger_states_[i].x << " --- " << finger_states_[i].y;
         }
       }
     } break;
