@@ -38,6 +38,8 @@
 
 <img src="app/test/4.png" height="300">
 
+<img src="app/test/5.jpg" height="300">
+
 ## 编译项目
 
  - 本项目使用CMake管理编译。

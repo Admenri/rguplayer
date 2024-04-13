@@ -178,6 +178,29 @@ void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
         mouse_state_.scroll_y += sdl_event.wheel.y * flip;
       }
     } break;
+    case SDL_EVENT_FINGER_DOWN: {
+      if (sdl_event.wheel.windowID == window_id_) {
+        int i = sdl_event.tfinger.fingerID;
+        if (i < MAX_FINGERS)
+          finger_states_[i].down = true;
+      }
+    }  // fallthrough
+    case SDL_EVENT_FINGER_MOTION: {
+      if (sdl_event.wheel.windowID == window_id_) {
+        int i = sdl_event.tfinger.fingerID;
+        if (i < MAX_FINGERS) {
+          finger_states_[i].x = sdl_event.tfinger.x;
+          finger_states_[i].y = sdl_event.tfinger.y;
+        }
+      }
+    } break;
+    case SDL_EVENT_FINGER_UP: {
+      if (sdl_event.wheel.windowID == window_id_) {
+        int i = sdl_event.tfinger.fingerID;
+        if (i < MAX_FINGERS)
+          memset(&finger_states_[i], 0, sizeof(finger_states_[0]));
+      }
+    } break;
     case SDL_EVENT_WINDOW_MOUSE_ENTER: {
       mouse_state_.in_window = true;
     } break;

@@ -5,8 +5,10 @@
 #ifndef UI_WIDGET_WIDGET_H_
 #define UI_WIDGET_WIDGET_H_
 
-#include <SDL_keyboard.h>
+#include "SDL_keyboard.h"
+#include "SDL_touch.h"
 
+#include <array>
 #include <memory>
 #include <optional>
 #include <string>
@@ -20,6 +22,7 @@ struct SDL_Window;
 
 namespace ui {
 
+#define MAX_FINGERS 10
 #define MOUSE_BUTTON_COUNT 32
 
 class Widget {
@@ -38,6 +41,11 @@ class Widget {
 
     bool in_window;
     bool focused;
+  };
+
+  struct FingerState {
+    bool down;
+    float x, y;
   };
 
   enum class WindowPlacement {
@@ -105,6 +113,9 @@ class Widget {
 
   bool GetKeyState(::SDL_Scancode scancode) const;
   MouseState& GetMouseState() { return mouse_state_; }
+  std::array<FingerState, MAX_FINGERS>& GetTouchState() {
+    return finger_states_;
+  }
 
  private:
   void UIEventDispatcher(const SDL_Event& sdl_event);
@@ -115,6 +126,7 @@ class Widget {
 
   bool key_states_[SDL_NUM_SCANCODES]{0};
   MouseState mouse_state_{0};
+  std::array<FingerState, MAX_FINGERS> finger_states_;
 
   base::WeakPtrFactory<Widget> weak_ptr_factory_{this};
 };
