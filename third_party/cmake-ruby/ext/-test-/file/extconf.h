@@ -1,0 +1,11 @@
+#ifndef EXTCONF_H
+#define EXTCONF_H
+#define HAVE_SYS_PARAM_H 1
+#define HAVE_SYS_MOUNT_H 1
+#define HAVE_SYS_VFS_H 1
+#define HAVE_TYPE_STRUCT_STATFS 1
+#define HAVE_STRUCT_STATFS_F_TYPE 1
+#define HAVE_ST_F_TYPE 1
+#define HAVE_TYPE_STRUCT_STATVFS 1
+#define TEST_INIT_FUNCS(X) X(fs) X(stat)
+#endif

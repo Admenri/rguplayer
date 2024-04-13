@@ -29,58 +29,82 @@ endif()
 include_directories(base/third_party)
 include_directories(third_party)
 
-## SDL
+### Android compile configure
 set(SDL_STATIC on)
+if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+set(SDL_STATIC off)
+endif()
+
+if(SDL_STATIC)
+  set(BUILD_SHARED_LIBS off)
+else()
+  set(BUILD_SHARED_LIBS on)
+endif()
+
+if(SDL_STATIC)
+  set(SDL3TTF_BUILD_SHARED_LIBS off)
+else()
+  set(SDL3TTF_BUILD_SHARED_LIBS on)
+endif()
+
+if(SDL_STATIC)
+  set(SDL3NET_BUILD_SHARED_LIBS off)
+else()
+  set(SDL3NET_BUILD_SHARED_LIBS on)
+endif()
+
+## SDL
 add_subdirectory(third_party/SDL)
 
 ## SDL_image
-set(BUILD_SHARED_LIBS off)
 set(SDL3IMAGE_VENDORED off)
 add_subdirectory(third_party/SDL_image)
 include_directories(third_party/SDL_image/include/SDL3_image)
 
 ## SDL_ttf
 set(SDL3TTF_VENDORED ON)
-set(SDL3TTF_BUILD_SHARED_LIBS off)
 add_subdirectory(third_party/SDL_ttf)
 include_directories(third_party/SDL_ttf/include/SDL3_ttf)
 
 ## SDL_net
-set(SDL3NET_BUILD_SHARED_LIBS off)
 add_subdirectory(third_party/SDL_net)
 include_directories(third_party/SDL_net/include/SDL3_net)
 
 ## CRuby-Mri
-add_library(mri_ruby UNKNOWN IMPORTED)
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(RUBY_INCLUDE_PATH
-      "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
-      "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x86/"
-    )
-    set(RUBY_LIBRARY_PATH
-      "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x86/vcruntime140-ruby320-static.lib"
-    )
-  elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(RUBY_INCLUDE_PATH
-      "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
-      "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x64/"
-    )
-    set(RUBY_LIBRARY_PATH
-      "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x64/x64-vcruntime140-ruby320-static.lib"
-    )
-  else()
-    message("No Implement")
-  endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+  add_subdirectory(third_party/cmake-ruby)
 else()
-  find_package(Ruby REQUIRED)
-  set(RUBY_INCLUDE_PATH "${Ruby_INCLUDE_DIRS}" "${Ruby_CONFIG_INCLUDE_DIR}")
-  set(RUBY_LIBRARY_PATH "${Ruby_LIBRARIES}")
-  message(${RUBY_INCLUDE_PATH} ${RUBY_LIBRARY_PATH})
+  add_library(mri_ruby UNKNOWN IMPORTED)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+      set(RUBY_INCLUDE_PATH
+        "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
+        "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x86/"
+      )
+      set(RUBY_LIBRARY_PATH
+        "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x86/vcruntime140-ruby320-static.lib"
+      )
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+      set(RUBY_INCLUDE_PATH
+        "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
+        "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x64/"
+      )
+      set(RUBY_LIBRARY_PATH
+        "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x64/x64-vcruntime140-ruby320-static.lib"
+      )
+    else()
+      message("No Implement")
+    endif()
+  else()
+    find_package(Ruby REQUIRED)
+    set(RUBY_INCLUDE_PATH "${Ruby_INCLUDE_DIRS}" "${Ruby_CONFIG_INCLUDE_DIR}")
+    set(RUBY_LIBRARY_PATH "${Ruby_LIBRARIES}")
+    message(${RUBY_INCLUDE_PATH} ${RUBY_LIBRARY_PATH})
+  endif()
+  set_target_properties(mri_ruby PROPERTIES
+                        IMPORTED_LOCATION "${RUBY_LIBRARY_PATH}"
+                        INTERFACE_INCLUDE_DIRECTORIES "${RUBY_INCLUDE_PATH}")
 endif()
-set_target_properties(mri_ruby PROPERTIES
-                      IMPORTED_LOCATION "${RUBY_LIBRARY_PATH}"
-                      INTERFACE_INCLUDE_DIRECTORIES "${RUBY_INCLUDE_PATH}")
 
 ## Google ANGLE
 include_directories(third_party/angle/include)

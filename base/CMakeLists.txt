@@ -49,7 +49,11 @@ set(CORE_BASE_SRC
 )
 
 add_library(core_base ${CORE_BASE_SRC} ${CORE_BASE_THIRD_PARTY})
-target_link_libraries(core_base SDL3::SDL3-static)
+if(SDL_STATIC)
+target_link_libraries(core_base PUBLIC SDL3::SDL3-static)
+else()
+target_link_libraries(core_base PUBLIC SDL3-shared)
+endif()
 if (MSVC)
   target_compile_options(core_base PRIVATE /O2 /WX "$<$<CXX_COMPILER_ID:MSVC>:-utf-8>")
 else()

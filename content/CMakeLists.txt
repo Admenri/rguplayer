@@ -70,7 +70,6 @@ target_link_libraries(core_content PUBLIC
                       core_renderer
                       components_filesystem
                       components_fpslimiter
-                      SDL3::SDL3-static
                       SDL3_image::SDL3_image
                       SDL3_ttf::SDL3_ttf
                       SDL3_net::SDL3_net
