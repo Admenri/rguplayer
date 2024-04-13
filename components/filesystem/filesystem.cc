@@ -6,7 +6,12 @@
 
 #include "base/exceptions/exception.h"
 
+#include "SDL_system.h"
 #include "physfs.h"
+
+#ifdef __ANDROID__
+#include <jni.h>
+#endif  // __ANDROID__
 
 #if USE_ADMENRI_ARCHIVER
 #include "crypto/admenri_archiver.h"
@@ -173,7 +178,16 @@ PHYSFS_EnumerateCallbackResult OpenReadEnumCallback(void* data,
 }  // namespace
 
 Filesystem::Filesystem(const std::string& argv0) {
-  if (!PHYSFS_init(argv0.data())) {
+  const char* init_data = argv0.c_str();
+
+#ifdef __ANDROID__
+  PHYSFS_AndroidInit ainit;
+  ainit.jnienv = SDL_AndroidGetJNIEnv();
+  ainit.context = SDL_AndroidGetActivity();
+  init_data = (const char*)&ainit;
+#endif
+
+  if (!PHYSFS_init(init_data)) {
     LOG(INFO) << "[Filesystem] Failed to load Physfs.";
   } else {
     LOG(INFO) << "[Filesystem] BasePath: " << PHYSFS_getBaseDir();
@@ -188,6 +202,11 @@ Filesystem::Filesystem(const std::string& argv0) {
         << "[Filesystem] [Official] Use Admenri ADP crypted archiver library.";
   }
 #endif  //! USE_ADMENRI_ARCHIVER
+
+#ifdef __ANDROID__
+  PHYSFS_mount(PHYSFS_getBaseDir(), nullptr, 1);
+  PHYSFS_setRoot(PHYSFS_getBaseDir(), "/assets");
+#endif
 }
 
 Filesystem::~Filesystem() {

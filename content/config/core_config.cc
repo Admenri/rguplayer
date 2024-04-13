@@ -58,13 +58,17 @@ void CoreConfigure::LoadCommandLine(int argc, char** argv) {
 bool CoreConfigure::LoadConfigure(const std::string& filename) {
   /* Parse configure */
   auto* io = SDL_IOFromFile(filename.c_str(), "r");
-  if (!io)
+  if (!io) {
+    std::string str = "Failed to load configure file: " + filename;
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Core", str.c_str(),
+                             nullptr);
     return false;
+  }
 
   INIReader reader(io, IniStreamReader);
   SDL_CloseIO(io);
   if (reader.ParseError()) {
-    std::string str = "Failed to load configure file: " + filename;
+    std::string str = "Error when parse configure: " + filename;
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Core", str.c_str(),
                              nullptr);
     return false;

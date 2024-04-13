@@ -425,6 +425,7 @@ void Font::MakeFontIDInternal() {
   auto& cache = g_default_font_state->path_cache;
   std::vector<std::string> load_names(name_);
   load_names.push_back("Default.ttf");
+
   for (auto& name : load_names) {
     std::string font_find_path;
     if (!FindFontInternal(name, &font_find_path))
@@ -444,8 +445,11 @@ void Font::MakeFontIDInternal() {
 bool Font::FindFontInternal(const std::string& name, std::string* out_path) {
   for (auto& path : kFontLookupDirs) {
     std::string font_path = path + name;
-    std::ifstream file(font_path);
-    if (file.good()) {
+    SDL_IOStream* io = SDL_IOFromFile(font_path.c_str(), "r");
+    size_t file_length = SDL_GetIOSize(io);
+    SDL_CloseIO(io);
+
+    if (file_length > 0) {
       if (out_path)
         *out_path = font_path;
 

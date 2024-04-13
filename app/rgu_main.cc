@@ -29,7 +29,6 @@ int main(int argc, char* argv[]) {
 #endif  //! defined(OS_WIN)
 
   scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
-#ifndef __ANDROID__
   std::string app(argv[0]);
   ReplaceStringWidth(app, '\\', '/');
   auto last_sep = app.find_last_of('/');
@@ -43,9 +42,6 @@ int main(int argc, char* argv[]) {
   if (last_sep != std::string::npos)
     app = app.substr(0, last_sep);
   std::string ini = app + ".ini";
-#else
-  std::string ini = "Game.ini";
-#endif
 
   LOG(INFO) << "[App] Configure: " << ini;
   if (!config->LoadConfigure(ini))
@@ -59,6 +55,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft");
   SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 
