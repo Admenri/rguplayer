@@ -82,8 +82,8 @@ class Graphics final : public base::RefCounted<Graphics>,
   scoped_refptr<CoreConfigure> config() { return config_; }
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
   base::WeakPtr<ui::Widget> window() { return renderer_->window(); }
-  filesystem::Filesystem* filesystem();
   int max_texture_size() const { return renderer_->max_texture_size(); }
+  filesystem::Filesystem* filesystem();
 
  private:
   friend class Viewport;

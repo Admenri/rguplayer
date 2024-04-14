@@ -8,6 +8,7 @@
 #include "base/memory/ref_counted.h"
 #include "base/worker/run_loop.h"
 #include "content/config/core_config.h"
+#include "content/worker/worker_share.h"
 #include "ui/widget/widget.h"
 
 #include "SDL_events.h"
@@ -27,17 +28,14 @@ class EventRunner : public base::RefCounted<EventRunner> {
     EVENT_NUMS,
   };
 
-  EventRunner();
+  EventRunner(WorkerShareData* share_data);
 
   EventRunner(const EventRunner&) = delete;
   EventRunner& operator=(const EventRunner&) = delete;
 
-  void InitEventDispatcher(scoped_refptr<CoreConfigure> config,
-                           base::WeakPtr<ui::Widget> window,
-                           base::WeakPtr<BindingRunner> dispatcher);
+  void InitDispatcher(base::WeakPtr<BindingRunner> binding_runner);
   void EventMain();
 
-  uint32_t user_event_id() { return user_event_id_; }
   scoped_refptr<base::SequencedTaskRunner> task_runner() {
     return loop_runner_->task_runner();
   }
@@ -46,12 +44,10 @@ class EventRunner : public base::RefCounted<EventRunner> {
   void EventFilter(const SDL_Event& event);
   void UpdateFPSDisplay(std::optional<int32_t> fps);
 
-  uint32_t user_event_id_;
-  scoped_refptr<CoreConfigure> config_;
+  WorkerShareData* share_data_;
+  base::WeakPtr<BindingRunner> binding_runner_;
   base::CallbackListSubscription quit_observer_;
   std::unique_ptr<base::RunLoop> loop_runner_;
-  base::WeakPtr<ui::Widget> window_;
-  base::WeakPtr<BindingRunner> dispatcher_;
 
   struct {
     bool enable_display;

@@ -10,19 +10,15 @@
 
 namespace content {
 
-EventRunner::EventRunner()
-    : fps_counter_{false, 0, SDL_GetPerformanceCounter(),
+EventRunner::EventRunner(WorkerShareData* share_data)
+    : share_data_(share_data),
+      fps_counter_{false, 0, SDL_GetPerformanceCounter(),
                    SDL_GetPerformanceFrequency(), 0} {
-  user_event_id_ = SDL_RegisterEvents(EVENT_NUMS);
+  share_data_->user_event_id = SDL_RegisterEvents(EVENT_NUMS);
 }
 
-void EventRunner::InitEventDispatcher(scoped_refptr<CoreConfigure> config,
-                                      base::WeakPtr<ui::Widget> window,
-                                      base::WeakPtr<BindingRunner> dispatcher) {
-  window_ = window;
-  config_ = config;
-  dispatcher_ = dispatcher;
-
+void EventRunner::InitDispatcher(base::WeakPtr<BindingRunner> binding_runner) {
+  binding_runner_ = binding_runner;
   loop_runner_ =
       std::make_unique<base::RunLoop>(base::RunLoop::MessagePumpType::UI);
 
@@ -35,7 +31,8 @@ void EventRunner::EventMain() {
 }
 
 void EventRunner::EventFilter(const SDL_Event& event) {
-  int user_event = event.type - user_event_id_;
+  base::WeakPtr<ui::Widget> window = share_data_->window;
+  int user_event = event.type - share_data_->user_event_id;
 
   /* Application quit flag */
   if (user_event == QUIT_SYSTEM_EVENT || event.type == SDL_EVENT_QUIT) {
@@ -49,7 +46,7 @@ void EventRunner::EventFilter(const SDL_Event& event) {
     if (delta_ticks >= fps_counter_.counter_freq) {
       if (fps_counter_.enable_display) {
         fps_counter_.average_fps = fps_counter_.frame_count;
-        UpdateFPSDisplay(fps_counter_.average_fps);
+        UpdateFPSDisplay(std::make_optional<int32_t>(fps_counter_.average_fps));
       }
 
       fps_counter_.last_counter = SDL_GetPerformanceCounter();
@@ -61,19 +58,19 @@ void EventRunner::EventFilter(const SDL_Event& event) {
 
   /* Reset content */
   if (event.type == SDL_EVENT_KEY_UP &&
-      event.window.windowID == window_->GetWindowID()) {
+      event.window.windowID == window->GetWindowID()) {
     if (event.key.keysym.scancode == SDL_SCANCODE_F2) {
       // Switch fps display mode
       fps_counter_.enable_display = !fps_counter_.enable_display;
 
       std::optional<int32_t> fps = std::nullopt;
       if (fps_counter_.enable_display)
-        fps = fps_counter_.average_fps;
+        fps = std::make_optional<int32_t>(fps_counter_.average_fps);
 
       UpdateFPSDisplay(fps);
     } else if (event.key.keysym.scancode == SDL_SCANCODE_F12) {
       // Trigger reset process
-      dispatcher_->RequestReset();
+      binding_runner_->RequestReset();
     }
   }
 
@@ -89,10 +86,13 @@ void EventRunner::EventFilter(const SDL_Event& event) {
 }
 
 void EventRunner::UpdateFPSDisplay(std::optional<int32_t> fps) {
+  base::WeakPtr<ui::Widget> window = share_data_->window;
+  scoped_refptr<CoreConfigure> config = share_data_->config;
+
   if (fps.has_value())
-    return window_->SetTitle(config_->game_title() +
-                             " - FPS: " + std::to_string(*fps));
-  return window_->SetTitle(config_->game_title());
+    return window->SetTitle(config->game_title() +
+                            " - FPS: " + std::to_string(*fps));
+  return window->SetTitle(config->game_title());
 }
 
 }  // namespace content

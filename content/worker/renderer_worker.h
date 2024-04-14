@@ -11,6 +11,7 @@
 #include "base/worker/run_loop.h"
 #include "base/worker/thread_worker.h"
 #include "content/config/core_config.h"
+#include "content/worker/worker_share.h"
 #include "ui/widget/widget.h"
 
 namespace content {
@@ -43,6 +44,7 @@ class RenderRunner : public base::RefCounted<RenderRunner> {
   scoped_refptr<CoreConfigure> config_;
   base::WeakPtr<ui::Widget> host_window_;
   SDL_GLContext glcontext_;
+
   int max_texture_size_;
   int vertex_units_, fragment_units_, combined_units_;
 

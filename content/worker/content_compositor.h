@@ -8,6 +8,7 @@
 #include "content/worker/binding_worker.h"
 #include "content/worker/content_params.h"
 #include "content/worker/event_runner.h"
+#include "content/worker/worker_share.h"
 
 namespace content {
 
@@ -23,7 +24,7 @@ class WorkerTreeCompositor {
   void ContentMain();
 
  private:
-  scoped_refptr<CoreConfigure> config_;
+  std::unique_ptr<WorkerShareData> share_data_;
   scoped_refptr<EventRunner> event_runner_;
   scoped_refptr<BindingRunner> binding_runner_;
 };

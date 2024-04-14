@@ -64,6 +64,7 @@ set(CORE_CONTENT_SRC
   worker/event_runner.h
   worker/renderer_worker.cc
   worker/renderer_worker.h
+  worker/worker_share.h
 )
 
 add_library(core_content ${CORE_CONTENT_SRC})

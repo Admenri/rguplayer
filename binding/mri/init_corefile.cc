@@ -18,7 +18,7 @@ struct CoreFileInfo {
 VALUE CreateCoreFileFrom(const std::string& filename, bool mri_exc) {
   SDL_IOStream* ops = nullptr;
   try {
-    ops = MriGetGlobalRunner()->filesystem()->OpenReadRaw(filename);
+    ops = MriGetGlobalRunner()->share_data()->filesystem->OpenReadRaw(filename);
   } catch (base::Exception& e) {
     if (mri_exc) {
       MriProcessException(e);

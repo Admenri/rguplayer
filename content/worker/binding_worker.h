@@ -12,7 +12,9 @@
 #include "content/public/input.h"
 #include "content/public/mouse.h"
 #include "content/public/touch.h"
+#include "content/worker/binding_worker.h"
 #include "content/worker/content_params.h"
+#include "content/worker/worker_share.h"
 
 #include <thread>
 
@@ -20,13 +22,13 @@ namespace content {
 
 class BindingRunner : public base::RefCounted<BindingRunner> {
  public:
-  BindingRunner() = default;
+  BindingRunner(WorkerShareData* share_data);
 
   BindingRunner(const BindingRunner&) = delete;
   BindingRunner& operator=(const BindingRunner&) = delete;
 
   void InitBindingComponents(ContentInitParams& params);
-  void BindingMain(uint32_t event_id);
+  void BindingMain();
 
   void RequestQuit();
   void RequestReset();
@@ -35,10 +37,9 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
   bool CheckRunnerFlags();
   void RaiseRunnerFlags();
 
-  RGSSVersion rgss_version() { return config_->content_version(); }
-  scoped_refptr<CoreConfigure> config() const { return config_; }
-  uint32_t user_event_id() { return user_event_id_; }
-  filesystem::Filesystem* filesystem() { return file_manager_.get(); }
+  scoped_refptr<CoreConfigure> config() const { return share_data_->config; }
+  RGSSVersion rgss_version() { return config()->content_version(); }
+  WorkerShareData* share_data() { return share_data_; }
 
   scoped_refptr<Graphics> graphics() const { return graphics_; }
   scoped_refptr<Input> input() const { return input_; }
@@ -53,25 +54,19 @@ class BindingRunner : public base::RefCounted<BindingRunner> {
  private:
   void BindingFuncMain();
 
-  scoped_refptr<CoreConfigure> config_;
+  WorkerShareData* share_data_;
   std::unique_ptr<std::thread> runner_thread_;
-
+  std::unique_ptr<BindingEngine> binding_engine_;
   scoped_refptr<RenderRunner> renderer_;
+
   scoped_refptr<Graphics> graphics_;
   scoped_refptr<Input> input_;
   scoped_refptr<Audio> audio_;
   scoped_refptr<Mouse> mouse_;
   scoped_refptr<Touch> touch_;
 
-  base::Vec2i initial_resolution_;
-  base::WeakPtr<ui::Widget> window_;
   std::atomic_bool quit_atomic_;
   std::atomic_bool reset_atomic_;
-  uint32_t user_event_id_;
-
-  std::string argv0_;
-  std::unique_ptr<filesystem::Filesystem> file_manager_;
-  std::unique_ptr<BindingEngine> binding_engine_;
 
   base::WeakPtrFactory<BindingRunner> weak_ptr_factory_{this};
 };

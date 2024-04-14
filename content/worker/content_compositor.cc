@@ -6,23 +6,25 @@
 
 namespace content {
 
-WorkerTreeCompositor::WorkerTreeCompositor() {}
+WorkerTreeCompositor::WorkerTreeCompositor()
+    : share_data_(std::make_unique<WorkerShareData>()) {}
 
 WorkerTreeCompositor::~WorkerTreeCompositor() {
   binding_runner_->RequestQuit();
   binding_runner_.reset();
   event_runner_.reset();
+  share_data_.reset();
 }
 
 void WorkerTreeCompositor::InitCC(ContentInitParams params) {
-  config_ = params.config;
+  share_data_->config = params.config;
+  share_data_->window = params.host_window;
 
-  event_runner_ = new EventRunner();
-  binding_runner_ = new BindingRunner();
+  event_runner_ = new EventRunner(share_data_.get());
+  binding_runner_ = new BindingRunner(share_data_.get());
 
   // Init event runner on main thread
-  event_runner_->InitEventDispatcher(config_, params.host_window->AsWeakPtr(),
-                                     binding_runner_->AsWeakPtr());
+  event_runner_->InitDispatcher(binding_runner_->AsWeakPtr());
 
   // Init renderer in binding thread for sync mode
   binding_runner_->InitBindingComponents(params);
@@ -30,7 +32,7 @@ void WorkerTreeCompositor::InitCC(ContentInitParams params) {
 
 void WorkerTreeCompositor::ContentMain() {
   // Launch script thread
-  binding_runner_->BindingMain(event_runner_->user_event_id());
+  binding_runner_->BindingMain();
 
   // Launch event loop
   event_runner_->EventMain();

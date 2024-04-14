@@ -282,7 +282,7 @@ RGSSVersion Graphics::content_version() const {
 }
 
 filesystem::Filesystem* Graphics::filesystem() {
-  return dispatcher_->filesystem();
+  return dispatcher_->share_data()->filesystem.get();
 }
 
 void Graphics::InitScreenBufferInternal() {
@@ -547,8 +547,8 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
 
 void Graphics::UpdateAverageFPSInternal() {
   SDL_Event quit_event;
-  quit_event.type =
-      dispatcher_->user_event_id() + EventRunner::UPDATE_FPS_DISPLAY;
+  quit_event.type = dispatcher_->share_data()->user_event_id +
+                    EventRunner::UPDATE_FPS_DISPLAY;
   SDL_PushEvent(&quit_event);
 }
 

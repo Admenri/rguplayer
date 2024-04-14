@@ -11,16 +11,15 @@
 
 namespace content {
 
+BindingRunner::BindingRunner(WorkerShareData* share_data)
+    : share_data_(share_data) {}
+
 void BindingRunner::InitBindingComponents(ContentInitParams& params) {
-  argv0_ = params.argv0;
-  config_ = params.config;
-  window_ = params.host_window->AsWeakPtr();
-  initial_resolution_ = params.initial_resolution;
+  share_data_->argv0 = params.argv0;
   binding_engine_ = std::move(params.binding_engine);
 }
 
-void BindingRunner::BindingMain(uint32_t event_id) {
-  user_event_id_ = event_id;
+void BindingRunner::BindingMain() {
   runner_thread_ =
       std::make_unique<std::thread>(&BindingRunner::BindingFuncMain, this);
 }
@@ -60,21 +59,22 @@ void BindingRunner::RaiseRunnerFlags() {
 void BindingRunner::BindingFuncMain() {
   // Attach renderer to binding thread
   renderer_ = new RenderRunner();
-  renderer_->InitRenderer(config_, window_);
+  renderer_->InitRenderer(share_data_->config, share_data_->window);
 
   // Init I/O filesystem
-  file_manager_ = std::make_unique<filesystem::Filesystem>(argv0_);
-  file_manager_->AddLoadPath(".");
-  for (auto& it : config_->load_paths())
-    file_manager_->AddLoadPath(it);
+  share_data_->filesystem =
+      std::make_unique<filesystem::Filesystem>(share_data_->argv0);
+  share_data_->filesystem->AddLoadPath(".");
+  for (auto& it : share_data_->config->load_paths())
+    share_data_->filesystem->AddLoadPath(it);
 
   // Init Modules
   graphics_ = new Graphics(weak_ptr_factory_.GetWeakPtr(), renderer_,
-                           initial_resolution_);
-  input_ = new Input(config_, window_);
-  audio_ = new Audio(file_manager_->AsWeakPtr(), config_);
-  mouse_ = new Mouse(window_);
-  touch_ = new Touch(config_, window_);
+                           share_data_->config->initial_resolution());
+  input_ = new Input(share_data_->config, share_data_->window);
+  audio_ = new Audio(share_data_->filesystem->AsWeakPtr(), share_data_->config);
+  mouse_ = new Mouse(share_data_->window);
+  touch_ = new Touch(share_data_->config, share_data_->window);
 
   // Before run main initialize
   binding_engine_->InitializeBinding(this);
@@ -97,11 +97,11 @@ void BindingRunner::BindingFuncMain() {
   renderer_->DestroyRenderer();
 
   // Release I/O filesystem
-  file_manager_.reset();
+  share_data_->filesystem.reset();
 
   // Quit app required
   SDL_Event quit_event;
-  quit_event.type = user_event_id_ + EventRunner::QUIT_SYSTEM_EVENT;
+  quit_event.type = share_data_->user_event_id + EventRunner::QUIT_SYSTEM_EVENT;
   SDL_PushEvent(&quit_event);
 }
 
