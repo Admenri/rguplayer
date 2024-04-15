@@ -7,11 +7,26 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_main.h"
+#include "SDL_system.h"
 #include "SDL_ttf.h"
 
 #if defined(OS_LINUX)
 #include "app/icon.xxd"
 #endif  //! defined(OS_LINUX)
+
+#if defined(OS_WIN)
+#include <windows.h>
+extern "C" {
+__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
+#ifdef __ANDROID__
+#include <jni.h>
+#include <sys/system_properties.h>
+#include <unistd.h>
+#endif
 
 namespace {
 
@@ -55,9 +70,17 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft");
   SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+
+  // Allow generate synthetic mouse events on touch
+  SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
+  // Disallow generate synthetic touch events on mouse
+  SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+
+#ifdef __ANDROID__
+  SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+#endif
 
   SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
@@ -65,6 +88,45 @@ int main(int argc, char* argv[]) {
 
   // Init ANGLE vendor settings
   content::RenderRunner::InitANGLERenderer(config->angle_renderer());
+
+#ifdef __ANDROID__
+  char sdkVersionChar[PROP_VALUE_MAX];
+  __system_property_get("ro.build.version.sdk", sdkVersionChar);
+  int sdkVersion = atoi(sdkVersionChar);
+
+  // Get GAME_PATH string field from JNI (MainActivity.java)
+  JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+  jobject activity = (jobject)SDL_AndroidGetActivity();
+  jclass cls = env->GetObjectClass(activity);
+  jfieldID fIDGamePath =
+      env->GetStaticFieldID(cls, "GAME_PATH", "Ljava/lang/String;");
+  jstring strJGamePath = (jstring)env->GetStaticObjectField(cls, fIDGamePath);
+  const char* dataDir = env->GetStringUTFChars(strJGamePath, 0);
+
+  // Request storage permission (before Android 11)
+  if (sdkVersion < 30) {
+    if (!SDL_AndroidRequestPermission(
+            "android.permission.WRITE_EXTERNAL_STORAGE", nullptr, nullptr)) {
+      SDL_ShowSimpleMessageBox(
+          SDL_MESSAGEBOX_ERROR, "RGU Core",
+          "Failed to get external storage. Please check the app permissions.",
+          nullptr);
+
+      TTF_Quit();
+      IMG_Quit();
+      SDL_Quit();
+      return 0;
+    }
+  }
+
+  // Set and ensure current directory
+  if (!::chdir(dataDir))
+    LOG(INFO) << "[Android] External storage path: " << dataDir;
+
+  env->ReleaseStringUTFChars(strJGamePath, dataDir);
+  env->DeleteLocalRef(strJGamePath);
+  env->DeleteLocalRef(cls);
+#endif
 
   std::unique_ptr<ui::Widget> win = std::make_unique<ui::Widget>();
   ui::Widget::InitParams win_params;
