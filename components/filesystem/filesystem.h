@@ -22,8 +22,8 @@ class Filesystem {
   Filesystem& operator=(const Filesystem&) = delete;
 
   void AddLoadPath(const std::string& path);
-
   bool Exists(const std::string& filename);
+  std::vector<std::string> EnumDir(const std::string& dir);
 
   using OpenCallback =
       base::RepeatingCallback<bool(SDL_IOStream*, const std::string&)>;

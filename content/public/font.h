@@ -11,13 +11,14 @@
 #include <vector>
 
 #include "base/memory/ref_counted.h"
+#include "components/filesystem/filesystem.h"
 #include "content/public/utility.h"
 
 namespace content {
 
 class Font : public base::RefCounted<Font> {
  public:
-  static void InitStaticFont();
+  static void InitStaticFont(filesystem::Filesystem* io);
   static void DestroyStaticFont();
 
   static bool Existed(const std::string& name);

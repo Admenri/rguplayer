@@ -223,6 +223,23 @@ bool Filesystem::Exists(const std::string& filename) {
   return PHYSFS_exists(filename.c_str());
 }
 
+std::vector<std::string> Filesystem::EnumDir(const std::string& dir) {
+  std::vector<std::string> files;
+
+  PHYSFS_enumerate(
+      dir.c_str(),
+      [](void* data, const char* origdir,
+         const char* fname) -> PHYSFS_EnumerateCallbackResult {
+        std::vector<std::string>* files =
+            static_cast<std::vector<std::string>*>(data);
+        files->push_back(fname);
+        return PHYSFS_ENUM_OK;
+      },
+      &files);
+
+  return files;
+}
+
 void Filesystem::OpenRead(const std::string& file_path, OpenCallback callback) {
   std::string filename(file_path);
   std::string dir, file, ext;

@@ -35,7 +35,15 @@ struct DefaultFontState {
   // Storage map: <FontID, Size> -> FontObject
   std::map<std::pair<int, int>, TTF_Font*> font_cache;
   std::vector<std::string> path_cache;
+
+  // IO filesystem
+  filesystem::Filesystem* io;
+
+  // Memory cache
+  std::map<std::string, std::pair<int64_t, void*>> mem_cache_;
 };
+
+std::unique_ptr<DefaultFontState> g_default_font_state = nullptr;
 
 void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
   SDL_Surface* out =
@@ -76,21 +84,52 @@ void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
   in = out;
 }
 
-std::unique_ptr<DefaultFontState> g_default_font_state = nullptr;
+std::pair<int64_t, void*> ReadFontToMemory(const std::string& path) {
+  SDL_IOStream* io = SDL_IOFromFile(path.c_str(), "rb");
+
+  int64_t fsize = SDL_GetIOSize(io);
+  void* mem = malloc(fsize);
+  SDL_ReadIO(io, mem, fsize);
+
+  return std::make_pair(fsize, mem);
+}
+
+TTF_Font* ReadFontFromMemory(const std::string& path, int size) {
+  auto it = g_default_font_state->mem_cache_.find(path);
+  if (it != g_default_font_state->mem_cache_.end()) {
+    SDL_IOStream* io = SDL_IOFromConstMem(it->second.second, it->second.first);
+    return TTF_OpenFontIO(io, SDL_TRUE, size);
+  }
+
+  return nullptr;
+}
 
 }  // namespace
 
-void Font::InitStaticFont() {
+void Font::InitStaticFont(filesystem::Filesystem* io) {
   g_default_font_state = std::make_unique<DefaultFontState>();
-
   g_default_font_state->default_color = new Color(255.0, 255.0, 255.0, 255.0);
   g_default_font_state->default_out_color = new Color(0, 0, 0, 255.0);
+  g_default_font_state->io = io;
+
+  for (auto& dir : kFontLookupDirs) {
+    auto files = io->EnumDir(dir);
+    for (auto& file : files) {
+      std::string filepath = dir + file;
+      g_default_font_state->mem_cache_.emplace(filepath,
+                                               ReadFontToMemory(filepath));
+    }
+  }
 }
 
 void Font::DestroyStaticFont() {
   auto& cache = g_default_font_state->font_cache;
   for (auto& it : cache)
     TTF_CloseFont(it.second);
+
+  for (auto& it : g_default_font_state->mem_cache_)
+    free(it.second.second);
+
   g_default_font_state.reset();
 }
 
@@ -405,7 +444,7 @@ void Font::LoadFontInternal() {
 
       // Load new font
       const auto& font_path = paths.at(font_id_);
-      auto* font_ptr = TTF_OpenFont(font_path.c_str(), size_);
+      auto* font_ptr = ReadFontFromMemory(font_path, size_);
       if (font_ptr) {
         cache.emplace(std::pair{font_id_, size_}, font_ptr);
         loaded = true;
@@ -445,11 +484,8 @@ void Font::MakeFontIDInternal() {
 bool Font::FindFontInternal(const std::string& name, std::string* out_path) {
   for (auto& path : kFontLookupDirs) {
     std::string font_path = path + name;
-    SDL_IOStream* io = SDL_IOFromFile(font_path.c_str(), "r");
-    size_t file_length = SDL_GetIOSize(io);
-    SDL_CloseIO(io);
-
-    if (file_length > 0) {
+    auto it = g_default_font_state->mem_cache_.find(font_path);
+    if (it != g_default_font_state->mem_cache_.end()) {
       if (out_path)
         *out_path = font_path;
 

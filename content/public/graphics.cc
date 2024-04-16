@@ -31,7 +31,7 @@ Graphics::Graphics(base::WeakPtr<BindingRunner> dispatcher,
       frame_rate_(dispatcher->rgss_version() >= RGSSVersion::RGSS2 ? 60 : 40),
       fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)) {
   viewport_rect().rect = initial_resolution;
-  Font::InitStaticFont();
+  Font::InitStaticFont(dispatcher_->share_data()->filesystem.get());
 
   InitScreenBufferInternal();
 }
