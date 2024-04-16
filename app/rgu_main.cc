@@ -26,6 +26,7 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #include <jni.h>
 #include <sys/system_properties.h>
 #include <unistd.h>
+#include <filesystem>
 #endif
 
 namespace {
@@ -120,8 +121,15 @@ int main(int argc, char* argv[]) {
   }
 
   // Set and ensure current directory
-  if (!::chdir(dataDir))
-    LOG(INFO) << "[Android] External storage path: " << dataDir;
+  std::filesystem::path stdPath(dataDir);
+  if (!std::filesystem::exists(stdPath) ||
+      !std::filesystem::is_directory(stdPath)) {
+    std::filesystem::create_directories(stdPath);
+  }
+
+  std::filesystem::current_path(stdPath);
+  if (!std::filesystem::equivalent(std::filesystem::current_path(), stdPath))
+    LOG(INFO) << "[Android] Failed to create directory: " << dataDir;
 
   env->ReleaseStringUTFChars(strJGamePath, dataDir);
   env->DeleteLocalRef(strJGamePath);
