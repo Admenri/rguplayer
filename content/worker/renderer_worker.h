@@ -34,6 +34,7 @@ class RenderRunner : public base::RefCounted<RenderRunner> {
   int fragment_texture_units() const { return fragment_units_; }
   int combine_texture_units() const { return combined_units_; }
   base::WeakPtr<ui::Widget> window() const { return host_window_; }
+  SDL_GLContext& context() { return glcontext_; }
 
   static void InitANGLERenderer(CoreConfigure::ANGLERenderer renderer);
 

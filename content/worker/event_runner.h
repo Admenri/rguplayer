@@ -41,7 +41,8 @@ class EventRunner : public base::RefCounted<EventRunner> {
   }
 
  private:
-  void EventFilter(const SDL_Event& event);
+  static int EventFilter(void* userdata, SDL_Event* event);
+  void EventDispatch(const SDL_Event& event);
   void UpdateFPSDisplay(std::optional<int32_t> fps);
 
   WorkerShareData* share_data_;

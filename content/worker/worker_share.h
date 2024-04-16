@@ -31,6 +31,12 @@ struct WorkerShareData {
 
   // Renderer data storage
   base::WeakPtr<ui::Widget> window;
+
+  // Sync point
+  struct {
+    std::atomic_bool require;
+    std::atomic_bool signal;
+  } background_sync;
 };
 
 }  // namespace content

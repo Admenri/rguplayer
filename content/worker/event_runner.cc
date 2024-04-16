@@ -23,14 +23,32 @@ void EventRunner::InitDispatcher(base::WeakPtr<BindingRunner> binding_runner) {
       std::make_unique<base::RunLoop>(base::RunLoop::MessagePumpType::UI);
 
   quit_observer_ = base::RunLoop::BindEventDispatcher(
-      base::BindRepeating(&EventRunner::EventFilter, base::Unretained(this)));
+      base::BindRepeating(&EventRunner::EventDispatch, base::Unretained(this)));
+
+  SDL_SetEventFilter(&EventRunner::EventFilter, this);
 }
 
 void EventRunner::EventMain() {
   loop_runner_->Run();
 }
 
-void EventRunner::EventFilter(const SDL_Event& event) {
+int EventRunner::EventFilter(void* userdata, SDL_Event* event) {
+  EventRunner* self = static_cast<EventRunner*>(userdata);
+  WorkerShareData* data = self->share_data_;
+
+  switch (event->type) {
+    case SDL_EVENT_WILL_ENTER_BACKGROUND:
+      data->background_sync.require.store(true);
+      return 0;
+    case SDL_EVENT_DID_ENTER_FOREGROUND:
+      data->background_sync.signal.store(true);
+      return 0;
+  }
+
+  return 1;
+}
+
+void EventRunner::EventDispatch(const SDL_Event& event) {
   base::WeakPtr<ui::Widget> window = share_data_->window;
   int user_event = event.type - share_data_->user_event_id;
 

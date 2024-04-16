@@ -121,6 +121,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   void UpdateWindowViewportInternal();
 
   void SetSwapIntervalInternal();
+  void CheckSyncPoint();
 
   renderer::TextureFrameBuffer screen_buffer_[2];
   renderer::TextureFrameBuffer frozen_snapshot_;

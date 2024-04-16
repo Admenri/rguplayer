@@ -390,6 +390,7 @@ void Graphics::PresentScreenInternal(
   renderer::Blt::BltDraw(resolution_, target_rect, config_->smooth_scale());
   renderer::Blt::EndDraw();
 
+  CheckSyncPoint();
   SDL_GL_SwapWindow(window->AsSDLWindow());
 }
 
@@ -574,6 +575,21 @@ void Graphics::UpdateWindowViewportInternal() {
 void Graphics::SetSwapIntervalInternal() {
   if (SDL_GL_SetSwapInterval(vsync_interval_))
     LOG(WARNING) << "[Graphics] " << SDL_GetError();
+}
+
+void Graphics::CheckSyncPoint() {
+  WorkerShareData* data = dispatcher_->share_data();
+
+  if (!data->background_sync.require.load())
+    return;
+
+  SDL_GL_MakeCurrent(window()->AsSDLWindow(), nullptr);
+  while (!data->background_sync.signal.load())
+    SDL_Delay(10);
+  SDL_GL_MakeCurrent(window()->AsSDLWindow(), renderer()->context());
+
+  data->background_sync.require.store(false);
+  data->background_sync.signal.store(false);
 }
 
 }  // namespace content
