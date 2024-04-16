@@ -590,6 +590,7 @@ void Graphics::CheckSyncPoint() {
 
   data->background_sync.require.store(false);
   data->background_sync.signal.store(false);
+  fps_manager_->Reset();
 }
 
 }  // namespace content
