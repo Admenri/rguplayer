@@ -14,16 +14,18 @@ Viewport::Viewport(scoped_refptr<Graphics> screen)
     : GraphicElement(screen),
       Disposable(screen),
       Drawable(screen.get(), 0, true) {
+  parent_offset_ = base::Vec2i();
   viewport_rect().rect = screen->GetSize();
-  InitViewportInternal();
+  InitViewportInternal(screen->GetSize());
 }
 
 Viewport::Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect)
     : GraphicElement(screen),
       Disposable(screen),
       Drawable(screen.get(), 0, true) {
+  parent_offset_ = base::Vec2i();
   viewport_rect().rect = rect;
-  InitViewportInternal();
+  InitViewportInternal(rect);
 }
 
 Viewport::Viewport(scoped_refptr<Graphics> screen,
@@ -31,8 +33,10 @@ Viewport::Viewport(scoped_refptr<Graphics> screen,
     : GraphicElement(screen),
       Disposable(screen),
       Drawable(viewport.get(), 0, true) {
-  viewport_rect().rect = viewport->GetRect()->AsBase();
-  InitViewportInternal();
+  auto parent_rect = viewport->viewport_rect();
+  parent_offset_ = parent_rect.GetRealOffset();
+  viewport_rect().rect = base::Rect(parent_offset_, parent_rect.rect.Size());
+  InitViewportInternal(parent_rect.rect.Size());
 }
 
 Viewport::~Viewport() {
@@ -86,6 +90,7 @@ void Viewport::SetViewport(scoped_refptr<Viewport> viewport) {
   if (!parent)
     parent = screen().get();
   Drawable::SetParent(parent);
+  parent_offset_ = parent->viewport_rect().GetRealOffset();
   OnRectChangedInternal();
 }
 
@@ -150,12 +155,12 @@ void Viewport::Composite() {
 }
 
 void Viewport::OnViewportRectChanged(const ViewportInfo& rect) {
-  parent_offset_ = parent_rect().GetRealOffset();
+  parent_offset_ = rect.GetRealOffset();
   OnRectChangedInternal();
 }
 
-void Viewport::InitViewportInternal() {
-  rect_ = new Rect(viewport_rect().rect);
+void Viewport::InitViewportInternal(const base::Rect& initial_rect) {
+  rect_ = new Rect(initial_rect);
   rect_observer_ = rect_->AddChangedObserver(base::BindRepeating(
       &Viewport::OnRectChangedInternal, base::Unretained(this)));
 
@@ -164,7 +169,10 @@ void Viewport::InitViewportInternal() {
 }
 
 void Viewport::OnRectChangedInternal() {
-  viewport_rect().rect = rect_->AsBase() + parent_offset_;
+  viewport_rect().rect = rect_->AsBase();
+  viewport_rect().rect.x += parent_offset_.x;
+  viewport_rect().rect.y += parent_offset_.y;
+
   NotifyViewportChanged();
   viewport_rect_need_update_ = true;
 }

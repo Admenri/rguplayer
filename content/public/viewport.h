@@ -91,7 +91,7 @@ class Viewport : public base::RefCounted<Viewport>,
   void CheckDisposed() const override { CheckIsDisposed(); }
   void OnViewportRectChanged(const ViewportInfo& rect) override;
 
-  void InitViewportInternal();
+  void InitViewportInternal(const base::Rect& initial_rect);
 
   void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
 
