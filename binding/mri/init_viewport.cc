@@ -24,10 +24,17 @@ MRI_METHOD(viewport_initialize) {
     VALUE rect;
     MriParseArgsTo(argc, argv, "o", &rect);
 
-    scoped_refptr<content::Rect> rect_obj =
-        MriCheckStructData<content::Rect>(rect, kRectDataType);
+    if (rb_typeddata_is_kind_of(rect, &kRectDataType)) {
+      scoped_refptr<content::Rect> rect_obj =
+          MriCheckStructData<content::Rect>(rect, kRectDataType);
 
-    obj = new content::Viewport(screen, rect_obj->AsBase());
+      obj = new content::Viewport(screen, rect_obj->AsBase());
+    } else if (rb_typeddata_is_kind_of(rect, &kViewportDataType)) {
+      scoped_refptr<content::Viewport> vp_obj =
+          MriCheckStructData<content::Viewport>(rect, kViewportDataType);
+
+      obj = new content::Viewport(screen, vp_obj);
+    }
   } else {
     int x, y, width, height;
 
@@ -128,6 +135,7 @@ void InitViewportBinding() {
   MriInitDisposableBinding<content::Viewport>(klass);
   MriInitFlashableBinding<content::Viewport>(klass);
   MriInitDrawableBinding<content::Viewport>(klass);
+  MriInitViewportChildBinding<content::Viewport>(klass);
 
   MriDefineMethod(klass, "initialize", viewport_initialize);
   MriDefineMethod(klass, "snap_to_bitmap", viewport_snap_to_bitmap);

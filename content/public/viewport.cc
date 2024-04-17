@@ -26,6 +26,15 @@ Viewport::Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect)
   InitViewportInternal();
 }
 
+Viewport::Viewport(scoped_refptr<Graphics> screen,
+                   scoped_refptr<Viewport> viewport)
+    : GraphicElement(screen),
+      Disposable(screen),
+      Drawable(viewport.get(), 0, true) {
+  viewport_rect().rect = viewport->GetRect()->AsBase();
+  InitViewportInternal();
+}
+
 Viewport::~Viewport() {
   Dispose();
 }
@@ -66,6 +75,20 @@ void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   SnapToBitmapInternal(target);
 }
 
+void Viewport::SetViewport(scoped_refptr<Viewport> viewport) {
+  CheckIsDisposed();
+
+  if (viewport == parent_)
+    return;
+  parent_ = viewport;
+
+  DrawableParent* parent = parent_.get();
+  if (!parent)
+    parent = screen().get();
+  Drawable::SetParent(parent);
+  OnRectChangedInternal();
+}
+
 void Viewport::SetShader(scoped_refptr<Shader> shader) {
   CheckIsDisposed();
 
@@ -103,7 +126,8 @@ void Viewport::Composite() {
     return;
 
   renderer::GSM.states.scissor.Push(true);
-  renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);
+  renderer::GSM.states.scissor_rect.PushOnly();
+  renderer::GSM.states.scissor_rect.SetIntersect(viewport_rect().rect);
 
   DrawableParent::CompositeChildren();
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
@@ -126,7 +150,8 @@ void Viewport::Composite() {
 }
 
 void Viewport::OnViewportRectChanged(const ViewportInfo& rect) {
-  // Bypass, no process.
+  parent_offset_ = parent_rect().GetRealOffset();
+  OnRectChangedInternal();
 }
 
 void Viewport::InitViewportInternal() {
@@ -139,9 +164,8 @@ void Viewport::InitViewportInternal() {
 }
 
 void Viewport::OnRectChangedInternal() {
-  viewport_rect().rect = rect_->AsBase();
+  viewport_rect().rect = rect_->AsBase() + parent_offset_;
   NotifyViewportChanged();
-
   viewport_rect_need_update_ = true;
 }
 

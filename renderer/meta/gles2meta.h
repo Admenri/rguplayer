@@ -161,6 +161,8 @@ struct TextureFrameBuffer {
   inline static void Alloc(TextureFrameBuffer& tfb,
                            GLsizei width,
                            GLsizei height) {
+    if (tfb.size == base::Vec2i(width, height))
+      return;
     Texture::Bind(tfb.tex);
     Texture::TexImage2D(width, height, GL_RGBA);
     tfb.size = base::Vec2i(width, height);

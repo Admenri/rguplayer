@@ -23,6 +23,7 @@ class Viewport : public base::RefCounted<Viewport>,
  public:
   Viewport(scoped_refptr<Graphics> screen);
   Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect);
+  Viewport(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport);
   ~Viewport() override;
 
   Viewport(const Viewport&) = delete;
@@ -70,6 +71,12 @@ class Viewport : public base::RefCounted<Viewport>,
 
   void SnapToBitmap(scoped_refptr<Bitmap> target);
 
+  void SetViewport(scoped_refptr<Viewport> viewport);
+  scoped_refptr<Viewport> GetViewport() {
+    CheckDisposed();
+    return parent_;
+  }
+
   /* Set custom shader program */
   scoped_refptr<Shader> GetShader() const { return shader_program_; }
   void SetShader(scoped_refptr<Shader> shader);
@@ -90,6 +97,9 @@ class Viewport : public base::RefCounted<Viewport>,
 
   void OnRectChangedInternal();
 
+  scoped_refptr<Viewport> parent_;
+
+  base::Vec2i parent_offset_;
   scoped_refptr<Rect> rect_;
   scoped_refptr<Color> color_;
   scoped_refptr<Tone> tone_;

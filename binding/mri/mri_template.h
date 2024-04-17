@@ -177,7 +177,7 @@ MRI_METHOD(viewportchild_get_viewport) {
 
 template <typename Ty>
 MRI_METHOD(viewportchild_set_viewport) {
-  content::ViewportChild* obj = MriGetStructData<Ty>(self);
+  Ty* obj = MriGetStructData<Ty>(self);
 
   VALUE v;
   MriParseArgsTo(argc, argv, "o", &v);
