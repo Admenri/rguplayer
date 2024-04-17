@@ -46,10 +46,10 @@
  - 第三方依赖库部分使用Git拉取，部分需要用户自行编译处理。
  - 项目中需要使用Python3来生成自动编译文件，请确保系统中已安装Python3。
 
-### Windows (Visual Studio 2019)
+### Windows (测试环境：Windows 11 23H2 & Visual Studio 2019 & Clang-LLVM)
  - 可以直接使用vs内置的cmake功能进行快捷构建
 
-### Linux (Ubuntu23.10)
+### Linux (测试环境：Ubuntu23.10 & Visual Studio Code & GCC 13)
  - 首先通过git clone拉取项目源码: git clone https://github.com/Admenri/rguplayer.git
  - 接着git clone在third_party中用到的第三方库源码: git submodule init | git submodule update
  - 注意SDL_ttf中还有freetype
@@ -57,12 +57,18 @@
  - 在目录执行：cmake -S . -B out 以生成工程
  - 之后执行cmake --build out执行构建
 
+### Android (测试环境：Android 13.0 & Android Studio & Windows 11 23H2)
+ - 确保系统安装了Android Studio，Android NDK，CMake
+ - 确保可以在开发环境下编译出成品程序（例如Windows下先编译出exe）
+ - 然后使用Android Studio打开 “android-project” 文件夹
+ - 之后即可直接执行 Build Project 开始构建
+
 ## 系统支持
 
-- Microsoft Windows 7 later
-- Linux 6.5.0 later
-- Android 4.0 later
-- 其他平台支持计划中
+- Microsoft Windows 7 及以上
+- GNU/Linux 6.5.0 及以上
+- Android 8.0 及以上
+- 目前不支持Apple系的任何操作系统（macOS，iOS），欢迎有mac设备的同志贡献代码
 
 ## 思路来源
 
