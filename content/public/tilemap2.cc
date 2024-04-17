@@ -1019,8 +1019,8 @@ void Tilemap2::ParseMapDataBufferInternal() {
         {6,  6},  waterfall,
         {6,  9},  waterfall};
     const base::Vec2i waterfall_offset[] = {
-        {12, 6}, {12, 9},
         {14, 0}, {14, 3},
+        {12, 6}, {12, 9},
         {14, 6}, {14, 9},
     };
     // clang-format on
