@@ -25,6 +25,12 @@ load_data(String buffer)
 将数据从String中读入到位图对象中，注意保证String的大小≥size
 
 ## Class - Viewport
+initialize(Viewport viewport)
+将一个视口作为父视口创建本视口
+
+viewport= viewport
+设置父视口
+
 snap_to_bitmap(Bitmap target)
 将视口中的各种活动块渲染到位图中，可无视视口的可视属性直接绘制，
 绘制的对象会保留视口的位置偏移，同时会清空位图中原先的数据而不是覆盖渲染
@@ -58,6 +64,9 @@ set_keys_from_flag(String flags, Array keys)
 
 emulate(Integer scancode, Boolean down)
 在引擎层模拟设置一个按键的状态，适用于没有键盘输入的设备
+
+scancode为SDL的扫码键代码，
+详情参考：https://wiki.libsdl.org/SDL3/SDL_Scancode
 
 ## Module - RGU : 引擎内置扩展模块
 CONTENTVERSION -> Integer
