@@ -277,6 +277,12 @@ int Graphics::GetDisplayHeight() {
   return renderer()->window()->GetSize().y;
 }
 
+void Graphics::SetDrawableOffset(const base::Vec2i& offset) {
+  viewport_rect().rect.x = offset.x;
+  viewport_rect().rect.y = offset.y;
+  NotifyViewportChanged();
+}
+
 RGSSVersion Graphics::content_version() const {
   return dispatcher_->rgss_version();
 }
@@ -352,7 +358,8 @@ void Graphics::ResizeResolutionInternal() {
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
 
-  viewport_rect().rect = resolution_;
+  viewport_rect().rect.width = resolution_.x;
+  viewport_rect().rect.height = resolution_.y;
   NotifyViewportChanged();
 }
 

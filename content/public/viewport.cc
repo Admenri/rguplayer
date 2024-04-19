@@ -14,8 +14,8 @@ Viewport::Viewport(scoped_refptr<Graphics> screen)
     : GraphicElement(screen),
       Disposable(screen),
       Drawable(screen.get(), 0, true) {
-  parent_offset_ = base::Vec2i();
-  viewport_rect().rect = screen->GetSize();
+  parent_offset_ = screen->viewport_rect().GetRealOffset();
+  viewport_rect() = screen->viewport_rect();
   InitViewportInternal(screen->GetSize());
 }
 
@@ -23,8 +23,10 @@ Viewport::Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect)
     : GraphicElement(screen),
       Disposable(screen),
       Drawable(screen.get(), 0, true) {
-  parent_offset_ = base::Vec2i();
+  parent_offset_ = screen->viewport_rect().GetRealOffset();
   viewport_rect().rect = rect;
+  viewport_rect().rect.x += parent_offset_.x;
+  viewport_rect().rect.y += parent_offset_.y;
   InitViewportInternal(rect);
 }
 

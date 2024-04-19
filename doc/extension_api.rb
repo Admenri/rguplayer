@@ -315,6 +315,9 @@ frame_skip frame_skip=
 display_width display_height
 获取游戏窗口的大小
 
+set_drawable_offset(Integer x, Integer y)
+设置整体画面的偏移
+
 ## Module - Audio
 set_volume(Integer volume = 100)
 设置游戏的全局音量

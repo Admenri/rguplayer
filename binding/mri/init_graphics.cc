@@ -192,6 +192,14 @@ MRI_METHOD(graphics_display_height) {
   return rb_fix_new(screen->GetDisplayHeight());
 }
 
+MRI_METHOD(graphics_set_offset) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+  int x, y;
+  MriParseArgsTo(argc, argv, "ii", &x, &y);
+  screen->SetDrawableOffset(base::Vec2i(x, y));
+  return Qnil;
+}
+
 void InitGraphicsBinding() {
   VALUE module = rb_define_module("Graphics");
 
@@ -221,6 +229,8 @@ void InitGraphicsBinding() {
 
   MriDefineModuleFunction(module, "display_width", graphics_display_width);
   MriDefineModuleFunction(module, "display_height", graphics_display_height);
+
+  MriDefineModuleFunction(module, "set_drawable_offset", graphics_set_offset);
 }
 
 }  // namespace binding
