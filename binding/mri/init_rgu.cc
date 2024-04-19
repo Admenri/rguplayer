@@ -7,6 +7,7 @@
 
 #include "SDL_locale.h"
 #include "SDL_misc.h"
+#include "SDL_platform.h"
 
 namespace binding {
 
@@ -40,6 +41,7 @@ void InitRGUBinding() {
   rb_const_set(module, rb_intern("CONTENTVERSION"),
                INT2FIX((int)runner->rgss_version()));
   rb_const_set(module, rb_intern("SDLVERSION"), INT2FIX(SDL_COMPILEDVERSION));
+  rb_const_set(module, rb_intern("PLATFORM"), rb_str_new2(SDL_GetPlatform()));
 
   // Locale in host
   MriDefineModuleFunction(module, "get_locale", rgu_get_locate);
