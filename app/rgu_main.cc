@@ -74,10 +74,8 @@ int main(int argc, char* argv[]) {
   SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 
-  // Allow generate synthetic mouse events on touch
   SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
-  // Disallow generate synthetic touch events on mouse
-  SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+  SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
 
 #ifdef __ANDROID__
   SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");

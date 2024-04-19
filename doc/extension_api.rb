@@ -75,6 +75,9 @@ CONTENTVERSION -> Integer
 SDLVERSION -> Integer
 常量：引擎使用的SDL版本
 
+PLATFORM -> String
+返回当前引擎运行的系统平台
+
 get_locale -> Hash
 获取本机的地区及语言
 Hash: { “country” : “US”,
@@ -82,6 +85,9 @@ Hash: { “country” : “US”,
 
 open_url(String url)
 使用本机默认浏览器打开一个网址
+
+reset_engine
+相当于按下F12
 
 ## Module - Mouse : 鼠标扩展模块
 update

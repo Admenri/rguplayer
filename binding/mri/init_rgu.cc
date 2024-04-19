@@ -32,6 +32,11 @@ MRI_METHOD(rgu_open_url) {
   return Qnil;
 }
 
+MRI_METHOD(rgu_reset) {
+  MriGetGlobalRunner()->RequestReset();
+  return Qnil;
+}
+
 void InitRGUBinding() {
   scoped_refptr<content::BindingRunner> runner = MriGetGlobalRunner();
 
@@ -48,6 +53,9 @@ void InitRGUBinding() {
 
   // Open url
   MriDefineModuleFunction(module, "open_url", rgu_open_url);
+
+  // Reset game
+  MriDefineModuleFunction(module, "reset_engine", rgu_reset);
 }
 
 }  // namespace binding
