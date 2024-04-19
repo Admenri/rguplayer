@@ -18,6 +18,7 @@ class DrawableParent {
   struct ViewportInfo {
     base::Rect rect;
     base::Vec2i origin;
+    bool scissor = true;
 
     base::Vec2i GetRealOffset() const { return rect.Position() - origin; }
   };

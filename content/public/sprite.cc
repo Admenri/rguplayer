@@ -283,6 +283,11 @@ void Sprite::UpdateVisibilityInternal() {
   }
 
   auto& viewport = parent_rect();
+  if (!viewport.scissor) {
+    need_invisible_ = false;
+    return;
+  }
+
   SDL_Rect screen_rect = viewport.rect.ToSDLRect();
 
   SDL_Rect self_rect;
