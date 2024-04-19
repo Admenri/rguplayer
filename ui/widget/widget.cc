@@ -122,7 +122,12 @@ bool Widget::GetKeyState(::SDL_Scancode scancode) const {
 }
 
 void Widget::EmulateKeyState(::SDL_Scancode scancode, bool pressed) {
-  key_states_[scancode] = pressed;
+  SDL_Event emulate_event;
+
+  emulate_event.type = pressed ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
+  emulate_event.key.windowID = window_id_;
+  emulate_event.key.keysym.scancode = scancode;
+  SDL_PushEvent(&emulate_event);
 }
 
 void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
