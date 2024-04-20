@@ -36,126 +36,88 @@ class Rect : public base::RefCounted<Rect>,
              public Serializable,
              public ValueNotification {
  public:
-  Rect() : x_(0), y_(0), width_(0), height_(0) {}
-  Rect(const base::Rect& rect)
-      : x_(rect.x), y_(rect.y), width_(rect.width), height_(rect.height) {}
+  Rect() = default;
+  Rect(const base::Rect& rect) : data_(rect) {}
 
-  Rect(const Rect& other) {
-    x_ = other.x_;
-    y_ = other.y_;
-    width_ = other.width_;
-    height_ = other.height_;
+  Rect(const Rect& other) { data_ = other.data_; }
+
+  Rect& operator=(const Rect& other) {
+    Set(other.data_);
+    return *this;
   }
 
-  const Rect& operator=(const Rect& other) {
-    x_ = other.x_;
-    y_ = other.y_;
-    width_ = other.width_;
-    height_ = other.height_;
-    return other;
-  }
-
-  bool IsSame(const Rect& other) {
-    return other.x_ == x_ && other.y_ == y_ && other.width_ == width_ &&
-           other.height_ == height_;
-  }
-
+  bool IsSame(const Rect& other) { return data_ == other.data_; }
   void Set(const base::Rect& rect) {
-    bool changed = false;
-    if (x_ != rect.x)
-      changed = true;
-    x_ = rect.x;
-    if (y_ != rect.y)
-      changed = true;
-    y_ = rect.y;
-    if (width_ != rect.width)
-      changed = true;
-    width_ = rect.width;
-    if (height_ != rect.height)
-      changed = true;
-    height_ = rect.height;
-    if (changed)
+    base::Rect tmp_rect(data_);
+    data_ = rect;
+    if (!(tmp_rect == data_))
       UpdateData();
   }
 
   void Set(scoped_refptr<Rect> rect) {
-    bool changed = false;
-    if (x_ != rect->x_)
-      changed = true;
-    x_ = rect->x_;
-    if (y_ != rect->y_)
-      changed = true;
-    y_ = rect->y_;
-    if (width_ != rect->width_)
-      changed = true;
-    width_ = rect->width_;
-    if (height_ != rect->height_)
-      changed = true;
-    height_ = rect->height_;
-    if (changed)
+    base::Rect tmp_rect(data_);
+    data_ = rect->data_;
+    if (!(tmp_rect == data_))
       UpdateData();
   }
 
-  void Empty() { Set(base::Rect(0, 0, 0, 0)); }
+  void Empty() { Set(base::Rect()); }
 
-  int GetX() const { return x_; }
+  int GetX() const { return data_.x; }
   void SetX(int x) {
-    if (x_ == x)
+    if (data_.x == x)
       return;
-    x_ = x;
+    data_.x = x;
     UpdateData();
   }
 
-  int GetY() const { return y_; }
+  int GetY() const { return data_.y; }
   void SetY(int y) {
-    if (y_ == y)
+    if (data_.y == y)
       return;
-    y_ = y;
+    data_.y = y;
     UpdateData();
   }
 
-  int GetWidth() const { return width_; }
+  int GetWidth() const { return data_.width; }
   void SetWidth(int width) {
-    if (width_ == width)
+    if (data_.width == width)
       return;
-    width_ = width;
+    data_.width = width;
     UpdateData();
   }
 
-  int GetHeight() const { return height_; }
+  int GetHeight() const { return data_.height; }
   void SetHeight(int height) {
-    if (height_ == height)
+    if (data_.height == height)
       return;
-    height_ = height;
+    data_.height = height;
     UpdateData();
   }
 
   base::Rect AsBase(bool normalize = false) {
     if (normalize) {
-      if (width_ < 0) {
-        width_ = -width_;
-        x_ -= width_;
+      if (data_.width < 0) {
+        data_.width = -data_.width;
+        data_.x -= data_.width;
       }
 
-      if (height_ < 0) {
-        height_ = -height_;
-        y_ -= height_;
+      if (data_.height < 0) {
+        data_.height = -data_.height;
+        data_.y -= data_.height;
       }
     }
 
-    return base::Rect(x_, y_, width_, height_);
+    return data_;
   }
 
-  bool IsValid() const { return width_ != 0 && height_ != 0; }
+  bool IsValid() const { return data_.width != 0 && data_.height != 0; }
 
   std::string Serialize() override;
   static scoped_refptr<Rect> Deserialize(const std::string& data);
 
  private:
-  int x_;
-  int y_;
-  int width_;
-  int height_;
+  base::Rect data_;
 };
 
 class Tone : public base::RefCounted<Tone>,
@@ -178,10 +140,7 @@ class Tone : public base::RefCounted<Tone>,
   }
 
   Tone& operator=(const Tone& other) {
-    red_ = other.red_;
-    green_ = other.green_;
-    blue_ = other.blue_;
-    gray_ = other.gray_;
+    Set(other.red_, other.green_, other.blue_, other.gray_);
     return *this;
   }
 
@@ -282,28 +241,22 @@ class Color : public base::RefCounted<Color>,
               public Serializable,
               public ValueNotification {
  public:
-  Color() : red_(0.0), green_(0.0), blue_(0.0), alpha_(0.0), valid_(false) {}
+  Color() : red_(0.0), green_(0.0), blue_(0.0), alpha_(0.0) {}
   Color(double red, double green, double blue, double alpha = 255.0)
       : red_(std::clamp(red, 0.0, 255.0)),
         green_(std::clamp(green, 0.0, 255.0)),
         blue_(std::clamp(blue, 0.0, 255.0)),
-        alpha_(std::clamp(alpha, 0.0, 255.0)),
-        valid_(!!alpha_) {}
+        alpha_(std::clamp(alpha, 0.0, 255.0)) {}
 
   Color(const Color& other) {
     red_ = other.red_;
     green_ = other.green_;
     blue_ = other.blue_;
     alpha_ = other.alpha_;
-    valid_ = other.valid_;
   }
 
   Color& operator=(const Color& other) {
-    red_ = other.red_;
-    green_ = other.green_;
-    blue_ = other.blue_;
-    alpha_ = other.alpha_;
-    valid_ = other.valid_;
+    Set(other.red_, other.green_, other.blue_, other.alpha_);
     return *this;
   }
 
@@ -395,23 +348,15 @@ class Color : public base::RefCounted<Color>,
                      static_cast<uint8_t>(blue_), static_cast<uint8_t>(alpha_)};
   }
 
-  inline bool IsValid() const { return valid_; }
-
+  inline bool IsValid() const { return alpha_ != 0; }
   std::string Serialize() override;
   static scoped_refptr<Color> Deserialize(const std::string& data);
 
  private:
-  void UpdateData() override {
-    ValueNotification::UpdateData();
-    valid_ = !!alpha_;
-  }
-
   double red_;
   double green_;
   double blue_;
   double alpha_;
-
-  bool valid_ = true;
 };
 
 }  // namespace content

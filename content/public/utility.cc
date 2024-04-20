@@ -10,10 +10,10 @@ std::string Rect::Serialize() {
   std::string data;
 
   data.resize(4 * sizeof(int32_t));
-  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 0, x_);
-  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 1, y_);
-  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 2, width_);
-  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 3, height_);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 0, data_.x);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 1, data_.y);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 2, data_.width);
+  Serializable::WriteInt32(data.data(), sizeof(int32_t) * 3, data_.height);
 
   return data;
 }
