@@ -15,20 +15,15 @@ class LinkedList;
 template <typename T>
 class LinkNode {
  public:
-  LinkNode() : previous_(nullptr), next_(nullptr), value_(nullptr) {}
   LinkNode(T* data) : previous_(nullptr), next_(nullptr), value_(data) {}
   ~LinkNode() { RemoveFromList(); }
 
   LinkNode(const LinkNode&) = delete;
   LinkNode& operator=(const LinkNode&) = delete;
 
-  T* value() { return static_cast<T*>(this); }
-  const T* value() const { return static_cast<const T*>(this); }
-
-  T* value_as_init() { return value_; }
-
   LinkNode<T>* previous() { return previous_; }
   LinkNode<T>* next() { return next_; }
+  T* value() { return value_; }
 
   void RemoveFromList() {
     if (previous_ && next_) {
@@ -50,7 +45,7 @@ class LinkNode {
 template <typename T>
 class LinkedList {
  public:
-  LinkedList() : root_() {
+  LinkedList() : root_(nullptr) {
     root_.previous_ = &root_;
     root_.next_ = &root_;
   }
@@ -78,9 +73,7 @@ class LinkedList {
 
   LinkNode<T>* head() { return root_.next_; }
   LinkNode<T>* tail() { return root_.previous_; }
-
   LinkNode<T>* end() { return &root_; }
-
   bool empty() const { return root_.next_ == &root_; }
 
  private:

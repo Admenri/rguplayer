@@ -123,8 +123,6 @@ class Bitmap : public base::RefCounted<Bitmap>,
   scoped_refptr<Font> font_;
   base::RepeatingClosureList observers_;
   SDL_Surface* surface_buffer_;
-
-  base::WeakPtrFactory<Bitmap> weak_ptr_factory_{this};
 };
 
 }  // namespace content

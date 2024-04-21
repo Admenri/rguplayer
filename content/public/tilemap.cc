@@ -104,14 +104,13 @@ const uint8_t kFlashAlpha[] = {
 const int kFlashAlphaSize = sizeof(kFlashAlpha) / sizeof(kFlashAlpha[0]);
 
 const int kGroundLayerDefaultZ = 0;
-const int kZLayerDefaultZ = 0;
+const int kZLayerDefaultZ = 1;
 
 }  // namespace
 
 class TilemapGroundLayer : public ViewportChild {
  public:
-  TilemapGroundLayer(scoped_refptr<Graphics> screen,
-                     base::WeakPtr<Tilemap> tilemap)
+  TilemapGroundLayer(scoped_refptr<Graphics> screen, Tilemap* tilemap)
       : ViewportChild(screen, tilemap->viewport_, kGroundLayerDefaultZ),
         tilemap_(tilemap) {}
 
@@ -120,7 +119,6 @@ class TilemapGroundLayer : public ViewportChild {
 
   void InitDrawableData() override { tilemap_->InitTilemapData(); }
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
-
   void Composite() override {
     auto& shader = renderer::GSM.shaders()->tilemap;
     shader.Bind();
@@ -140,28 +138,25 @@ class TilemapGroundLayer : public ViewportChild {
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
   void OnViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {
-    tilemap_->ResetDrawLayerInternal();
     tilemap_->map_buffer_need_update_ = true;
   }
 
-  base::WeakPtr<Tilemap> tilemap_;
+ private:
+  Tilemap* tilemap_;
 };
 
 class TilemapZLayer : public ViewportChild {
  public:
-  TilemapZLayer(scoped_refptr<Graphics> screen, base::WeakPtr<Tilemap> tilemap)
+  TilemapZLayer(scoped_refptr<Graphics> screen, Tilemap* tilemap)
       : ViewportChild(screen, tilemap->viewport_, kZLayerDefaultZ),
         tilemap_(tilemap) {}
 
   TilemapZLayer(const TilemapZLayer&) = delete;
   TilemapZLayer& operator=(const TilemapZLayer&) = delete;
 
-  void InitDrawableData() override {}
-  void BeforeComposite() override {}
+  void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
+  void SetIndex(int index) { index_ = index; }
   void Composite() override {
-    if (!tilemap_ || !tilemap_->above_offsets_.size())
-      return;
-
     auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
@@ -175,13 +170,8 @@ class TilemapZLayer : public ViewportChild {
         tilemap_->above_vertices_[index_].size() / 4);
   }
 
-  void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
-  void OnViewportRectChanged(
-      const DrawableParent::ViewportInfo& rect) override {}
-
-  void SetIndex(int index) { index_ = index; }
-
-  base::WeakPtr<Tilemap> tilemap_;
+ private:
+  Tilemap* tilemap_;
   int index_ = 0;
 };
 
@@ -192,7 +182,7 @@ Tilemap::Tilemap(scoped_refptr<Graphics> screen,
       Disposable(screen),
       viewport_(viewport),
       tile_size_(tilesize) {
-  ResetDrawLayerInternal();
+  ResetDrawLayersInternal();
 }
 
 Tilemap::~Tilemap() {
@@ -312,8 +302,8 @@ void Tilemap::SetVisible(bool visible) {
 
   if (visible_ == visible)
     return;
-
   visible_ = visible;
+
   ground_layer_->SetVisible(visible_);
   for (auto& it : above_layers_)
     it->SetVisible(visible_);
@@ -329,8 +319,8 @@ void Tilemap::SetOX(int ox) {
 
   if (origin_.x == ox)
     return;
-
   origin_.x = ox;
+
   map_buffer_need_update_ = true;
 }
 
@@ -344,13 +334,14 @@ void Tilemap::SetOY(int oy) {
 
   if (origin_.y == oy)
     return;
-
   origin_.y = oy;
+
   map_buffer_need_update_ = true;
 }
 
 void Tilemap::OnObjectDisposed() {
-  weak_ptr_factory_.InvalidateWeakPtrs();
+  ground_layer_.reset();
+  above_layers_.clear();
 
   tilemap_quads_.reset();
   flash_layer_.reset();
@@ -359,9 +350,6 @@ void Tilemap::OnObjectDisposed() {
 }
 
 void Tilemap::InitTilemapData() {
-  if (flash_layer_)
-    return;
-
   tilemap_quads_ =
       std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
   flash_layer_ = std::make_unique<TilemapFlashLayer>(tile_size_);
@@ -652,35 +640,7 @@ void Tilemap::UpdateMapBufferInternal() {
 
   tilemap_quads_->Update();
 
-  // Update layers for new buffer
-  UpdateZLayersOrderInternal();
-}
-
-void Tilemap::ResetDrawLayerInternal() {
-  ground_layer_.reset(
-      new TilemapGroundLayer(screen(), weak_ptr_factory_.GetWeakPtr()));
-  const DrawableParent::ViewportInfo& viewport_rect =
-      ground_layer_->parent_rect();
-
-  const base::Vec2i tilemap_origin = origin_;
-  const base::Vec2i viewport_size = viewport_rect.rect.Size();
-
-  int layer_num =
-      (viewport_size.y / tile_size_) + !!(viewport_size.y % tile_size_) + 7;
-
-  above_layers_.clear();
-  for (int i = 0; i < layer_num; ++i) {
-    std::unique_ptr<TilemapZLayer> new_layer(
-        new TilemapZLayer(screen(), weak_ptr_factory_.GetWeakPtr()));
-    above_layers_.push_back(std::move(new_layer));
-  }
-}
-
-void Tilemap::UpdateZLayersOrderInternal() {
-  auto calc_z_order = [&](int index) {
-    return 32 * (index + tilemap_viewport_.y + 1) - origin_.y;
-  };
-
+  // Update z-layers for new buffer
   for (int i = 0; i < above_vertices_.size(); ++i) {
     auto& it = above_vertices_[i];
     if (it.empty()) {
@@ -689,9 +649,27 @@ void Tilemap::UpdateZLayersOrderInternal() {
       continue;
     }
 
-    above_layers_[i]->SetZ(calc_z_order(i));
-    above_layers_[i]->SetVisible(true);
     above_layers_[i]->SetIndex(i);
+    above_layers_[i]->SetVisible(true);
+  }
+}
+
+void Tilemap::ResetDrawLayersInternal() {
+  ground_layer_.reset(new TilemapGroundLayer(screen(), this));
+  const DrawableParent::ViewportInfo& viewport_rect =
+      ground_layer_->parent_rect();
+  const base::Vec2i viewport_size = viewport_rect.rect.Size();
+
+  auto calc_z_order = [&](int index) {
+    return 32 * (index + tilemap_viewport_.y + 1) - origin_.y;
+  };
+
+  int layer_num =
+      (viewport_size.y / tile_size_) + !!(viewport_size.y % tile_size_) + 7;
+  for (int i = 0; i < layer_num; ++i) {
+    std::unique_ptr<TilemapZLayer> new_layer(new TilemapZLayer(screen(), this));
+    new_layer->SetZ(calc_z_order(i));
+    above_layers_.push_back(std::move(new_layer));
   }
 }
 

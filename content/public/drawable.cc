@@ -11,7 +11,7 @@ uint64_t g_creation_stamp = 0;
 }  // namespace
 
 Drawable::Drawable(DrawableParent* parent, int z, bool visible, int sprite_y)
-    : base::LinkNode<Drawable>(),
+    : node_(this),
       init_data_complete_(false),
       parent_(parent),
       z_(z),
@@ -22,7 +22,7 @@ Drawable::Drawable(DrawableParent* parent, int z, bool visible, int sprite_y)
 }
 
 Drawable::~Drawable() {
-  RemoveFromList();
+  node_.RemoveFromList();
 }
 
 void Drawable::SetParent(DrawableParent* parent) {
@@ -30,9 +30,9 @@ void Drawable::SetParent(DrawableParent* parent) {
 
   if (parent_ == parent)
     return;
-
-  RemoveFromList();
   parent_ = parent;
+
+  node_.RemoveFromList();
   parent_->InsertDrawable(this);
 
   OnViewportRectChanged(parent->viewport_rect());
@@ -46,13 +46,18 @@ void Drawable::SetZ(int z) {
 
   z_ = z;
 
-  RemoveFromList();
+  node_.RemoveFromList();
   parent_->InsertDrawable(this);
+}
+
+void Drawable::RemoveFromList() {
+  node_.RemoveFromList();
 }
 
 void Drawable::SetSpriteY(int y) {
   sprite_y_ = y;
-  RemoveFromList();
+
+  node_.RemoveFromList();
   parent_->InsertDrawable(this);
 }
 
@@ -67,11 +72,11 @@ DrawableParent::~DrawableParent() {
 void DrawableParent::InsertDrawable(Drawable* drawable) {
   for (auto it = drawables_.head(); it != drawables_.end(); it = it->next()) {
     if (CalcDrawableOrder(it->value(), drawable)) {
-      return drawables_.InsertBefore(it, drawable);
+      return drawables_.InsertBefore(it, &drawable->node_);
     }
   }
 
-  drawables_.Append(drawable);
+  drawables_.Append(&drawable->node_);
 }
 
 void DrawableParent::NotifyPrepareComposite() {
@@ -106,9 +111,8 @@ void DrawableParent::CompositeChildren() {
 }
 
 void DrawableParent::NotifyViewportChanged() {
-  for (auto it = drawables_.head(); it != drawables_.end(); it = it->next()) {
+  for (auto* it = drawables_.head(); it != drawables_.end(); it = it->next())
     it->value()->OnViewportRectChanged(viewport_rect_);
-  }
 }
 
 bool DrawableParent::CalcDrawableOrder(Drawable* self, Drawable* other) {

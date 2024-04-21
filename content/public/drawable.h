@@ -18,8 +18,11 @@ class DrawableParent {
   struct ViewportInfo {
     base::Rect rect;
     base::Vec2i origin;
+
+    // Did viewport container has scissor area?
     bool scissor = true;
 
+    // Calculate display offset
     base::Vec2i GetRealOffset() const { return rect.Position() - origin; }
   };
 
@@ -37,9 +40,7 @@ class DrawableParent {
 
   /* Notify on binding thread */
   void NotifyViewportChanged();
-
   inline ViewportInfo& viewport_rect() { return viewport_rect_; }
-  base::LinkedList<Drawable>& link() { return drawables_; }
 
  private:
   bool CalcDrawableOrder(Drawable* self, Drawable* other);
@@ -48,7 +49,7 @@ class DrawableParent {
   base::LinkedList<Drawable> drawables_;
 };
 
-class Drawable : public base::LinkNode<Drawable> {
+class Drawable {
  public:
   Drawable(DrawableParent* parent,
            int z = 0,
@@ -88,19 +89,23 @@ class Drawable : public base::LinkNode<Drawable> {
   }
 
  protected:
-  virtual void InitDrawableData() = 0;
+  virtual void InitDrawableData() {}
   virtual void BeforeComposite() {}
   virtual void Composite() = 0;
   virtual void CheckDisposed() const = 0;
   virtual void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
   }
 
+  void RemoveFromList();
   void SetSpriteY(int y);
 
  private:
   friend class DrawableParent;
+  base::LinkNode<Drawable> node_;
+
   bool init_data_complete_;
   DrawableParent* parent_;
+
   int z_;
   bool visible_;
   uint64_t creation_stamp_;

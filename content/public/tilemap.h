@@ -71,11 +71,10 @@ class Tilemap : public base::RefCounted<Tilemap>,
   void MakeAtlasInternal();
   void UpdateViewportInternal();
   void UpdateMapBufferInternal();
-  void ResetDrawLayerInternal();
-  void UpdateZLayersOrderInternal();
   void RaiseUpdateAtlasInternal();
   void RaiseUpdateBufferInternal();
   void DrawFlashLayerInternal();
+  void ResetDrawLayersInternal();
 
   enum class AutotileType {
     Animated = 0,
@@ -124,8 +123,6 @@ class Tilemap : public base::RefCounted<Tilemap>,
   base::CallbackListSubscription map_data_observer_;
   base::CallbackListSubscription priorities_observer_;
   base::CallbackListSubscription bitmap_observers_[8];
-
-  base::WeakPtrFactory<Tilemap> weak_ptr_factory_{this};
 };
 
 }  // namespace content

@@ -155,7 +155,7 @@ void Graphics::Reset() {
   /* Disposed all elements */
   for (auto it = disposable_elements_.tail(); it != disposable_elements_.end();
        it = it->previous()) {
-    it->value_as_init()->Dispose();
+    it->value()->Dispose();
   }
 
   /* Reset attribute */
@@ -183,7 +183,7 @@ void Graphics::Transition(int duration,
   SetBrightness(255);
   vague = std::clamp<int>(vague, 1, 256);
 
-  TransitionSceneInternal(duration, trans_bitmap, vague);
+  TransitionSceneInternal(duration, !!trans_bitmap, vague);
   renderer::GSM.states.blend.Push(false);
   for (int i = 0; i < duration; ++i) {
     TransitionSceneInternalLoop(i, duration, trans_bitmap);
@@ -421,7 +421,7 @@ void Graphics::FreezeSceneInternal() {
 }
 
 void Graphics::TransitionSceneInternal(int duration,
-                                       scoped_refptr<Bitmap> trans_bitmap,
+                                       bool has_trans,
                                        int vague) {
   // Snap to backend buffer
   CompositeScreenInternal();
@@ -429,7 +429,7 @@ void Graphics::TransitionSceneInternal(int duration,
   auto& alpha_shader = renderer::GSM.shaders()->alpha_trans;
   auto& vague_shader = renderer::GSM.shaders()->vague_shader;
 
-  if (!trans_bitmap) {
+  if (!has_trans) {
     alpha_shader.Bind();
     alpha_shader.SetProjectionMatrix(
         renderer::GSM.states.viewport.Current().Size());

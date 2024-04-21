@@ -80,6 +80,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   void SetDrawableOffset(const base::Vec2i& offset);
 
+  inline bool frozen() const { return frozen_; }
   RGSSVersion content_version() const;
   scoped_refptr<CoreConfigure> config() { return config_; }
   scoped_refptr<RenderRunner> renderer() const { return renderer_; }
@@ -98,9 +99,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   void PresentScreenInternal(const renderer::TextureFrameBuffer& screen_buffer);
   void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
   void FreezeSceneInternal();
-  void TransitionSceneInternal(int duration,
-                               scoped_refptr<Bitmap> trans_bitmap,
-                               int vague);
+  void TransitionSceneInternal(int duration, bool has_trans, int vague);
   void TransitionSceneInternalLoop(int i,
                                    int duration,
                                    scoped_refptr<Bitmap> trans_bitmap);
@@ -144,8 +143,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   base::Rect display_viewport_;
   base::Vec2i window_size_;
   int vsync_interval_;
-
-  base::WeakPtrFactory<Graphics> weak_ptr_factory_{this};
 };
 
 class GraphicElement {
