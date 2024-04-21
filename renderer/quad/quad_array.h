@@ -40,9 +40,6 @@ class QuadDrawableArray final {
     if (!quad_size_)
       return;
 
-    if (GL.GenVertexArrays)
-      VertexArray<VertexType>::Bind(vao_);
-
     VertexBuffer::Bind(vao_.vbo);
     size_t buffer_size = quad_size_ * sizeof(VertexType) * 4;
     if (buffer_size > vbo_size_) {
@@ -55,9 +52,7 @@ class QuadDrawableArray final {
       // As subdata upload
       VertexBuffer::BufferSubData(0, buffer_size, vertices_.data());
     }
-
-    if (!GL.GenVertexArrays)
-      VertexBuffer::Unbind();
+    VertexBuffer::Unbind();
   }
 
   void Draw(size_t offset, size_t count) {

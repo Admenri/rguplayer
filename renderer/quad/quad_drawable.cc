@@ -33,8 +33,7 @@ void QuadIndexBuffer::EnsureSize(size_t count) {
 
   IndexBuffer::Bind(ibo);
   IndexBuffer::BufferData(buffer.size() * sizeof(uint16_t), buffer.data());
-  if (!GL.GenVertexArrays)
-    IndexBuffer::Unbind();
+  IndexBuffer::Unbind();
 }
 
 QuadDrawable::QuadDrawable() : CommonVertexDrawable(GSM.quad_ibo()->ibo) {}

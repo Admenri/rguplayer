@@ -54,13 +54,9 @@ inline void CommonVertexDrawable<VertexCount>::Draw() {
 
 template <int VertexCount>
 inline void CommonVertexDrawable<VertexCount>::UpdateBuffer() {
-  if (GL.GenVertexArrays)
-    VertexArray<CommonVertex>::Bind(vertex_array_);
-
   VertexBuffer::Bind(vertex_array_.vbo);
   VertexBuffer::BufferData(sizeof(vertex_), &vertex_, GL_DYNAMIC_DRAW);
-  if (!GL.GenVertexArrays)
-    VertexBuffer::Unbind();
+  VertexBuffer::Unbind();
 }
 
 }  // namespace renderer

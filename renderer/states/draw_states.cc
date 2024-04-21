@@ -73,9 +73,4 @@ void GLClearColor::OnSetState(const base::Vec4& value) {
   GL.ClearColor(value.x, value.y, value.z, value.w);
 }
 
-void GLVertexAttrib::OnSetState(const GLID<VertexAttrib>& value) {
-  if (GL.BindVertexArray)
-    GL.BindVertexArray(value.gl);
-}
-
 }  // namespace renderer
