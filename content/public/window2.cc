@@ -617,8 +617,9 @@ void Window2::UpdateBaseTextureInternal() {
   renderer::TextureFrameBuffer::Alloc(base_tfb_, rect_.width, rect_.height);
 
   renderer::FrameBuffer::Bind(base_tfb_.fbo);
-  renderer::FrameBuffer::ClearColor();
+  renderer::GSM.states.clear_color.Push(base::Vec4());
   renderer::FrameBuffer::Clear();
+  renderer::GSM.states.clear_color.Pop();
 
   if (!windowskin_ || windowskin_->IsDisposed())
     return;

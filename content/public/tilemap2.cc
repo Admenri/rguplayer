@@ -543,7 +543,8 @@ namespace content {
 
 class TilemapGroundLayer2 : public ViewportChild {
  public:
-  TilemapGroundLayer2(scoped_refptr<Graphics> screen, Tilemap2* tilemap)
+  TilemapGroundLayer2(scoped_refptr<Graphics> screen,
+                      base::WeakPtr<Tilemap2> tilemap)
       : ViewportChild(screen, tilemap->viewport_, kGroundLayerDefaultZ),
         tilemap_(tilemap) {}
 
@@ -575,19 +576,22 @@ class TilemapGroundLayer2 : public ViewportChild {
     tilemap_->buffer_need_update_ = true;
   }
 
-  Tilemap2* tilemap_;
+  base::WeakPtr<Tilemap2> tilemap_;
 };
 
 class TilemapAboveLayer2 : public ViewportChild {
  public:
-  TilemapAboveLayer2(scoped_refptr<Graphics> screen, Tilemap2* tilemap)
+  TilemapAboveLayer2(scoped_refptr<Graphics> screen,
+                     base::WeakPtr<Tilemap2> tilemap)
       : ViewportChild(screen, tilemap->viewport_, kAboveLayerDefaultZ),
         tilemap_(tilemap) {}
 
   TilemapAboveLayer2(const TilemapAboveLayer2&) = delete;
   TilemapAboveLayer2& operator=(const TilemapAboveLayer2&) = delete;
 
-  void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
+  void InitDrawableData() override {}
+  void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
+
   void Composite() override {
     auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
@@ -601,7 +605,13 @@ class TilemapAboveLayer2 : public ViewportChild {
                                    tilemap_->above_vertices_.size() / 4);
   }
 
-  Tilemap2* tilemap_;
+  void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
+  void OnViewportRectChanged(
+      const DrawableParent::ViewportInfo& rect) override {
+    tilemap_->buffer_need_update_ = true;
+  }
+
+  base::WeakPtr<Tilemap2> tilemap_;
 };
 
 Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
@@ -611,8 +621,10 @@ Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
       Disposable(screen),
       viewport_(viewport),
       tile_size_(tilesize) {
-  ground_ = std::make_unique<TilemapGroundLayer2>(screen, this);
-  above_ = std::make_unique<TilemapAboveLayer2>(screen, this);
+  ground_ = std::make_unique<TilemapGroundLayer2>(
+      screen, weak_ptr_factory_.GetWeakPtr());
+  above_ = std::make_unique<TilemapAboveLayer2>(screen,
+                                                weak_ptr_factory_.GetWeakPtr());
 }
 
 Tilemap2::~Tilemap2() {
@@ -760,6 +772,8 @@ void Tilemap2::SetOY(int oy) {
 void Tilemap2::OnObjectDisposed() {
   ground_.reset();
   above_.reset();
+
+  weak_ptr_factory_.InvalidateWeakPtrs();
 
   tilemap_quads_.reset();
   flash_layer_.reset();

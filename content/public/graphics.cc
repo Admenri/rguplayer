@@ -328,8 +328,9 @@ void Graphics::CompositeScreenInternal() {
   DrawableParent::NotifyPrepareComposite();
 
   renderer::FrameBuffer::Bind(screen_buffer_[0].fbo);
-  renderer::FrameBuffer::ClearColor(0, 0, 0, 1);
+  renderer::GSM.states.clear_color.Push(base::Vec4(0, 0, 0, 1));
   renderer::FrameBuffer::Clear();
+  renderer::GSM.states.clear_color.Pop();
 
   renderer::GSM.states.scissor_rect.Set(resolution_);
   renderer::GSM.states.viewport.Set(resolution_);

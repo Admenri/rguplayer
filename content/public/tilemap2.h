@@ -123,6 +123,8 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   base::CallbackListSubscription map_data_observer_;
   base::CallbackListSubscription flags_observer_;
   base::CallbackListSubscription bitmap_observers_[9];
+
+  base::WeakPtrFactory<Tilemap2> weak_ptr_factory_{this};
 };
 
 }  // namespace content

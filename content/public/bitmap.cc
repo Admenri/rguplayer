@@ -437,8 +437,9 @@ void Bitmap::FillRectInternal(const base::Rect& rect, const base::Vec4& color) {
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.Push(rect);
 
-  renderer::FrameBuffer::ClearColor(color.x, color.y, color.z, color.w);
+  renderer::GSM.states.clear_color.Push(color);
   renderer::FrameBuffer::Clear();
+  renderer::GSM.states.clear_color.Pop();
 
   renderer::GSM.states.scissor_rect.Pop();
   renderer::GSM.states.scissor.Pop();

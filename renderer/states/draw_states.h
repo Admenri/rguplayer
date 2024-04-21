@@ -103,6 +103,11 @@ class GLClearColor : public StateStack<base::Vec4> {
   void OnSetState(const base::Vec4& value) override;
 };
 
+class GLVertexAttrib : public StateStack<GLID<VertexAttrib>> {
+ public:
+  void OnSetState(const GLID<VertexAttrib>& value) override;
+};
+
 }  // namespace renderer
 
 #endif  // !RENDERER_STATES_DRAW_STATES_H_
