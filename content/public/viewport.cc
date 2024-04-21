@@ -137,6 +137,7 @@ void Viewport::Composite() {
   renderer::GSM.states.scissor_rect.SetIntersect(viewport_rect().rect);
 
   DrawableParent::CompositeChildren();
+
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
       (shader_program_ && !shader_program_->IsDisposed())) {
     base::Vec4 composite_color = color_->AsBase();
@@ -194,7 +195,7 @@ void Viewport::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
   NotifyPrepareComposite();
 
   renderer::FrameBuffer::Bind(target->GetTexture().fbo);
-  renderer::GSM.states.clear_color.Set(base::Vec4());
+  renderer::FrameBuffer::ClearColor();
   renderer::FrameBuffer::Clear();
 
   if (Flashable::IsFlashing() && Flashable::EmptyFlashing())

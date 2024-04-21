@@ -67,7 +67,7 @@ static const int kPauseAniAlphaSize =
 
 class WindowControlLayer : public ViewportChild {
  public:
-  WindowControlLayer(base::WeakPtr<Window> window)
+  WindowControlLayer(Window* window)
       : ViewportChild(window->screen(),
                       window->GetViewport(),
                       window->GetZ() + 2),
@@ -85,7 +85,7 @@ class WindowControlLayer : public ViewportChild {
   void OnViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {}
 
-  base::WeakPtr<Window> window_;
+  Window* window_;
 };
 
 Window::Window(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
@@ -269,8 +269,6 @@ void Window::SetViewport(scoped_refptr<Viewport> viewport) {
 }
 
 void Window::OnObjectDisposed() {
-  weak_ptr_factory_.InvalidateWeakPtrs();
-
   RemoveFromList();
 
   control_layer_.reset();
@@ -365,7 +363,7 @@ void Window::Composite() {
 void Window::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {}
 
 void Window::InitWindow() {
-  control_layer_.reset(new WindowControlLayer(weak_ptr_factory_.GetWeakPtr()));
+  control_layer_.reset(new WindowControlLayer(this));
 
   cursor_rect_ = new Rect();
   cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(
@@ -442,9 +440,8 @@ void Window::UpdateBaseTexInternal() {
   renderer::TextureFrameBuffer::Alloc(base_tfb_, rect_.width, rect_.height);
 
   renderer::FrameBuffer::Bind(base_tfb_.fbo);
-  renderer::GSM.states.clear_color.Push(base::Vec4());
+  renderer::FrameBuffer::ClearColor();
   renderer::FrameBuffer::Clear();
-  renderer::GSM.states.clear_color.Pop();
 
   if (!windowskin_ || windowskin_->IsDisposed())
     return;

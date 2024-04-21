@@ -179,8 +179,6 @@ class Window : public base::RefCounted<Window>,
 
   base::CallbackListSubscription cursor_rect_observer_;
   base::CallbackListSubscription windowskin_observer_;
-
-  base::WeakPtrFactory<Window> weak_ptr_factory_{this};
 };
 
 }  // namespace content

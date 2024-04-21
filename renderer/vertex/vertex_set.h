@@ -90,14 +90,16 @@ struct VertexArray {
 
   inline static void Bind(const VertexArray& vao) {
     if (GL.GenVertexArrays) {
-      GSM.states.vertex_attrib.Set(vao.id);
+      GL.BindVertexArray(vao.id.gl);
     } else {
       SetAttrib(vao);
     }
   }
 
   inline static void Unbind() {
-    if (!GL.GenVertexArrays) {
+    if (GL.GenVertexArrays) {
+      GL.BindVertexArray(0);
+    } else {
       for (size_t i = 0; i < VertexInfo<Type>::attr_size; i++) {
         GL.DisableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
       }

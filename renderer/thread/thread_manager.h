@@ -56,8 +56,6 @@ class GlobalStateManager final {
     GLScissorRegion scissor_rect;
     GLBlend blend;
     GLBlendFunc blend_func;
-    GLClearColor clear_color;
-    GLVertexAttrib vertex_attrib;
   } states;
 
   GLShaderWare* shaders() const { return shaders_.get(); }
