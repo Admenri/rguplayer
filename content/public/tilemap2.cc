@@ -554,6 +554,10 @@ class TilemapGroundLayer2 : public ViewportChild {
   void InitDrawableData() override { tilemap_->InitDrawableData(); }
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
   void Composite() override {
+    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
+    if (!ground_quad_size)
+      return;
+
     auto& shader = renderer::GSM.shaders()->tilemap2;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
@@ -564,9 +568,7 @@ class TilemapGroundLayer2 : public ViewportChild {
     shader.SetAnimationOffset(tilemap_->animation_offset_);
     shader.SetTileSize(tilemap_->tile_size_);
 
-    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
     tilemap_->tilemap_quads_->Draw(0, ground_quad_size);
-
     tilemap_->DrawFlashLayerInternal();
   }
 
@@ -593,6 +595,12 @@ class TilemapAboveLayer2 : public ViewportChild {
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
 
   void Composite() override {
+    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
+    int above_quad_size = tilemap_->above_vertices_.size() / 4;
+
+    if (!above_quad_size)
+      return;
+
     auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
@@ -600,9 +608,7 @@ class TilemapAboveLayer2 : public ViewportChild {
     shader.SetTexture(tilemap_->atlas_tfb_.tex);
     shader.SetTransOffset(tilemap_->tilemap_offset_);
 
-    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
-    tilemap_->tilemap_quads_->Draw(ground_quad_size,
-                                   tilemap_->above_vertices_.size() / 4);
+    tilemap_->tilemap_quads_->Draw(ground_quad_size, above_quad_size);
   }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }

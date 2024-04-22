@@ -26,17 +26,17 @@ class QuadDrawableArray final {
     VertexBuffer::Del(vao_.vbo);
   }
 
-  void Resize(size_t size) {
+  inline void Resize(size_t size) {
     vertices_.resize(size * 4);
     quad_size_ = size;
   }
 
-  void Clear() {
+  inline void Clear() {
     vertices_.clear();
     quad_size_ = 0;
   }
 
-  void Update() {
+  inline void Update() {
     if (!quad_size_)
       return;
 
@@ -55,7 +55,7 @@ class QuadDrawableArray final {
     VertexBuffer::Unbind();
   }
 
-  void Draw(size_t offset, size_t count) {
+  inline void Draw(size_t offset, size_t count) {
     if (!count)
       return;
 
@@ -66,10 +66,10 @@ class QuadDrawableArray final {
     VertexArray<VertexType>::Unbind();
   }
 
-  void Draw() { Draw(0, quad_size_); }
+  inline void Draw() { Draw(0, quad_size_); }
 
-  std::vector<VertexType>& vertices() { return vertices_; }
-  size_t count() const { return quad_size_; }
+  inline std::vector<VertexType>& vertices() { return vertices_; }
+  inline size_t count() const { return quad_size_; }
 
  private:
   std::vector<VertexType> vertices_;

@@ -157,6 +157,9 @@ class TilemapZLayer : public ViewportChild {
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
   void SetIndex(int index) { index_ = index; }
   void Composite() override {
+    if (!tilemap_->above_vertices_.size())
+      return;
+
     auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
@@ -165,8 +168,9 @@ class TilemapZLayer : public ViewportChild {
     shader.SetTransOffset(tilemap_->tilemap_offset_);
 
     int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
+    int offset = index_ ? tilemap_->above_offsets_[index_] / 4 : 0;
     tilemap_->tilemap_quads_->Draw(
-        ground_quad_size + tilemap_->above_offsets_[index_] / 4,
+        ground_quad_size + offset,
         tilemap_->above_vertices_[index_].size() / 4);
   }
 
