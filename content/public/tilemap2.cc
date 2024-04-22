@@ -806,6 +806,10 @@ void Tilemap2::CreateTileAtlasInternal() {
   renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_ * 64,
                                       tile_size_ * 32);
 
+  renderer::FrameBuffer::Bind(atlas_tfb_.fbo);
+  renderer::FrameBuffer::ClearColor();
+  renderer::FrameBuffer::Clear();
+
   /* tilemap bitmap atlas */
   for (int i = 0; i < kTilemapAtlasSize; ++i) {
     auto& atlas_info = kTilemapAtlas[i];

@@ -386,6 +386,10 @@ void Tilemap::MakeAtlasInternal() {
   renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_ * 20,
                                       atlas_height);
 
+  renderer::FrameBuffer::Bind(atlas_tfb_.fbo);
+  renderer::FrameBuffer::ClearColor();
+  renderer::FrameBuffer::Clear();
+
   // Autotile part
   int offset = 0;
   for (auto& it : autotiles_) {
