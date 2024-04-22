@@ -89,10 +89,6 @@ int main(int argc, char* argv[]) {
   content::RenderRunner::InitANGLERenderer(config->angle_renderer());
 
 #ifdef __ANDROID__
-  char sdkVersionChar[PROP_VALUE_MAX];
-  __system_property_get("ro.build.version.sdk", sdkVersionChar);
-  int sdkVersion = atoi(sdkVersionChar);
-
   // Get GAME_PATH string field from JNI (MainActivity.java)
   JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
   jobject activity = (jobject)SDL_AndroidGetActivity();
@@ -102,22 +98,6 @@ int main(int argc, char* argv[]) {
   jstring strJGamePath = (jstring)env->GetStaticObjectField(cls, fIDGamePath);
   const char* dataDir = env->GetStringUTFChars(strJGamePath, 0);
 
-  // Request storage permission (before Android 11)
-  if (sdkVersion < 30) {
-    if (!SDL_AndroidRequestPermission(
-            "android.permission.WRITE_EXTERNAL_STORAGE", nullptr, nullptr)) {
-      SDL_ShowSimpleMessageBox(
-          SDL_MESSAGEBOX_ERROR, "RGU Core",
-          "Failed to get external storage. Please check the app permissions.",
-          nullptr);
-
-      TTF_Quit();
-      IMG_Quit();
-      SDL_Quit();
-      return 0;
-    }
-  }
-
   // Set and ensure current directory
   std::filesystem::path stdPath(dataDir);
   if (!std::filesystem::exists(stdPath) ||
@@ -126,8 +106,8 @@ int main(int argc, char* argv[]) {
   }
 
   std::filesystem::current_path(stdPath);
-  if (!std::filesystem::equivalent(std::filesystem::current_path(), stdPath))
-    LOG(INFO) << "[Android] Failed to create directory: " << dataDir;
+  if (std::filesystem::equivalent(std::filesystem::current_path(), stdPath))
+    LOG(INFO) << "[Android] Base directory: " << dataDir;
 
   env->ReleaseStringUTFChars(strJGamePath, dataDir);
   env->DeleteLocalRef(strJGamePath);

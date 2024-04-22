@@ -79,9 +79,6 @@ struct VertexArray {
       GL.BindVertexArray(vao.id.gl);
       SetAttrib(vao);
       GL.BindVertexArray(0);
-    } else {
-      IndexBuffer::Unbind();
-      VertexBuffer::Unbind();
     }
   }
 

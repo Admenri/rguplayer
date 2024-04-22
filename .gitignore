@@ -363,3 +363,4 @@ FodyWeavers.xsd
 /android-project/.idea
 /android-project/app/build
 /android-project/app/.cxx
+/android-project/app/src/main/assets
