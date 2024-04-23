@@ -22,7 +22,7 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
 
-#ifdef __ANDROID__
+#if defined(OS_ANDROID)
 #include <jni.h>
 #include <sys/system_properties.h>
 #include <unistd.h>
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
   SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
 
-#ifdef __ANDROID__
+#if defined(OS_ANDROID)
   SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
 #endif
 
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
   // Init ANGLE vendor settings
   content::RenderRunner::InitANGLERenderer(config->angle_renderer());
 
-#ifdef __ANDROID__
+#if defined(OS_ANDROID)
   // Get GAME_PATH string field from JNI (MainActivity.java)
   JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
   jobject activity = (jobject)SDL_AndroidGetActivity();

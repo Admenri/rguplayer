@@ -66,7 +66,12 @@ class Widget {
 
     bool resizable = false;
 
-    bool fullscreen = false;
+    bool fullscreen =
+#if defined(OS_ANDROID)
+        true;
+#else
+        false;
+#endif
 
     std::optional<base::Vec2i> position;
     base::Vec2i size;
