@@ -91,7 +91,15 @@ int main(int argc, char* argv[]) {
       std::make_unique<filesystem::Filesystem>(argv[0]);
   iosystem->AddLoadPath(".");
 
-  SDL_IOStream* inifile = iosystem->OpenReadRaw(ini);
+  SDL_IOStream* inifile = nullptr;
+  try {
+    iosystem->OpenReadRaw(ini);
+  } catch (const base::Exception& e) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Kernel",
+                             e.GetErrorMessage().c_str(), nullptr);
+    return 1;
+  }
+
   if (!config->LoadConfigure(inifile))
     return 1;
 
@@ -100,7 +108,7 @@ int main(int argc, char* argv[]) {
 
   if (config->content_version() == content::RGSSVersion::Null) {
     LOG(INFO) << "[Entry] Failed to load RGSS version.";
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Core",
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Kernel",
                              "Failed to identify RGSS version from configure.",
                              nullptr);
     return 1;
