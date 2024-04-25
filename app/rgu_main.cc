@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 
   SDL_IOStream* inifile = nullptr;
   try {
-    iosystem->OpenReadRaw(ini);
+    inifile = iosystem->OpenReadRaw(ini);
   } catch (const base::Exception& e) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Kernel",
                              e.GetErrorMessage().c_str(), nullptr);
