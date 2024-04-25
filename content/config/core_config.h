@@ -7,6 +7,7 @@
 
 #include "base/math/math.h"
 #include "base/memory/ref_counted.h"
+#include "components/filesystem/filesystem.h"
 
 namespace content {
 
@@ -36,7 +37,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   CoreConfigure& operator=(const CoreConfigure&) = delete;
 
   void LoadCommandLine(int argc, char** argv);
-  bool LoadConfigure(const std::string& filename);
+  bool LoadConfigure(SDL_IOStream* filestream);
 
   std::string& game_rtp() { return game_rtp_; }
   std::string& game_title() { return game_title_; }

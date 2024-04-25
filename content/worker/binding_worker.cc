@@ -15,7 +15,6 @@ BindingRunner::BindingRunner(WorkerShareData* share_data)
     : share_data_(share_data) {}
 
 void BindingRunner::InitBindingComponents(ContentInitParams& params) {
-  share_data_->argv0 = params.argv0;
   binding_engine_ = std::move(params.binding_engine);
 }
 
@@ -61,13 +60,6 @@ void BindingRunner::BindingFuncMain() {
   renderer_ = new RenderRunner();
   renderer_->InitRenderer(share_data_->config, share_data_->window);
 
-  // Init I/O filesystem
-  share_data_->filesystem =
-      std::make_unique<filesystem::Filesystem>(share_data_->argv0);
-  share_data_->filesystem->AddLoadPath(".");
-  for (auto& it : share_data_->config->load_paths())
-    share_data_->filesystem->AddLoadPath(it);
-
   // Init Modules
   graphics_ = new Graphics(weak_ptr_factory_.GetWeakPtr(), renderer_,
                            share_data_->config->initial_resolution());
@@ -95,9 +87,6 @@ void BindingRunner::BindingFuncMain() {
 
   // Destroy renderer on binding thread
   renderer_->DestroyRenderer();
-
-  // Release I/O filesystem
-  share_data_->filesystem.reset();
 
   // Quit app required
   SDL_Event quit_event;

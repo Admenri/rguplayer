@@ -19,6 +19,7 @@ WorkerTreeCompositor::~WorkerTreeCompositor() {
 void WorkerTreeCompositor::InitCC(ContentInitParams params) {
   share_data_->config = params.config;
   share_data_->window = params.host_window;
+  share_data_->filesystem = std::move(params.filesystem);
 
   event_runner_ = new EventRunner(share_data_.get());
   binding_runner_ = new BindingRunner(share_data_.get());

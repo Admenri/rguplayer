@@ -17,9 +17,6 @@ namespace content {
  * Used in multi worker build on different threads.
  * Created and managed in worker host tree manager. */
 struct WorkerShareData {
-  // Base path of engine
-  std::string argv0;
-
   // Engine configure storage
   scoped_refptr<CoreConfigure> config;
 

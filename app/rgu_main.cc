@@ -44,6 +44,32 @@ int main(int argc, char* argv[]) {
   ::SetConsoleOutputCP(CP_UTF8);
 #endif  //! defined(OS_WIN)
 
+#if defined(OS_ANDROID)
+  // Get GAME_PATH string field from JNI (MainActivity.java)
+  JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+  jobject activity = (jobject)SDL_AndroidGetActivity();
+  jclass cls = env->GetObjectClass(activity);
+  jfieldID fIDGamePath =
+      env->GetStaticFieldID(cls, "GAME_PATH", "Ljava/lang/String;");
+  jstring strJGamePath = (jstring)env->GetStaticObjectField(cls, fIDGamePath);
+  const char* dataDir = env->GetStringUTFChars(strJGamePath, 0);
+
+  // Set and ensure current directory
+  std::filesystem::path stdPath(dataDir);
+  if (!std::filesystem::exists(stdPath) ||
+      !std::filesystem::is_directory(stdPath)) {
+    std::filesystem::create_directories(stdPath);
+  }
+
+  std::filesystem::current_path(stdPath);
+  if (std::filesystem::equivalent(std::filesystem::current_path(), stdPath))
+    LOG(INFO) << "[Android] Base directory: " << dataDir;
+
+  env->ReleaseStringUTFChars(strJGamePath, dataDir);
+  env->DeleteLocalRef(strJGamePath);
+  env->DeleteLocalRef(cls);
+#endif  //! defined(OS_ANDROID)
+
   scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
   std::string app(argv[0]);
   ReplaceStringWidth(app, '\\', '/');
@@ -60,8 +86,17 @@ int main(int argc, char* argv[]) {
   std::string ini = app + ".ini";
 
   LOG(INFO) << "[App] Configure: " << ini;
-  if (!config->LoadConfigure(ini))
+
+  std::unique_ptr<filesystem::Filesystem> iosystem =
+      std::make_unique<filesystem::Filesystem>(argv[0]);
+  iosystem->AddLoadPath(".");
+
+  SDL_IOStream* inifile = iosystem->OpenReadRaw(ini);
+  if (!config->LoadConfigure(inifile))
     return 1;
+
+  for (auto& it : config->load_paths())
+    iosystem->AddLoadPath(it);
 
   if (config->content_version() == content::RGSSVersion::Null) {
     LOG(INFO) << "[Entry] Failed to load RGSS version.";
@@ -87,32 +122,6 @@ int main(int argc, char* argv[]) {
 
   // Init ANGLE vendor settings
   content::RenderRunner::InitANGLERenderer(config->angle_renderer());
-
-#if defined(OS_ANDROID)
-  // Get GAME_PATH string field from JNI (MainActivity.java)
-  JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
-  jobject activity = (jobject)SDL_AndroidGetActivity();
-  jclass cls = env->GetObjectClass(activity);
-  jfieldID fIDGamePath =
-      env->GetStaticFieldID(cls, "GAME_PATH", "Ljava/lang/String;");
-  jstring strJGamePath = (jstring)env->GetStaticObjectField(cls, fIDGamePath);
-  const char* dataDir = env->GetStringUTFChars(strJGamePath, 0);
-
-  // Set and ensure current directory
-  std::filesystem::path stdPath(dataDir);
-  if (!std::filesystem::exists(stdPath) ||
-      !std::filesystem::is_directory(stdPath)) {
-    std::filesystem::create_directories(stdPath);
-  }
-
-  std::filesystem::current_path(stdPath);
-  if (std::filesystem::equivalent(std::filesystem::current_path(), stdPath))
-    LOG(INFO) << "[Android] Base directory: " << dataDir;
-
-  env->ReleaseStringUTFChars(strJGamePath, dataDir);
-  env->DeleteLocalRef(strJGamePath);
-  env->DeleteLocalRef(cls);
-#endif
 
   std::unique_ptr<ui::Widget> win = std::make_unique<ui::Widget>();
   ui::Widget::InitParams win_params;
@@ -141,7 +150,7 @@ int main(int argc, char* argv[]) {
       new content::WorkerTreeCompositor);
   content::ContentInitParams params;
 
-  params.argv0 = *argv;
+  params.filesystem = std::move(iosystem);
   params.config = config;
   params.binding_engine = std::make_unique<binding::BindingEngineMri>();
   params.initial_resolution = config->initial_resolution();
