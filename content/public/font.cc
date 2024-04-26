@@ -434,6 +434,7 @@ void Font::LoadFontInternal() {
   if (size_ >= 6 && size_ <= 96 && font_id_ >= 0) {
     // Find in global cache
     bool loaded = false;
+    int count = 0;
     while (!font_) {
       auto it = cache.find({font_id_, size_});
       if (it != cache.end()) {
@@ -449,6 +450,11 @@ void Font::LoadFontInternal() {
         cache.emplace(std::pair{font_id_, size_}, font_ptr);
         loaded = true;
       }
+
+      // Check if exist font
+      count++;
+      if (count > cache.size())
+        break;
     }
   }
 
