@@ -84,12 +84,11 @@ void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
   in = out;
 }
 
-std::pair<int64_t, void*> ReadFontToMemory(const std::string& path) {
-  SDL_IOStream* io = SDL_IOFromFile(path.c_str(), "rb");
-
+std::pair<int64_t, void*> ReadFontToMemory(SDL_IOStream* io) {
   int64_t fsize = SDL_GetIOSize(io);
   void* mem = malloc(fsize);
   SDL_ReadIO(io, mem, fsize);
+  SDL_CloseIO(io);
 
   return std::make_pair(fsize, mem);
 }
@@ -116,8 +115,8 @@ void Font::InitStaticFont(filesystem::Filesystem* io) {
     auto files = io->EnumDir(dir);
     for (auto& file : files) {
       std::string filepath = dir + file;
-      g_default_font_state->mem_cache_.emplace(filepath,
-                                               ReadFontToMemory(filepath));
+      g_default_font_state->mem_cache_.emplace(
+          filepath, ReadFontToMemory(io->OpenReadRaw(filepath)));
     }
   }
 }
