@@ -1,4 +1,4 @@
-2024.4.10:
+2024.4.29:
 
 * Bitmap
 - 模糊未实现
@@ -11,9 +11,6 @@
 
 * CRuby
 - 创建一个cmake版本mri
-
-* RHI Thread
-- 创建一个渲染硬件接口线程，提高图形API的利用率
 
 * MRuby Binding
 - 增加mruby的绑定实现

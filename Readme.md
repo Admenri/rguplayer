@@ -82,7 +82,6 @@
 - SDL - https://github.com/libsdl-org/SDL
 - SDL_image - https://github.com/libsdl-org/SDL_image
 - SDL_ttf - https://github.com/libsdl-org/SDL_ttf
-- SDL_net - https://github.com/libsdl-org/SDL_net
 - ANGLE - https://chromium.googlesource.com/angle/angle
 - concurrentqueue - https://github.com/cameron314/concurrentqueue
 - CRuby - https://www.ruby-lang.org/zh_cn/
