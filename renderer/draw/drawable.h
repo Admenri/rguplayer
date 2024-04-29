@@ -9,57 +9,54 @@
 
 namespace renderer {
 
-template <int VertexCount>
-class CommonVertexDrawable {
+template <typename VertexType, int VertexCount>
+class Drawable {
  public:
-  CommonVertexDrawable(const GLID<IndexBuffer>& ibo);
-  virtual ~CommonVertexDrawable();
+  Drawable(const GLID<IndexBuffer>& ibo);
+  virtual ~Drawable();
 
-  CommonVertexDrawable(const CommonVertexDrawable&) = delete;
-  CommonVertexDrawable& operator=(const CommonVertexDrawable&) = delete;
-
-  virtual void Draw();
+  Drawable(const Drawable&) = delete;
+  Drawable& operator=(const Drawable&) = delete;
 
  protected:
   virtual void UpdateBuffer();
+  void NotifyUpdate() { need_update_ = true; }
 
-  CommonVertex vertex_[VertexCount];
-  VertexArray<CommonVertex> vertex_array_;
+  VertexType* vertices() { return vertex_; }
+  VertexArray<VertexType>& vertex_array() { return vertex_array_; }
+
+ private:
+  VertexType vertex_[VertexCount];
+  VertexArray<VertexType> vertex_array_;
   bool need_update_ = true;
 };
 
-template <int VertexCount>
-inline CommonVertexDrawable<VertexCount>::CommonVertexDrawable(
+template <typename VertexType, int VertexCount>
+inline Drawable<VertexType, VertexCount>::Drawable(
     const GLID<IndexBuffer>& ibo) {
   vertex_array_.vbo = VertexBuffer::Gen();
   vertex_array_.ibo = ibo;
-
-  VertexArray<CommonVertex>::Init(vertex_array_);
+  VertexArray<VertexType>::Init(vertex_array_);
 }
 
-template <int VertexCount>
-inline CommonVertexDrawable<VertexCount>::~CommonVertexDrawable() {
+template <typename VertexType, int VertexCount>
+inline Drawable<VertexType, VertexCount>::~Drawable() {
   VertexArray<CommonVertex>::Uninit(vertex_array_);
-
   VertexBuffer::Del(vertex_array_.vbo);
 }
 
-template <int VertexCount>
-inline void CommonVertexDrawable<VertexCount>::Draw() {
-  if (need_update_) {
-    UpdateBuffer();
-    need_update_ = false;
-  }
-}
+template <typename VertexType, int VertexCount>
+inline void Drawable<VertexType, VertexCount>::UpdateBuffer() {
+  if (!need_update_)
+    return;
 
-template <int VertexCount>
-inline void CommonVertexDrawable<VertexCount>::UpdateBuffer() {
-  if (GL.GenVertexArrays)
-    VertexArray<CommonVertex>::Bind(vertex_array_);
-
+  // Upload data
   VertexBuffer::Bind(vertex_array_.vbo);
   VertexBuffer::BufferData(sizeof(vertex_), &vertex_, GL_DYNAMIC_DRAW);
   VertexBuffer::Unbind();
+
+  // Upload complete
+  need_update_ = false;
 }
 
 }  // namespace renderer

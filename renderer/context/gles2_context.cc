@@ -40,30 +40,17 @@ void GLES2Context::InitGLESContext(const ContextParams& params) {
 
   // VertexArray extension
   if (params.enable_vertex_array) {
-    if (SDL_GL_ExtensionSupported("GL_ARB_vertex_array_object"))
-      suffix_.clear();
-    else if (SDL_GL_ExtensionSupported("GL_OES_vertex_array_object"))
-      suffix_ = "OES";
     BIND_GLES_FUN(BindVertexArray);
     BIND_GLES_FUN(DeleteVertexArrays);
     BIND_GLES_FUN(GenVertexArrays);
     BIND_GLES_FUN(IsVertexArray);
   }
-
   if (!GenVertexArrays)
     LOG(INFO) << "[Renderer] Disable Vertex Array extension.";
 
   // FrameBuffer blit
-  if (params.enable_framebuffer_blit) {
-    if (SDL_GL_ExtensionSupported("GL_ARB_framebuffer_object"))
-      suffix_.clear();
-    else if (SDL_GL_ExtensionSupported("GL_EXT_framebuffer_blit"))
-      suffix_ = "EXT";
-    else
-      suffix_.clear();
+  if (params.enable_framebuffer_blit)
     BIND_GLES_FUN(BlitFramebuffer);
-  }
-
   if (!BlitFramebuffer)
     LOG(INFO) << "[Renderer] Disable FrameBuffer blit extension.";
 

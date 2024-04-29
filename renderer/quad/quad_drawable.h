@@ -28,19 +28,22 @@ class QuadIndexBuffer {
   std::vector<uint16_t> buffer;
 };
 
-class QuadDrawable final : public CommonVertexDrawable<4> {
+class QuadDrawable final : public Drawable<CommonVertex, 4> {
  public:
   QuadDrawable();
+
+  QuadDrawable(const QuadDrawable&) = delete;
+  QuadDrawable& operator=(const QuadDrawable&) = delete;
 
   void SetPositionRect(const base::RectF& pos);
   void SetTexCoordRect(const base::RectF& texcoord);
   void SetColor(int index = -1, const base::Vec4& color = base::Vec4());
 
-  void Draw() override;
+  void Draw();
 
  private:
   base::RectF position_cache_;
-  base::RectF texCoord_cache_;
+  base::RectF texcoord_cache_;
 };
 
 template <typename V>

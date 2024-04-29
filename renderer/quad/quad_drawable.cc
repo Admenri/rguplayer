@@ -36,59 +36,59 @@ void QuadIndexBuffer::EnsureSize(size_t count) {
   IndexBuffer::Unbind();
 }
 
-QuadDrawable::QuadDrawable() : CommonVertexDrawable(GSM.quad_ibo()->ibo) {}
+QuadDrawable::QuadDrawable() : Drawable(GSM.quad_ibo()->ibo) {}
 
 void QuadDrawable::SetPositionRect(const base::RectF& pos) {
   if (position_cache_ == pos)
     return;
+  position_cache_ = pos;
 
   int i = 0;
-  vertex_[i++].position = base::Vec2(pos.x, pos.y);
-  vertex_[i++].position = base::Vec2(pos.x + pos.width, pos.y);
-  vertex_[i++].position = base::Vec2(pos.x + pos.width, pos.y + pos.height);
-  vertex_[i++].position = base::Vec2(pos.x, pos.y + pos.height);
-  need_update_ = true;
-
-  position_cache_ = pos;
+  vertices()[i++].position = base::Vec2(pos.x, pos.y);
+  vertices()[i++].position = base::Vec2(pos.x + pos.width, pos.y);
+  vertices()[i++].position = base::Vec2(pos.x + pos.width, pos.y + pos.height);
+  vertices()[i++].position = base::Vec2(pos.x, pos.y + pos.height);
+  NotifyUpdate();
 }
 
 void QuadDrawable::SetTexCoordRect(const base::RectF& texcoord) {
-  if (texCoord_cache_ == texcoord)
+  if (texcoord_cache_ == texcoord)
     return;
+  texcoord_cache_ = texcoord;
 
   int i = 0;
-  vertex_[i++].texCoord = base::Vec2(texcoord.x, texcoord.y);
-  vertex_[i++].texCoord = base::Vec2(texcoord.x + texcoord.width, texcoord.y);
-  vertex_[i++].texCoord =
+  vertices()[i++].texCoord = base::Vec2(texcoord.x, texcoord.y);
+  vertices()[i++].texCoord =
+      base::Vec2(texcoord.x + texcoord.width, texcoord.y);
+  vertices()[i++].texCoord =
       base::Vec2(texcoord.x + texcoord.width, texcoord.y + texcoord.height);
-  vertex_[i++].texCoord = base::Vec2(texcoord.x, texcoord.y + texcoord.height);
-  need_update_ = true;
-
-  texCoord_cache_ = texcoord;
+  vertices()[i++].texCoord =
+      base::Vec2(texcoord.x, texcoord.y + texcoord.height);
+  NotifyUpdate();
 }
 
 void QuadDrawable::SetColor(int index, const base::Vec4& color) {
   if (index == -1) {
     int i = 0;
-    vertex_[i++].color = color;
-    vertex_[i++].color = color;
-    vertex_[i++].color = color;
-    vertex_[i++].color = color;
-    need_update_ = true;
-    return;
+    vertices()[i++].color = color;
+    vertices()[i++].color = color;
+    vertices()[i++].color = color;
+    vertices()[i++].color = color;
+  } else {
+    index = std::clamp(index, 0, 3);
+    CommonVertex& vert = vertices()[index];
+    if (vert.color == color)
+      return;
+    vert.color = color;
   }
 
-  CommonVertex& vert = vertex_[std::clamp(index, 0, 3)];
-  if (vert.color == color)
-    return;
-  vert.color = color;
-  need_update_ = true;
+  NotifyUpdate();
 }
 
 void QuadDrawable::Draw() {
-  CommonVertexDrawable::Draw();
+  Drawable::UpdateBuffer();
 
-  VertexArray<CommonVertex>::Bind(vertex_array_);
+  VertexArray<CommonVertex>::Bind(vertex_array());
   GL.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
   VertexArray<CommonVertex>::Unbind();
 }
