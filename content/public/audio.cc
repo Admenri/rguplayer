@@ -291,7 +291,7 @@ void Audio::Reset() {
 }
 
 void Audio::SetGlobalVolume(int volume) {
-  core_.setGlobalVolume(volume);
+  core_.setGlobalVolume(volume / 100.0f);
 }
 
 void Audio::InitAudioDeviceInternal() {
