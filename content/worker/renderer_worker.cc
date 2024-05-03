@@ -16,9 +16,9 @@ namespace content {
 
 namespace {
 
-std::vector<SDL_EGLAttrib> g_angle_attrib;
-SDL_EGLAttrib* SDLCALL GetANGLEAttribArray() {
-  return g_angle_attrib.data();
+std::vector<SDL_EGLAttrib> g_angle_platform;
+SDL_EGLAttrib* SDLCALL GetANGLEPlatformCallback() {
+  return g_angle_platform.data();
 }
 
 }  // namespace
@@ -36,44 +36,45 @@ void RenderRunner::DestroyRenderer() {
 }
 
 void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, SDL_TRUE);
+
   if (renderer == content::CoreConfigure::ANGLERenderer::DefaultES)
     return;
 
   SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
   SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-
-  g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
+  g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
   switch (renderer) {
     case content::CoreConfigure::ANGLERenderer::D3D9:
-      g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE);
+      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE);
       break;
     case content::CoreConfigure::ANGLERenderer::D3D11:
-      g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE);
+      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE);
       break;
     case content::CoreConfigure::ANGLERenderer::Vulkan:
-      g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
+      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
       break;
     case content::CoreConfigure::ANGLERenderer::Metal:
-      g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE);
+      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE);
       break;
     case content::CoreConfigure::ANGLERenderer::Software:
-      g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
-      g_angle_attrib.push_back(EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE);
-      g_angle_attrib.push_back(
+      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
+      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE);
+      g_angle_platform.push_back(
           EGL_PLATFORM_ANGLE_DEVICE_TYPE_SWIFTSHADER_ANGLE);
       break;
     default:
+      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE);
       break;
   }
-
-  g_angle_attrib.push_back(EGL_NONE);
-  SDL_EGL_SetEGLAttributeCallbacks(GetANGLEAttribArray, nullptr, nullptr);
+  g_angle_platform.push_back(EGL_NONE);
+  SDL_EGL_SetEGLAttributeCallbacks(GetANGLEPlatformCallback, nullptr, nullptr);
 }
 
 void RenderRunner::InitGLContextInternal() {
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, SDL_TRUE);
-
   glcontext_ = SDL_GL_CreateContext(host_window_->AsSDLWindow());
   SDL_GL_MakeCurrent(host_window_->AsSDLWindow(), glcontext_);
   SDL_GL_SetSwapInterval(0);
@@ -91,14 +92,6 @@ void RenderRunner::InitGLContextInternal() {
   renderer::GSM.enable_es_shaders() = true;
   renderer::GSM.InitStates();
   max_texture_size_ = renderer::GSM.max_texture_size();
-
-  renderer::GL.GetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &vertex_units_);
-  renderer::GL.GetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &fragment_units_);
-  renderer::GL.GetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
-                           &combined_units_);
-  LOG(INFO) << "[Content] MaxVertexTextureUnits: " << vertex_units_;
-  LOG(INFO) << "[Content] MaxFragmentTextureUnits: " << fragment_units_;
-  LOG(INFO) << "[Content] MaxCombinedTextureUnits: " << combined_units_;
 
   LOG(INFO) << "[Content] GLRenderer: " << renderer::GL.GetString(GL_RENDERER);
   LOG(INFO) << "[Content] GLVendor: " << renderer::GL.GetString(GL_VENDOR);
