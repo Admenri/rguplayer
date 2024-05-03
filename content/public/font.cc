@@ -97,7 +97,7 @@ TTF_Font* ReadFontFromMemory(const std::string& path, int size) {
   auto it = g_default_font_state->mem_cache_.find(path);
   if (it != g_default_font_state->mem_cache_.end()) {
     SDL_IOStream* io = SDL_IOFromConstMem(it->second.second, it->second.first);
-    return TTF_OpenFontIO(io, SDL_TRUE, size);
+    return TTF_OpenFontIO(io, SDL_TRUE, size * 0.9f);
   }
 
   return nullptr;
