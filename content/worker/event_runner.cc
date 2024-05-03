@@ -21,6 +21,7 @@ void EventRunner::InitDispatcher(base::WeakPtr<BindingRunner> binding_runner) {
   binding_runner_ = binding_runner;
   loop_runner_ =
       std::make_unique<base::RunLoop>(base::RunLoop::MessagePumpType::UI);
+  share_data_->event_runner = loop_runner_->task_runner();
 
   quit_observer_ = base::RunLoop::BindEventDispatcher(
       base::BindRepeating(&EventRunner::EventDispatch, base::Unretained(this)));

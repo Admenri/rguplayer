@@ -29,6 +29,9 @@ struct WorkerShareData {
   // Renderer data storage
   base::WeakPtr<ui::Widget> window;
 
+  // Event task runner
+  scoped_refptr<base::SequencedTaskRunner> event_runner;
+
   // Sync point
   struct {
     std::atomic_bool require;

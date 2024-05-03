@@ -10,6 +10,7 @@
 
 #include <array>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 
@@ -119,9 +120,11 @@ class Widget {
   bool GetKeyState(::SDL_Scancode scancode) const;
   void EmulateKeyState(::SDL_Scancode scancode, bool pressed);
   MouseState& GetMouseState() { return mouse_state_; }
-  std::array<FingerState, MAX_FINGERS>& GetTouchState() {
+  inline std::array<FingerState, MAX_FINGERS>& GetTouchState() {
     return finger_states_;
   }
+
+  std::string FetchInputText();
 
  private:
   void UIEventDispatcher(const SDL_Event& sdl_event);
@@ -133,6 +136,9 @@ class Widget {
   bool key_states_[SDL_NUM_SCANCODES]{0};
   MouseState mouse_state_{0};
   std::array<FingerState, MAX_FINGERS> finger_states_;
+
+  std::mutex text_lock_;
+  std::string text_buffer_;
 
   base::WeakPtrFactory<Widget> weak_ptr_factory_{this};
 };

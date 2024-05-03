@@ -125,6 +125,15 @@ void Widget::EmulateKeyState(::SDL_Scancode scancode, bool pressed) {
   key_states_[scancode] = pressed;
 }
 
+std::string Widget::FetchInputText() {
+  std::string output;
+  text_lock_.lock();
+  output = text_buffer_;
+  text_buffer_.clear();
+  text_lock_.unlock();
+  return output;
+}
+
 void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
   if (sdl_event.type == SDL_EVENT_KEY_DOWN) {
     if (sdl_event.key.windowID == window_id_) {
@@ -215,16 +224,27 @@ void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
       }
     } break;
     case SDL_EVENT_WINDOW_MOUSE_ENTER: {
-      mouse_state_.in_window = true;
+      if (sdl_event.window.windowID == window_id_)
+        mouse_state_.in_window = true;
     } break;
     case SDL_EVENT_WINDOW_MOUSE_LEAVE: {
-      mouse_state_.in_window = false;
+      if (sdl_event.window.windowID == window_id_)
+        mouse_state_.in_window = false;
     } break;
     case SDL_EVENT_WINDOW_FOCUS_GAINED: {
-      mouse_state_.focused = true;
+      if (sdl_event.window.windowID == window_id_)
+        mouse_state_.focused = true;
     } break;
     case SDL_EVENT_WINDOW_FOCUS_LOST: {
-      mouse_state_.focused = false;
+      if (sdl_event.window.windowID == window_id_)
+        mouse_state_.focused = false;
+    } break;
+    case SDL_EVENT_TEXT_INPUT: {
+      if (sdl_event.text.windowID == window_id_) {
+        text_lock_.lock();
+        text_buffer_ += sdl_event.text.text;
+        text_lock_.unlock();
+      }
     } break;
     default:
       break;

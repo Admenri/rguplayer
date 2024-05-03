@@ -65,6 +65,16 @@ set_keys_from_flag(String flags, Array keys)
 emulate(Integer scancode, Boolean down)
 在引擎层模拟设置一个按键的状态，适用于没有键盘输入的设备
 
+text_input=
+text_input
+设置是否开启文本输入模式
+
+fetch_text
+取回已在队列中积压的文本，取回后队列清除
+
+set_text_region(Rect region)
+设置IME输入法的显示位置（以屏幕大小为标准设置）
+
 scancode为SDL的扫码键代码，
 详情参考：https://wiki.libsdl.org/SDL3/SDL_Scancode
 

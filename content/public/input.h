@@ -10,6 +10,8 @@
 
 #include "base/memory/ref_counted.h"
 #include "content/config/core_config.h"
+#include "content/public/utility.h"
+#include "content/worker/worker_share.h"
 #include "ui/widget/widget.h"
 
 namespace content {
@@ -30,9 +32,8 @@ class Input final : public base::RefCounted<Input> {
 
   using KeySymMap = std::list<KeyBinding>;
 
-  Input(scoped_refptr<CoreConfigure> config,
-        base::WeakPtr<ui::Widget> input_device);
-  ~Input();
+  Input(WorkerShareData* share_data);
+  ~Input() = default;
 
   Input(const Input&) = delete;
   Input& operator=(const Input&) = delete;
@@ -61,15 +62,19 @@ class Input final : public base::RefCounted<Input> {
   int Dir8();
 
   void EmulateKeyState(int scancode, bool pressed);
+  void SetTextInput(bool enable);
+  bool IsTextInput();
+  std::string FetchText();
+  void SetTextInputRect(scoped_refptr<Rect> region);
 
  private:
   void UpdateDir4Internal();
   void UpdateDir8Internal();
 
+  WorkerShareData* share_data_;
   KeySymMap key_bindings_;
   std::array<KeyState, SDL_NUM_SCANCODES> key_states_;
   std::array<KeyState, SDL_NUM_SCANCODES> recent_key_states_;
-  scoped_refptr<CoreConfigure> config_;
 
   struct {
     int active = 0;

@@ -4,6 +4,7 @@
 
 #include "binding/mri/init_input.h"
 
+#include "binding/mri/init_utility.h"
 #include "content/public/input.h"
 
 #include <map>
@@ -203,6 +204,42 @@ MRI_METHOD(input_emulate) {
   return Qnil;
 }
 
+MRI_METHOD(input_set_text_input) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  bool enable;
+  MriParseArgsTo(argc, argv, "b", &enable);
+
+  input->SetTextInput(enable);
+  return Qnil;
+}
+
+MRI_METHOD(input_get_text_input) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  return MRI_BOOL_NEW(input->IsTextInput());
+}
+
+MRI_METHOD(input_fetch_text) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  std::string out = input->FetchText();
+  return rb_utf8_str_new_cstr(out.c_str());
+}
+
+MRI_METHOD(input_text_region) {
+  scoped_refptr<content::Input> input = MriGetGlobalRunner()->input();
+
+  VALUE r;
+  MriParseArgsTo(argc, argv, "o", &r);
+
+  scoped_refptr<content::Rect> rect =
+      MriCheckStructData<content::Rect>(r, kRectDataType);
+
+  input->SetTextInputRect(rect);
+  return Qnil;
+}
+
 void InitInputBinding() {
   VALUE module = rb_define_module("Input");
 
@@ -228,6 +265,11 @@ void InitInputBinding() {
   MriDefineModuleFunction(module, "set_keys_from_flag", input_set_keys_from);
 
   MriDefineModuleFunction(module, "emulate", input_emulate);
+
+  MriDefineModuleFunction(module, "text_input=", input_set_text_input);
+  MriDefineModuleFunction(module, "text_input", input_get_text_input);
+  MriDefineModuleFunction(module, "fetch_text", input_fetch_text);
+  MriDefineModuleFunction(module, "set_text_region", input_text_region);
 
   for (int i = 0; i < kKeyboardBindingsSize; ++i) {
     auto& binding_set = kKeyboardBindings[i];

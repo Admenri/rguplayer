@@ -63,7 +63,7 @@ void BindingRunner::BindingFuncMain() {
   // Init Modules
   graphics_ = new Graphics(weak_ptr_factory_.GetWeakPtr(), renderer_,
                            share_data_->config->initial_resolution());
-  input_ = new Input(share_data_->config, share_data_->window);
+  input_ = new Input(share_data_);
   audio_ = new Audio(share_data_->filesystem->AsWeakPtr(), share_data_->config);
   mouse_ = new Mouse(share_data_->window);
   touch_ = new Touch(share_data_->config, share_data_->window);

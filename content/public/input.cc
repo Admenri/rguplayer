@@ -4,6 +4,8 @@
 
 #include "content/public/input.h"
 
+#include "base/worker/run_loop.h"
+
 #include "SDL_events.h"
 
 namespace content {
@@ -60,9 +62,8 @@ const int kArrowDirsSymbolSize =
 
 }  // namespace
 
-Input::Input(scoped_refptr<CoreConfigure> config,
-             base::WeakPtr<ui::Widget> input_device)
-    : config_(config), window_(input_device) {
+Input::Input(WorkerShareData* share_data) : share_data_(share_data) {
+  window_ = share_data_->window;
   memset(key_states_.data(), 0, key_states_.size() * sizeof(KeyState));
   memset(recent_key_states_.data(), 0,
          recent_key_states_.size() * sizeof(KeyState));
@@ -71,16 +72,14 @@ Input::Input(scoped_refptr<CoreConfigure> config,
   for (int i = 0; i < kDefaultKeyboardBindingsSize; ++i)
     key_bindings_.push_back(kDefaultKeyboardBindings[i]);
 
-  if (config->content_version() == RGSSVersion::RGSS1)
+  if (share_data_->config->content_version() == RGSSVersion::RGSS1)
     for (int i = 0; i < kKeyboardBindings1Size; ++i)
       key_bindings_.push_back(kKeyboardBindings1[i]);
 
-  if (config->content_version() >= RGSSVersion::RGSS2)
+  if (share_data_->config->content_version() >= RGSSVersion::RGSS2)
     for (int i = 0; i < kKeyboardBindings2Size; ++i)
       key_bindings_.push_back(kKeyboardBindings2[i]);
 }
-
-Input::~Input() {}
 
 void Input::ApplyKeySymBinding(const KeySymMap& keysyms) {
   key_bindings_ = keysyms;
@@ -249,6 +248,32 @@ int Input::Dir8() {
 
 void Input::EmulateKeyState(int scancode, bool pressed) {
   window_->EmulateKeyState((::SDL_Scancode)scancode, pressed);
+}
+
+void Input::SetTextInput(bool enable) {
+  share_data_->event_runner->PostTask(base::BindOnce(
+      [](bool enable) { enable ? SDL_StartTextInput() : SDL_StopTextInput(); },
+      enable));
+  share_data_->event_runner->WaitForSync();
+
+  FetchText();
+}
+
+bool Input::IsTextInput() {
+  return SDL_TextInputActive();
+}
+
+std::string Input::FetchText() {
+  return window_->FetchInputText();
+}
+
+void Input::SetTextInputRect(scoped_refptr<Rect> region) {
+  auto rt = region->AsBase();
+  SDL_Rect sdlrt{rt.x, rt.y, rt.width, rt.height};
+
+  share_data_->event_runner->PostTask(base::BindOnce(
+      [](SDL_Rect* sdlrt) { SDL_SetTextInputRect(sdlrt); }, &sdlrt));
+  share_data_->event_runner->WaitForSync();
 }
 
 void Input::UpdateDir4Internal() {
