@@ -1157,7 +1157,7 @@ void Tilemap2::ParseMapDataBufferInternal() {
   auto each_tile = [&](int16_t tileID, int x, int y, int z,
                        int16_t underTileID) {
     int16_t flag = TableGetFlag(flagdata, tileID);
-    bool over_player = flag & OVER_PLAYER_FLAG;
+    bool over_player = (flag & OVER_PLAYER_FLAG) && (z >= 2);
     bool is_table;
 
     if (screen()->content_version() >= RGSSVersion::RGSS3)
