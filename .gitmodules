@@ -18,3 +18,7 @@
 	path = third_party/physfs
 	url = https://github.com/Admenri/physfs.git
 	branch = main
+[submodule "third_party/spine-runtimes"]
+	path = third_party/spine-runtimes
+	url = https://github.com/EsotericSoftware/spine-runtimes.git
+	branch = 4.2
