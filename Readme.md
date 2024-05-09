@@ -1,34 +1,23 @@
 ﻿# ![Logo](app/resources/rgu_favicon_64.png) RGU Player Core
 
-## 项目概述
+## 概述
 
-- RGU是一款兼容RGSS 1/2/3，使用SDL3作为底层，OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。
-- RGU在提供兼容原版RGSS的同时提供跨平台与性能提升支持，同时提供诸如自定义着色器与网络扩展在内的加强功能。
-- 本项目使用BSD-3协议开源。
-- 本项目语法风格与代码结构与The Chromium Project相似。
+ - RGU是一款兼容RGSS 1/2/3，使用 SDL3 作为底层，OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。  
+ - RGU在提供兼容原版RGSS的同时提供跨平台与性能提升支持，同时提供诸如自定义着色器与网络扩展在内的加强功能。  
+ - 本项目使用BSD-3协议开源。  
+ - 本项目语法风格与代码结构与The Chromium Project相似。
+ - 程序灵感来源于 Chromium RGM RGD MKXP
 
-## 项目结构
+## 程序结构
 
-- 运行结构为多线程架构，程序内存在多个线程worker，每个worker都有任务投递的接口，引擎将事件处理，逻辑渲染处理，音频播放处理，视频解码处理，网络处理等分解为多个线程。
+- 程序运行结构为多线程架构，程序内存在多个线程worker，每个worker都有任务投递的接口，引擎将事件处理，逻辑渲染处理，音频播放处理，视频解码处理，网络处理等分解为多个线程。   
+- 游戏的图像渲染采用 OpenGL ES(2.0) 标准以获得最大兼容。  
+- 用户可以选择使用ANGLE运行其他渲染器后端（D3D9 D3D11 Vulkan Metal 软渲染等）以应对显卡驱动兼容问题。  
+- 引擎的事件输入处理基于 SDL 的事件处理。  
+- 引擎的音频处理基于 SoLoud 库，音频数据通过Soloud核心处理后输出到SDL的音频设备接口。  
+- 引擎的脚本处理部分使用了 Ruby3 的解释器。  
 
-- 源码结构分为逻辑实现，图像渲染实现，基础库实现，封装组件实现与脚本引擎绑定实现，
-- 整个程序的入口在app文件夹中
-- content文件夹中存放负责组织引擎全部内容（图像，输入，音频）功能的代码，是引擎的核心实现
-- components中存放引擎中的某些特定组件实现（如IO系统，fps计数器等）
-- base文件夹中存放跨平台的基础代码
-- binding文件夹中存放与cruby，mruby等第三方解释器进行绑定的代码
-- buildtools中存放所有的python自动化代码
-- renderer文件夹存放了GLES2.0渲染器的初级封装代码
-- third_party中为使用的第三方代码库，base/third_party中也有部分第三方库
-- ui文件夹存放了SDL窗口的封装代码，用于与input模块进行配合操作
-
-- 游戏的图像渲染采用OpenGL ES(2.0)标准以获得最大兼容
-- 用户可以选择使用ANGLE运行其他渲染器后端（D3D9 D3D11 Vulkan Metal 软渲染等）以应对显卡驱动兼容问题
-- 引擎的输入处理基于SDL的事件处理
-- 引擎的音频处理基于SoLoud库，音频数据通过Soloud核心处理后输出到SDL的音频设备接口
-- 引擎的脚本处理部分使用了Ruby 3.2.2的解释器
-
-## 截图
+## 软件截图
 
 <img src="app/test/1.png" height="300">
 
@@ -40,24 +29,30 @@
 
 <img src="app/test/5.jpg" height="300">
 
-## 编译项目
+## 构建项目
+### 0. 注意事项
 
  - 本项目使用CMake管理编译。
  - 第三方依赖库部分使用Git拉取，部分需要用户自行编译处理。
  - 项目中需要使用Python3来生成自动编译文件，请确保系统中已安装Python3。
 
-### Windows (测试环境：Windows 11 23H2 & Visual Studio 2019 & Clang-LLVM)
- - 可以直接使用vs内置的cmake功能进行快捷构建
+### 1. 拉取源码
+#### 拉取项目源码
+ - git clone https://github.com/Admenri/rguplayer.git rguproject
+#### 拉取第三方库源码
+ - cd rguproject
+ - git submodule update --init --recursive
 
-### Linux (测试环境：Ubuntu23.10 & Visual Studio Code & GCC 13)
- - 首先通过git clone拉取项目源码: git clone https://github.com/Admenri/rguplayer.git
- - 接着git clone在third_party中用到的第三方库源码: git submodule init | git submodule update
- - 注意SDL_ttf中还有freetype
- - 然后保证系统安装了opengl开发库和ruby开发库
+### 2. 针对不同环境开始构建
+#### Windows (测试环境：Windows 11 23H2 & Visual Studio 2019 & Clang-LLVM)
+ - 可以直接使用 Visual Studio 内置的 CMake 功能进行快捷构建，编译器建议选择Clang-LLVM
+
+#### Linux (测试环境：Ubuntu 23.10 & Visual Studio Code & GCC 13)
+ - 确保系统安装了OpenGL开发库和CRuby开发库
  - 在目录执行：cmake -S . -B out 以生成工程
  - 之后执行cmake --build out执行构建
 
-### Android (测试环境：Android 13.0 & Android Studio & Windows 11 23H2)
+#### Android (测试环境：Android 13.0 & Android Studio & Windows 11 23H2)
  - 确保系统安装了Android Studio，Android NDK，CMake
  - 确保可以在开发环境下编译出成品程序（例如Windows下先编译出exe）
  - 然后使用Android Studio打开 “android-project” 文件夹
@@ -69,13 +64,6 @@
 - GNU/Linux 6.5.0 及以上
 - Android 8.0 及以上
 - 目前不支持Apple系的任何操作系统（macOS，iOS），欢迎有mac设备的同志贡献代码
-
-## 思路来源
-
-- Chromium
-- RGM
-- MKXP
-- SDL
 
 ## 第三方库使用
 
