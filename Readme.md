@@ -89,6 +89,7 @@
 - zlib - https://github.com/madler/zlib
 - inih - https://github.com/jtilly/inih
 - soloud - https://github.com/jarikomppa/soloud
+- spineruntime - https://github.com/EsotericSoftware/spine-runtimes
 
 ## 联系方式
 

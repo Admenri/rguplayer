@@ -357,6 +357,18 @@ class GeometryShader : public GLES2ShaderBase {
   GLint u_textureEmptyFlag_;
 };
 
+class SpineShader : public GLES2ShaderBase {
+ public:
+  SpineShader();
+
+  void SetTransOffset(const base::Vec2& offset);
+  void SetTexture(GLID<Texture> tex);
+
+ private:
+  GLint u_transOffset_;
+  GLint u_texture_;
+};
+
 }  // namespace renderer
 
 #endif  // !RENDERER_SHADER_GLES2_SHADERS_H_

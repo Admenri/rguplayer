@@ -120,6 +120,26 @@ include_directories(third_party/zlib)
 add_subdirectory(third_party/soloud)
 include_directories(third_party/soloud/include)
 
+## Soloud
+add_subdirectory(third_party/spine-runtimes/spine-cpp)
+include_directories(third_party/spine-runtimes/spine-cpp/spine-cpp/include)
+
+#--------------------------------------------------------------------------------
+# Auto-generated directory include path
+#--------------------------------------------------------------------------------
+
+find_package(Python3 COMPONENTS Interpreter)
+
+if(Python3_FOUND)
+    set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+    message(STATUS "Found Python3: ${Python3_EXECUTABLE}")
+else()
+    message(FATAL_ERROR "Python3 not found.")
+endif()
+
+set(RGU_AUTOGEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/gen")
+include_directories("${RGU_AUTOGEN_DIR}")
+
 #--------------------------------------------------------------------------------
 # Components of Core
 #--------------------------------------------------------------------------------
@@ -137,21 +157,8 @@ add_subdirectory(components/fpslimiter)
 ## Filesystem
 add_subdirectory(components/filesystem)
 
-#--------------------------------------------------------------------------------
-# Auto-generated directory include path
-#--------------------------------------------------------------------------------
-
-find_package(Python3 COMPONENTS Interpreter)
-
-if(Python3_FOUND)
-    set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
-    message(STATUS "Found Python3: ${Python3_EXECUTABLE}")
-else()
-    message(FATAL_ERROR "Python3 not found.")
-endif()
-
-set(RGU_AUTOGEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/gen")
-include_directories("${RGU_AUTOGEN_DIR}")
+## Spine runtime
+add_subdirectory(components/spinecontroller)
 
 #--------------------------------------------------------------------------------
 # Add rgu projects

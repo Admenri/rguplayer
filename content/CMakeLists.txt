@@ -74,6 +74,7 @@ target_link_libraries(core_content PUBLIC
                       core_ui
                       components_filesystem
                       components_fpslimiter
+                      components_spinecontroller
                       SDL3_image::SDL3_image
                       SDL3_ttf::SDL3_ttf
                       soloud)
