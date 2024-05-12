@@ -551,7 +551,6 @@ class TilemapGroundLayer2 : public ViewportChild {
   TilemapGroundLayer2(const TilemapGroundLayer2&) = delete;
   TilemapGroundLayer2& operator=(const TilemapGroundLayer2&) = delete;
 
-  void InitDrawableData() override { tilemap_->InitDrawableData(); }
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
   void Composite() override {
     int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
@@ -573,7 +572,7 @@ class TilemapGroundLayer2 : public ViewportChild {
   }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
-  void OnViewportRectChanged(
+  void OnParentViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {
     tilemap_->buffer_need_update_ = true;
   }
@@ -591,9 +590,7 @@ class TilemapAboveLayer2 : public ViewportChild {
   TilemapAboveLayer2(const TilemapAboveLayer2&) = delete;
   TilemapAboveLayer2& operator=(const TilemapAboveLayer2&) = delete;
 
-  void InitDrawableData() override {}
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
-
   void Composite() override {
     int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
     int above_quad_size = tilemap_->above_vertices_.size() / 4;
@@ -612,7 +609,7 @@ class TilemapAboveLayer2 : public ViewportChild {
   }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
-  void OnViewportRectChanged(
+  void OnParentViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {
     tilemap_->buffer_need_update_ = true;
   }
@@ -627,6 +624,8 @@ Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
       Disposable(screen),
       viewport_(viewport),
       tile_size_(tilesize) {
+  InitDrawableData();
+
   ground_ = std::make_unique<TilemapGroundLayer2>(
       screen, weak_ptr_factory_.GetWeakPtr());
   above_ = std::make_unique<TilemapAboveLayer2>(screen,

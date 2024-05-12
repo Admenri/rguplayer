@@ -262,11 +262,11 @@ class Sprite : public base::RefCounted<Sprite>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Sprite"; }
 
-  void InitDrawableData() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override { CheckIsDisposed(); }
-  void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;
+  void OnParentViewportRectChanged(
+      const DrawableParent::ViewportInfo& rect) override;
   void OnSrcRectChangedInternal();
   void UpdateWaveQuadsInternal();
   void UpdateVisibilityInternal();

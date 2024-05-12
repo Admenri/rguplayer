@@ -76,13 +76,9 @@ class WindowControlLayer : public ViewportChild {
   WindowControlLayer(const WindowControlLayer&) = delete;
   WindowControlLayer& operator=(const WindowControlLayer&) = delete;
 
-  void InitDrawableData() override {}
-  void BeforeComposite() override {}
-
   void Composite() override { window_->CompositeControls(); }
-
-  void CheckDisposed() const override {}
-  void OnViewportRectChanged(
+  void CheckDisposed() const override { window_->CheckDisposed(); }
+  void OnParentViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {}
 
   base::WeakPtr<Window> window_;
@@ -282,21 +278,6 @@ void Window::OnObjectDisposed() {
   renderer::TextureFrameBuffer::Del(base_tfb_);
 }
 
-void Window::InitDrawableData() {
-  base_quad_ = std::make_unique<renderer::QuadDrawable>();
-  content_quad_ = std::make_unique<renderer::QuadDrawable>();
-  controls_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-  base_tex_quad_array_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-
-  base_tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(base_tfb_, 32, 32);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(base_tfb_);
-
-  controls_quads_->Resize(14);
-}
-
 void Window::BeforeComposite() {
   if (update_required_) {
     update_required_ = false;
@@ -362,7 +343,10 @@ void Window::Composite() {
   renderer::GSM.states.scissor.Pop();
 }
 
-void Window::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {}
+void Window::OnParentViewportRectChanged(
+    const DrawableParent::ViewportInfo& rect) {
+  // Pass viewport event
+}
 
 void Window::InitWindow() {
   control_layer_.reset(new WindowControlLayer(weak_ptr_factory_.GetWeakPtr()));
@@ -370,6 +354,19 @@ void Window::InitWindow() {
   cursor_rect_ = new Rect();
   cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(
       &Window::CursorRectChangedInternal, base::Unretained(this)));
+
+  base_quad_ = std::make_unique<renderer::QuadDrawable>();
+  content_quad_ = std::make_unique<renderer::QuadDrawable>();
+  controls_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  base_tex_quad_array_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+
+  base_tfb_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(base_tfb_, 32, 32);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(base_tfb_);
+
+  controls_quads_->Resize(14);
 }
 
 void Window::ResetBaseTexQuadsInternal() {

@@ -5,11 +5,15 @@
 #ifndef CONTENT_WORKER_WORKER_SHARE_H_
 #define CONTENT_WORKER_WORKER_SHARE_H_
 
+#include "base/third_party/concurrentqueue/concurrentqueue.h"
 #include "components/filesystem/filesystem.h"
 #include "content/config/core_config.h"
 #include "ui/widget/widget.h"
 
+#include "SDL_events.h"
+
 #include <atomic>
+#include <queue>
 
 namespace content {
 
@@ -37,6 +41,9 @@ struct WorkerShareData {
     std::atomic_bool require;
     std::atomic_bool signal;
   } background_sync;
+
+  // GUI Event Queue
+  moodycamel::ConcurrentQueue<SDL_Event> event_queue;
 };
 
 }  // namespace content

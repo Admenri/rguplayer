@@ -99,6 +99,12 @@ open_url(String url)
 reset_engine
 相当于按下F12
 
+get_counter -> Bignum
+取当前计数器的计数时间
+
+get_counter_freq -> Bignum
+取计数器的频率（计数时间 ÷ 频率 = 秒）
+
 ## Module - Mouse : 鼠标扩展模块
 update
 更新鼠标状态，每帧调用

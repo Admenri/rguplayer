@@ -89,23 +89,20 @@ class Drawable {
   }
 
  protected:
-  virtual void InitDrawableData() {}
   virtual void BeforeComposite() {}
   virtual void Composite() = 0;
   virtual void CheckDisposed() const = 0;
-  virtual void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
-  }
+  virtual void OnParentViewportRectChanged(
+      const DrawableParent::ViewportInfo& rect) {}
 
   void RemoveFromList();
   void SetSpriteY(int y);
 
  private:
   friend class DrawableParent;
+
   base::LinkNode<Drawable> node_;
-
-  bool init_data_complete_;
   DrawableParent* parent_;
-
   int z_;
   bool visible_;
   uint64_t creation_stamp_;

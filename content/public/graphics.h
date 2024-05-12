@@ -27,7 +27,8 @@ class BindingRunner;
 class Graphics final : public base::RefCounted<Graphics>,
                        public DrawableParent {
  public:
-  Graphics(base::WeakPtr<BindingRunner> dispatcher,
+  Graphics(WorkerShareData* share_data,
+           base::WeakPtr<BindingRunner> dispatcher,
            scoped_refptr<RenderRunner> renderer,
            const base::Vec2i& initial_resolution);
   ~Graphics();
@@ -124,6 +125,9 @@ class Graphics final : public base::RefCounted<Graphics>,
   void SetSwapIntervalInternal();
   void CheckSyncPoint();
 
+  void DrawGUIInternal();
+
+  WorkerShareData* share_data_;
   renderer::TextureFrameBuffer screen_buffer_[2];
   renderer::TextureFrameBuffer frozen_snapshot_;
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;

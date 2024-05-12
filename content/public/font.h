@@ -19,6 +19,7 @@ namespace content {
 class Font : public base::RefCounted<Font> {
  public:
   static void InitStaticFont(filesystem::Filesystem* io);
+  static void* GetDefaultFont(int64_t* font_size);
   static void DestroyStaticFont();
 
   static bool Existed(const std::string& name);

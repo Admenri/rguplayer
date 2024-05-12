@@ -13,15 +13,20 @@
 #include "content/worker/event_runner.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
+#include "third_party/imgui/imgui.h"
+#include "third_party/imgui/imgui_impl_opengl3.h"
+#include "third_party/imgui/imgui_impl_sdl3.h"
 
 #include "SDL_timer.h"
 
 namespace content {
 
-Graphics::Graphics(base::WeakPtr<BindingRunner> dispatcher,
+Graphics::Graphics(WorkerShareData* share_data,
+                   base::WeakPtr<BindingRunner> dispatcher,
                    scoped_refptr<RenderRunner> renderer,
                    const base::Vec2i& initial_resolution)
-    : config_(dispatcher->config()),
+    : share_data_(share_data),
+      config_(dispatcher->config()),
       dispatcher_(dispatcher),
       renderer_(renderer),
       resolution_(initial_resolution),
@@ -33,14 +38,49 @@ Graphics::Graphics(base::WeakPtr<BindingRunner> dispatcher,
   viewport_rect().rect = initial_resolution;
   viewport_rect().scissor = false;
   Font::InitStaticFont(dispatcher_->share_data()->filesystem.get());
-
   InitScreenBufferInternal();
+
+  // Setup Dear ImGui context
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGui::GetStyle().ScaleAllSizes(1.5f);
+  ImGuiIO& io = ImGui::GetIO();
+  io.ConfigFlags |=
+      ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+  io.ConfigFlags |=
+      ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+
+  // Apply DPI Settings
+  int display_w, display_h;
+  SDL_GetWindowSizeInPixels(window()->AsSDLWindow(), &display_w, &display_h);
+  io.DisplaySize = ImVec2((float)display_w, (float)display_h);
+  io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
+  float windowScale = SDL_GetWindowDisplayScale(window()->AsSDLWindow());
+  ImGui::GetStyle().ScaleAllSizes(windowScale);
+
+  // Apply default font
+  ImFontConfig font_config;
+  font_config.FontDataOwnedByAtlas = false;
+  int64_t font_size;
+  void* font_data = Font::GetDefaultFont(&font_size);
+  io.Fonts->AddFontFromMemoryTTF(font_data, font_size, 16.0f * windowScale,
+                                 &font_config);
+
+  // Setup Dear ImGui style
+  ImGui::StyleColorsDark();
+
+  // Setup Platform/Renderer backends
+  ImGui_ImplSDL3_InitForOpenGL(window()->AsSDLWindow(), renderer_->context());
+  ImGui_ImplOpenGL3_Init(nullptr);
 }
 
 Graphics::~Graphics() {
   Font::DestroyStaticFont();
-
   DestroyBufferInternal();
+
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplSDL3_Shutdown();
+  ImGui::DestroyContext();
 }
 
 int Graphics::GetBrightness() const {
@@ -398,6 +438,9 @@ void Graphics::PresentScreenInternal(
   renderer::Blt::BltDraw(resolution_, target_rect, config_->smooth_scale());
   renderer::Blt::EndDraw();
 
+  // Draw GUI panel
+  DrawGUIInternal();
+
   CheckSyncPoint();
   SDL_GL_SwapWindow(window->AsSDLWindow());
 }
@@ -599,6 +642,24 @@ void Graphics::CheckSyncPoint() {
   data->background_sync.require.store(false);
   data->background_sync.signal.store(false);
   fps_manager_->Reset();
+}
+
+void Graphics::DrawGUIInternal() {
+  // Event
+  SDL_Event sdl_event = {0};
+  while (share_data_->event_queue.try_dequeue(sdl_event))
+    ImGui_ImplSDL3_ProcessEvent(&sdl_event);
+
+  // Render
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplSDL3_NewFrame();
+  ImGui::NewFrame();
+
+  static bool show_demo_window = true;
+  ImGui::ShowDemoWindow(&show_demo_window);
+
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 }  // namespace content

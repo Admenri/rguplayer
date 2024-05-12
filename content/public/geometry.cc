@@ -14,6 +14,10 @@ Geometry::Geometry(scoped_refptr<Graphics> screen,
       triangle_count_(64) {
   triangle_vertices_.resize(triangle_count_ * 3);
   buffer_need_update_ = true;
+
+  vao_.vbo = renderer::VertexBuffer::Gen();
+  vao_.ibo = renderer::GLID<renderer::IndexBuffer>(0);
+  renderer::VertexArray<renderer::GeometryVertex>::Init(vao_);
 }
 
 Geometry::~Geometry() {
@@ -72,12 +76,6 @@ void Geometry::OnObjectDisposed() {
 
   renderer::VertexArray<renderer::GeometryVertex>::Uninit(vao_);
   renderer::VertexBuffer::Del(vao_.vbo);
-}
-
-void Geometry::InitDrawableData() {
-  vao_.vbo = renderer::VertexBuffer::Gen();
-  vao_.ibo = renderer::GLID<renderer::IndexBuffer>(0);
-  renderer::VertexArray<renderer::GeometryVertex>::Init(vao_);
 }
 
 void Geometry::BeforeComposite() {

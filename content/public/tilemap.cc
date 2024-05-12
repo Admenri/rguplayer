@@ -117,7 +117,6 @@ class TilemapGroundLayer : public ViewportChild {
   TilemapGroundLayer(const TilemapGroundLayer&) = delete;
   TilemapGroundLayer& operator=(const TilemapGroundLayer&) = delete;
 
-  void InitDrawableData() override { tilemap_->InitTilemapData(); }
   void BeforeComposite() override { tilemap_->BeforeTilemapComposite(); }
   void Composite() override {
     auto& shader = renderer::GSM.shaders()->tilemap;
@@ -136,7 +135,7 @@ class TilemapGroundLayer : public ViewportChild {
   }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
-  void OnViewportRectChanged(
+  void OnParentViewportRectChanged(
       const DrawableParent::ViewportInfo& rect) override {
     tilemap_->map_buffer_need_update_ = true;
   }
@@ -186,6 +185,7 @@ Tilemap::Tilemap(scoped_refptr<Graphics> screen,
       Disposable(screen),
       viewport_(viewport),
       tile_size_(tilesize) {
+  InitTilemapData();
   ResetDrawLayersInternal();
 }
 

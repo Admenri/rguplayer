@@ -8,6 +8,7 @@
 #include "SDL_locale.h"
 #include "SDL_misc.h"
 #include "SDL_platform.h"
+#include "SDL_timer.h"
 
 namespace binding {
 
@@ -37,6 +38,14 @@ MRI_METHOD(rgu_reset) {
   return Qnil;
 }
 
+MRI_METHOD(rgu_get_counter) {
+  return rb_uint2big(SDL_GetPerformanceCounter());
+}
+
+MRI_METHOD(rgu_get_counter_freq) {
+  return rb_uint2big(SDL_GetPerformanceFrequency());
+}
+
 void InitRGUBinding() {
   scoped_refptr<content::BindingRunner> runner = MriGetGlobalRunner();
 
@@ -56,6 +65,10 @@ void InitRGUBinding() {
 
   // Reset game
   MriDefineModuleFunction(module, "reset_engine", rgu_reset);
+
+  // Graphics Etc
+  MriDefineModuleFunction(module, "get_counter", rgu_get_counter);
+  MriDefineModuleFunction(module, "get_counter_freq", rgu_get_counter_freq);
 }
 
 }  // namespace binding

@@ -72,7 +72,11 @@ void Sprite::InitAttributeInternal() {
   src_rect_observer_ = src_rect_->AddChangedObserver(base::BindRepeating(
       &Sprite::OnSrcRectChangedInternal, base::Unretained(this)));
 
-  OnViewportRectChanged(parent_rect());
+  quad_ = std::make_unique<renderer::QuadDrawable>();
+  wave_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+
+  OnParentViewportRectChanged(parent_rect());
 }
 
 void Sprite::OnObjectDisposed() {
@@ -80,12 +84,6 @@ void Sprite::OnObjectDisposed() {
 
   quad_.reset();
   wave_quads_.reset();
-}
-
-void Sprite::InitDrawableData() {
-  quad_ = std::make_unique<renderer::QuadDrawable>();
-  wave_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
 }
 
 void Sprite::BeforeComposite() {
@@ -181,7 +179,8 @@ void Sprite::Composite() {
   renderer::GSM.states.blend.Pop();
 }
 
-void Sprite::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
+void Sprite::OnParentViewportRectChanged(
+    const DrawableParent::ViewportInfo& rect) {
   transform_.SetGlobalOffset(rect.GetRealOffset());
 }
 

@@ -53,6 +53,9 @@ void EventRunner::EventDispatch(const SDL_Event& event) {
   base::WeakPtr<ui::Widget> window = share_data_->window;
   int user_event = event.type - share_data_->user_event_id;
 
+  /* Push queue for GUI event process */
+  share_data_->event_queue.enqueue(event);
+
   /* Application quit flag */
   if (user_event == QUIT_SYSTEM_EVENT || event.type == SDL_EVENT_QUIT) {
     loop_runner_->QuitWhenIdle();

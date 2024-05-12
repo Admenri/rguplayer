@@ -332,35 +332,6 @@ void Window2::OnObjectDisposed() {
   renderer::TextureFrameBuffer::Del(base_tfb_);
 }
 
-void Window2::InitDrawableData() {
-  base_quad_ = std::make_unique<renderer::QuadDrawable>();
-  content_quad_ = std::make_unique<renderer::QuadDrawable>();
-  arrows_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-  cursor_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-  base_tex_quad_array_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-
-  arrows_quads_->Resize(5);
-  pause_vertex_ = nullptr;
-  cursor_quads_->Resize(1);
-
-  base_tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(base_tfb_, rect_.width, rect_.height);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(base_tfb_);
-
-  contents_quad_need_update_ = true;
-
-  /*
-   * Stretch layer
-   * Frame layer
-   * Cursor layer
-   * Control layer
-   * Contents layer
-   */
-}
-
 void Window2::BeforeComposite() {
   if (update_required_) {
     update_required_ = false;
@@ -511,7 +482,8 @@ void Window2::CheckDisposed() const {
   CheckIsDisposed();
 }
 
-void Window2::OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) {
+void Window2::OnParentViewportRectChanged(
+    const DrawableParent::ViewportInfo& rect) {
   // Passed on composite trans calculate
 }
 
@@ -528,6 +500,33 @@ void Window2::InitWindow() {
   cursor_rect_ = new Rect();
   cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(
       &Window2::CursorRectChangedInternal, base::Unretained(this)));
+
+  base_quad_ = std::make_unique<renderer::QuadDrawable>();
+  content_quad_ = std::make_unique<renderer::QuadDrawable>();
+  arrows_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  cursor_quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  base_tex_quad_array_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+
+  arrows_quads_->Resize(5);
+  pause_vertex_ = nullptr;
+  cursor_quads_->Resize(1);
+
+  base_tfb_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(base_tfb_, rect_.width, rect_.height);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(base_tfb_);
+
+  contents_quad_need_update_ = true;
+
+  /*
+   * Stretch layer
+   * Frame layer
+   * Cursor layer
+   * Control layer
+   * Contents layer
+   */
 }
 
 void Window2::CalcBaseQuadArrayInternal() {

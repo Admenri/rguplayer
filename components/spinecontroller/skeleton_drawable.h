@@ -17,6 +17,8 @@ class Filesystem;
 
 namespace spinecontroller {
 
+class OGLTexture;
+
 class OGLTextureLoader : public spine::TextureLoader {
  public:
   OGLTextureLoader(filesystem::Filesystem* io) : io_(io) {}
@@ -33,6 +35,7 @@ class OGLTextureLoader : public spine::TextureLoader {
 };
 
 class SkeletonDrawable {
+ public:
   SkeletonDrawable(spine::SkeletonData* skeleton,
                    spine::AnimationStateData* stateData = nullptr);
   ~SkeletonDrawable();

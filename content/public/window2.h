@@ -183,11 +183,11 @@ class Window2 : public base::RefCounted<Window2>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Window2"; }
 
-  void InitDrawableData() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override;
-  void OnViewportRectChanged(const DrawableParent::ViewportInfo& rect) override;
+  void OnParentViewportRectChanged(
+      const DrawableParent::ViewportInfo& rect) override;
 
   void InitWindow();
   void UpdateInternal();

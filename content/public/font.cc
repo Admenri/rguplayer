@@ -121,6 +121,16 @@ void Font::InitStaticFont(filesystem::Filesystem* io) {
   }
 }
 
+void* Font::GetDefaultFont(int64_t* font_size) {
+  auto it = g_default_font_state->mem_cache_.find("Fonts/Default.ttf");
+  if (it != g_default_font_state->mem_cache_.end()) {
+    *font_size = it->second.first;
+    return it->second.second;
+  }
+
+  return nullptr;
+}
+
 void Font::DestroyStaticFont() {
   auto& cache = g_default_font_state->font_cache;
   for (auto& it : cache)

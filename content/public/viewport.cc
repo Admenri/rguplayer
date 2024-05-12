@@ -111,19 +111,6 @@ void Viewport::OnObjectDisposed() {
   renderer::TextureFrameBuffer::Del(viewport_buffer_);
 }
 
-void Viewport::InitDrawableData() {
-  viewport_buffer_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
-                                      viewport_rect().rect.width,
-                                      viewport_rect().rect.height);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(viewport_buffer_);
-
-  viewport_quad_ = std::make_unique<renderer::QuadDrawable>();
-  auto rect = base::Rect(viewport_rect().rect.Size());
-  viewport_quad_->SetPositionRect(rect);
-  viewport_quad_->SetTexCoordRect(rect);
-}
-
 void Viewport::BeforeComposite() {
   DrawableParent::NotifyPrepareComposite();
 }
@@ -156,7 +143,7 @@ void Viewport::Composite() {
   renderer::GSM.states.scissor.Pop();
 }
 
-void Viewport::OnViewportRectChanged(const ViewportInfo& rect) {
+void Viewport::OnParentViewportRectChanged(const ViewportInfo& rect) {
   parent_offset_ = rect.GetRealOffset();
   OnRectChangedInternal();
 }
@@ -168,6 +155,17 @@ void Viewport::InitViewportInternal(const base::Rect& initial_rect) {
 
   color_ = new Color();
   tone_ = new Tone();
+
+  viewport_buffer_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(viewport_buffer_,
+                                      viewport_rect().rect.width,
+                                      viewport_rect().rect.height);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(viewport_buffer_);
+
+  viewport_quad_ = std::make_unique<renderer::QuadDrawable>();
+  auto rect = base::Rect(viewport_rect().rect.Size());
+  viewport_quad_->SetPositionRect(rect);
+  viewport_quad_->SetTexCoordRect(rect);
 }
 
 void Viewport::OnRectChangedInternal() {
@@ -246,7 +244,7 @@ void ViewportChild::SetViewport(scoped_refptr<Viewport> viewport) {
   if (!parent)
     parent = screen_.get();
   SetParent(parent);
-  OnViewportRectChanged(parent->viewport_rect());
+  OnParentViewportRectChanged(parent->viewport_rect());
 }
 
 }  // namespace content

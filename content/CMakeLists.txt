@@ -74,10 +74,10 @@ target_link_libraries(core_content PUBLIC
                       core_ui
                       components_filesystem
                       components_fpslimiter
-                      components_spinecontroller
                       SDL3_image::SDL3_image
                       SDL3_ttf::SDL3_ttf
-                      soloud)
+                      soloud
+                      base_imgui)
 
 if (MSVC)
   target_compile_options(core_content PRIVATE /O2 /WX "$<$<CXX_COMPILER_ID:MSVC>:-utf-8>")

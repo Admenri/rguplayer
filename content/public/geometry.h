@@ -52,7 +52,6 @@ class Geometry : public base::RefCounted<Geometry>,
  private:
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Geometry"; }
-  void InitDrawableData() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override { CheckIsDisposed(); }

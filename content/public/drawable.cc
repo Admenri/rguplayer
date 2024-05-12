@@ -12,7 +12,6 @@ uint64_t g_creation_stamp = 0;
 
 Drawable::Drawable(DrawableParent* parent, int z, bool visible, int sprite_y)
     : node_(this),
-      init_data_complete_(false),
       parent_(parent),
       z_(z),
       visible_(visible),
@@ -35,7 +34,7 @@ void Drawable::SetParent(DrawableParent* parent) {
   node_.RemoveFromList();
   parent_->InsertDrawable(this);
 
-  OnViewportRectChanged(parent->viewport_rect());
+  OnParentViewportRectChanged(parent->viewport_rect());
 }
 
 void Drawable::SetZ(int z) {
@@ -86,16 +85,8 @@ void DrawableParent::NotifyPrepareComposite() {
   for (auto it = drawables_.tail(); it != drawables_.end();
        it = it->previous()) {
     auto* child = it->value();
-    if (child->visible_) {
-      // Init once for renderer data on RenderRunner
-      if (!child->init_data_complete_) {
-        child->InitDrawableData();
-        child->init_data_complete_ = true;
-      }
-
-      // Prepare for render composite
+    if (child->visible_)
       child->BeforeComposite();
-    }
   }
 }
 
@@ -112,7 +103,7 @@ void DrawableParent::CompositeChildren() {
 
 void DrawableParent::NotifyViewportChanged() {
   for (auto* it = drawables_.head(); it != drawables_.end(); it = it->next())
-    it->value()->OnViewportRectChanged(viewport_rect_);
+    it->value()->OnParentViewportRectChanged(viewport_rect_);
 }
 
 bool DrawableParent::CalcDrawableOrder(Drawable* self, Drawable* other) {

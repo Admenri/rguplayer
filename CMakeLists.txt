@@ -120,9 +120,9 @@ include_directories(third_party/zlib)
 add_subdirectory(third_party/soloud)
 include_directories(third_party/soloud/include)
 
-## Soloud
-add_subdirectory(third_party/spine-runtimes/spine-cpp)
-include_directories(third_party/spine-runtimes/spine-cpp/spine-cpp/include)
+## IMGUI
+add_subdirectory(third_party/imgui)
+include_directories(third_party/imgui)
 
 #--------------------------------------------------------------------------------
 # Auto-generated directory include path
@@ -156,9 +156,6 @@ add_subdirectory(components/fpslimiter)
 
 ## Filesystem
 add_subdirectory(components/filesystem)
-
-## Spine runtime
-add_subdirectory(components/spinecontroller)
 
 #--------------------------------------------------------------------------------
 # Add rgu projects

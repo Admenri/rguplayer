@@ -85,11 +85,10 @@ class Viewport : public base::RefCounted<Viewport>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Viewport"; }
 
-  void InitDrawableData() override;
   void BeforeComposite() override;
   void Composite() override;
   void CheckDisposed() const override { CheckIsDisposed(); }
-  void OnViewportRectChanged(const ViewportInfo& rect) override;
+  void OnParentViewportRectChanged(const ViewportInfo& rect) override;
 
   void InitViewportInternal(const base::Rect& initial_rect);
 
