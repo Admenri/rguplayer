@@ -8,6 +8,7 @@
 #include "content/config/core_config.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
+#include "content/public/input.h"
 #include "content/public/shader.h"
 #include "content/worker/binding_worker.h"
 #include "content/worker/event_runner.h"
@@ -648,8 +649,14 @@ void Graphics::CheckSyncPoint() {
 void Graphics::DrawGUIInternal() {
   // Event
   SDL_Event sdl_event = {0};
-  while (share_data_->event_queue.try_dequeue(sdl_event))
+  while (share_data_->event_queue.try_dequeue(sdl_event)) {
+    if (share_data_->disable_gui_key_input &&
+        (sdl_event.type == SDL_EVENT_KEY_DOWN ||
+         sdl_event.type == SDL_EVENT_KEY_UP))
+      continue;
+
     ImGui_ImplSDL3_ProcessEvent(&sdl_event);
+  }
 
   // New frame
   ImGui_ImplOpenGL3_NewFrame();
@@ -657,8 +664,7 @@ void Graphics::DrawGUIInternal() {
   ImGui::NewFrame();
 
   // Gen window
-  static bool show_demo_window = true;
-  ImGui::ShowDemoWindow(&show_demo_window);
+  DrawSettingsWindowInternal();
 
   // IME Process
   ImGui::EndFrame();
@@ -669,6 +675,19 @@ void Graphics::DrawGUIInternal() {
   // Render
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void Graphics::DrawSettingsWindowInternal() {
+  ImGui::SetNextWindowPos(ImVec2(), ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
+
+  if (ImGui::Begin("Engine Settings")) {
+    // Button settings
+    share_data_->create_button_settings_gui.Run();
+
+    // End window create
+    ImGui::End();
+  }
 }
 
 }  // namespace content

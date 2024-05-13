@@ -67,6 +67,8 @@ class Input final : public base::RefCounted<Input> {
   std::string FetchText();
   void SetTextInputRect(scoped_refptr<Rect> region);
 
+  void ShowButtonSettingsGUI();
+
  private:
   void UpdateDir4Internal();
   void UpdateDir8Internal();
@@ -75,6 +77,8 @@ class Input final : public base::RefCounted<Input> {
   KeySymMap key_bindings_;
   std::array<KeyState, SDL_NUM_SCANCODES> key_states_;
   std::array<KeyState, SDL_NUM_SCANCODES> recent_key_states_;
+
+  KeySymMap tmp_bindings_;
 
   struct {
     int active = 0;
@@ -86,6 +90,7 @@ class Input final : public base::RefCounted<Input> {
   } dir8_state_;
 
   base::WeakPtr<ui::Widget> window_;
+  base::WeakPtrFactory<Input> weak_ptr_factory_{this};
 };
 
 }  // namespace content

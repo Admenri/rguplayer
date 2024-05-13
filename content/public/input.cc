@@ -5,6 +5,8 @@
 #include "content/public/input.h"
 
 #include "base/worker/run_loop.h"
+#include "third_party/imgui/imgui.h"
+#include "third_party/imgui/imgui_impl_sdl3.h"
 
 #include "SDL_events.h"
 
@@ -60,6 +62,10 @@ const std::string kArrowDirsSymbol[] = {
 const int kArrowDirsSymbolSize =
     sizeof(kArrowDirsSymbol) / sizeof(kArrowDirsSymbol[0]);
 
+const std::array<std::string, 12> kButtonItems = {
+    "A", "B", "C", "X", "Y", "Z", "L", "R", "DOWN", "LEFT", "RIGHT", "UP",
+};
+
 }  // namespace
 
 Input::Input(WorkerShareData* share_data) : share_data_(share_data) {
@@ -79,6 +85,9 @@ Input::Input(WorkerShareData* share_data) : share_data_(share_data) {
   if (share_data_->config->content_version() >= RGSSVersion::RGSS2)
     for (int i = 0; i < kKeyboardBindings2Size; ++i)
       key_bindings_.push_back(kKeyboardBindings2[i]);
+
+  share_data_->create_button_settings_gui = base::BindRepeating(
+      &Input::ShowButtonSettingsGUI, weak_ptr_factory_.GetWeakPtr());
 }
 
 void Input::ApplyKeySymBinding(const KeySymMap& keysyms) {
@@ -274,6 +283,47 @@ void Input::SetTextInputRect(scoped_refptr<Rect> region) {
   share_data_->event_runner->PostTask(base::BindOnce(
       [](SDL_Rect* sdlrt) { SDL_SetTextInputRect(sdlrt); }, &sdlrt));
   share_data_->event_runner->WaitForSync();
+}
+
+void Input::ShowButtonSettingsGUI() {
+  static int selected_button = 0, selected_binding = -1;
+  share_data_->disable_gui_key_input = (selected_binding != -1);
+
+  if (ImGui::CollapsingHeader("Button Configure")) {
+    auto list_height = 6 * ImGui::GetTextLineHeightWithSpacing();
+    auto list_width = ImGui::CalcItemWidth() / 2.0f;
+
+    if (ImGui::BeginListBox("##button_list", ImVec2(list_width, list_height))) {
+      for (int i = 0; i < kButtonItems.size(); ++i) {
+        if (ImGui::Selectable(kButtonItems[i].c_str(), i == selected_button)) {
+          selected_button = i;
+          selected_binding = -1;
+        }
+      }
+
+      ImGui::EndListBox();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::BeginListBox("##button_binding",
+                            ImVec2(list_width, list_height))) {
+      std::vector<int> keys;
+      GetKeysFromFlag(kButtonItems[selected_button], keys);
+
+      for (int i = 0; i < keys.size(); ++i) {
+        const bool is_select = (selected_binding == i);
+        if (ImGui::Selectable(
+                is_select
+                    ? "<...>"
+                    : SDL_GetScancodeName(static_cast<SDL_Scancode>(keys[i])),
+                is_select)) {
+          selected_binding = (selected_binding != i ? i : -1);
+        }
+      }
+
+      ImGui::EndListBox();
+    }
+  }
 }
 
 void Input::UpdateDir4Internal() {
