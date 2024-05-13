@@ -64,7 +64,8 @@ Graphics::Graphics(WorkerShareData* share_data,
   int64_t font_size;
   void* font_data = Font::GetDefaultFont(&font_size);
   io.Fonts->AddFontFromMemoryTTF(font_data, font_size, 16.0f * windowScale,
-                                 &font_config);
+                                 &font_config,
+                                 io.Fonts->GetGlyphRangesChineseFull());
 
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
@@ -650,14 +651,22 @@ void Graphics::DrawGUIInternal() {
   while (share_data_->event_queue.try_dequeue(sdl_event))
     ImGui_ImplSDL3_ProcessEvent(&sdl_event);
 
-  // Render
+  // New frame
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
 
+  // Gen window
   static bool show_demo_window = true;
   ImGui::ShowDemoWindow(&show_demo_window);
 
+  // IME Process
+  ImGui::EndFrame();
+  share_data_->event_runner->PostTask(base::BindOnce(
+      [](bool enable) { enable ? SDL_StartTextInput() : SDL_StopTextInput(); },
+      SDL_TextInputActive()));
+
+  // Render
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
