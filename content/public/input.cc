@@ -86,6 +86,7 @@ Input::Input(WorkerShareData* share_data) : share_data_(share_data) {
     for (int i = 0; i < kKeyboardBindings2Size; ++i)
       key_bindings_.push_back(kKeyboardBindings2[i]);
 
+  setting_bindings_ = key_bindings_;
   share_data_->create_button_settings_gui = base::BindRepeating(
       &Input::ShowButtonSettingsGUI, weak_ptr_factory_.GetWeakPtr());
 }
@@ -291,9 +292,9 @@ void Input::ShowButtonSettingsGUI() {
 
   if (ImGui::CollapsingHeader("Button Configure")) {
     auto list_height = 6 * ImGui::GetTextLineHeightWithSpacing();
-    auto list_width = ImGui::CalcItemWidth() / 2.0f;
-
-    if (ImGui::BeginListBox("##button_list", ImVec2(list_width, list_height))) {
+    if (ImGui::BeginListBox(
+            "##button_list",
+            ImVec2(ImGui::CalcItemWidth() / 2.0f, list_height + 64))) {
       for (int i = 0; i < kButtonItems.size(); ++i) {
         if (ImGui::Selectable(kButtonItems[i].c_str(), i == selected_button)) {
           selected_button = i;
@@ -305,23 +306,71 @@ void Input::ShowButtonSettingsGUI() {
     }
 
     ImGui::SameLine();
-    if (ImGui::BeginListBox("##button_binding",
-                            ImVec2(list_width, list_height))) {
-      std::vector<int> keys;
-      GetKeysFromFlag(kButtonItems[selected_button], keys);
 
-      for (int i = 0; i < keys.size(); ++i) {
-        const bool is_select = (selected_binding == i);
-        if (ImGui::Selectable(
-                is_select
-                    ? "<...>"
-                    : SDL_GetScancodeName(static_cast<SDL_Scancode>(keys[i])),
-                is_select)) {
-          selected_binding = (selected_binding != i ? i : -1);
+    ImGui::BeginGroup();
+    if (ImGui::BeginListBox("##button_binding",
+                            ImVec2(-FLT_MIN, list_height))) {
+      for (int i = 0; i < setting_bindings_.size(); ++i) {
+        auto& it = setting_bindings_[i];
+        if (it.sym == kButtonItems[selected_button]) {
+          const bool is_select = (selected_binding == i);
+          std::string button_name = SDL_GetScancodeName(it.scancode);
+          if (it.scancode == SDL_SCANCODE_UNKNOWN)
+            button_name = "<empty>";
+          if (is_select)
+            button_name = "<...>";
+          if (ImGui::Selectable(button_name.c_str(), is_select)) {
+            selected_binding = (selected_binding != i ? i : -1);
+          }
         }
       }
 
       ImGui::EndListBox();
+    }
+
+    if (share_data_->disable_gui_key_input) {
+      for (int code = 0; code < SDL_NUM_SCANCODES; ++code) {
+        bool key_pressed =
+            window_->GetKeyState(static_cast<SDL_Scancode>(code));
+
+        if (key_pressed) {
+          auto it = setting_bindings_.begin();
+          for (int i = 0; i < selected_binding; ++i)
+            it++;
+
+          it->scancode = static_cast<SDL_Scancode>(code);
+          selected_binding = -1;
+        }
+      }
+    }
+
+    if (ImGui::Button("Add")) {
+      setting_bindings_.push_back(
+          {kButtonItems[selected_button], SDL_SCANCODE_UNKNOWN});
+      selected_binding = -1;
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Remove") && selected_binding >= 0) {
+      auto it = setting_bindings_.begin();
+      for (int i = 0; i < selected_binding; ++i)
+        it++;
+
+      setting_bindings_.erase(it);
+      selected_binding = -1;
+    }
+
+    ImGui::EndGroup();
+
+    if (ImGui::Button("Save Settings")) {
+      key_bindings_ = setting_bindings_;
+      selected_binding = -1;
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Reset Settings")) {
+      setting_bindings_ = key_bindings_;
+      selected_binding = -1;
     }
   }
 }

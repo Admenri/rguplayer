@@ -6,7 +6,7 @@
 #define CONTENT_PUBLIC_INPUT_H_
 
 #include <array>
-#include <list>
+#include <vector>
 
 #include "base/memory/ref_counted.h"
 #include "content/config/core_config.h"
@@ -30,7 +30,7 @@ class Input final : public base::RefCounted<Input> {
     int repeat_count;
   };
 
-  using KeySymMap = std::list<KeyBinding>;
+  using KeySymMap = std::vector<KeyBinding>;
 
   Input(WorkerShareData* share_data);
   ~Input() = default;
@@ -78,7 +78,7 @@ class Input final : public base::RefCounted<Input> {
   std::array<KeyState, SDL_NUM_SCANCODES> key_states_;
   std::array<KeyState, SDL_NUM_SCANCODES> recent_key_states_;
 
-  KeySymMap tmp_bindings_;
+  KeySymMap setting_bindings_;
 
   struct {
     int active = 0;
