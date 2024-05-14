@@ -68,9 +68,10 @@ int main(int argc, char* argv[]) {
   env->ReleaseStringUTFChars(strJGamePath, dataDir);
   env->DeleteLocalRef(strJGamePath);
   env->DeleteLocalRef(cls);
-#endif  //! defined(OS_ANDROID)
 
-  scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
+  // Fixed configure file
+  std::string ini = "Game.ini";
+#else
   std::string app(argv[0]);
   ReplaceStringWidth(app, '\\', '/');
   auto last_sep = app.find_last_of('/');
@@ -78,14 +79,17 @@ int main(int argc, char* argv[]) {
     app = app.substr(last_sep + 1);
 
   LOG(INFO) << "[App] Path: " << app;
-  config->LoadCommandLine(argc, argv);
 
   last_sep = app.find_last_of('.');
   if (last_sep != std::string::npos)
     app = app.substr(0, last_sep);
   std::string ini = app + ".ini";
+#endif  //! defined(OS_ANDROID)
 
   LOG(INFO) << "[App] Configure: " << ini;
+
+  scoped_refptr<content::CoreConfigure> config = new content::CoreConfigure();
+  config->LoadCommandLine(argc, argv);
 
   std::unique_ptr<filesystem::Filesystem> iosystem =
       std::make_unique<filesystem::Filesystem>(argv[0]);
@@ -103,6 +107,7 @@ int main(int argc, char* argv[]) {
   if (!config->LoadConfigure(inifile))
     return 1;
 
+  config->executable_file() = app;
   for (auto& it : config->load_paths())
     iosystem->AddLoadPath(it);
 

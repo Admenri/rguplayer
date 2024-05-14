@@ -9,6 +9,8 @@
 
 #include "SDL_events.h"
 
+#include <fstream>
+
 namespace content {
 
 namespace {
@@ -101,6 +103,9 @@ void Input::ApplyKeySymBinding(const KeySymMap& keysyms) {
 }
 
 void Input::Update() {
+  if (share_data_->enable_settings_menu)
+    return;
+
   for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
     bool key_pressed = window_->GetKeyState(static_cast<SDL_Scancode>(i));
 
@@ -500,8 +505,50 @@ void Input::ShowButtonSettingsGUI() {
   }
 }
 
-void Input::TryReadBindingsInternal() {}
+void Input::TryReadBindingsInternal() {
+  std::string filepath = share_data_->config->executable_file();
+  filepath += ".cg";
+  filepath += std::to_string((int)share_data_->config->content_version());
+  std::ifstream fs(filepath, std::ios::binary);
+  if (fs.is_open()) {
+    key_bindings_.clear();
 
-void Input::StorageBindingsInternal() {}
+    uint32_t item_size;
+    fs.read(reinterpret_cast<char*>(&item_size), sizeof(item_size));
+    for (uint32_t i = 0; i < item_size; ++i) {
+      uint32_t token_size;
+      fs.read(reinterpret_cast<char*>(&token_size), sizeof(token_size));
+      std::string token(token_size, 0);
+      fs.read(token.data(), token_size);
+      SDL_Scancode scancode;
+      fs.read(reinterpret_cast<char*>(&scancode), sizeof(scancode));
+
+      key_bindings_.push_back({token, scancode});
+    }
+
+    fs.close();
+  }
+}
+
+void Input::StorageBindingsInternal() {
+  std::string filepath = share_data_->config->executable_file();
+  filepath += ".cg";
+  filepath += std::to_string((int)share_data_->config->content_version());
+  std::ofstream fs(filepath, std::ios::binary);
+  if (fs.is_open()) {
+    uint32_t item_size = key_bindings_.size();
+    fs.write(reinterpret_cast<const char*>(&item_size), sizeof(item_size));
+    for (const auto& it : key_bindings_) {
+      uint32_t token_size = it.sym.size();
+      fs.write(reinterpret_cast<const char*>(&token_size), sizeof(token_size));
+      fs.write(it.sym.data(), token_size);
+
+      SDL_Scancode scancode = it.scancode;
+      fs.write(reinterpret_cast<const char*>(&scancode), sizeof(scancode));
+    }
+
+    fs.close();
+  }
+}
 
 }  // namespace content

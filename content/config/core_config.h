@@ -39,6 +39,8 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   void LoadCommandLine(int argc, char** argv);
   bool LoadConfigure(SDL_IOStream* filestream);
 
+  std::string& executable_file() { return executable_file_; }
+
   std::string& game_rtp() { return game_rtp_; }
   std::string& game_title() { return game_title_; }
   std::string& game_scripts() { return game_scripts_; }
@@ -59,6 +61,8 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   std::vector<std::string>& load_paths() { return load_paths_; }
 
  private:
+  std::string executable_file_;
+
   std::string game_rtp_;
   std::string game_title_;
   std::string game_scripts_;
