@@ -137,7 +137,7 @@ int main(int argc, char* argv[]) {
   win_params.size = config->window_size();
   win_params.title = config->game_title();
   win_params.resizable = true;
-  win_params.hpixeldensity = false;
+  win_params.hpixeldensity = true;
   win->Init(std::move(win_params));
 
 #if defined(OS_LINUX)

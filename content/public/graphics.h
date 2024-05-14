@@ -127,6 +127,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   void DrawGUIInternal();
   void DrawSettingsWindowInternal();
+  void DrawGraphicsSettingsGUI();
 
   WorkerShareData* share_data_;
   renderer::TextureFrameBuffer screen_buffer_[2];

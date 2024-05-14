@@ -20,6 +20,26 @@
 
 #include "SDL_timer.h"
 
+namespace {
+
+void DrawEngineInfoGUI() {
+  if (ImGui::CollapsingHeader("About")) {
+    ImGui::Text("Ruby Game Universal (RGU) Runtime");
+    ImGui::Separator();
+    ImGui::Text("Copyright (C) 2015-2024 Admenri.");
+    ImGui::Text("The RGU is licensed under the BSD-3-Clause License, ");
+    ImGui::Text("see LICENSE for more information.");
+
+    if (ImGui::Button("Github"))
+      SDL_OpenURL("https://github.com/Admenri/rguplayer");
+    ImGui::SameLine();
+    if (ImGui::Button("AFDian"))
+      SDL_OpenURL("https://afdian.net/a/rguplayer");
+  }
+}
+
+}  // namespace
+
 namespace content {
 
 Graphics::Graphics(WorkerShareData* share_data,
@@ -683,17 +703,43 @@ void Graphics::DrawGUIInternal() {
 
 void Graphics::DrawSettingsWindowInternal() {
   ImGui::SetNextWindowPos(ImVec2(), ImGuiCond_FirstUseEver);
-  ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
 
   if (ImGui::Begin("Settings")) {
     // Button settings
     share_data_->create_button_settings_gui.Run();
 
+    // Graphics settings
+    DrawGraphicsSettingsGUI();
+
     // Audio settings
     share_data_->create_audio_settings_gui.Run();
 
+    // Engine Info
+    DrawEngineInfoGUI();
+
     // End window create
     ImGui::End();
+  }
+}
+
+void Graphics::DrawGraphicsSettingsGUI() {
+  if (ImGui::CollapsingHeader("Graphics")) {
+    // V-Sync
+    int gl_vsync;
+    SDL_GL_GetSwapInterval(&gl_vsync);
+    bool ui_vsync = gl_vsync;
+    ImGui::Checkbox("V-Sync", &ui_vsync);
+    SDL_GL_SetSwapInterval(ui_vsync ? 1 : 0);
+
+    // Smooth Scale
+    ImGui::Checkbox("Smooth Scale", &share_data_->config->smooth_scale());
+
+    // ScreenRatio
+    ImGui::Checkbox("Keep Ratio", &share_data_->config->keep_ratio());
+
+    // Skip Frame
+    ImGui::Checkbox("Frame Skip", &share_data_->config->allow_frame_skip());
   }
 }
 

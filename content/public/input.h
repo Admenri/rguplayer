@@ -18,9 +18,13 @@ namespace content {
 
 class Input final : public base::RefCounted<Input> {
  public:
-  using KeyBinding = struct {
+  struct KeyBinding {
     std::string sym;
     SDL_Scancode scancode;
+
+    bool operator==(const KeyBinding& other) {
+      return sym == other.sym && scancode == other.scancode;
+    }
   };
 
   using KeyState = struct {
@@ -31,9 +35,8 @@ class Input final : public base::RefCounted<Input> {
   };
 
   using KeySymMap = std::vector<KeyBinding>;
-
   Input(WorkerShareData* share_data);
-  ~Input() = default;
+  ~Input();
 
   Input(const Input&) = delete;
   Input& operator=(const Input&) = delete;
@@ -67,11 +70,13 @@ class Input final : public base::RefCounted<Input> {
   std::string FetchText();
   void SetTextInputRect(scoped_refptr<Rect> region);
 
-  void ShowButtonSettingsGUI();
-
  private:
   void UpdateDir4Internal();
   void UpdateDir8Internal();
+
+  void ShowButtonSettingsGUI();
+  void TryReadBindingsInternal();
+  void StorageBindingsInternal();
 
   WorkerShareData* share_data_;
   KeySymMap key_bindings_;
