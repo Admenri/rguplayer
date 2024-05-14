@@ -725,6 +725,15 @@ void Graphics::DrawSettingsWindowInternal() {
 
 void Graphics::DrawGraphicsSettingsGUI() {
   if (ImGui::CollapsingHeader("Graphics")) {
+    ImGui::TextWrapped("Renderer: %s", renderer::GL.GetString(GL_RENDERER));
+    ImGui::Separator();
+    ImGui::TextWrapped("Vendor: %s", renderer::GL.GetString(GL_VENDOR));
+    ImGui::Separator();
+    ImGui::TextWrapped("Version: %s", renderer::GL.GetString(GL_VERSION));
+    ImGui::Separator();
+    ImGui::Text("Average FPS: %d", share_data_->display_fps);
+    ImGui::Separator();
+
     // V-Sync
     int gl_vsync;
     SDL_GL_GetSwapInterval(&gl_vsync);

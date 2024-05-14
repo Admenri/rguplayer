@@ -43,7 +43,6 @@ class EventRunner : public base::RefCounted<EventRunner> {
  private:
   static int EventFilter(void* userdata, SDL_Event* event);
   void EventDispatch(const SDL_Event& event);
-  void UpdateFPSDisplay(std::optional<int32_t> fps);
 
   WorkerShareData* share_data_;
   base::WeakPtr<BindingRunner> binding_runner_;
@@ -51,7 +50,6 @@ class EventRunner : public base::RefCounted<EventRunner> {
   std::unique_ptr<base::RunLoop> loop_runner_;
 
   struct {
-    bool enable_display;
     uint64_t frame_count;
     uint64_t last_counter;
     uint64_t counter_freq;
