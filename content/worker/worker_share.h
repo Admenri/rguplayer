@@ -43,9 +43,11 @@ struct WorkerShareData {
   } background_sync;
 
   // GUI Event Queue
+  bool enable_settings_menu = false;
   bool disable_gui_key_input = false;
   moodycamel::ConcurrentQueue<SDL_Event> event_queue;
   base::RepeatingClosure create_button_settings_gui;
+  base::RepeatingClosure create_audio_settings_gui;
 };
 
 }  // namespace content

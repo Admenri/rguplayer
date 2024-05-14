@@ -5,6 +5,7 @@
 #include "content/public/audio.h"
 
 #include "base/exceptions/exception.h"
+#include "third_party/imgui/imgui.h"
 
 #include "SDL_timer.h"
 
@@ -126,10 +127,8 @@ SoLoud::result soloud_sdlbackend_init(SoLoud::Soloud* aSoloud,
 
 }  // namespace
 
-Audio::Audio(base::WeakPtr<filesystem::Filesystem> file_reader,
-             scoped_refptr<CoreConfigure> config)
-    : file_reader_(file_reader), config_(config) {
-  if (config_->disable_audio()) {
+Audio::Audio(WorkerShareData* share_data) : share_data_(share_data) {
+  if (share_data_->config->disable_audio()) {
     LOG(INFO) << "[Content] Disable Audio module.";
     output_device_ = 0;
     return;
@@ -143,6 +142,10 @@ Audio::Audio(base::WeakPtr<filesystem::Filesystem> file_reader,
   audio_runner_->task_runner()->PostTask(
       base::BindOnce(&Audio::InitAudioDeviceInternal, base::Unretained(this)));
   audio_runner_->task_runner()->WaitForSync();
+
+  // Bind settings function
+  share_data_->create_audio_settings_gui = base::BindRepeating(
+      &Audio::DrawAudioSettingsGUI, weak_ptr_factory_.GetWeakPtr());
 }
 
 Audio::~Audio() {
@@ -357,17 +360,17 @@ void Audio::PlaySlotInternal(SlotInfo* slot,
     slot->filename = filename;
 
     try {
-      file_reader_->OpenRead(filename,
-                             base::BindRepeating(
-                                 [](SoLoud::Wav* source, SDL_IOStream* ops,
-                                    const std::string& ext) {
-                                   size_t out_size;
-                                   uint8_t* mem = static_cast<uint8_t*>(
-                                       read_mem_file(ops, &out_size, SDL_TRUE));
-                                   return source->loadMem(mem, out_size) ==
-                                          SoLoud::SO_NO_ERROR;
-                                 },
-                                 slot->source.get()));
+      share_data_->filesystem->OpenRead(
+          filename, base::BindRepeating(
+                        [](SoLoud::Wav* source, SDL_IOStream* ops,
+                           const std::string& ext) {
+                          size_t out_size;
+                          uint8_t* mem = static_cast<uint8_t*>(
+                              read_mem_file(ops, &out_size, SDL_TRUE));
+                          return source->loadMem(mem, out_size) ==
+                                 SoLoud::SO_NO_ERROR;
+                        },
+                        slot->source.get()));
     } catch (const base::Exception& exception) {
       LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
     }
@@ -411,17 +414,17 @@ void Audio::EmitSoundInternal(const std::string& filename,
     std::unique_ptr<SoLoud::Wav> source(new SoLoud::Wav());
 
     try {
-      file_reader_->OpenRead(filename,
-                             base::BindRepeating(
-                                 [](SoLoud::Wav* source, SDL_IOStream* ops,
-                                    const std::string& ext) {
-                                   size_t out_size;
-                                   uint8_t* mem = static_cast<uint8_t*>(
-                                       read_mem_file(ops, &out_size, SDL_TRUE));
-                                   return source->loadMem(mem, out_size) ==
-                                          SoLoud::SO_NO_ERROR;
-                                 },
-                                 source.get()));
+      share_data_->filesystem->OpenRead(
+          filename, base::BindRepeating(
+                        [](SoLoud::Wav* source, SDL_IOStream* ops,
+                           const std::string& ext) {
+                          size_t out_size;
+                          uint8_t* mem = static_cast<uint8_t*>(
+                              read_mem_file(ops, &out_size, SDL_TRUE));
+                          return source->loadMem(mem, out_size) ==
+                                 SoLoud::SO_NO_ERROR;
+                        },
+                        source.get()));
     } catch (const base::Exception& exception) {
       LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
     }
@@ -430,7 +433,7 @@ void Audio::EmitSoundInternal(const std::string& filename,
     auto handle = core_.play(*source);
     core_.setVolume(handle, volume / 100.0f);
     core_.setRelativePlaySpeed(handle, pitch / 100.0f);
-    se_cache_.insert(std::make_pair(filename, std::move(source)));
+    se_cache_.emplace(filename, std::move(source));
   }
 }
 
@@ -455,6 +458,14 @@ void Audio::ResetInternal() {
   me_.play_handle = 0;
 
   se_cache_.clear();
+}
+
+void Audio::DrawAudioSettingsGUI() {
+  if (ImGui::CollapsingHeader("Audio")) {
+    float volume = core_.getGlobalVolume();
+    ImGui::SliderFloat("Volume", &volume, 0, 1);
+    core_.setGlobalVolume(volume);
+  }
 }
 
 }  // namespace content

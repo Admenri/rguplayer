@@ -54,7 +54,8 @@ void EventRunner::EventDispatch(const SDL_Event& event) {
   int user_event = event.type - share_data_->user_event_id;
 
   /* Push queue for GUI event process */
-  share_data_->event_queue.enqueue(event);
+  if (share_data_->enable_settings_menu)
+    share_data_->event_queue.enqueue(event);
 
   /* Application quit flag */
   if (user_event == QUIT_SYSTEM_EVENT || event.type == SDL_EVENT_QUIT) {
@@ -81,7 +82,10 @@ void EventRunner::EventDispatch(const SDL_Event& event) {
   /* Reset content */
   if (event.type == SDL_EVENT_KEY_UP &&
       event.window.windowID == window->GetWindowID()) {
-    if (event.key.keysym.scancode == SDL_SCANCODE_F2) {
+    if (event.key.keysym.scancode == SDL_SCANCODE_F1) {
+      // Settings menu
+      share_data_->enable_settings_menu = !share_data_->enable_settings_menu;
+    } else if (event.key.keysym.scancode == SDL_SCANCODE_F2) {
       // Switch fps display mode
       fps_counter_.enable_display = !fps_counter_.enable_display;
 

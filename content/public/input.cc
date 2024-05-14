@@ -6,7 +6,6 @@
 
 #include "base/worker/run_loop.h"
 #include "third_party/imgui/imgui.h"
-#include "third_party/imgui/imgui_impl_sdl3.h"
 
 #include "SDL_events.h"
 
@@ -290,7 +289,7 @@ void Input::ShowButtonSettingsGUI() {
   static int selected_button = 0, selected_binding = -1;
   share_data_->disable_gui_key_input = (selected_binding != -1);
 
-  if (ImGui::CollapsingHeader("Button Configure")) {
+  if (ImGui::CollapsingHeader("Button")) {
     auto list_height = 6 * ImGui::GetTextLineHeightWithSpacing();
     if (ImGui::BeginListBox(
             "##button_list",

@@ -9,21 +9,21 @@
 #include "base/worker/thread_worker.h"
 #include "components/filesystem/filesystem.h"
 #include "content/config/core_config.h"
+#include "content/worker/worker_share.h"
 
 #include "SDL_audio.h"
 
 #include "soloud.h"
 #include "soloud_wav.h"
 
-#include <unordered_map>
 #include <list>
+#include <unordered_map>
 
 namespace content {
 
 class Audio final : public base::RefCounted<Audio> {
  public:
-  Audio(base::WeakPtr<filesystem::Filesystem> file_reader,
-        scoped_refptr<CoreConfigure> config);
+  Audio(WorkerShareData* share_data);
   ~Audio();
 
   Audio(const Audio&) = delete;
@@ -91,6 +91,8 @@ class Audio final : public base::RefCounted<Audio> {
 
   void ResetInternal();
 
+  void DrawAudioSettingsGUI();
+
   std::unique_ptr<base::ThreadWorker> audio_runner_;
 
   SoLoud::Soloud core_;
@@ -103,8 +105,7 @@ class Audio final : public base::RefCounted<Audio> {
   SlotInfo me_;
   std::unordered_map<std::string, std::unique_ptr<SoLoud::Wav>> se_cache_;
 
-  base::WeakPtr<filesystem::Filesystem> file_reader_;
-  scoped_refptr<CoreConfigure> config_;
+  WorkerShareData* share_data_;
   std::unique_ptr<std::thread> me_watcher_;
   std::atomic_bool quit_flag_;
 

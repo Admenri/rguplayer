@@ -56,6 +56,7 @@ Graphics::Graphics(WorkerShareData* share_data,
   SDL_GetWindowSizeInPixels(window()->AsSDLWindow(), &display_w, &display_h);
   io.DisplaySize = ImVec2((float)display_w, (float)display_h);
   io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
+  io.IniFilename = nullptr;
   float windowScale = SDL_GetWindowDisplayScale(window()->AsSDLWindow());
   ImGui::GetStyle().ScaleAllSizes(windowScale);
 
@@ -647,6 +648,9 @@ void Graphics::CheckSyncPoint() {
 }
 
 void Graphics::DrawGUIInternal() {
+  if (!share_data_->enable_settings_menu)
+    return;
+
   // Event
   SDL_Event sdl_event = {0};
   while (share_data_->event_queue.try_dequeue(sdl_event)) {
@@ -681,9 +685,12 @@ void Graphics::DrawSettingsWindowInternal() {
   ImGui::SetNextWindowPos(ImVec2(), ImGuiCond_FirstUseEver);
   ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
 
-  if (ImGui::Begin("Engine Settings")) {
+  if (ImGui::Begin("Settings")) {
     // Button settings
     share_data_->create_button_settings_gui.Run();
+
+    // Audio settings
+    share_data_->create_audio_settings_gui.Run();
 
     // End window create
     ImGui::End();
