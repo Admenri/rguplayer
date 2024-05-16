@@ -64,8 +64,8 @@ Graphics::Graphics(WorkerShareData* share_data,
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGui::GetStyle().ScaleAllSizes(1.5f);
   ImGuiIO& io = ImGui::GetIO();
+  io.IniFilename = nullptr;
   io.ConfigFlags |=
       ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
   io.ConfigFlags |=
@@ -76,16 +76,15 @@ Graphics::Graphics(WorkerShareData* share_data,
   SDL_GetWindowSizeInPixels(window()->AsSDLWindow(), &display_w, &display_h);
   io.DisplaySize = ImVec2((float)display_w, (float)display_h);
   io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
-  io.IniFilename = nullptr;
   float windowScale = SDL_GetWindowDisplayScale(window()->AsSDLWindow());
   ImGui::GetStyle().ScaleAllSizes(windowScale);
 
   // Apply default font
   ImFontConfig font_config;
   font_config.FontDataOwnedByAtlas = false;
-  int64_t font_size;
-  void* font_data = Font::GetDefaultFont(&font_size);
-  io.Fonts->AddFontFromMemoryTTF(font_data, font_size, 16.0f * windowScale,
+  int64_t font_data_size;
+  void* font_data = Font::GetDefaultFont(&font_data_size);
+  io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0f * windowScale,
                                  &font_config,
                                  io.Fonts->GetGlyphRangesChineseFull());
 

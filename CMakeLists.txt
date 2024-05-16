@@ -22,6 +22,22 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 #--------------------------------------------------------------------------------
+# Auto-generated directory include path
+#--------------------------------------------------------------------------------
+
+find_package(Python3 COMPONENTS Interpreter)
+
+if(Python3_FOUND)
+    set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+    message(STATUS "Found Python3: ${Python3_EXECUTABLE}")
+else()
+    message(FATAL_ERROR "Python3 not found.")
+endif()
+
+set(RGU_AUTOGEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/gen")
+include_directories("${RGU_AUTOGEN_DIR}")
+
+#--------------------------------------------------------------------------------
 # Third-party Libraries
 #--------------------------------------------------------------------------------
 
@@ -123,22 +139,6 @@ include_directories(third_party/soloud/include)
 ## IMGUI
 add_subdirectory(third_party/imgui)
 include_directories(third_party/imgui)
-
-#--------------------------------------------------------------------------------
-# Auto-generated directory include path
-#--------------------------------------------------------------------------------
-
-find_package(Python3 COMPONENTS Interpreter)
-
-if(Python3_FOUND)
-    set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
-    message(STATUS "Found Python3: ${Python3_EXECUTABLE}")
-else()
-    message(FATAL_ERROR "Python3 not found.")
-endif()
-
-set(RGU_AUTOGEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/gen")
-include_directories("${RGU_AUTOGEN_DIR}")
 
 #--------------------------------------------------------------------------------
 # Components of Core
