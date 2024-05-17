@@ -103,7 +103,7 @@ void Input::ApplyKeySymBinding(const KeySymMap& keysyms) {
 }
 
 void Input::Update() {
-  if (share_data_->enable_settings_menu)
+  if (share_data_->menu_window_focused)
     return;
 
   for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {

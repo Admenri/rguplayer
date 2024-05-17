@@ -11,10 +11,11 @@
 
 namespace content {
 
+class WorkerShareData;
+
 class Touch : public base::RefCounted<Touch> {
  public:
-  Touch(scoped_refptr<CoreConfigure> config,
-        base::WeakPtr<ui::Widget> input_device);
+  Touch(WorkerShareData* share_data);
   ~Touch();
 
   Touch(const Touch&) = delete;
@@ -26,7 +27,7 @@ class Touch : public base::RefCounted<Touch> {
   bool IsFingerPressed(int fid);
 
  private:
-  scoped_refptr<CoreConfigure> config_;
+  WorkerShareData* share_data_;
   base::WeakPtr<ui::Widget> window_;
 };
 

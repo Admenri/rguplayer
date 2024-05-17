@@ -4,11 +4,12 @@
 
 #include "content/public/touch.h"
 
+#include "content/worker/worker_share.h"
+
 namespace content {
 
-Touch::Touch(scoped_refptr<CoreConfigure> config,
-             base::WeakPtr<ui::Widget> input_device)
-    : config_(config), window_(input_device) {}
+Touch::Touch(WorkerShareData* share_data)
+    : share_data_(share_data), window_(share_data->window) {}
 
 Touch::~Touch() {}
 

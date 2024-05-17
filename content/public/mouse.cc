@@ -6,9 +6,13 @@
 
 namespace content {
 
-Mouse::Mouse(base::WeakPtr<ui::Widget> input_device) : window_(input_device) {}
+Mouse::Mouse(WorkerShareData* share_data)
+    : share_data_(share_data), window_(share_data->window) {}
 
 void Mouse::Update() {
+  if (share_data_->menu_window_focused)
+    return;
+
   auto& mouse_state = window_->GetMouseState();
   for (int i = 0; i < states_.size(); ++i) {
     bool press_state = mouse_state.states[i];

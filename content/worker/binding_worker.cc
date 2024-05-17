@@ -66,8 +66,8 @@ void BindingRunner::BindingFuncMain() {
                    share_data_->config->initial_resolution());
   input_ = new Input(share_data_);
   audio_ = new Audio(share_data_);
-  mouse_ = new Mouse(share_data_->window);
-  touch_ = new Touch(share_data_->config, share_data_->window);
+  mouse_ = new Mouse(share_data_);
+  touch_ = new Touch(share_data_);
 
   // Before run main initialize
   binding_engine_->InitializeBinding(this);

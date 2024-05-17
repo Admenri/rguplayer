@@ -46,6 +46,7 @@ struct WorkerShareData {
   int display_fps = 0;
   bool enable_settings_menu = false;
   bool disable_gui_key_input = false;
+  bool menu_window_focused = false;
   moodycamel::ConcurrentQueue<SDL_Event> event_queue;
   base::RepeatingClosure create_button_settings_gui;
   base::RepeatingClosure create_audio_settings_gui;

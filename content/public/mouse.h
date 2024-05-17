@@ -24,7 +24,7 @@ class Mouse : public base::RefCounted<Mouse> {
     X2 = SDL_BUTTON_X2,
   };
 
-  Mouse(base::WeakPtr<ui::Widget> input_device);
+  Mouse(WorkerShareData* share_data);
 
   Mouse(const Mouse&) = delete;
   Mouse& operator=(const Mouse&) = delete;
@@ -57,6 +57,7 @@ class Mouse : public base::RefCounted<Mouse> {
     bool moved = false;
   };
 
+  WorkerShareData* share_data_;
   std::array<BindingState, sizeof(ui::Widget::MouseState::states)> states_;
   base::WeakPtr<ui::Widget> window_;
 };

@@ -705,6 +705,8 @@ void Graphics::DrawSettingsWindowInternal() {
   ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
 
   if (ImGui::Begin("Settings")) {
+    share_data_->menu_window_focused = ImGui::IsWindowFocused();
+
     // Button settings
     share_data_->create_button_settings_gui.Run();
 
