@@ -667,8 +667,10 @@ void Graphics::CheckSyncPoint() {
 }
 
 void Graphics::DrawGUIInternal() {
-  if (!share_data_->enable_settings_menu)
+  if (!share_data_->enable_settings_menu) {
+    share_data_->menu_window_focused = false;
     return;
+  }
 
   // Event
   SDL_Event sdl_event = {0};

@@ -509,6 +509,7 @@ void Input::TryReadBindingsInternal() {
   std::string filepath = share_data_->config->executable_file();
   filepath += ".cg";
   filepath += std::to_string((int)share_data_->config->content_version());
+
   std::ifstream fs(filepath, std::ios::binary);
   if (fs.is_open()) {
     key_bindings_.clear();
@@ -534,6 +535,7 @@ void Input::StorageBindingsInternal() {
   std::string filepath = share_data_->config->executable_file();
   filepath += ".cg";
   filepath += std::to_string((int)share_data_->config->content_version());
+
   std::ofstream fs(filepath, std::ios::binary);
   if (fs.is_open()) {
     uint32_t item_size = key_bindings_.size();

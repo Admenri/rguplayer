@@ -70,7 +70,8 @@ int main(int argc, char* argv[]) {
   env->DeleteLocalRef(cls);
 
   // Fixed configure file
-  std::string ini = "Game.ini";
+  std::string app = "Game";
+  std::string ini = app + ".ini";
 #else
   std::string app(argv[0]);
   ReplaceStringWidth(app, '\\', '/');

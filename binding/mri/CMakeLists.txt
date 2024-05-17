@@ -57,6 +57,7 @@ set(BINDING_MRI_SRC
   zlib.c
 )
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
 set(LIBFFI_DIR ${PROJECT_SOURCE_DIR}/third_party/libffi)
 if(EXISTS ${LIBFFI_DIR})
   add_library(external-libffi UNKNOWN IMPORTED)
@@ -81,12 +82,15 @@ if(EXISTS ${LIBFFI_DIR})
     fiddle/pointer.c
   )
 endif()
+endif()
 
 add_library(binding_mri ${BINDING_MRI_SRC})
 target_link_libraries(binding_mri PUBLIC core_base core_renderer core_content core_ui mri_ruby zlibstatic)
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
 if(EXISTS ${LIBFFI_DIR})
   target_compile_definitions(binding_mri PRIVATE HAS_LIBFFI_SUPPORT=1)
   target_link_libraries(binding_mri PRIVATE external-libffi)
   target_include_directories(binding_mri PRIVATE fiddle)
+endif()
 endif()

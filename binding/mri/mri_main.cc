@@ -33,7 +33,7 @@
 #include "binding/rpg/module_rpg2.rb.xxd"
 #include "binding/rpg/module_rpg3.rb.xxd"
 
-#include "content/public/sprite.h"
+#include "fiddle/fiddle.wrapper.xxd"
 
 #include "zlib.h"
 
@@ -236,7 +236,9 @@ void BindingEngineMri::InitializeBinding(
   InitRGUBinding();
   Init_zlib();
 #if HAS_LIBFFI_SUPPORT
+  LOG(INFO) << "[Binding] Fiddle extension loaded.";
   Init_fiddle();
+  rb_eval_string(fiddle_wrapper);
 #endif
 
   if (config->content_version() < content::RGSSVersion::RGSS3) {
@@ -394,7 +396,7 @@ void BindingEngineMri::LoadPackedScripts() {
                          i, script_name);
 
       VALUE filename = MriStringUTF8(filename_buffer, len);
-      backtrace_.insert(std::make_pair(filename_buffer, script_name));
+      backtrace_.emplace(filename_buffer, script_name);
 
       int state;
       EvalString(utf8_string, filename, &state);
