@@ -43,6 +43,7 @@ void rb_call_builtin_inits();
 #endif
 
 void Init_zlib(void);
+void Init_fiddle(void);
 }
 
 namespace binding {
@@ -234,6 +235,9 @@ void BindingEngineMri::InitializeBinding(
   InitTouchBinding();
   InitRGUBinding();
   Init_zlib();
+#if HAS_LIBFFI_SUPPORT
+  Init_fiddle();
+#endif
 
   if (config->content_version() < content::RGSSVersion::RGSS3) {
     if (sizeof(void*) == 4) {

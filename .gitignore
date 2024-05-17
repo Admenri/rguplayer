@@ -365,3 +365,4 @@ FodyWeavers.xsd
 /android-project/app/.cxx
 /android-project/app/src/main/assets
 /android-project/app/release
+/third_party/libffi
