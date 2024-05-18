@@ -144,13 +144,6 @@ include_directories(third_party/imgui)
 # Components of Core
 #--------------------------------------------------------------------------------
 
-## [Private] Admenri's Crypted archive library
-set(USE_PRIVATE_ADMENRI_ARCHIVER_CRYPT off)
-if (EXISTS ${PROJECT_SOURCE_DIR}/crypto)
-  set(USE_PRIVATE_ADMENRI_ARCHIVER_CRYPT on)
-  add_subdirectory(crypto)
-endif()
-
 ## FPSLimiter
 add_subdirectory(components/fpslimiter)
 

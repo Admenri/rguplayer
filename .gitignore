@@ -354,9 +354,6 @@ FodyWeavers.xsd
 # Windows CRuby
 /third_party/ruby/
 
-# Private crypto
-/crypto/
-
 # Android Project
 /android-project/local.properties
 /android-project/.gradle
