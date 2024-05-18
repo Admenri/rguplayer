@@ -577,6 +577,7 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
       static_cast<float>(rendered_text_size.y) / origin_size.y);
 
   base::Vec2 text_surf_size = base::Vec2i(txt_surf->w, txt_surf->h);
+  SDL_DestroySurface(txt_surf);
 
   renderer::GSM.states.viewport.Push(size_);
   renderer::GSM.states.blend.Push(false);

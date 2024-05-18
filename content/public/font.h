@@ -71,8 +71,6 @@ class Font : public base::RefCounted<Font> {
 
  private:
   void LoadFontInternal();
-  void MakeFontIDInternal();
-  static bool FindFontInternal(const std::string& name, std::string* out_path);
 
   std::vector<std::string> name_;
   int size_;
@@ -83,7 +81,6 @@ class Font : public base::RefCounted<Font> {
   scoped_refptr<Color> color_;
   scoped_refptr<Color> out_color_;
 
-  int font_id_;
   TTF_Font* font_;
 };
 
