@@ -340,6 +340,9 @@ display_width display_height
 set_drawable_offset(Integer x, Integer y)
 设置整体画面的偏移
 
+transition(..., Bitmap transmap, ...)
+将filename参数改为支持Bitmap对象输入参数
+
 ## Module - Audio
 set_volume(Integer volume = 100)
 设置游戏的全局音量

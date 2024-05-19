@@ -29,13 +29,19 @@ MRI_METHOD(graphics_transition) {
   scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
 
   int duration = 8;
-  std::string filename;
+  VALUE trans_bitmap = Qnil;
   int vague = 40;
-  MriParseArgsTo(argc, argv, "|isi", &duration, &filename, &vague);
+  MriParseArgsTo(argc, argv, "|ioi", &duration, &trans_bitmap, &vague);
 
   scoped_refptr<content::Bitmap> transmap;
-  if (!filename.empty())
+  if (RB_TYPE_P(trans_bitmap, RUBY_T_STRING)) {
+    std::string filename(RSTRING_PTR(trans_bitmap), RSTRING_LEN(trans_bitmap));
     MRI_GUARD(transmap = new content::Bitmap(screen, filename););
+  } else if (rb_typeddata_is_kind_of(trans_bitmap, &kBitmapDataType)) {
+    MRI_GUARD(transmap = MriCheckStructData<content::Bitmap>(trans_bitmap,
+                                                             kBitmapDataType););
+  }
+
   MRI_GUARD(screen->Transition(duration, transmap, vague););
 
   return Qnil;
