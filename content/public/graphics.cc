@@ -728,11 +728,18 @@ void Graphics::DrawSettingsWindowInternal() {
 
 void Graphics::DrawGraphicsSettingsGUI() {
   if (ImGui::CollapsingHeader("Graphics")) {
-    ImGui::TextWrapped("Renderer: %s", renderer::GL.GetString(GL_RENDERER));
+    static std::string ogl_renderer(
+        (const char*)renderer::GL.GetString(GL_RENDERER));
+    static std::string ogl_vendor(
+        (const char*)renderer::GL.GetString(GL_VENDOR));
+    static std::string ogl_version(
+        (const char*)renderer::GL.GetString(GL_VERSION));
+
+    ImGui::TextWrapped("Renderer: %s", ogl_renderer.c_str());
     ImGui::Separator();
-    ImGui::TextWrapped("Vendor: %s", renderer::GL.GetString(GL_VENDOR));
+    ImGui::TextWrapped("Vendor: %s", ogl_vendor.c_str());
     ImGui::Separator();
-    ImGui::TextWrapped("Version: %s", renderer::GL.GetString(GL_VERSION));
+    ImGui::TextWrapped("Version: %s", ogl_version.c_str());
     ImGui::Separator();
     ImGui::Text("Average FPS: %d", share_data_->display_fps);
     ImGui::Separator();
