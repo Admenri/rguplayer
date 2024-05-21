@@ -125,6 +125,9 @@ include_directories(third_party/angle/include)
 ## Physfs
 set(PHYSFS_BUILD_STATIC TRUE)
 set(PHYSFS_BUILD_SHARED FALSE)
+set(PHYSFS_TARGETNAME_UNINSTALL "physfs-uninstall")
+set(PHYSFS_TARGETNAME_DIST "physfs-dist")
+set(PHYSFS_TARGETNAME_DOCS "physfs-docs")
 add_subdirectory(third_party/physfs)
 include_directories(third_party/physfs/src)
 
@@ -139,6 +142,11 @@ include_directories(third_party/soloud/include)
 ## IMGUI
 add_subdirectory(third_party/imgui)
 include_directories(third_party/imgui)
+
+## AOM
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/third_party/aom")
+add_subdirectory(third_party/aom)
+include_directories(third_party/aom)
 
 #--------------------------------------------------------------------------------
 # Components of Core
