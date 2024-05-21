@@ -78,6 +78,7 @@
 - inih - https://github.com/jtilly/inih
 - soloud - https://github.com/jarikomppa/soloud
 - imgui - https://github.com/ocornut/imgui
+- aom - https://aomedia.googlesource.com/aom/
 
 ## 联系方式
 
