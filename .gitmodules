@@ -18,3 +18,7 @@
 	path = third_party/physfs
 	url = https://github.com/Admenri/physfs.git
 	branch = main
+[submodule "third_party/aom"]
+	path = third_party/aom
+	url = https://aomedia.googlesource.com/aom.git
+	branch = main
