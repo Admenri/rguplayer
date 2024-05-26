@@ -5,6 +5,8 @@
 #include "error_codes.hpp"
 #include "frame.hpp"
 
+struct SDL_IOStream;
+
 namespace uvpx {
 
 typedef void (*OnAudioDataDecoded)(void* userPtr, float* values, size_t count);
@@ -19,15 +21,13 @@ class UVPX_EXPORT Player {
 
  public:
   struct Config {
-    const char* fileRoot;
     int decodeThreadsCount;
     int videoDecodeBufferSize;
     int audioDecodeBufferSize;
     int frameBufferCount;
 
     Config()
-        : fileRoot(nullptr),
-          decodeThreadsCount(32),
+        : decodeThreadsCount(32),
           videoDecodeBufferSize(2 * 1024 * 1024),
           audioDecodeBufferSize(4 * 1024),
           frameBufferCount(4) {}
@@ -76,7 +76,7 @@ class UVPX_EXPORT Player {
   Player(const Config& cfg);
   ~Player();
 
-  LoadResult load(const char* fileName, int audioTrack, bool preloadFile);
+  LoadResult load(SDL_IOStream* io, int audioTrack, bool preloadFile);
   bool update(float dt);
 
   VideoInfo info() const;

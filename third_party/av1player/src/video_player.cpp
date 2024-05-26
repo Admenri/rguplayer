@@ -39,15 +39,6 @@ VideoPlayer::VideoPlayer(const Player::Config& cfg)
       m_threadRunning(false),
       m_state(State::Uninitialized) {
   m_config = cfg;
-
-  if (cfg.fileRoot) {
-    m_fileRoot = cfg.fileRoot;
-    if (m_fileRoot.length() > 0 && m_fileRoot[m_fileRoot.length() - 1] != '/')
-      m_fileRoot += '/';
-  } else {
-    m_fileRoot = "";
-  }
-
   m_packetPool = new uvpx::ObjectPool<Packet>(1024 * 4);
 
   reset();
@@ -62,19 +53,15 @@ VideoPlayer::~VideoPlayer() {
  * @param fileName file name relative to the file root
  * @param audioTrack which audio track to select
  */
-Player::LoadResult VideoPlayer::load(const char* fileName,
+Player::LoadResult VideoPlayer::load(SDL_IOStream* io,
                                      int audioTrack,
                                      bool preloadFile) {
   reset();
 
-  debugLog("vpx loading: %s", fileName);
-
-  std::string videoFullPath = m_fileRoot + fileName;
-
   // open file
   m_reader = new FileReader();
-  if (m_reader->open(videoFullPath.c_str(), preloadFile)) {
-    debugLog("Failed to open video file: %s", videoFullPath.c_str());
+  if (m_reader->open(io, preloadFile)) {
+    debugLog("Failed to open iostream video file.");
     return Player::LoadResult::FileNotExists;
   }
 

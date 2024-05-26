@@ -3,13 +3,15 @@
 
 #include "mkvparser/mkvreader.h"
 
+#include "SDL_iostream.h"
+
 namespace uvpx {
 
 class FileReader : public mkvparser::IMkvReader {
  public:
  protected:
   long long m_length;
-  FILE* m_file;
+  SDL_IOStream* m_file;
 
   bool getFileSize();
 
@@ -21,7 +23,7 @@ class FileReader : public mkvparser::IMkvReader {
   FileReader();
   virtual ~FileReader();
 
-  int open(const char* fileName, bool preload);
+  int open(SDL_IOStream* io, bool preload);
   void close();
 
   virtual int Read(long long position, long length, unsigned char* buffer);

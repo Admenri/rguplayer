@@ -16,10 +16,10 @@ Player::~Player() {
     delete m_videoPlayer;
 }
 
-Player::LoadResult Player::load(const char* fileName,
+Player::LoadResult Player::load(SDL_IOStream* io,
                                 int audioTrack,
                                 bool preloadFile) {
-  return m_videoPlayer->load(fileName, audioTrack, preloadFile);
+  return m_videoPlayer->load(io, audioTrack, preloadFile);
 }
 
 bool Player::update(float dt) {

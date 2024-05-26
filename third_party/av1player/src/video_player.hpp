@@ -72,7 +72,6 @@ class VideoPlayer {
   long m_audioTrackIdx;
   bool m_hasVideo;
   bool m_hasAudio;
-  std::string m_fileRoot;
   std::atomic<size_t> m_framesDecoded;
   Timer m_timer;
 
@@ -118,9 +117,7 @@ class VideoPlayer {
   VideoPlayer(const Player::Config& cfg);
   ~VideoPlayer();
 
-  Player::LoadResult load(const char* fileName,
-                          int audioTrack,
-                          bool preloadFile);
+  Player::LoadResult load(SDL_IOStream* io, int audioTrack, bool preloadFile);
   bool update(float dt);
 
   Player::VideoInfo info() const;

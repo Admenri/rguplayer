@@ -14,27 +14,15 @@ FileReader::~FileReader() {
   close();
 }
 
-int FileReader::open(const char* fileName, bool preload) {
-  if (fileName == nullptr)
+int FileReader::open(SDL_IOStream* io, bool preload) {
+  if (io == nullptr)
     return -1;
 
   if (m_file)
     return -1;
-
-#ifdef _MSC_VER
-  const errno_t e = fopen_s(&m_file, fileName, "rb");
-
-  if (e)
-    return -1;  // error
-#else
-  m_file = fopen(fileName, "rb");
-
-  if (m_file == NULL)
-    return -1;
-#endif
+  m_file = io;
 
   bool ret = !getFileSize();
-
   if (preload) {
     m_data = new unsigned char[m_length];
     Read(0, m_length, m_data);
@@ -49,7 +37,7 @@ void FileReader::close() {
   SafeDeleteArray<unsigned char>(m_data);
 
   if (m_file != nullptr) {
-    fclose(m_file);
+    SDL_CloseIO(m_file);
     m_file = nullptr;
   }
 }
@@ -71,17 +59,9 @@ int FileReader::Read(long long offset, long len, unsigned char* buffer) {
     return -1;
 
   if (!m_preloaded) {
-#ifdef _MSC_VER
-    const int status = _fseeki64(m_file, offset, SEEK_SET);
+    SDL_SeekIO(m_file, offset, SDL_IO_SEEK_SET);
 
-    if (status)
-      return -1;  // error
-#else
-    fseek(m_file, offset, SEEK_SET);
-#endif
-
-    const size_t size = fread(buffer, 1, len, m_file);
-
+    const size_t size = SDL_ReadIO(m_file, buffer, len);
     if (size < size_t(len))
       return -1;  // error
   }
@@ -117,29 +97,12 @@ int FileReader::Length(long long* total, long long* available) {
 bool FileReader::getFileSize() {
   if (m_file == NULL)
     return false;
-#ifdef _MSC_VER
-  int status = _fseeki64(m_file, 0L, SEEK_END);
 
-  if (status)
-    return false;  // error
-
-  m_length = _ftelli64(m_file);
-#else
-  fseek(m_file, 0L, SEEK_END);
-  m_length = ftell(m_file);
-#endif
-
+  m_length = SDL_GetIOSize(m_file);
   if (m_length < 0)
     return false;
 
-#ifdef _MSC_VER
-  status = _fseeki64(m_file, 0L, SEEK_SET);
-
-  if (status)
-    return false;  // error
-#else
-  fseek(m_file, 0L, SEEK_SET);
-#endif
+  SDL_SeekIO(m_file, 0L, SDL_IO_SEEK_SET);
 
   return true;
 }
