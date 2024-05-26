@@ -20,8 +20,8 @@ class SyncSequencedTaskRunner : public SequencedTaskRunner {
 }  // namespace
 
 ThreadWorker::ThreadWorker(bool sync_worker)
-    : sync_(sync_worker),
-      task_runner_(sync_worker ? new SyncSequencedTaskRunner() : nullptr) {}
+    : task_runner_(sync_worker ? new SyncSequencedTaskRunner() : nullptr),
+      sync_(sync_worker) {}
 
 ThreadWorker::~ThreadWorker() {
   Stop();

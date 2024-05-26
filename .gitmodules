@@ -22,3 +22,11 @@
 	path = third_party/aom
 	url = https://aomedia.googlesource.com/aom.git
 	branch = main
+[submodule "third_party/vorbis"]
+	path = third_party/vorbis
+	url = https://github.com/xiph/vorbis.git
+	branch = master
+[submodule "third_party/ogg"]
+	path = third_party/ogg
+	url = https://github.com/xiph/ogg.git
+	branch = master

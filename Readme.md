@@ -79,6 +79,8 @@
 - soloud - https://github.com/jarikomppa/soloud
 - imgui - https://github.com/ocornut/imgui
 - aom - https://aomedia.googlesource.com/aom/
+- vorbis - https://github.com/xiph/vorbis
+- ogg - https://github.com/xiph/ogg
 
 ## 联系方式
 

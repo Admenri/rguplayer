@@ -135,6 +135,12 @@ include_directories(third_party/physfs/src)
 add_subdirectory(third_party/zlib)
 include_directories(third_party/zlib)
 
+## AOM
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/third_party/aom")
+add_subdirectory(third_party/aom)
+include_directories(third_party/aom)
+include_directories(third_party/aom/third_party/libwebm)
+
 ## Soloud
 add_subdirectory(third_party/soloud)
 include_directories(third_party/soloud/include)
@@ -143,10 +149,12 @@ include_directories(third_party/soloud/include)
 add_subdirectory(third_party/imgui)
 include_directories(third_party/imgui)
 
-## AOM
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/third_party/aom")
-add_subdirectory(third_party/aom)
-include_directories(third_party/aom)
+## Vorbis OGG
+add_subdirectory(third_party/ogg)
+add_subdirectory(third_party/vorbis)
+
+## AOMPLAYER
+add_subdirectory(third_party/av1player)
 
 #--------------------------------------------------------------------------------
 # Components of Core
