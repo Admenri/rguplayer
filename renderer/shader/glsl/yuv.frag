@@ -19,6 +19,7 @@ void main() {
 	yuv.y = texture2D(u_textureU, v_texCoord).r;
 	yuv.z = texture2D(u_textureV, v_texCoord).r;
 	yuv += kYUVOffset;
+	vec3 rgb = kYUVMatrix * yuv;
 
-	gl_FragColor = vec4(kYUVMatrix * yuv, 1.0);
+	gl_FragColor = vec4(rgb, 1.0);
 }

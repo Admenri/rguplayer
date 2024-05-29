@@ -32,11 +32,11 @@ int MriParseArgsTo(int argc, VALUE* argv, const char* fmt, ...) {
   va_start(args_iter, fmt);
 
   while (ch != format.end()) {
-    if (*ch != '|' && argc <= count)
+    if (*ch != '|' && argc <= count) {
       if (!is_arg_optional)
         rb_raise(rb_eArgError, "wrong number of arguments");
-      else
-        break;
+      break;
+    }
 
     VALUE arg_element = argv[count];
 

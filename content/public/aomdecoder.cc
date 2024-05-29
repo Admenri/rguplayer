@@ -118,20 +118,18 @@ void AOMDecoder::Render(scoped_refptr<Bitmap> target) {
     shader.SetTextureU(plane_u_);
     shader.SetTextureV(plane_v_);
 
-    renderer::GSM.states.viewport.Push(canvas_size);
-
     auto& tfb = target->GetTexture();
     renderer::FrameBuffer::Bind(tfb.fbo);
     renderer::FrameBuffer::ClearColor();
     renderer::FrameBuffer::Clear();
 
     auto* quad = renderer::GSM.common_quad();
+    renderer::GSM.states.viewport.Push(canvas_size);
     renderer::GSM.states.blend.Push(false);
     quad->SetPositionRect(base::Rect(canvas_size));
     quad->SetTexCoordRect(base::Rect(canvas_size));
     quad->Draw();
     renderer::GSM.states.blend.Pop();
-
     renderer::GSM.states.viewport.Pop();
   }
 }

@@ -86,7 +86,6 @@ void ParseExeceptionInfo(VALUE exc,
                          const BindingEngineMri::BacktraceData& btData) {
   VALUE exeception_name = rb_class_path(rb_obj_class(exc));
   VALUE backtrace = rb_funcall2(exc, rb_intern("backtrace"), 0, NULL);
-  VALUE message = rb_funcall2(exc, rb_intern("message"), 0, NULL);
   VALUE backtrace_front = rb_ary_entry(backtrace, 0);
 
   VALUE ds = rb_sprintf("%" PRIsVALUE ": %" PRIsVALUE " (%" PRIsVALUE ")",
