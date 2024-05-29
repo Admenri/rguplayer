@@ -369,6 +369,24 @@ class SpineShader : public GLES2ShaderBase {
   GLint u_texture_;
 };
 
+class YUVShader : public GLES2ShaderBase {
+ public:
+  YUVShader();
+
+  void SetTextureSize(const base::Vec2& tex_size);
+  void SetTransOffset(const base::Vec2& offset);
+  void SetTextureY(GLID<Texture> tex);
+  void SetTextureU(GLID<Texture> tex);
+  void SetTextureV(GLID<Texture> tex);
+
+ private:
+  GLint u_texSize_;
+  GLint u_transOffset_;
+  GLint u_textureY_;
+  GLint u_textureU_;
+  GLint u_textureV_;
+};
+
 }  // namespace renderer
 
 #endif  // !RENDERER_SHADER_GLES2_SHADERS_H_

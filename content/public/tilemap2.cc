@@ -301,9 +301,6 @@ const base::RectF kAutotileSrcTable[] = {
     {0.0f, 0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f, 0.5f},
 };
 
-const int kAutotileSrcTableSize =
-    sizeof(kAutotileSrcTable) / sizeof(kAutotileSrcTable[0]);
-
 const base::RectF kAutotileSrcWall[] = {
     {1.0f, 1.0f, 0.5f, 0.5f}, {0.5f, 1.0f, 0.5f, 0.5f},
     {1.0f, 0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f, 0.5f},
@@ -346,10 +343,8 @@ const base::RectF kAutotileSrcWaterfall[] = {
     {1.0f, 0.0f, 0.5f, 1.0f}, {0.5f, 0.0f, 0.5f, 1.0f},
     {0.0f, 0.0f, 0.5f, 1.0f}, {0.5f, 0.0f, 0.5f, 1.0f},
     {1.0f, 0.0f, 0.5f, 1.0f}, {1.5f, 0.0f, 0.5f, 1.0f},
-    {0.0f, 0.0f, 0.5f, 1.0f}, {1.5f, 0.0f, 0.5f, 1.0f}};
-
-const int kAutotileSrcWaterfallSize =
-    sizeof(kAutotileSrcWaterfall) / sizeof(kAutotileSrcWaterfall[0]);
+    {0.0f, 0.0f, 0.5f, 1.0f}, {1.5f, 0.0f, 0.5f, 1.0f},
+};
 
 const TilemapVXAtlasBlock kTilemapAtlas[] = {
     /* A1 tilemap */
@@ -872,7 +867,6 @@ void Tilemap2::ParseMapDataBufferInternal() {
   ground_vertices_.clear();
   above_vertices_.clear();
 
-  auto& viewport_rect = ground_->parent_rect();
   scoped_refptr<Table> mapdata = map_data_;
   scoped_refptr<Table> flagdata = flags_;
 

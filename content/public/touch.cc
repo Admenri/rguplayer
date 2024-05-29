@@ -8,8 +8,7 @@
 
 namespace content {
 
-Touch::Touch(WorkerShareData* share_data)
-    : share_data_(share_data), window_(share_data->window) {}
+Touch::Touch(WorkerShareData* share_data) : window_(share_data->window) {}
 
 Touch::~Touch() {}
 

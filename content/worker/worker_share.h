@@ -10,6 +10,7 @@
 #include "content/config/core_config.h"
 #include "ui/widget/widget.h"
 
+#include "SDL_audio.h"
 #include "SDL_events.h"
 
 #include <atomic>
@@ -41,6 +42,9 @@ struct WorkerShareData {
     std::atomic_bool require;
     std::atomic_bool signal;
   } background_sync;
+
+  // Audio
+  SDL_AudioDeviceID output_device;
 
   // GUI Event Queue
   int display_fps = 0;

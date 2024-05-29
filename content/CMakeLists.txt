@@ -14,6 +14,8 @@ set(CORE_CONTENT_SRC
   config/core_config.h
   engine/binding_engine.cc
   engine/binding_engine.h
+  public/aomdecoder.cc
+  public/aomdecoder.h
   public/audio.cc
   public/audio.h
   public/bitmap.cc

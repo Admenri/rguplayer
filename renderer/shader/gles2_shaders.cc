@@ -37,6 +37,7 @@ namespace shader {
 #include "renderer/shader/glsl/transform.vert.xxd"
 #include "renderer/shader/glsl/vaguetrans.frag.xxd"
 #include "renderer/shader/glsl/viewport.frag.xxd"
+#include "renderer/shader/glsl/yuv.frag.xxd"
 
 static inline std::string FromRawData(const uint8_t* raw_data,
                                       const uint32_t data_size) {
@@ -717,6 +718,39 @@ void SpineShader::SetTransOffset(const base::Vec2& offset) {
 
 void SpineShader::SetTexture(GLID<Texture> tex) {
   GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
+}
+
+YUVShader::YUVShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::base_vert, shader::base_vert_len),
+      "base_vert", shader::FromRawData(shader::yuv_frag, shader::yuv_frag_len),
+      "yuv_frag");
+
+  u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
+  u_texSize_ = GL.GetUniformLocation(program(), "u_texSize");
+  u_textureY_ = GL.GetUniformLocation(program(), "u_textureY");
+  u_textureU_ = GL.GetUniformLocation(program(), "u_textureU");
+  u_textureV_ = GL.GetUniformLocation(program(), "u_textureV");
+}
+
+void YUVShader::SetTextureSize(const base::Vec2& tex_size) {
+  GL.Uniform2f(u_texSize_, 1.f / tex_size.x, 1.f / tex_size.y);
+}
+
+void YUVShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void YUVShader::SetTextureY(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_textureY_, tex.gl, 1);
+}
+
+void YUVShader::SetTextureU(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_textureU_, tex.gl, 2);
+}
+
+void YUVShader::SetTextureV(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_textureV_, tex.gl, 3);
 }
 
 }  // namespace renderer

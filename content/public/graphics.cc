@@ -570,7 +570,6 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
                                    const base::Vec4& color,
                                    const base::Vec4& tone,
                                    scoped_refptr<Shader> program) {
-  const base::Rect& viewport_rect = renderer::GSM.states.scissor_rect.Current();
   const base::Rect& screen_rect = resolution_;
 
   const bool has_tone_effect =

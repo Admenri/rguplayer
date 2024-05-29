@@ -70,7 +70,7 @@ struct Texture {
                                 GLsizei height,
                                 GLenum format = GL_RGBA,
                                 const void* buffer = nullptr) {
-    GL.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format,
+    GL.TexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
                   GL_UNSIGNED_BYTE, buffer);
   }
 

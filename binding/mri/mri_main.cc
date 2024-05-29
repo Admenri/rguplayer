@@ -7,6 +7,7 @@
 
 #include "binding/mri/mri_main.h"
 
+#include "binding/mri/init_aomdecode.h"
 #include "binding/mri/init_audio.h"
 #include "binding/mri/init_bitmap.h"
 #include "binding/mri/init_corefile.h"
@@ -234,6 +235,7 @@ void BindingEngineMri::InitializeBinding(
   InitMouseBinding();
   InitTouchBinding();
   InitRGUBinding();
+  InitAOMDecodeBinding();
   Init_zlib();
 #if HAS_LIBFFI_SUPPORT
   LOG(INFO) << "[Binding] Fiddle extension loaded.";

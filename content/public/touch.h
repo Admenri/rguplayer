@@ -11,7 +11,7 @@
 
 namespace content {
 
-class WorkerShareData;
+struct WorkerShareData;
 
 class Touch : public base::RefCounted<Touch> {
  public:
@@ -27,7 +27,6 @@ class Touch : public base::RefCounted<Touch> {
   bool IsFingerPressed(int fid);
 
  private:
-  WorkerShareData* share_data_;
   base::WeakPtr<ui::Widget> window_;
 };
 

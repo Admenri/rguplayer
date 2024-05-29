@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.18.0)
 #--------------------------------------------------------------------------------
 
 set(BINDING_MRI_SRC
+  init_aomdecode.cc
+  init_aomdecode.h
   init_audio.cc
   init_audio.h
   init_bitmap.cc

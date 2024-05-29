@@ -208,7 +208,6 @@ class Window2 : public base::RefCounted<Window2>,
   scoped_refptr<Rect> cursor_rect_;
   base::CallbackListSubscription cursor_rect_observer_;
   bool active_ = true;
-  bool visible_ = true;
   bool arrows_visible_ = true;
   bool pause_ = false;
 
