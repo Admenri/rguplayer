@@ -141,11 +141,12 @@ void AOMDecoder::Render(scoped_refptr<Bitmap> target) {
                      yuv->uvPitch(), yuv->v(), yuv->uvPitch());
     player_->unlockRead();
 
+    auto frame_size = base::Vec2i(info.width, info.height);
     auto& shader = renderer::GSM.shaders()->yuv;
     shader.Bind();
     shader.SetProjectionMatrix(canvas_size);
     shader.SetTransOffset(base::Vec2());
-    shader.SetTextureSize(canvas_size);
+    shader.SetTextureSize(frame_size);
     shader.SetTextureY(video_planes_[Plane_Y]);
     shader.SetTextureU(video_planes_[Plane_U]);
     shader.SetTextureV(video_planes_[Plane_V]);
@@ -160,7 +161,7 @@ void AOMDecoder::Render(scoped_refptr<Bitmap> target) {
 
     auto* quad = renderer::GSM.common_quad();
     quad->SetPositionRect(base::Rect(canvas_size));
-    quad->SetTexCoordRect(base::Rect(canvas_size));
+    quad->SetTexCoordRect(base::Rect(frame_size));
     quad->Draw();
 
     renderer::GSM.states.blend.Pop();

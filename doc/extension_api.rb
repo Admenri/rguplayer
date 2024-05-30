@@ -357,3 +357,36 @@ finger_x(id) finger_y(id) -> Numeric
 
 finger_press?(id) -> Boolean
 获取指定槽位的触屏按下状态
+
+## Class - AOMDecoder
+initialize
+初始化解码器
+
+load_video(String filename)
+加载视频文件，加载方式与Bitmap相同，支持从统一IO系统读取
+支持的视频规格：
+容器：Mkv
+视频编码：AV1 (Libaom)
+音频编码：Vorbis (Xiph OGG)
+
+update
+更新视频帧，自动适配上一帧的间隔时间
+
+set_state(Integer state)
+设置视频播放状态：
+
+get_state -> Integer
+取当前视频的状态
+
+video_info -> Hash
+获取视频加载后的视频头信息
+
+render(Bitmap target)
+将当前存储的视频帧渲染到指定的bitmap
+
+视频播放状态参考：
+Playing = 0
+Paused = 1
+Stopped = 2
+Finished = 3 (只读)
+
