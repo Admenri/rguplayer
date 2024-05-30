@@ -10,7 +10,7 @@ struct SDL_IOStream;
 namespace uvpx {
 
 typedef void (*OnAudioDataDecoded)(void* userPtr, float* values, size_t count);
-typedef void (*OnVideoFinished)();
+typedef void (*OnVideoFinished)(void* userPtr);
 typedef void (*DebugLogFuncPtr)(const char* msg);
 
 class VideoPlayer;
@@ -59,6 +59,7 @@ class UVPX_EXPORT Player {
 
   enum class LoadResult {
     Success = 0,
+    AlreadyReaded,
     FileNotExists,
     FailedParseHeader,
     FailedCreateInstance,
@@ -85,7 +86,7 @@ class UVPX_EXPORT Player {
   void unlockRead();
 
   void setOnAudioData(OnAudioDataDecoded func, void* userPtr);
-  void setOnVideoFinished(OnVideoFinished func);
+  void setOnVideoFinished(OnVideoFinished func, void* userPtr);
 
   double playTime();
   float duration();
@@ -96,6 +97,7 @@ class UVPX_EXPORT Player {
   bool isStopped();
   bool isPaused();
   bool isPlaying();
+  bool isFinished();
 
   static const Config& defaultConfig();
   bool readStats(Statistics* dst);

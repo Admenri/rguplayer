@@ -43,9 +43,6 @@ struct WorkerShareData {
     std::atomic_bool signal;
   } background_sync;
 
-  // Audio
-  SDL_AudioDeviceID output_device;
-
   // GUI Event Queue
   int display_fps = 0;
   bool enable_settings_menu = false;

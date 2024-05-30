@@ -463,6 +463,10 @@ void Graphics::PresentScreenInternal(
   // Draw GUI panel
   DrawGUIInternal();
 
+  GLenum gl_error = renderer::GL.GetError();
+  if (gl_error != GL_NO_ERROR)
+    LOG(INFO) << "[Graphics] GLError: " << gl_error;
+
   CheckSyncPoint();
   SDL_GL_SwapWindow(window->AsSDLWindow());
 }

@@ -7,18 +7,20 @@
 #include "SDL_timer.h"
 
 #include "renderer/quad/quad_drawable.h"
+#include "third_party/av1player/src/utils.hpp"
 
 namespace content {
 
-AOMDecoder::AOMDecoder(scoped_refptr<Graphics> host,
-                       WorkerShareData* share_data)
+AOMDecoder::AOMDecoder(scoped_refptr<Graphics> host)
     : Disposable(host),
       io_(host->filesystem()),
       last_ticks_(0),
       counter_freq_(SDL_GetPerformanceFrequency()),
-      frame_delta_(0.0f) {
-  audio_output_ = share_data->output_device;
-  player_ = std::make_unique<uvpx::Player>(uvpx::Player::defaultConfig());
+      frame_delta_(0.0f),
+      audio_output_(0),
+      audio_stream_(nullptr) {
+  uvpx::setDebugLog(
+      [](const char* msg) { LOG(INFO) << "[AOMDecoder] " << msg; });
 }
 
 AOMDecoder::~AOMDecoder() {
@@ -26,17 +28,42 @@ AOMDecoder::~AOMDecoder() {
 }
 
 uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
+  if (player_)
+    return uvpx::Player::LoadResult::AlreadyReaded;
+
+  // Read video file
   SDL_IOStream* ops = io_->OpenReadRaw(filename);
+
+  // Create player instance
+  player_ = std::make_unique<uvpx::Player>(uvpx::Player::defaultConfig());
   auto result = player_->load(ops, 0, false);
 
+  // Initialize timer
   last_ticks_ = SDL_GetPerformanceCounter();
   counter_freq_ = SDL_GetPerformanceFrequency();
   frame_delta_ = 1.0f / (float)player_->info().frameRate;
 
+  // Init OGL & audio device
   if (result == uvpx::Player::LoadResult::Success) {
     player_->setOnAudioData(OnAudioData, this);
+    player_->setOnVideoFinished(OnVideoFinished, this);
+
+    // Init yuv texture
     auto info = player_->info();
     CreateYUVInternal(info.width, info.height);
+
+    // Init Audio components
+    SDL_AudioSpec wanted_spec;
+    wanted_spec.freq = info.audioFrequency;
+    wanted_spec.format = SDL_AUDIO_F32;
+    wanted_spec.channels = info.audioChannels;
+
+    audio_output_ =
+        SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &wanted_spec);
+    if (audio_output_) {
+      audio_stream_ = SDL_CreateAudioStream(&wanted_spec, &wanted_spec);
+      SDL_BindAudioStream(audio_output_, audio_stream_);
+    }
   }
 
   return result;
@@ -46,8 +73,10 @@ void AOMDecoder::Update() {
   if (!player_)
     return;
 
+  // Update frame delta
   player_->update(frame_delta_);
 
+  // Update timer
   uint64_t current_ticks = SDL_GetPerformanceCounter();
   frame_delta_ =
       static_cast<float>(current_ticks - last_ticks_) / counter_freq_;
@@ -68,9 +97,13 @@ void AOMDecoder::SetPlayState(Type state) {
   switch (state) {
     case content::AOMDecoder::Type::Playing:
       player_->play();
+      if (audio_output_)
+        SDL_ResumeAudioDevice(audio_output_);
       break;
     case content::AOMDecoder::Type::Paused:
       player_->pause();
+      if (audio_output_)
+        SDL_PauseAudioDevice(audio_output_);
       break;
     case content::AOMDecoder::Type::Stopped:
       player_->stop();
@@ -90,6 +123,8 @@ AOMDecoder::Type AOMDecoder::GetPlayState() {
     return Type::Paused;
   else if (player_->isStopped())
     return Type::Stopped;
+  else if (player_->isFinished())
+    return Type::Finished;
   else
     return Type();
 }
@@ -98,77 +133,90 @@ void AOMDecoder::Render(scoped_refptr<Bitmap> target) {
   if (!player_ || !target)
     return;
 
-  auto canvas_size = target->GetSize();
   uvpx::Frame* yuv = nullptr;
   auto info = player_->info();
+  auto canvas_size = target->GetSize();
   if ((yuv = player_->lockRead()) != nullptr) {
     UpdateYUVTexture(info.width, info.height, yuv->y(), yuv->yPitch(), yuv->u(),
                      yuv->uvPitch(), yuv->v(), yuv->uvPitch());
-
     player_->unlockRead();
-  }
 
-  if (yuv) {
     auto& shader = renderer::GSM.shaders()->yuv;
     shader.Bind();
     shader.SetProjectionMatrix(canvas_size);
     shader.SetTransOffset(base::Vec2());
     shader.SetTextureSize(canvas_size);
-    shader.SetTextureY(plane_y_);
-    shader.SetTextureU(plane_u_);
-    shader.SetTextureV(plane_v_);
+    shader.SetTextureY(video_planes_[Plane_Y]);
+    shader.SetTextureU(video_planes_[Plane_U]);
+    shader.SetTextureV(video_planes_[Plane_V]);
 
     auto& tfb = target->GetTexture();
     renderer::FrameBuffer::Bind(tfb.fbo);
     renderer::FrameBuffer::ClearColor();
     renderer::FrameBuffer::Clear();
 
-    auto* quad = renderer::GSM.common_quad();
     renderer::GSM.states.viewport.Push(canvas_size);
     renderer::GSM.states.blend.Push(false);
+
+    auto* quad = renderer::GSM.common_quad();
     quad->SetPositionRect(base::Rect(canvas_size));
     quad->SetTexCoordRect(base::Rect(canvas_size));
     quad->Draw();
+
     renderer::GSM.states.blend.Pop();
     renderer::GSM.states.viewport.Pop();
   }
 }
 
 void AOMDecoder::OnObjectDisposed() {
+  if (audio_stream_)
+    SDL_DestroyAudioStream(audio_stream_);
+
+  if (audio_output_)
+    SDL_CloseAudioDevice(audio_output_);
+
   DestroyYUVInternal();
+
   player_.reset();
 }
 
 void AOMDecoder::OnAudioData(void* userPtr, float* pcm, size_t count) {
-  [[maybe_unused]] auto* self = static_cast<AOMDecoder*>(userPtr);
+  auto* self = static_cast<AOMDecoder*>(userPtr);
+  SDL_PutAudioStreamData(self->audio_stream_, pcm, count * sizeof(float));
+}
+
+void AOMDecoder::OnVideoFinished(void* userPtr) {
+  auto* self = static_cast<AOMDecoder*>(userPtr);
+  uvpx::debugLog("instace: %p video play finished.", self);
 }
 
 void AOMDecoder::CreateYUVInternal(int width, int height) {
-  plane_y_ = renderer::Texture::Gen();
-  renderer::Texture::Bind(plane_y_);
-  renderer::Texture::SetWrap();
-  renderer::Texture::SetFilter();
-  renderer::Texture::TexImage2D(width, height, GL_LUMINANCE);
+  if (video_quad_)
+    return;
 
-  plane_u_ = renderer::Texture::Gen();
-  renderer::Texture::Bind(plane_u_);
-  renderer::Texture::SetWrap();
-  renderer::Texture::SetFilter();
-  renderer::Texture::TexImage2D((width + 1) / 2, (height + 1) / 2,
-                                GL_LUMINANCE);
+  auto gen_plane = [](renderer::GLID<renderer::Texture>* tex, GLsizei w,
+                      GLsizei h) {
+    *tex = renderer::Texture::Gen();
+    renderer::Texture::Bind(*tex);
+    renderer::Texture::SetFilter(GL_LINEAR);
+    renderer::Texture::SetWrap();
+    renderer::Texture::TexImage2D(w, h, GL_LUMINANCE);
+  };
 
-  plane_v_ = renderer::Texture::Gen();
-  renderer::Texture::Bind(plane_v_);
-  renderer::Texture::SetWrap();
-  renderer::Texture::SetFilter();
-  renderer::Texture::TexImage2D((width + 1) / 2, (height + 1) / 2,
-                                GL_LUMINANCE);
+  gen_plane(&video_planes_[Plane_Y], width, height);
+  gen_plane(&video_planes_[Plane_U], (width + 1) / 2, (height + 1) / 2);
+  gen_plane(&video_planes_[Plane_V], (width + 1) / 2, (height + 1) / 2);
+
+  video_quad_ = std::make_unique<renderer::QuadDrawable>();
 }
 
 void AOMDecoder::DestroyYUVInternal() {
-  renderer::Texture::Del(plane_y_);
-  renderer::Texture::Del(plane_u_);
-  renderer::Texture::Del(plane_v_);
+  if (!video_quad_)
+    return;
+
+  renderer::Texture::Del(video_planes_[Plane_Y]);
+  renderer::Texture::Del(video_planes_[Plane_U]);
+  renderer::Texture::Del(video_planes_[Plane_V]);
 }
 
 void AOMDecoder::UpdateYUVTexture(int width,
@@ -179,15 +227,15 @@ void AOMDecoder::UpdateYUVTexture(int width,
                                   int Upitch,
                                   const Uint8* Vplane,
                                   int Vpitch) {
-  renderer::Texture::Bind(plane_v_);
+  renderer::Texture::Bind(video_planes_[Plane_V]);
   VideoTexSubImage2D(GL_TEXTURE_2D, 0, 0, (width + 1) / 2, (height + 1) / 2,
                      GL_LUMINANCE, GL_UNSIGNED_BYTE, Vplane, Vpitch, 1);
 
-  renderer::Texture::Bind(plane_u_);
+  renderer::Texture::Bind(video_planes_[Plane_U]);
   VideoTexSubImage2D(GL_TEXTURE_2D, 0, 0, (width + 1) / 2, (height + 1) / 2,
                      GL_LUMINANCE, GL_UNSIGNED_BYTE, Uplane, Upitch, 1);
 
-  renderer::Texture::Bind(plane_y_);
+  renderer::Texture::Bind(video_planes_[Plane_Y]);
   VideoTexSubImage2D(GL_TEXTURE_2D, 0, 0, width, height, GL_LUMINANCE,
                      GL_UNSIGNED_BYTE, Yplane, Ypitch, 1);
 }
@@ -249,8 +297,9 @@ int AOMDecoder::VideoTexSubImage2D(GLenum target,
   }
 #endif
 
-  renderer::GL.TexImage2D(target, 0, xoffset, yoffset, width, height, format,
-                          type, src);
+  renderer::GL.TexSubImage2D(target, 0, xoffset, yoffset, width, height, format,
+                             type, src);
+
   if (blob) {
     SDL_free(blob);
   }

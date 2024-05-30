@@ -34,8 +34,6 @@ void debugLog(const char* format, ...) {
 
   if (g_debugLogFuncPtr != nullptr)
     g_debugLogFuncPtr(buffer);
-
-  printf("%s\n", buffer);
 }
 
 }  // namespace uvpx

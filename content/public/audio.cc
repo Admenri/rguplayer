@@ -305,7 +305,6 @@ void Audio::InitAudioDeviceInternal() {
   soloud_spec_.channels = 2;
   output_device_ =
       SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &soloud_spec_);
-  share_data_->output_device = output_device_;
 
   if (!output_device_) {
     LOG(INFO) << "[Content] Failed to initialize audio device, audio module "

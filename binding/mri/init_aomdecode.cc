@@ -15,8 +15,7 @@ MRI_DEFINE_DATATYPE_REF(AOMDecoder, "AOMDecoder", content::AOMDecoder);
 MRI_METHOD(aom_initialize) {
   scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
 
-  scoped_refptr<content::AOMDecoder> decoder =
-      new content::AOMDecoder(screen, MriGetGlobalRunner()->share_data());
+  scoped_refptr<content::AOMDecoder> decoder = new content::AOMDecoder(screen);
 
   decoder->AddRef();
   MriSetStructData(self, decoder.get());

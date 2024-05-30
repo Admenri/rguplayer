@@ -9,6 +9,7 @@
 #include "components/filesystem/filesystem.h"
 #include "content/public/bitmap.h"
 #include "renderer/meta/gles2meta.h"
+#include "renderer/quad/quad_drawable.h"
 #include "third_party/av1player/src/player.hpp"
 
 #include <optional>
@@ -23,9 +24,10 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>, public Disposable {
     Playing = 0,
     Paused,
     Stopped,
+    Finished,
   };
 
-  AOMDecoder(scoped_refptr<Graphics> host, WorkerShareData* share_data);
+  AOMDecoder(scoped_refptr<Graphics> host);
   ~AOMDecoder();
 
   AOMDecoder(const AOMDecoder&) = delete;
@@ -49,6 +51,7 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>, public Disposable {
 
  private:
   static void OnAudioData(void* userPtr, float* pcm, size_t count);
+  static void OnVideoFinished(void* userPtr);
   void CreateYUVInternal(int width, int height);
   void DestroyYUVInternal();
   void UpdateYUVTexture(int width,
@@ -76,11 +79,12 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>, public Disposable {
   int64_t counter_freq_;
   float frame_delta_;
 
-  renderer::GLID<renderer::Texture> plane_y_;
-  renderer::GLID<renderer::Texture> plane_u_;
-  renderer::GLID<renderer::Texture> plane_v_;
+  enum PlaneType { Plane_Y = 0, Plane_U, Plane_V };
+  renderer::GLID<renderer::Texture> video_planes_[3];
+  std::unique_ptr<renderer::QuadDrawable> video_quad_;
 
   SDL_AudioDeviceID audio_output_;
+  SDL_AudioStream* audio_stream_;
 };
 
 }  // namespace content

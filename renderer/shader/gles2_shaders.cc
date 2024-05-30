@@ -163,7 +163,7 @@ bool GLES2ShaderBase::Setup(const std::string& vertex_shader,
   }
 
   u_projectionMat_ = GL.GetUniformLocation(program(), "u_projectionMat");
-  return true;
+  return u_projectionMat_ >= 0;
 }
 
 void GLES2ShaderBase::SetTexture(GLint location, GLuint tex, uint16_t unit) {

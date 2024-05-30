@@ -53,6 +53,7 @@ class VideoPlayer {
   OnAudioDataDecoded m_onAudioDataDecoded;
   void* m_onAudioDataDecodedUserPtr;
   OnVideoFinished m_onVideoFinished;
+  void* m_onVideoFinishedUserPtr;
 
   void reset();
   void destroy();
@@ -124,7 +125,7 @@ class VideoPlayer {
   FrameBuffer* frameBuffer();
 
   void setOnAudioData(OnAudioDataDecoded func, void* userPtr);
-  void setOnVideoFinished(OnVideoFinished func);
+  void setOnVideoFinished(OnVideoFinished func, void* userPtr);
 
   double playTime();
   float duration();
@@ -135,6 +136,7 @@ class VideoPlayer {
   bool isStopped();
   bool isPaused();
   bool isPlaying();
+  bool isFinished();
 
   void addAudioData(float* values, size_t count);
 

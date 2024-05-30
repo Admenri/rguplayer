@@ -42,8 +42,8 @@ void Player::setOnAudioData(OnAudioDataDecoded func, void* userPtr) {
   m_videoPlayer->setOnAudioData(func, userPtr);
 }
 
-void Player::setOnVideoFinished(OnVideoFinished func) {
-  m_videoPlayer->setOnVideoFinished(func);
+void Player::setOnVideoFinished(OnVideoFinished func, void* userPtr) {
+  m_videoPlayer->setOnVideoFinished(func, userPtr);
 }
 
 double Player::playTime() {
@@ -76,6 +76,10 @@ bool Player::isPaused() {
 
 bool Player::isPlaying() {
   return m_videoPlayer->isPlaying();
+}
+
+bool Player::isFinished() {
+  return m_videoPlayer->isFinished();
 }
 
 bool Player::readStats(Statistics* dst) {

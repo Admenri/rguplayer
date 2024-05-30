@@ -275,7 +275,7 @@ bool VideoPlayer::update(float dt) {
 
   if (callOnFinishEvent) {
     if (m_onVideoFinished != nullptr)
-      m_onVideoFinished();
+      m_onVideoFinished(m_onVideoFinishedUserPtr);
   }
 
   return true;
@@ -392,6 +392,10 @@ bool VideoPlayer::isPaused() {
 /// Checks whether the video is playing.
 bool VideoPlayer::isPlaying() {
   return m_state == State::Playing;
+}
+
+bool VideoPlayer::isFinished() {
+  return m_state == State::Finished;
 }
 
 /// Checks whether the video is stopped.
@@ -515,8 +519,9 @@ void VideoPlayer::setOnAudioData(OnAudioDataDecoded func, void* userPtr) {
 }
 
 /// Sets OnVideoFinished callback
-void VideoPlayer::setOnVideoFinished(OnVideoFinished func) {
+void VideoPlayer::setOnVideoFinished(OnVideoFinished func, void* userPtr) {
   m_onVideoFinished = func;
+  m_onVideoFinishedUserPtr = userPtr;
 }
 
 /**
