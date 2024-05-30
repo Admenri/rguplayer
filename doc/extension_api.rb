@@ -389,4 +389,5 @@ Playing = 0
 Paused = 1
 Stopped = 2
 Finished = 3 (只读)
+当视频播放结束时可以通过Stop后Play进行重新播放
 
