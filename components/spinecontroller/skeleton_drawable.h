@@ -48,6 +48,7 @@ class SkeletonDrawable {
 
   spine::Skeleton* skeleton() { return skeleton_.get(); }
   spine::AnimationState* animation_state() { return state_.get(); }
+  bool& use_premultiplied_alpha() { return use_premultiplied_alpha_; }
 
  private:
   void drawOGL(const base::Vec2i& offset,
@@ -61,6 +62,7 @@ class SkeletonDrawable {
   spine::SkeletonClipping clipper_;
   spine::Vector<float> world_vertices_;
   spine::Vector<renderer::CommonVertex> vertex_buffer_;
+  bool use_premultiplied_alpha_;
 
   renderer::VertexArray<renderer::CommonVertex> vertex_array_;
 };

@@ -263,20 +263,38 @@ void SkeletonDrawable::drawOGL(const base::Vec2i& offset,
   shader.SetTransOffset(offset);
 
   renderer::GSM.states.blend.Push(true);
-  switch (blend_mode) {
-    default:
-    case spine::BlendMode_Normal:
-      renderer::GL.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      break;
-    case spine::BlendMode_Additive:
-      renderer::GL.BlendFunc(GL_SRC_ALPHA, GL_ONE);
-      break;
-    case spine::BlendMode_Multiply:
-      renderer::GL.BlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
-      break;
-    case spine::BlendMode_Screen:
-      renderer::GL.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-      break;
+  if (!use_premultiplied_alpha_) {
+    switch (blend_mode) {
+      default:
+      case spine::BlendMode_Normal:
+        renderer::GL.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+      case spine::BlendMode_Additive:
+        renderer::GL.BlendFunc(GL_SRC_ALPHA, GL_ONE);
+        break;
+      case spine::BlendMode_Multiply:
+        renderer::GL.BlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+      case spine::BlendMode_Screen:
+        renderer::GL.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+        break;
+    }
+  } else {
+    switch (blend_mode) {
+      default:
+      case spine::BlendMode_Normal:
+        renderer::GL.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+      case spine::BlendMode_Additive:
+        renderer::GL.BlendFunc(GL_ONE, GL_ONE);
+        break;
+      case spine::BlendMode_Multiply:
+        renderer::GL.BlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+      case spine::BlendMode_Screen:
+        renderer::GL.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+        break;
+    }
   }
 
   renderer::VertexArray<renderer::CommonVertex>::Bind(vertex_array_);

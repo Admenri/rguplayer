@@ -82,6 +82,7 @@
 - vorbis - https://github.com/xiph/vorbis
 - ogg - https://github.com/xiph/ogg
 - boost_asio - https://github.com/boostorg/boost
+- spine - https://github.com/EsotericSoftware/spine-runtimes
 
 ## 联系方式
 
