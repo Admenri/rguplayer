@@ -159,6 +159,9 @@ add_subdirectory(third_party/av1player)
 ## Boost-ASIO
 add_subdirectory(third_party/boost_asio)
 
+## WebSocketpp
+include_directories(third_party/websocketpp)
+
 #--------------------------------------------------------------------------------
 # Components of Core
 #--------------------------------------------------------------------------------

@@ -8,9 +8,6 @@ set(RGU_DEP_LIBS
   binding_mri
 )
 
-add_executable(asio-test asio_test.cc)
-target_link_libraries(asio-test PUBLIC Boost::asio)
-
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_compile_definitions(NOMINMAX)
 
@@ -29,6 +26,5 @@ endif()
 
 execute_process(
   COMMAND "${PYTHON_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/buildtools/build_file_binary.py" "${PROJECT_SOURCE_DIR}/app/resources/rgu_favicon_64.png" -o "${RGU_AUTOGEN_DIR}/app/icon.xxd"
-  RESULT_VARIABLE SHADER_GENERATE_RESULT
   OUTPUT_QUIET
 )
