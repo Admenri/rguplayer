@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.18.0)
 project(rgu_player VERSION 1.0.0)
 include_directories("${PROJECT_SOURCE_DIR}")
 
-add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 set(CMAKE_CXX_STANDARD 17)
 
 #--------------------------------------------------------------------------------
@@ -155,6 +155,9 @@ add_subdirectory(third_party/vorbis)
 
 ## AOMPLAYER
 add_subdirectory(third_party/av1player)
+
+## Boost-ASIO
+add_subdirectory(third_party/boost_asio)
 
 #--------------------------------------------------------------------------------
 # Components of Core

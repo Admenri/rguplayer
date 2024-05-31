@@ -69,8 +69,4 @@ set(CORE_RENDERER_SRC
 
 add_library(core_renderer ${CORE_RENDERER_SRC})
 target_link_libraries(core_renderer PUBLIC core_base)
-if (MSVC)
-  target_compile_options(core_renderer PRIVATE /O2 /WX "$<$<CXX_COMPILER_ID:MSVC>:-utf-8>")
-else()
-  target_compile_options(core_renderer PRIVATE -O2 -Werror)
-endif()
+target_compile_options(core_renderer PRIVATE -Werror)

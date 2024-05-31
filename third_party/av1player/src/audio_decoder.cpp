@@ -12,23 +12,6 @@
 
 namespace uvpx {
 
-static uint64_t ne_xiph_lace_value(unsigned char** np) {
-  uint64_t lace;
-  uint64_t value;
-  unsigned char* p = *np;
-
-  lace = *p++;
-  value = lace;
-  while (lace == 255) {
-    lace = *p++;
-    value += lace;
-  }
-
-  *np = p;
-
-  return value;
-}
-
 ogg_packet InitOggPacket(const unsigned char* aData,
                          size_t aLength,
                          bool aBOS,

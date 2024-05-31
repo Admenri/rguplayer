@@ -148,10 +148,10 @@ int main(int argc, char* argv[]) {
 
 #if defined(OS_LINUX)
   auto* icon_ops =
-      SDL_RWFromConstMem(rgu_favicon_64_png, rgu_favicon_64_png_len);
+      SDL_IOFromConstMem(rgu_favicon_64_png, rgu_favicon_64_png_len);
 
   if (icon_ops) {
-    auto* icon = IMG_Load_RW(icon_ops, SDL_TRUE);
+    auto* icon = IMG_Load_IO(icon_ops, SDL_TRUE);
 
     if (icon) {
       SDL_SetWindowIcon(win->AsSDLWindow(), icon);

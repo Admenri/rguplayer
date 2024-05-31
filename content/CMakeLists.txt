@@ -81,9 +81,4 @@ target_link_libraries(core_content PUBLIC
                       soloud
                       base_imgui
                       aom_player)
-
-if (MSVC)
-  target_compile_options(core_content PRIVATE /O2 /WX "$<$<CXX_COMPILER_ID:MSVC>:-utf-8>")
-else()
-  target_compile_options(core_content PRIVATE -O2 -Werror)
-endif()
+target_compile_options(core_content PRIVATE -Werror)
