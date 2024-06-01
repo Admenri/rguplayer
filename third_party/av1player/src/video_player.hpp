@@ -121,7 +121,7 @@ class VideoPlayer {
   Player::LoadResult load(SDL_IOStream* io, int audioTrack, bool preloadFile);
   bool update(float dt);
 
-  Player::VideoInfo info() const;
+  Player::VideoInfo* info();
   FrameBuffer* frameBuffer();
 
   void setOnAudioData(OnAudioDataDecoded func, void* userPtr);

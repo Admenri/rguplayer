@@ -649,7 +649,7 @@ void Tilemap::UpdateMapBufferInternal() {
   tilemap_quads_->Update();
 
   // Update z-layers for new buffer
-  for (int i = 0; i < above_vertices_.size(); ++i) {
+  for (size_t i = 0; i < above_vertices_.size(); ++i) {
     auto& it = above_vertices_[i];
     if (it.empty()) {
       above_layers_[i]->SetIndex(-1);

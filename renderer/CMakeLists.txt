@@ -69,4 +69,7 @@ set(CORE_RENDERER_SRC
 
 add_library(core_renderer ${CORE_RENDERER_SRC})
 target_link_libraries(core_renderer PUBLIC core_base)
-target_compile_options(core_renderer PRIVATE -Werror)
+target_compile_options(core_renderer PRIVATE
+  -Werror
+  -Wno-float-conversion
+)

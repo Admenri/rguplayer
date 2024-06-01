@@ -76,9 +76,14 @@ target_link_libraries(core_content PUBLIC
                       core_ui
                       components_filesystem
                       components_fpslimiter
-                      SDL3_image::SDL3_image
-                      SDL3_ttf::SDL3_ttf
+                      sdl_image_loader
+                      sdl_ttf_render
                       soloud
                       base_imgui
                       aom_player)
-target_compile_options(core_content PRIVATE -Werror)
+target_compile_options(core_content PRIVATE
+  -Werror
+  -Wno-float-conversion
+  -Wno-class-memaccess
+  -Wno-unused-parameter
+)

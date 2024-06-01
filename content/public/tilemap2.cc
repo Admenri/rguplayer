@@ -605,7 +605,7 @@ class TilemapAboveLayer2 : public ViewportChild {
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
   void OnParentViewportRectChanged(
-      const DrawableParent::ViewportInfo& rect) override {
+      const DrawableParent::ViewportInfo&) override {
     tilemap_->buffer_need_update_ = true;
   }
 
@@ -805,7 +805,7 @@ void Tilemap2::CreateTileAtlasInternal() {
   renderer::FrameBuffer::Clear();
 
   /* tilemap bitmap atlas */
-  for (int i = 0; i < kTilemapAtlasSize; ++i) {
+  for (size_t i = 0; i < kTilemapAtlasSize; ++i) {
     auto& atlas_info = kTilemapAtlas[i];
     scoped_refptr<Bitmap> atlas_bitmap = bitmaps_[atlas_info.tile_id];
 
@@ -886,7 +886,7 @@ void Tilemap2::ParseMapDataBufferInternal() {
                           int size, bool above) {
     auto* vert = above ? alloc_above(size) : alloc_ground(size);
 
-    for (size_t i = 0; i < size; ++i)
+    for (int i = 0; i < size; ++i)
       renderer::QuadSetTexPosRect(vert + i * 4, texcoords[i], position[i]);
   };
 

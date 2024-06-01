@@ -112,3 +112,4 @@ set (SOLOUD_TARGET_SOURCES
 
 add_library(soloud STATIC ${SOLOUD_TARGET_SOURCES})
 target_include_directories(soloud PUBLIC include)
+target_compile_options(soloud PRIVATE -w)

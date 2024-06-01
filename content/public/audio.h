@@ -97,8 +97,8 @@ class Audio final : public base::RefCounted<Audio> {
 
   SoLoud::Soloud core_;
   SDL_AudioDeviceID output_device_;
-  SDL_AudioStream* soloud_stream_{0};
-  SDL_AudioSpec soloud_spec_{0};
+  SDL_AudioStream* soloud_stream_;
+  SDL_AudioSpec soloud_spec_;
 
   SlotInfo bgm_;
   SlotInfo bgs_;

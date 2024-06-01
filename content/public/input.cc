@@ -231,7 +231,7 @@ void Input::SetKeysFromFlag(const std::string& flag,
 void Input::GetRecentPressed(std::vector<int>& out) {
   out.clear();
 
-  for (int i = 0; i < recent_key_states_.size(); ++i) {
+  for (size_t i = 0; i < recent_key_states_.size(); ++i) {
     if (recent_key_states_[i].pressed) {
       out.push_back(i);
     }
@@ -241,7 +241,7 @@ void Input::GetRecentPressed(std::vector<int>& out) {
 void Input::GetRecentTriggered(std::vector<int>& out) {
   out.clear();
 
-  for (int i = 0; i < recent_key_states_.size(); ++i) {
+  for (size_t i = 0; i < recent_key_states_.size(); ++i) {
     if (recent_key_states_[i].trigger) {
       out.push_back(i);
     }
@@ -251,7 +251,7 @@ void Input::GetRecentTriggered(std::vector<int>& out) {
 void Input::GetRecentRepeated(std::vector<int>& out) {
   out.clear();
 
-  for (int i = 0; i < recent_key_states_.size(); ++i) {
+  for (size_t i = 0; i < recent_key_states_.size(); ++i) {
     if (recent_key_states_[i].repeat) {
       out.push_back(i);
     }
@@ -272,7 +272,9 @@ void Input::EmulateKeyState(int scancode, bool pressed) {
 
 void Input::SetTextInput(bool enable) {
   share_data_->event_runner->PostTask(base::BindOnce(
-      [](bool enable) { enable ? SDL_StartTextInput() : SDL_StopTextInput(); },
+      [](bool enable_input) {
+        enable_input ? SDL_StartTextInput() : SDL_StopTextInput();
+      },
       enable));
   share_data_->event_runner->WaitForSync();
 
@@ -292,7 +294,7 @@ void Input::SetTextInputRect(scoped_refptr<Rect> region) {
   SDL_Rect sdlrt{rt.x, rt.y, rt.width, rt.height};
 
   share_data_->event_runner->PostTask(base::BindOnce(
-      [](SDL_Rect* sdlrt) { SDL_SetTextInputRect(sdlrt); }, &sdlrt));
+      [](SDL_Rect* rect) { SDL_SetTextInputRect(rect); }, &sdlrt));
   share_data_->event_runner->WaitForSync();
 }
 
@@ -402,8 +404,9 @@ void Input::ShowButtonSettingsGUI() {
     if (ImGui::BeginListBox(
             "##button_list",
             ImVec2(ImGui::CalcItemWidth() / 2.0f, list_height + 64))) {
-      for (int i = 0; i < kButtonItems.size(); ++i) {
-        if (ImGui::Selectable(kButtonItems[i].c_str(), i == selected_button)) {
+      for (size_t i = 0; i < kButtonItems.size(); ++i) {
+        if (ImGui::Selectable(kButtonItems[i].c_str(),
+                              static_cast<int>(i) == selected_button)) {
           selected_button = i;
           selected_binding = -1;
         }
@@ -420,19 +423,19 @@ void Input::ShowButtonSettingsGUI() {
       ImGui::BeginGroup();
       if (ImGui::BeginListBox("##binding_list",
                               ImVec2(-FLT_MIN, list_height))) {
-        for (int i = 0; i < setting_bindings_.size(); ++i) {
+        for (size_t i = 0; i < setting_bindings_.size(); ++i) {
           auto& it = setting_bindings_[i];
           if (it.sym == button_name) {
-            const bool is_select = (selected_binding == i);
+            const bool is_select = (selected_binding == static_cast<int>(i));
 
             // Generate button sign
-            std::string button_name = SDL_GetScancodeName(it.scancode);
+            std::string display_button_name = SDL_GetScancodeName(it.scancode);
             if (it.scancode == SDL_SCANCODE_UNKNOWN)
-              button_name = "<empty>";
+              display_button_name = "<empty>";
             if (is_select)
-              button_name = "<...>";
-            button_name += "##";
-            button_name.push_back(i);
+              display_button_name = "<...>";
+            display_button_name += "##";
+            display_button_name.push_back(i);
 
             // Find conflict bindings
             int conflict_count = -1;
@@ -445,7 +448,7 @@ void Input::ShowButtonSettingsGUI() {
             if (is_conflict)
               ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
 
-            if (ImGui::Selectable(button_name.c_str(), is_select)) {
+            if (ImGui::Selectable(display_button_name.c_str(), is_select)) {
               selected_binding = (is_select ? -1 : i);
             }
 

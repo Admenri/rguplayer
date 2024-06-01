@@ -80,7 +80,7 @@ MRI_METHOD(aom_render) {
 MRI_METHOD(aom_info) {
   scoped_refptr<content::AOMDecoder> obj =
       MriGetStructData<content::AOMDecoder>(self);
-  auto info = obj->GetVideoInfo();
+  auto& info = *obj->GetVideoInfo();
 
   VALUE info_hash = rb_hash_new();
   rb_hash_aset(info_hash, rb_str_new2("width"), INT2FIX(info.width));

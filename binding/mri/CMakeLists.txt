@@ -88,6 +88,14 @@ endif()
 
 add_library(binding_mri ${BINDING_MRI_SRC})
 target_link_libraries(binding_mri PUBLIC core_base core_renderer core_content core_ui mri_ruby zlibstatic)
+target_compile_options(binding_mri PRIVATE
+  -Wno-unused-parameter
+  -Wno-shadow
+  -Wno-cast-function-type
+  -Wno-deprecated-declarations
+  -Wno-missing-field-initializers
+  -Wno-float-conversion
+)
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
 if(EXISTS ${LIBFFI_DIR})

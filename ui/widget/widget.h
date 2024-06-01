@@ -42,6 +42,17 @@ class Widget {
 
     bool in_window;
     bool focused;
+
+    MouseState()
+        : x(0),
+          y(0),
+          scroll_x(0),
+          scroll_y(0),
+          states{0},
+          clicks{0},
+          visible(true),
+          in_window(false),
+          focused(false) {}
   };
 
   struct FingerState {
@@ -134,7 +145,7 @@ class Widget {
   base::CallbackListSubscription ui_dispatcher_binding_;
 
   bool key_states_[SDL_NUM_SCANCODES]{0};
-  MouseState mouse_state_{0};
+  MouseState mouse_state_;
   std::array<FingerState, MAX_FINGERS> finger_states_;
 
   std::mutex text_lock_;

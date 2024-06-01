@@ -728,10 +728,12 @@ void Window2::UpdateInternal() {
       cursor_alpha_index_ = 0;
 
   if (pause_) {
-    if (pause_alpha_index_ < (sizeof(pause_alpha) / sizeof(pause_alpha[0]) - 1))
+    if (pause_alpha_index_ <
+        static_cast<int>(sizeof(pause_alpha) / sizeof(pause_alpha[0]) - 1))
       ++pause_alpha_index_;
 
-    if (++pause_quad_index_ == (sizeof(pause_quad) / sizeof(pause_quad[0])))
+    if (++pause_quad_index_ ==
+        static_cast<int>(sizeof(pause_quad) / sizeof(pause_quad[0])))
       pause_quad_index_ = 0;
   }
 

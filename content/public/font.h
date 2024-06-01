@@ -5,17 +5,17 @@
 #ifndef CONTENT_PUBLIC_FONT_H_
 #define CONTENT_PUBLIC_FONT_H_
 
-#include "SDL_ttf.h"
-
 #include <string>
 #include <vector>
+
+#include "SDL_surface.h"
+#include "SDL_ttf.h"
 
 #include "base/memory/ref_counted.h"
 #include "components/filesystem/filesystem.h"
 #include "content/public/utility.h"
 
 namespace content {
-
 class Font : public base::RefCounted<Font> {
  public:
   static void InitStaticFont(filesystem::Filesystem* io);

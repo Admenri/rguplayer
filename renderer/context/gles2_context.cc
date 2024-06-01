@@ -10,13 +10,13 @@ namespace renderer {
 
 namespace {
 
-void GL_APIENTRY DebugOutput(GLenum source,
-                             GLenum type,
-                             GLuint id,
-                             GLenum severity,
-                             GLsizei length,
+void GL_APIENTRY DebugOutput(GLenum,
+                             GLenum,
+                             GLuint,
+                             GLenum,
+                             GLsizei,
                              const GLchar* message,
-                             const void* userParam) {
+                             const void*) {
   LOG(INFO) << "[Renderer] Debug Info: " << std::string(message);
 }
 

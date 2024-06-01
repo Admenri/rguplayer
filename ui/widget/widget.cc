@@ -23,9 +23,6 @@ Widget* Widget::FromWindowID(SDL_WindowID window_id) {
 }
 
 Widget::Widget() : window_(nullptr), window_id_(SDL_WindowID()) {
-  // Init window attribute
-  mouse_state_.visible = true;
-
   ui_dispatcher_binding_ = base::RunLoop::BindEventDispatcher(
       base::BindRepeating(&Widget::UIEventDispatcher, base::Unretained(this)));
 }

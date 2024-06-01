@@ -41,7 +41,7 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
   // Initialize timer
   last_ticks_ = SDL_GetPerformanceCounter();
   counter_freq_ = SDL_GetPerformanceFrequency();
-  frame_delta_ = 1.0f / (float)player_->info().frameRate;
+  frame_delta_ = 1.0f / (float)player_->info()->frameRate;
 
   // Init OGL & audio device
   if (result == uvpx::Player::LoadResult::Success) {
@@ -49,7 +49,7 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
     player_->setOnVideoFinished(OnVideoFinished, this);
 
     // Init yuv texture
-    auto info = player_->info();
+    auto& info = *player_->info();
     CreateYUVInternal(info.width, info.height);
 
     // Init Audio components
@@ -83,9 +83,9 @@ void AOMDecoder::Update() {
   last_ticks_ = current_ticks;
 }
 
-uvpx::Player::VideoInfo AOMDecoder::GetVideoInfo() {
+uvpx::Player::VideoInfo* AOMDecoder::GetVideoInfo() {
   if (!player_)
-    return uvpx::Player::VideoInfo{0};
+    return nullptr;
 
   return player_->info();
 }
@@ -134,7 +134,7 @@ void AOMDecoder::Render(scoped_refptr<Bitmap> target) {
     return;
 
   uvpx::Frame* yuv = nullptr;
-  auto info = player_->info();
+  auto& info = *player_->info();
   auto canvas_size = target->GetSize();
   if ((yuv = player_->lockRead()) != nullptr) {
     UpdateYUVTexture(info.width, info.height, yuv->y(), yuv->yPitch(), yuv->u(),

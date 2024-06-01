@@ -14,7 +14,7 @@ void Mouse::Update() {
     return;
 
   auto& mouse_state = window_->GetMouseState();
-  for (int i = 0; i < states_.size(); ++i) {
+  for (size_t i = 0; i < states_.size(); ++i) {
     bool press_state = mouse_state.states[i];
 
     states_[i].down = !states_[i].pressed && press_state;

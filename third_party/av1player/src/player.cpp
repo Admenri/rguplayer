@@ -26,7 +26,7 @@ bool Player::update(float dt) {
   return m_videoPlayer->update(dt);
 }
 
-Player::VideoInfo Player::info() const {
+Player::VideoInfo* Player::info() const {
   return m_videoPlayer->info();
 }
 

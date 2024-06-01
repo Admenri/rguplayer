@@ -18,7 +18,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     "setupapi;advapi32;uuid;version;oleaut32;ole32;imm32;winmm;user32;rpcrt4;usp10"
   )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  link_libraries("crypt")
+  link_libraries(crypt)
 endif()
 
 #--------------------------------------------------------------------------------
@@ -71,16 +71,17 @@ endif()
 
 ## SDL
 add_subdirectory(third_party/SDL)
+include_directories(third_party/SDL/include)
 
-## SDL_image
-set(SDL3IMAGE_VENDORED off)
-add_subdirectory(third_party/SDL_image)
-include_directories(third_party/SDL_image/include/SDL3_image)
+## image loader (SDL_image)
+add_subdirectory(third_party/image_loader)
+include_directories(third_party/image_loader/include/SDL3_image)
 
-## SDL_ttf
-set(SDL3TTF_VENDORED ON)
-add_subdirectory(third_party/SDL_ttf)
-include_directories(third_party/SDL_ttf/include/SDL3_ttf)
+## text render (SDL_ttf)
+add_subdirectory(third_party/freetype)
+include_directories(third_party/freetype/include)
+add_subdirectory(third_party/text_render)
+include_directories(third_party/text_render/include/SDL3_ttf)
 
 ## CRuby-Mri
 if(CMAKE_SYSTEM_NAME STREQUAL "Android")

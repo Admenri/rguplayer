@@ -41,7 +41,7 @@ FrameBuffer::~FrameBuffer() {
 
 Frame* FrameBuffer::lockRead() {
   double playTime = m_parent->playTime();
-  double frameTime = 1.0 / m_parent->info().frameRate;
+  double frameTime = 1.0 / m_parent->info()->frameRate;
 
 #ifdef LIMIT_READ_TO_FRAMERATE
   double diff = playTime - m_readTime;

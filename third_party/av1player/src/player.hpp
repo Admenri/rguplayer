@@ -80,7 +80,7 @@ class UVPX_EXPORT Player {
   LoadResult load(SDL_IOStream* io, int audioTrack, bool preloadFile);
   bool update(float dt);
 
-  VideoInfo info() const;
+  VideoInfo* info() const;
 
   Frame* lockRead();
   void unlockRead();

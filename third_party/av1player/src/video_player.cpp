@@ -136,7 +136,7 @@ Player::LoadResult VideoPlayer::load(SDL_IOStream* io,
         return Player::LoadResult::UnsupportedVideoCodec;
       }
 
-      aom_codec_dec_cfg_t aom_config = {0};
+      aom_codec_dec_cfg_t aom_config;
       aom_config.w = m_info.width;
       aom_config.h = m_info.height;
       aom_config.threads = m_info.decodeThreadsCount;
@@ -315,8 +315,8 @@ void VideoPlayer::updateYUVData(double time) {
   m_frameBuffer->unlockWrite();
 }
 
-Player::VideoInfo VideoPlayer::info() const {
-  return m_info;
+Player::VideoInfo* VideoPlayer::info() {
+  return &m_info;
 }
 
 FrameBuffer* VideoPlayer::frameBuffer() {

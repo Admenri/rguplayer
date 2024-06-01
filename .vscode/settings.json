@@ -6,7 +6,11 @@
     "editor.formatOnSave": true,
     "C_Cpp.formatting": "clangFormat",
     "files.associations": {
-        "*.xxd": "cpp"
+        "*.xxd": "cpp",
+        "os.h": "c",
+        "stdlib.h": "c",
+        "alloca.h": "c",
+        "misc.h": "c"
     },
     "cmake.buildDirectory": "${workspaceFolder}/out"
 }

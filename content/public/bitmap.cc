@@ -6,14 +6,14 @@
 
 #include <array>
 
-#include "SDL_image.h"
-
 #include "base/exceptions/exception.h"
 #include "components/filesystem/filesystem.h"
 #include "content/config/core_config.h"
 #include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
 #include "renderer/quad/quad_drawable.h"
+
+#include "SDL_image.h"
 
 namespace content {
 

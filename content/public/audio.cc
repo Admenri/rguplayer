@@ -30,9 +30,11 @@ void* read_mem_file(SDL_IOStream* src, size_t* datasize, bool freesrc) {
     size = FILE_CHUNK_SIZE;
     loading_chunks = SDL_TRUE;
   }
-  if (size >= SDL_SIZE_MAX) {
+
+  if (static_cast<uint64_t>(size) >= SDL_SIZE_MAX) {
     goto done;
   }
+
   data = new char[(size_t)(size + 1)];
   if (!data) {
     goto done;
@@ -43,7 +45,7 @@ void* read_mem_file(SDL_IOStream* src, size_t* datasize, bool freesrc) {
     if (loading_chunks) {
       if ((size_total + FILE_CHUNK_SIZE) > size) {
         size = (size_total + FILE_CHUNK_SIZE);
-        if (size >= SDL_SIZE_MAX) {
+        if (static_cast<uint64_t>(size) >= SDL_SIZE_MAX) {
           newdata = NULL;
         } else {
           delete[] data;
@@ -362,12 +364,12 @@ void Audio::PlaySlotInternal(SlotInfo* slot,
     try {
       share_data_->filesystem->OpenRead(
           filename, base::BindRepeating(
-                        [](SoLoud::Wav* source, SDL_IOStream* ops,
+                        [](SoLoud::Wav* loader, SDL_IOStream* ops,
                            const std::string& ext) {
                           size_t out_size;
                           uint8_t* mem = static_cast<uint8_t*>(
                               read_mem_file(ops, &out_size, SDL_TRUE));
-                          return source->loadMem(mem, out_size) ==
+                          return loader->loadMem(mem, out_size) ==
                                  SoLoud::SO_NO_ERROR;
                         },
                         slot->source.get()));
@@ -416,12 +418,12 @@ void Audio::EmitSoundInternal(const std::string& filename,
     try {
       share_data_->filesystem->OpenRead(
           filename, base::BindRepeating(
-                        [](SoLoud::Wav* source, SDL_IOStream* ops,
+                        [](SoLoud::Wav* loader, SDL_IOStream* ops,
                            const std::string& ext) {
                           size_t out_size;
                           uint8_t* mem = static_cast<uint8_t*>(
                               read_mem_file(ops, &out_size, SDL_TRUE));
-                          return source->loadMem(mem, out_size) ==
+                          return loader->loadMem(mem, out_size) ==
                                  SoLoud::SO_NO_ERROR;
                         },
                         source.get()));

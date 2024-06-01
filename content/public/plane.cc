@@ -136,8 +136,7 @@ void Plane::Composite() {
   renderer::GSM.states.blend.Pop();
 }
 
-void Plane::OnParentViewportRectChanged(
-    const DrawableParent::ViewportInfo& rect) {
+void Plane::OnParentViewportRectChanged(const DrawableParent::ViewportInfo&) {
   quad_array_dirty_ = true;
 }
 
@@ -163,8 +162,8 @@ void Plane::UpdateQuadArray() {
 
   auto tex = bitmap_->GetSize();
   quad_array_->Resize(repeat_x * repeat_y);
-  for (size_t y = 0; y < repeat_y; ++y) {
-    for (size_t x = 0; x < repeat_x; ++x) {
+  for (int y = 0; y < repeat_y; ++y) {
+    for (int x = 0; x < repeat_x; ++x) {
       size_t index = (y * repeat_x + x) * 4;
       renderer::CommonVertex* vert = &quad_array_->vertices()[index];
       base::RectF pos(x * scale_width, y * scale_height, scale_width,
@@ -205,8 +204,8 @@ void Plane::UpdateQuadArray() {
 
   quad_array_->Resize(tile_x * tile_y);
 
-  for (size_t y = 0; y < tile_y; ++y) {
-    for (size_t x = 0; x < tile_x; ++x) {
+  for (int y = 0; y < tile_y; ++y) {
+    for (int x = 0; x < tile_x; ++x) {
       size_t index = (y * tile_x + x) * 4;
       renderer::CommonVertex* vert = &quad_array_->vertices()[index];
       base::RectF pos(x * item_x - wrap_ox, y * item_y - wrap_oy, item_x,

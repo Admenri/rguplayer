@@ -36,7 +36,7 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>, public Disposable {
   uvpx::Player::LoadResult LoadVideo(const std::string& filename);
   void Update();
 
-  uvpx::Player::VideoInfo GetVideoInfo();
+  uvpx::Player::VideoInfo* GetVideoInfo();
 
   void SetPlayState(Type state);
   Type GetPlayState();

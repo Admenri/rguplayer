@@ -12,7 +12,8 @@ namespace internal {
 namespace {
 
 bool QueryCancellationTraitsForNonCancellables(
-    const BindStateBase*, BindStateBase::CancellationQueryMode mode) {
+    const BindStateBase*,
+    BindStateBase::CancellationQueryMode mode) {
   switch (mode) {
     case BindStateBase::IS_CANCELLED:
       return false;
@@ -31,13 +32,15 @@ void BindStateBaseRefCountTraits::Destruct(const BindStateBase* bind_state) {
 
 BindStateBase::BindStateBase(InvokeFuncStorage polymorphic_invoke,
                              void (*destructor)(const BindStateBase*))
-    : BindStateBase(polymorphic_invoke, destructor,
+    : BindStateBase(polymorphic_invoke,
+                    destructor,
                     &QueryCancellationTraitsForNonCancellables) {}
 
-BindStateBase::BindStateBase(InvokeFuncStorage polymorphic_invoke,
-                             void (*destructor)(const BindStateBase*),
-                             bool (*query_cancellation_traits)(
-                                 const BindStateBase*, CancellationQueryMode))
+BindStateBase::BindStateBase(
+    InvokeFuncStorage polymorphic_invoke,
+    void (*destructor)(const BindStateBase*),
+    bool (*query_cancellation_traits)(const BindStateBase*,
+                                      CancellationQueryMode))
     : polymorphic_invoke_(polymorphic_invoke),
       destructor_(destructor),
       query_cancellation_traits_(query_cancellation_traits) {}
@@ -81,7 +84,8 @@ bool CallbackBase::EqualsInternal(const CallbackBase& other) const {
 
 CallbackBase::~CallbackBase() = default;
 
-CallbackBaseCopyable::CallbackBaseCopyable(const CallbackBaseCopyable& c) {
+CallbackBaseCopyable::CallbackBaseCopyable(const CallbackBaseCopyable& c)
+    : base::internal::CallbackBase() {
   bind_state_ = c.bind_state_;
 }
 

@@ -64,7 +64,7 @@ struct VertexArray {
     VertexBuffer::Bind(vao.vbo);
     IndexBuffer::Bind(vao.ibo);
 
-    for (size_t i = 0; i < VertexInfo<Type>::attr_size; i++) {
+    for (int i = 0; i < VertexInfo<Type>::attr_size; i++) {
       GL.EnableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
       GL.VertexAttribPointer(VertexInfo<Type>::attrs[i].index,
                              VertexInfo<Type>::attrs[i].size,
@@ -100,7 +100,7 @@ struct VertexArray {
     if (GL.GenVertexArrays) {
       GL.BindVertexArray(0);
     } else {
-      for (size_t i = 0; i < VertexInfo<Type>::attr_size; i++) {
+      for (int i = 0; i < VertexInfo<Type>::attr_size; i++) {
         GL.DisableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
       }
 

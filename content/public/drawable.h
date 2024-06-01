@@ -93,7 +93,7 @@ class Drawable {
   virtual void Composite() = 0;
   virtual void CheckDisposed() const = 0;
   virtual void OnParentViewportRectChanged(
-      const DrawableParent::ViewportInfo& rect) {}
+      const DrawableParent::ViewportInfo&) {}
 
   void RemoveFromList();
   void SetSpriteY(int y);

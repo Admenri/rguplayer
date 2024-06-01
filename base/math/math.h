@@ -332,7 +332,7 @@ class Rect {
     width = other.width;
     height = other.height;
     return other;
-  };
+  }
 
   bool operator==(const Rect& other) const {
     return other.x == x && other.y == y && other.width == width &&
