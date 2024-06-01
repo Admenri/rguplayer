@@ -2,14 +2,6 @@
 	path = third_party/SDL
 	url = https://github.com/Admenri/SDL.git
 	branch = main
-[submodule "third_party/SDL_ttf"]
-	path = third_party/SDL_ttf
-	url = https://github.com/Admenri/SDL_ttf.git
-	branch = main
-[submodule "third_party/SDL_image"]
-	path = third_party/SDL_image
-	url = https://github.com/Admenri/SDL_image.git
-	branch = main
 [submodule "third_party/zlib"]
 	path = third_party/zlib
 	url = https://github.com/Admenri/zlib.git
