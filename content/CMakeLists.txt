@@ -82,8 +82,6 @@ target_link_libraries(core_content PUBLIC
                       base_imgui
                       aom_player)
 target_compile_options(core_content PRIVATE
-  -Werror
   -Wno-float-conversion
-  -Wno-class-memaccess
   -Wno-unused-parameter
 )

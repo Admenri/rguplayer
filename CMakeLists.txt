@@ -128,7 +128,7 @@ set(PHYSFS_BUILD_STATIC TRUE)
 set(PHYSFS_BUILD_SHARED FALSE)
 set(PHYSFS_TARGETNAME_UNINSTALL "physfs-uninstall")
 set(PHYSFS_TARGETNAME_DIST "physfs-dist")
-set(PHYSFS_TARGETNAME_DOCS "physfs-docs")
+set(PHYSFS_BUILD_DOCS FALSE)
 add_subdirectory(third_party/physfs)
 include_directories(third_party/physfs/src)
 
