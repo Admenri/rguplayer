@@ -123,6 +123,7 @@ scoped_refptr<Bitmap> Bitmap::Clone() {
 
   scoped_refptr<Bitmap> new_bitmap = new Bitmap(screen(), size_.x, size_.y);
   new_bitmap->Blt(0, 0, this, size_);
+  *new_bitmap->font_ = *font_;
 
   return new_bitmap;
 }

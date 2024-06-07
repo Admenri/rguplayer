@@ -70,7 +70,7 @@ MRI_METHOD(bitmap_initialize_copy) {
   obj->AddRef();
   MriSetStructData(self, obj.get());
 
-  MriWrapProperty(self, obj->GetFont(), "_font", kFontDataType);
+  bitmap_init_prop(obj, self);
 
   return self;
 }
