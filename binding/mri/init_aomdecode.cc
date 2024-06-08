@@ -96,6 +96,8 @@ void InitAOMDecodeBinding() {
   VALUE klass = rb_define_class("AOMDecoder", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kAOMDecoderDataType>);
 
+  MriInitDisposableBinding<content::AOMDecoder>(klass);
+
   MriDefineMethod(klass, "initialize", aom_initialize);
   MriDefineMethod(klass, "load_video", aom_load_video);
   MriDefineMethod(klass, "update", aom_update);
@@ -103,8 +105,6 @@ void InitAOMDecodeBinding() {
   MriDefineMethod(klass, "get_state", aom_get_state);
   MriDefineMethod(klass, "render", aom_render);
   MriDefineMethod(klass, "video_info", aom_info);
-
-  MriInitDisposableBinding<content::Bitmap>(klass);
 }
 
 }  // namespace binding
