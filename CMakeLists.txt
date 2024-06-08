@@ -72,6 +72,7 @@ endif()
 ## SDL
 add_subdirectory(third_party/SDL)
 include_directories(third_party/SDL/include)
+include_directories(third_party/SDL/include/SDL3)
 
 ## image loader (SDL_image)
 add_subdirectory(third_party/image_loader)

@@ -43,7 +43,7 @@
 #endif
 
 // SDL
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
 #endif
@@ -58,6 +58,14 @@
 #define SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE    1
 #else
 #define SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE    0
+#endif
+
+// FIXME-LEGACY: remove when SDL 3.1.3 preview is released.
+#ifndef SDLK_APOSTROPHE
+#define SDLK_APOSTROPHE SDLK_QUOTE
+#endif
+#ifndef SDLK_GRAVE
+#define SDLK_GRAVE SDLK_BACKQUOTE
 #endif
 
 // SDL Data
@@ -145,7 +153,7 @@ static ImGuiKey ImGui_ImplSDL3_KeycodeToImGuiKey(int keycode)
         case SDLK_SPACE: return ImGuiKey_Space;
         case SDLK_RETURN: return ImGuiKey_Enter;
         case SDLK_ESCAPE: return ImGuiKey_Escape;
-        case SDLK_QUOTE: return ImGuiKey_Apostrophe;
+        case SDLK_APOSTROPHE: return ImGuiKey_Apostrophe;
         case SDLK_COMMA: return ImGuiKey_Comma;
         case SDLK_MINUS: return ImGuiKey_Minus;
         case SDLK_PERIOD: return ImGuiKey_Period;
@@ -155,7 +163,7 @@ static ImGuiKey ImGui_ImplSDL3_KeycodeToImGuiKey(int keycode)
         case SDLK_LEFTBRACKET: return ImGuiKey_LeftBracket;
         case SDLK_BACKSLASH: return ImGuiKey_Backslash;
         case SDLK_RIGHTBRACKET: return ImGuiKey_RightBracket;
-        case SDLK_BACKQUOTE: return ImGuiKey_GraveAccent;
+        case SDLK_GRAVE: return ImGuiKey_GraveAccent;
         case SDLK_CAPSLOCK: return ImGuiKey_CapsLock;
         case SDLK_SCROLLLOCK: return ImGuiKey_ScrollLock;
         case SDLK_NUMLOCKCLEAR: return ImGuiKey_NumLock;
@@ -369,6 +377,7 @@ static void ImGui_ImplSDL3_SetupPlatformHandles(ImGuiViewport* viewport, SDL_Win
 static bool ImGui_ImplSDL3_Init(SDL_Window* window, SDL_Renderer* renderer, void* sdl_gl_context)
 {
     ImGuiIO& io = ImGui::GetIO();
+    IMGUI_CHECKVERSION();
     IM_ASSERT(io.BackendPlatformUserData == nullptr && "Already initialized a platform backend!");
     IM_UNUSED(sdl_gl_context); // Unused in this branch
 
@@ -404,15 +413,15 @@ static bool ImGui_ImplSDL3_Init(SDL_Window* window, SDL_Renderer* renderer, void
     bd->WantUpdateGamepadsList = true;
 
     // Load mouse cursors
-    bd->MouseCursors[ImGuiMouseCursor_Arrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
-    bd->MouseCursors[ImGuiMouseCursor_TextInput] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeAll] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeNS] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENS);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeEW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEWE);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeNESW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENESW);
-    bd->MouseCursors[ImGuiMouseCursor_ResizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENWSE);
-    bd->MouseCursors[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
-    bd->MouseCursors[ImGuiMouseCursor_NotAllowed] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
+    bd->MouseCursors[ImGuiMouseCursor_Arrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
+    bd->MouseCursors[ImGuiMouseCursor_TextInput] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_TEXT);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeAll] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeNS] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NS_RESIZE);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeEW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_EW_RESIZE);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeNESW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NESW_RESIZE);
+    bd->MouseCursors[ImGuiMouseCursor_ResizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NWSE_RESIZE);
+    bd->MouseCursors[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_POINTER);
+    bd->MouseCursors[ImGuiMouseCursor_NotAllowed] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NOT_ALLOWED);
 
     // Set platform dependent data in viewport
     // Our mouse update function expect PlatformHandle to be filled for the main viewport
