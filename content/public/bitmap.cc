@@ -73,7 +73,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
   }
 
   size_ = base::Vec2i(width, height);
-  InitBitmapInternal(size_);
+  texture_ = screen()->AllocTexture(size_, true, GL_RGBA);
 }
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
@@ -111,7 +111,9 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
     surface_buffer_ = conv;
   }
 
-  InitBitmapInternal(surface_buffer_);
+  size_t img_size = size_.x * size_.y * 4;
+  texture_ = screen()->AllocTexture(size_, false, GL_RGBA,
+                                    surface_buffer_->pixels, img_size);
 }
 
 Bitmap::~Bitmap() {
@@ -171,7 +173,9 @@ void Bitmap::StretchBlt(const base::Rect& dest_rect,
   if (src_bitmap->IsDisposed() || !opacity)
     return;
 
-  StretchBltInternal(dest_rect, src_bitmap, src_rect, opacity / 255.0f);
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Bitmap::StretchBltInternal, texture_, dest_rect,
+                     src_bitmap->texture_, src_rect, opacity / 255.0f));
 
   NeedUpdateSurface();
 }
@@ -182,7 +186,8 @@ void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
   if (rect.width <= 0 || rect.height <= 0)
     return;
 
-  FillRectInternal(rect, color->AsBase());
+  screen()->renderer()->PostTask(base::BindOnce(
+      &Bitmap::FillRectInternal, texture_, rect, color->AsBase()));
 
   NeedUpdateSurface();
 }
@@ -196,7 +201,9 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
   if (rect.width <= 0 || rect.height <= 0)
     return;
 
-  GradientFillRectInternal(rect, color1->AsBase(), color2->AsBase(), vertical);
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Bitmap::GradientFillRectInternal, texture_, rect,
+                     color1->AsBase(), color2->AsBase(), vertical));
 
   NeedUpdateSurface();
 }
@@ -204,7 +211,8 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
 void Bitmap::Clear() {
   CheckIsDisposed();
 
-  FillRectInternal(size_, base::Vec4());
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Bitmap::FillRectInternal, texture_, size_, base::Vec4()));
 
   NeedUpdateSurface();
 }
@@ -212,7 +220,8 @@ void Bitmap::Clear() {
 void Bitmap::ClearRect(const base::Rect& rect) {
   CheckIsDisposed();
 
-  FillRectInternal(rect, base::Vec4());
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Bitmap::FillRectInternal, texture_, rect, base::Vec4()));
 
   NeedUpdateSurface();
 }
@@ -252,7 +261,8 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
                     static_cast<uint8_t>(data.w));
   }
 
-  SetPixelInternal(x, y, data);
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Bitmap::SetPixelInternal, texture_, x, y, data));
 
   NeedUpdateSurface();
 }
@@ -263,7 +273,8 @@ void Bitmap::HueChange(int hue) {
   if (hue % 360 == 0)
     return;
 
-  HueChangeInternal(hue);
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Bitmap::HueChangeInternal, texture_, hue));
 
   NeedUpdateSurface();
 }
@@ -290,7 +301,11 @@ void Bitmap::DrawText(const base::Rect& rect,
   CheckIsDisposed();
 
   font_->EnsureLoadFont();
-  DrawTextInternal(rect, str, align);
+  uint8_t fopacity;
+  auto* surf = font_->RenderText(str, &fopacity);
+  if (surf)
+    screen()->renderer()->PostTask(base::BindOnce(
+        &Bitmap::DrawTextInternal, texture_, surf, fopacity, rect, align));
 
   NeedUpdateSurface();
 }
@@ -329,7 +344,13 @@ SDL_Surface* Bitmap::SurfaceRequired() {
     return surface_buffer_;
   surface_buffer_ =
       SDL_CreateSurface(size_.x, size_.y, SDL_PIXELFORMAT_ABGR8888);
-  GetSurfaceInternal();
+
+  bool sync_fence = false;
+  screen()->renderer()->PostTask(base::BindOnce(
+      &Bitmap::GetSurfaceInternal, texture_, surface_buffer_, &sync_fence));
+
+  while (!sync_fence)
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   return surface_buffer_;
 }
@@ -337,7 +358,15 @@ SDL_Surface* Bitmap::SurfaceRequired() {
 void Bitmap::UpdateSurface() {
   CheckIsDisposed();
 
-  UpdateSurfaceInternal();
+  if (surface_buffer_ && surface_buffer_->pixels) {
+    std::vector<uint8_t> update_data;
+    size_t data_len = size_.x * size_.y * 4;
+    update_data.assign(data_len, 0);
+    memcpy(update_data.data(), surface_buffer_->pixels, data_len);
+
+    screen()->renderer()->PostTask(base::BindOnce(
+        &Bitmap::UpdateSurfaceInternal, texture_, std::move(update_data)));
+  }
 
   NeedUpdateSurface();
 }
@@ -351,46 +380,22 @@ void Bitmap::OnObjectDisposed() {
     surface_buffer_ = nullptr;
   }
 
-  renderer::TextureFrameBuffer::Del(texture_);
+  // Destroy async
+  screen()->FreeTexture(texture_);
 }
 
-void Bitmap::InitBitmapInternal(
-    const std::variant<base::Vec2i, SDL_Surface*>& initial_data) {
-  // Alloc new texture memory
-  texture_ = renderer::TextureFrameBuffer::Gen();
-  bool need_clear = false;
-
-  if (std::holds_alternative<base::Vec2i>(initial_data)) {
-    auto size = std::get<base::Vec2i>(initial_data);
-    renderer::TextureFrameBuffer::Alloc(texture_, size.x, size.y);
-    // Clear texture cache
-    need_clear = true;
-  } else if (std::holds_alternative<SDL_Surface*>(initial_data)) {
-    surface_buffer_ = std::get<SDL_Surface*>(initial_data);
-    renderer::TextureFrameBuffer::Alloc(texture_, surface_buffer_->w,
-                                        surface_buffer_->h);
-    renderer::Texture::TexImage2D(surface_buffer_->w, surface_buffer_->h,
-                                  GL_RGBA, surface_buffer_->pixels);
-
-  } else {
-    NOTREACHED();
-  }
-
-  // Link framebuffer
-  renderer::TextureFrameBuffer::LinkFrameBuffer(texture_);
-  if (need_clear)
-    renderer::FrameBuffer::Clear();
-}
-
-void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
-                                scoped_refptr<Bitmap> src_bitmap,
+void Bitmap::StretchBltInternal(renderer::TextureFrameBuffer* texture,
+                                const base::Rect& dest_rect,
+                                renderer::TextureFrameBuffer* src_bitmap,
                                 const base::Rect& src_rect,
                                 float opacity) {
+  base::Vec2i& size = texture->size;
+  base::Vec2i& src_size = src_bitmap->size;
   auto& dst_tex =
       renderer::GSM.EnsureCommonTFB(dest_rect.width, dest_rect.height);
 
   renderer::Blt::BeginDraw(dst_tex);
-  renderer::Blt::TexSource(texture_);
+  renderer::Blt::TexSource(*texture);
   renderer::Blt::BltDraw(dest_rect, dest_rect.Size());
   renderer::Blt::EndDraw();
 
@@ -398,27 +403,25 @@ void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
    * (texCoord - src_offset) * src_dst_factor
    */
   base::Vec4 offset_scale;
-  offset_scale.x = static_cast<float>(src_rect.x) / src_bitmap->GetWidth();
-  offset_scale.y = static_cast<float>(src_rect.y) / src_bitmap->GetHeight();
-  offset_scale.z =
-      (static_cast<float>(src_bitmap->GetWidth()) / src_rect.width) *
-      (static_cast<float>(dest_rect.width) / dst_tex.size.x);
-  offset_scale.w =
-      (static_cast<float>(src_bitmap->GetHeight()) / src_rect.height) *
-      (static_cast<float>(dest_rect.height) / dst_tex.size.y);
+  offset_scale.x = static_cast<float>(src_rect.x) / src_size.x;
+  offset_scale.y = static_cast<float>(src_rect.y) / src_size.y;
+  offset_scale.z = (static_cast<float>(src_size.x) / src_rect.width) *
+                   (static_cast<float>(dest_rect.width) / dst_tex.size.x);
+  offset_scale.w = (static_cast<float>(src_size.y) / src_rect.height) *
+                   (static_cast<float>(dest_rect.height) / dst_tex.size.y);
 
   auto& shader = renderer::GSM.shaders()->texblt;
 
-  renderer::GSM.states.viewport.Push(size_);
+  renderer::GSM.states.viewport.Push(size);
   renderer::GSM.states.blend.Push(false);
 
-  renderer::FrameBuffer::Bind(texture_.fbo);
+  renderer::FrameBuffer::Bind(texture->fbo);
 
   shader.Bind();
-  shader.SetProjectionMatrix(size_);
+  shader.SetProjectionMatrix(size);
   shader.SetTransOffset(base::Vec2i());
-  shader.SetSrcTexture(src_bitmap->texture_.tex);
-  shader.SetTextureSize(src_bitmap->size_);
+  shader.SetSrcTexture(src_bitmap->tex);
+  shader.SetTextureSize(src_bitmap->size);
   shader.SetDstTexture(dst_tex.tex);
   shader.SetOffsetScale(offset_scale);
   shader.SetOpacity(opacity);
@@ -432,8 +435,10 @@ void Bitmap::StretchBltInternal(const base::Rect& dest_rect,
   renderer::GSM.states.viewport.Pop();
 }
 
-void Bitmap::FillRectInternal(const base::Rect& rect, const base::Vec4& color) {
-  renderer::FrameBuffer::Bind(texture_.fbo);
+void Bitmap::FillRectInternal(renderer::TextureFrameBuffer* texture,
+                              const base::Rect& rect,
+                              const base::Vec4& color) {
+  renderer::FrameBuffer::Bind(texture->fbo);
 
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.Push(rect);
@@ -446,18 +451,20 @@ void Bitmap::FillRectInternal(const base::Rect& rect, const base::Vec4& color) {
   renderer::GSM.states.scissor.Pop();
 }
 
-void Bitmap::GradientFillRectInternal(const base::Rect& rect,
+void Bitmap::GradientFillRectInternal(renderer::TextureFrameBuffer* texture,
+                                      const base::Rect& rect,
                                       const base::Vec4& color1,
                                       const base::Vec4& color2,
                                       bool vertical) {
-  renderer::FrameBuffer::Bind(texture_.fbo);
+  base::Vec2i& size = texture->size;
+  renderer::FrameBuffer::Bind(texture->fbo);
 
-  renderer::GSM.states.viewport.Push(size_);
+  renderer::GSM.states.viewport.Push(size);
   renderer::GSM.states.blend.Push(false);
 
   auto& shader = renderer::GSM.shaders()->color;
   shader.Bind();
-  shader.SetProjectionMatrix(size_);
+  shader.SetProjectionMatrix(size);
   shader.SetTransOffset(base::Vec2i());
 
   auto* quad = renderer::GSM.common_quad();
@@ -481,17 +488,21 @@ void Bitmap::GradientFillRectInternal(const base::Rect& rect,
   renderer::GSM.states.blend.Pop();
 }
 
-void Bitmap::SetPixelInternal(int x, int y, const base::Vec4& color) {
+void Bitmap::SetPixelInternal(renderer::TextureFrameBuffer* texture,
+                              int x,
+                              int y,
+                              const base::Vec4& color) {
   std::array<uint8_t, 4> pixel = {
       static_cast<uint8_t>(color.x), static_cast<uint8_t>(color.y),
       static_cast<uint8_t>(color.z), static_cast<uint8_t>(color.w)};
 
-  renderer::Texture::Bind(texture_.tex);
+  renderer::Texture::Bind(texture->tex);
   renderer::Texture::TexSubImage2D(x, y, 1, 1, GL_RGBA, pixel.data());
 }
 
-void Bitmap::HueChangeInternal(int hue) {
-  auto& dst_tex = renderer::GSM.EnsureCommonTFB(size_.x, size_.y);
+void Bitmap::HueChangeInternal(renderer::TextureFrameBuffer* texture, int hue) {
+  base::Vec2i& size = texture->size;
+  auto& dst_tex = renderer::GSM.EnsureCommonTFB(size.x, size.y);
 
   while (hue < 0)
     hue += 359;
@@ -500,41 +511,33 @@ void Bitmap::HueChangeInternal(int hue) {
   renderer::FrameBuffer::Bind(dst_tex.fbo);
   renderer::FrameBuffer::Clear();
 
-  renderer::GSM.states.viewport.Push(size_);
+  renderer::GSM.states.viewport.Push(size);
   auto& shader = renderer::GSM.shaders()->hue;
   shader.Bind();
-  shader.SetProjectionMatrix(size_);
-  shader.SetTexture(texture_.tex);
-  shader.SetTextureSize(size_);
+  shader.SetProjectionMatrix(size);
+  shader.SetTexture(texture->tex);
+  shader.SetTextureSize(size);
   shader.SetTransOffset(base::Vec2i());
   shader.SetHueAdjustValue(static_cast<float>(hue) / 360.0f);
 
   auto* quad = renderer::GSM.common_quad();
-  quad->SetTexCoordRect(base::Vec2(size_));
-  quad->SetPositionRect(base::Vec2(size_));
+  quad->SetTexCoordRect(base::Vec2(size));
+  quad->SetPositionRect(base::Vec2(size));
   quad->Draw();
   renderer::GSM.states.viewport.Pop();
 
-  renderer::Blt::BeginDraw(texture_);
+  renderer::Blt::BeginDraw(*texture);
   renderer::Blt::TexSource(dst_tex);
-  renderer::Blt::BltDraw(size_, size_);
+  renderer::Blt::BltDraw(size, size);
   renderer::Blt::EndDraw();
 }
 
-void Bitmap::GetSurfaceInternal() {
-  renderer::GSM.states.viewport.Push(size_);
-  renderer::FrameBuffer::Bind(texture_.fbo);
-  renderer::GL.ReadPixels(0, 0, size_.x, size_.y, GL_RGBA, GL_UNSIGNED_BYTE,
-                          surface_buffer_->pixels);
-  renderer::GSM.states.viewport.Pop();
-}
-
-void Bitmap::DrawTextInternal(const base::Rect& rect,
-                              const std::string& str,
+void Bitmap::DrawTextInternal(renderer::TextureFrameBuffer* texture,
+                              SDL_Surface* txt_surf,
+                              uint8_t fopacity,
+                              const base::Rect& rect,
                               TextAlign align) {
-  uint8_t fopacity;
-  SDL_Surface* txt_surf = font_->RenderText(str, &fopacity);
-
+  base::Vec2i& size = texture->size;
   if (!txt_surf)
     return;
 
@@ -561,7 +564,7 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
   base::Vec2i origin_size = common_frame_buffer.size;
 
   renderer::Blt::BeginDraw(common_frame_buffer);
-  renderer::Blt::TexSource(texture_);
+  renderer::Blt::TexSource(*texture);
   renderer::Blt::BltDraw(pos, pos.Size());
   renderer::Blt::EndDraw();
 
@@ -580,14 +583,14 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
   base::Vec2 text_surf_size = base::Vec2i(txt_surf->w, txt_surf->h);
   SDL_DestroySurface(txt_surf);
 
-  renderer::GSM.states.viewport.Push(size_);
+  renderer::GSM.states.viewport.Push(size);
   renderer::GSM.states.blend.Push(false);
 
-  renderer::FrameBuffer::Bind(texture_.fbo);
+  renderer::FrameBuffer::Bind(texture->fbo);
 
   auto& shader = renderer::GSM.shaders()->texblt;
   shader.Bind();
-  shader.SetProjectionMatrix(size_);
+  shader.SetProjectionMatrix(size);
   shader.SetTransOffset(base::Vec2i());
   shader.SetSrcTexture(generic_tex);
   shader.SetTextureSize(rendered_text_size);
@@ -604,6 +607,20 @@ void Bitmap::DrawTextInternal(const base::Rect& rect,
   renderer::GSM.states.viewport.Pop();
 }
 
+void Bitmap::GetSurfaceInternal(renderer::TextureFrameBuffer* texture,
+                                SDL_Surface* output,
+                                bool* fence) {
+  base::Vec2i& size = texture->size;
+  renderer::GSM.states.viewport.Push(size);
+  renderer::FrameBuffer::Bind(texture->fbo);
+  renderer::GL.ReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE,
+                          output->pixels);
+  renderer::GSM.states.viewport.Pop();
+
+  // Activeate sync fence
+  *fence = true;
+}
+
 void Bitmap::NeedUpdateSurface() {
   // For get pixel cache
   if (surface_buffer_) {
@@ -614,12 +631,11 @@ void Bitmap::NeedUpdateSurface() {
   observers_.Notify();
 }
 
-void Bitmap::UpdateSurfaceInternal() {
-  if (surface_buffer_ && surface_buffer_->pixels) {
-    renderer::Texture::Bind(texture_.tex);
-    renderer::Texture::TexImage2D(size_.x, size_.y, GL_RGBA,
-                                  surface_buffer_->pixels);
-  }
+void Bitmap::UpdateSurfaceInternal(renderer::TextureFrameBuffer* texture,
+                                   std::vector<uint8_t> data) {
+  base::Vec2i& size = texture->size;
+  renderer::Texture::Bind(texture->tex);
+  renderer::Texture::TexImage2D(size.x, size.y, GL_RGBA, data.data());
 }
 
 }  // namespace content

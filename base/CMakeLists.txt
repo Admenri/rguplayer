@@ -1,5 +1,5 @@
 # Base components
-cmake_minimum_required(VERSION 3.18.0)
+cmake_minimum_required(VERSION 3.20.1)
 
 #--------------------------------------------------------------------------------
 # Define base source

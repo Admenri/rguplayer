@@ -122,8 +122,8 @@ class TilemapGroundLayer : public ViewportChild {
     auto& shader = renderer::GSM.shaders()->tilemap;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-    shader.SetTextureSize(tilemap_->atlas_tfb_.size);
-    shader.SetTexture(tilemap_->atlas_tfb_.tex);
+    shader.SetTextureSize(tilemap_->atlas_tfb_->size);
+    shader.SetTexture(tilemap_->atlas_tfb_->tex);
     shader.SetTransOffset(tilemap_->tilemap_offset_);
     shader.SetAnimateIndex(tilemap_->frame_index_);
     shader.SetTileSize(tilemap_->tile_size_);
@@ -162,8 +162,8 @@ class TilemapZLayer : public ViewportChild {
     auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-    shader.SetTextureSize(tilemap_->atlas_tfb_.size);
-    shader.SetTexture(tilemap_->atlas_tfb_.tex);
+    shader.SetTextureSize(tilemap_->atlas_tfb_->size);
+    shader.SetTexture(tilemap_->atlas_tfb_->tex);
     shader.SetTransOffset(tilemap_->tilemap_offset_);
 
     int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
@@ -347,20 +347,27 @@ void Tilemap::OnObjectDisposed() {
   ground_layer_.reset();
   above_layers_.clear();
 
-  tilemap_quads_.reset();
+  screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
   flash_layer_.reset();
 
-  renderer::TextureFrameBuffer::Del(atlas_tfb_);
+  screen()->FreeTexture(atlas_tfb_);
 }
 
 void Tilemap::InitTilemapData() {
   tilemap_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-  flash_layer_ = std::make_unique<TilemapFlashLayer>(tile_size_);
+      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
+  flash_layer_ = std::make_unique<TilemapFlashLayer>();
 
-  atlas_tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_, tile_size_);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(atlas_tfb_);
+  screen()->renderer()->PostTask(base::BindOnce(
+      [](renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr,
+         TilemapFlashLayer* flash_layer, int tile_size) {
+        quad_ptr->Init();
+        flash_layer->InitFlashLayer(tile_size);
+      },
+      tilemap_quads_, flash_layer_.get(), tile_size_));
+
+  atlas_tfb_ =
+      screen()->AllocTexture(base::Vec2i(tile_size_, tile_size_), false);
 }
 
 void Tilemap::BeforeTilemapComposite() {
@@ -383,10 +390,10 @@ void Tilemap::MakeAtlasInternal() {
   int atlas_height = 28 * tile_size_;
   if (tileset_ && !tileset_->IsDisposed())
     atlas_height = std::max(atlas_height, tileset_->GetSize().y);
-  renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_ * 20,
-                                      atlas_height);
+  renderer::TextureFrameBuffer::Alloc(
+      *atlas_tfb_, base::Vec2i(tile_size_ * 20, atlas_height));
 
-  renderer::FrameBuffer::Bind(atlas_tfb_.fbo);
+  renderer::FrameBuffer::Bind(atlas_tfb_->fbo);
   renderer::FrameBuffer::ClearColor();
   renderer::FrameBuffer::Clear();
 
@@ -419,8 +426,8 @@ void Tilemap::MakeAtlasInternal() {
 
       base::Vec2i single_size(tile_size_, tile_size_);
 
-      renderer::Blt::BeginDraw(atlas_tfb_);
-      renderer::Blt::TexSource(it.bitmap->GetTexture());
+      renderer::Blt::BeginDraw(*atlas_tfb_);
+      renderer::Blt::TexSource(*it.bitmap->GetRaw());
       for (int i = 0; i < 4; ++i) {
         renderer::Blt::BltDraw(
             base::Rect(base::Vec2i(tile_size_ * i, 0), single_size),
@@ -434,8 +441,8 @@ void Tilemap::MakeAtlasInternal() {
       NOTREACHED();
     }
 
-    renderer::Blt::BeginDraw(atlas_tfb_);
-    renderer::Blt::TexSource(it.bitmap->GetTexture());
+    renderer::Blt::BeginDraw(*atlas_tfb_);
+    renderer::Blt::TexSource(*it.bitmap->GetRaw());
     renderer::Blt::BltDraw(autotile_size, dst_pos);
     renderer::Blt::EndDraw();
 
@@ -451,8 +458,8 @@ void Tilemap::MakeAtlasInternal() {
   dst_rect.x = 12 * tile_size_;
   dst_rect.y = 0;
 
-  renderer::Blt::BeginDraw(atlas_tfb_);
-  renderer::Blt::TexSource(tileset_->GetTexture());
+  renderer::Blt::BeginDraw(*atlas_tfb_);
+  renderer::Blt::TexSource(*tileset_->GetRaw());
   renderer::Blt::BltDraw(tileset_size, dst_rect);
   renderer::Blt::EndDraw();
 }

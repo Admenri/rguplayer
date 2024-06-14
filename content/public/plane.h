@@ -118,9 +118,8 @@ class Plane : public base::RefCounted<Plane>,
   scoped_refptr<Color> color_;
   scoped_refptr<Tone> tone_;
 
-  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
-      quad_array_;
-  renderer::TextureFrameBuffer layer_tfb_;
+  renderer::QuadDrawableArray<renderer::CommonVertex>* quad_array_ = nullptr;
+  renderer::TextureFrameBuffer* layer_tfb_ = nullptr;
 
   bool quad_array_dirty_ = false;
 };

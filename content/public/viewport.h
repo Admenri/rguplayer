@@ -92,7 +92,7 @@ class Viewport : public base::RefCounted<Viewport>,
 
   void InitViewportInternal(const base::Rect& initial_rect);
 
-  void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
+  void SnapToBitmapInternal(renderer::TextureFrameBuffer* target);
 
   void OnRectChangedInternal();
 
@@ -104,8 +104,8 @@ class Viewport : public base::RefCounted<Viewport>,
   scoped_refptr<Tone> tone_;
   base::CallbackListSubscription rect_observer_;
 
-  std::unique_ptr<renderer::QuadDrawable> viewport_quad_;
-  renderer::TextureFrameBuffer viewport_buffer_;
+  renderer::QuadDrawable* viewport_quad_ = nullptr;
+  renderer::TextureFrameBuffer* viewport_buffer_ = nullptr;
 
   bool viewport_rect_need_update_ = false;
 

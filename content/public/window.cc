@@ -270,12 +270,12 @@ void Window::OnObjectDisposed() {
   RemoveFromList();
 
   control_layer_.reset();
-  base_quad_.reset();
-  content_quad_.reset();
-  controls_quads_.reset();
-  base_tex_quad_array_.reset();
+  screen()->renderer()->DeleteSoon(std::move(base_quad_));
+  screen()->renderer()->DeleteSoon(std::move(content_quad_));
+  screen()->renderer()->DeleteSoon(std::move(controls_quads_));
+  screen()->renderer()->DeleteSoon(std::move(base_tex_quad_array_));
 
-  renderer::TextureFrameBuffer::Del(base_tfb_);
+  screen()->FreeTexture(base_tfb_);
 }
 
 void Window::BeforeComposite() {
@@ -331,8 +331,8 @@ void Window::Composite() {
   auto& shader = renderer::GSM.shaders()->base_alpha;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-  shader.SetTexture(base_tfb_.tex);
-  shader.SetTextureSize(base_tfb_.size);
+  shader.SetTexture(base_tfb_->tex);
+  shader.SetTextureSize(base_tfb_->size);
   shader.SetTransOffset(offset);
   renderer::Texture::SetFilter(GL_LINEAR);
 
@@ -355,18 +355,20 @@ void Window::InitWindow() {
   cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(
       &Window::CursorRectChangedInternal, base::Unretained(this)));
 
-  base_quad_ = std::make_unique<renderer::QuadDrawable>();
-  content_quad_ = std::make_unique<renderer::QuadDrawable>();
+  base_quad_ = new renderer::QuadDrawable(false);
+  content_quad_ = new renderer::QuadDrawable(false);
   controls_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
   base_tex_quad_array_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
 
-  base_tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(base_tfb_, 32, 32);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(base_tfb_);
+  screen()->renderer()->PostTask(base::BindOnce(
+      [](renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr) {
+        quad_ptr->Resize(14);
+      },
+      controls_quads_));
 
-  controls_quads_->Resize(14);
+  base_tfb_ = screen()->AllocTexture(base::Vec2i(32, 32));
 }
 
 void Window::ResetBaseTexQuadsInternal() {
@@ -436,9 +438,9 @@ void Window::UpdateBaseTexInternal() {
 
   ResetBaseTexQuadsInternal();
 
-  renderer::TextureFrameBuffer::Alloc(base_tfb_, rect_.width, rect_.height);
+  renderer::TextureFrameBuffer::Alloc(*base_tfb_, rect_.Size());
 
-  renderer::FrameBuffer::Bind(base_tfb_.fbo);
+  renderer::FrameBuffer::Bind(base_tfb_->fbo);
   renderer::GSM.states.clear_color.Push(base::Vec4());
   renderer::FrameBuffer::Clear();
   renderer::GSM.states.clear_color.Pop();
@@ -452,7 +454,7 @@ void Window::UpdateBaseTexInternal() {
   auto& shader = renderer::GSM.shaders()->base_alpha;
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-  shader.SetTexture(windowskin_->GetTexture().tex);
+  shader.SetTexture(windowskin_->GetRaw()->tex);
   shader.SetTextureSize(windowskin_->GetSize());
   shader.SetTransOffset(base::Vec2());
   renderer::Texture::SetFilter(GL_LINEAR);
@@ -615,7 +617,7 @@ void Window::CompositeControls() {
 
   if (windowskin_ && !windowskin_->IsDisposed()) {
     shader.SetTransOffset(offset);
-    shader.SetTexture(windowskin_->GetTexture().tex);
+    shader.SetTexture(windowskin_->GetRaw()->tex);
     shader.SetTextureSize(windowskin_->GetSize());
     renderer::Texture::SetFilter(GL_LINEAR);
 
@@ -627,7 +629,7 @@ void Window::CompositeControls() {
     renderer::GSM.states.scissor_rect.SetIntersect(contents_rect);
 
     shader.SetTransOffset(offset + (base::Vec2i(16, 16) - origin_));
-    shader.SetTexture(contents_->GetTexture().tex);
+    shader.SetTexture(contents_->GetRaw()->tex);
     shader.SetTextureSize(contents_->GetSize());
 
     content_quad_->Draw();

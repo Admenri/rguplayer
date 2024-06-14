@@ -15,9 +15,14 @@ Geometry::Geometry(scoped_refptr<Graphics> screen,
   triangle_vertices_.resize(triangle_count_ * 3);
   buffer_need_update_ = true;
 
-  vao_.vbo = renderer::VertexBuffer::Gen();
-  vao_.ibo = renderer::GLID<renderer::IndexBuffer>(0);
-  renderer::VertexArray<renderer::GeometryVertex>::Init(vao_);
+  vao_ = new renderer::VertexArray<renderer::GeometryVertex>();
+  screen->renderer()->PostTask(base::BindOnce(
+      [](renderer::VertexArray<renderer::GeometryVertex>* vao) {
+        vao->vbo = renderer::VertexBuffer::Gen();
+        vao->ibo = renderer::GLID<renderer::IndexBuffer>(0);
+        renderer::VertexArray<renderer::GeometryVertex>::Init(*vao);
+      },
+      vao_));
 }
 
 Geometry::~Geometry() {
@@ -74,15 +79,20 @@ void Geometry::OnObjectDisposed() {
   triangle_vertices_.clear();
   triangle_count_ = 0;
 
-  renderer::VertexArray<renderer::GeometryVertex>::Uninit(vao_);
-  renderer::VertexBuffer::Del(vao_.vbo);
+  screen()->renderer()->PostTask(base::BindOnce(
+      [](renderer::VertexArray<renderer::GeometryVertex>* vao) {
+        renderer::VertexArray<renderer::GeometryVertex>::Uninit(*vao);
+        renderer::VertexBuffer::Del(vao->vbo);
+        delete vao;
+      },
+      vao_));
 }
 
 void Geometry::BeforeComposite() {
   if (buffer_need_update_) {
     buffer_need_update_ = false;
 
-    renderer::VertexBuffer::Bind(vao_.vbo);
+    renderer::VertexBuffer::Bind(vao_->vbo);
     size_t buffer_size = triangle_count_ * sizeof(renderer::GeometryVertex) * 3;
     if (buffer_size > vbo_size_) {
       renderer::VertexBuffer::BufferData(buffer_size, triangle_vertices_.data(),
@@ -115,7 +125,7 @@ void Geometry::Composite() {
     if (texture_valid) {
       GLint texture_location = shader_program_->GetUniformLocation("u_texture");
       renderer::GLES2ShaderBase::SetTexture(texture_location,
-                                            bitmap_->GetTexture().tex.gl, 1);
+                                            bitmap_->GetRaw()->tex.gl, 1);
     }
   } else {
     auto& shader = renderer::GSM.shaders()->geometry;
@@ -124,7 +134,7 @@ void Geometry::Composite() {
     shader.SetTransOffset(parent_rect().GetRealOffset());
     shader.SetTextureEmptyFlag(texture_valid ? 0.0f : 1.0f);
     if (texture_valid)
-      shader.SetTexture(bitmap_->GetTexture().tex);
+      shader.SetTexture(bitmap_->GetRaw()->tex);
   }
 
   renderer::GSM.states.blend.Push(true);
@@ -135,7 +145,7 @@ void Geometry::Composite() {
   else
     renderer::GSM.states.blend_func.Set(blend_mode_);
 
-  renderer::VertexArray<renderer::GeometryVertex>::Bind(vao_);
+  renderer::VertexArray<renderer::GeometryVertex>::Bind(*vao_);
   renderer::GL.DrawArrays(GL_TRIANGLES, 0,
                           (GLsizei)(triangle_vertices_.size()));
   renderer::VertexArray<renderer::GeometryVertex>::Unbind();

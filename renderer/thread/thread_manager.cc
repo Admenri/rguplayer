@@ -28,7 +28,7 @@ void GlobalStateManager::InitStates() {
   quad_ibo_->EnsureSize(1);
 
   common_tfb_ = TextureFrameBuffer::Gen();
-  TextureFrameBuffer::Alloc(common_tfb_, 64, 64);
+  TextureFrameBuffer::Alloc(common_tfb_, base::Vec2i(64, 64));
   TextureFrameBuffer::LinkFrameBuffer(common_tfb_);
   FrameBuffer::Unbind();
 
@@ -58,7 +58,7 @@ TextureFrameBuffer& GlobalStateManager::EnsureCommonTFB(int width, int height) {
   width = std::max(width, common_tfb_.size.x);
   height = std::max(height, common_tfb_.size.y);
 
-  TextureFrameBuffer::Alloc(common_tfb_, width, height);
+  TextureFrameBuffer::Alloc(common_tfb_, base::Vec2i(width, height));
   return common_tfb_;
 }
 

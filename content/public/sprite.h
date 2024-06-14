@@ -299,9 +299,8 @@ class Sprite : public base::RefCounted<Sprite>,
   scoped_refptr<Color> color_;
   scoped_refptr<Tone> tone_;
 
-  std::unique_ptr<renderer::QuadDrawable> quad_;
-  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
-      wave_quads_;
+  renderer::QuadDrawable* quad_ = nullptr;
+  renderer::QuadDrawableArray<renderer::CommonVertex>* wave_quads_ = nullptr;
 
   base::CallbackListSubscription src_rect_observer_;
 

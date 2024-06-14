@@ -89,6 +89,13 @@ class Graphics final : public base::RefCounted<Graphics>,
   int max_texture_size() const { return renderer_->max_texture_size(); }
   filesystem::Filesystem* filesystem();
 
+  renderer::TextureFrameBuffer* AllocTexture(const base::Vec2i& size,
+                                             bool clean = false,
+                                             GLenum format = GL_RGBA,
+                                             void* buffer = nullptr,
+                                             size_t buffer_size = 0);
+  void FreeTexture(renderer::TextureFrameBuffer*& texture_data);
+
  private:
   friend class Viewport;
   friend class Disposable;
@@ -98,13 +105,14 @@ class Graphics final : public base::RefCounted<Graphics>,
   void CompositeScreenInternal();
   void ResizeResolutionInternal();
   void PresentScreenInternal(const renderer::TextureFrameBuffer& screen_buffer);
-  void SnapToBitmapInternal(scoped_refptr<Bitmap> target);
+  void SnapToBitmapInternal(renderer::TextureFrameBuffer* target);
   void FreezeSceneInternal();
   void TransitionSceneInternal(int duration, bool has_trans, int vague);
   void TransitionSceneInternalLoop(int i,
                                    int duration,
-                                   scoped_refptr<Bitmap> trans_bitmap);
+                                   renderer::TextureFrameBuffer* trans_bitmap);
   void FrameProcessInternal();
+  void UpdateInternal(bool* fence);
 
   void AddDisposable(Disposable* disp);
   void RemoveDisposable(Disposable* disp);
@@ -133,6 +141,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   renderer::TextureFrameBuffer screen_buffer_[2];
   renderer::TextureFrameBuffer frozen_snapshot_;
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;
+  std::list<renderer::TextureFrameBuffer> texture_pool_;
 
   scoped_refptr<CoreConfigure> config_;
   base::WeakPtr<BindingRunner> dispatcher_;

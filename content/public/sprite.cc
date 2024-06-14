@@ -72,9 +72,16 @@ void Sprite::InitAttributeInternal() {
   src_rect_observer_ = src_rect_->AddChangedObserver(base::BindRepeating(
       &Sprite::OnSrcRectChangedInternal, base::Unretained(this)));
 
-  quad_ = std::make_unique<renderer::QuadDrawable>();
-  wave_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  quad_ = new renderer::QuadDrawable(false);
+  wave_quads_ = new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
+
+  screen()->renderer()->PostTask(base::BindOnce(
+      [](renderer::QuadDrawable* quad,
+         renderer::QuadDrawableArray<renderer::CommonVertex>* wave_quads) {
+        quad->InitDrawable(renderer::GSM.quad_ibo()->ibo);
+        wave_quads->Init();
+      },
+      quad_, wave_quads_));
 
   OnParentViewportRectChanged(parent_rect());
 }
@@ -82,8 +89,8 @@ void Sprite::InitAttributeInternal() {
 void Sprite::OnObjectDisposed() {
   RemoveFromList();
 
-  quad_.reset();
-  wave_quads_.reset();
+  screen()->renderer()->DeleteSoon(std::move(quad_));
+  screen()->renderer()->DeleteSoon(std::move(wave_quads_));
 }
 
 void Sprite::BeforeComposite() {
@@ -131,7 +138,7 @@ void Sprite::Composite() {
   const bool render_effect =
       color_effect || tone_effect || flash_effect || bush_effect;
 
-  auto& bitmap_texture = bitmap_->GetTexture();
+  auto& bitmap_texture = *bitmap_->GetRaw();
   if (render_effect) {
     auto& shader = renderer::GSM.shaders()->sprite;
     shader.Bind();
@@ -165,7 +172,7 @@ void Sprite::Composite() {
   }
 
   // Bind texture default
-  renderer::GL.BindTexture(GL_TEXTURE_2D, bitmap_->GetTexture().tex.gl);
+  renderer::GL.BindTexture(GL_TEXTURE_2D, bitmap_->GetRaw()->tex.gl);
 
   renderer::GSM.states.blend.Push(true);
   renderer::GSM.states.blend_func.Push(blend_mode_);

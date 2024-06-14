@@ -555,8 +555,8 @@ class TilemapGroundLayer2 : public ViewportChild {
     auto& shader = renderer::GSM.shaders()->tilemap2;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-    shader.SetTextureSize(tilemap_->atlas_tfb_.size);
-    shader.SetTexture(tilemap_->atlas_tfb_.tex);
+    shader.SetTextureSize(tilemap_->atlas_tfb_->size);
+    shader.SetTexture(tilemap_->atlas_tfb_->tex);
     shader.SetTransOffset(tilemap_->tilemap_offset_);
 
     shader.SetAnimationOffset(tilemap_->animation_offset_);
@@ -596,8 +596,8 @@ class TilemapAboveLayer2 : public ViewportChild {
     auto& shader = renderer::GSM.shaders()->base;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-    shader.SetTextureSize(tilemap_->atlas_tfb_.size);
-    shader.SetTexture(tilemap_->atlas_tfb_.tex);
+    shader.SetTextureSize(tilemap_->atlas_tfb_->size);
+    shader.SetTexture(tilemap_->atlas_tfb_->tex);
     shader.SetTransOffset(tilemap_->tilemap_offset_);
 
     tilemap_->tilemap_quads_->Draw(ground_quad_size, above_quad_size);
@@ -775,9 +775,10 @@ void Tilemap2::OnObjectDisposed() {
 
   weak_ptr_factory_.InvalidateWeakPtrs();
 
-  tilemap_quads_.reset();
-  flash_layer_.reset();
-  renderer::TextureFrameBuffer::Del(atlas_tfb_);
+  screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
+  screen()->renderer()->DeleteSoon(std::move(flash_layer_));
+
+  screen()->FreeTexture(atlas_tfb_);
 }
 
 void Tilemap2::BeforeTilemapComposite() {
@@ -797,10 +798,10 @@ void Tilemap2::BeforeTilemapComposite() {
 }
 
 void Tilemap2::CreateTileAtlasInternal() {
-  renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_ * 64,
-                                      tile_size_ * 32);
+  renderer::TextureFrameBuffer::Alloc(
+      *atlas_tfb_, base::Vec2i(tile_size_ * 64, tile_size_ * 32));
 
-  renderer::FrameBuffer::Bind(atlas_tfb_.fbo);
+  renderer::FrameBuffer::Bind(atlas_tfb_->fbo);
   renderer::FrameBuffer::ClearColor();
   renderer::FrameBuffer::Clear();
 
@@ -819,8 +820,8 @@ void Tilemap2::CreateTileAtlasInternal() {
         atlas_info.dst.x * tile_size_, atlas_info.dst.y * tile_size_,
         atlas_info.src.size.x * tile_size_, atlas_info.src.size.y * tile_size_);
 
-    renderer::Blt::BeginDraw(atlas_tfb_);
-    renderer::Blt::TexSource(atlas_bitmap->GetTexture());
+    renderer::Blt::BeginDraw(*atlas_tfb_);
+    renderer::Blt::TexSource(*atlas_bitmap->GetRaw());
     renderer::Blt::BltDraw(src_rect, dst_rect);
     renderer::Blt::EndDraw();
   }
@@ -828,7 +829,7 @@ void Tilemap2::CreateTileAtlasInternal() {
   /* shadow set atlas */
   if (screen()->content_version() >= RGSSVersion::RGSS3) {
     SDL_Surface* shadow_set = CreateShadowSet(tile_size_);
-    renderer::Texture::Bind(atlas_tfb_.tex);
+    renderer::Texture::Bind(atlas_tfb_->tex);
     renderer::Texture::TexSubImage2D(
         kShadowAtlasArea.x * tile_size_, kShadowAtlasArea.y * tile_size_,
         kShadowAtlasArea.width * tile_size_,
@@ -1276,13 +1277,19 @@ void Tilemap2::InitDrawableData() {
     return;
 
   tilemap_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
+  flash_layer_ = std::make_unique<TilemapFlashLayer>();
 
-  flash_layer_ = std::make_unique<TilemapFlashLayer>(tile_size_);
+  screen()->renderer()->PostTask(base::BindOnce(
+      [](renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr,
+         TilemapFlashLayer* flash_layer, int tile_size) {
+        quad_ptr->Init();
+        flash_layer->InitFlashLayer(tile_size);
+      },
+      tilemap_quads_, flash_layer_.get(), tile_size_));
 
-  atlas_tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(atlas_tfb_, tile_size_, tile_size_);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(atlas_tfb_);
+  atlas_tfb_ =
+      screen()->AllocTexture(base::Vec2i(tile_size_, tile_size_), false);
 }
 
 }  // namespace content

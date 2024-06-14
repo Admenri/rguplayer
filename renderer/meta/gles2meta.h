@@ -5,6 +5,7 @@
 #ifndef RENDERER_META_GLES2META_H_
 #define RENDERER_META_GLES2META_H_
 
+#include "base/math/math.h"
 #include "renderer/context/gles2_context.h"
 
 namespace renderer {
@@ -159,11 +160,11 @@ struct TextureFrameBuffer {
   }
 
   inline static void Alloc(TextureFrameBuffer& tfb,
-                           GLsizei width,
-                           GLsizei height) {
+                           base::Vec2i size,
+                           GLenum format = GL_RGBA) {
     Texture::Bind(tfb.tex);
-    Texture::TexImage2D(width, height, GL_RGBA);
-    tfb.size = base::Vec2i(width, height);
+    Texture::TexImage2D(size.x, size.y, format);
+    tfb.size = size;
   }
 
   inline static void LinkFrameBuffer(const TextureFrameBuffer& tfb) {

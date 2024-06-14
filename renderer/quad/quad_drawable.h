@@ -30,7 +30,7 @@ class QuadIndexBuffer {
 
 class QuadDrawable final : public Drawable<CommonVertex, 4> {
  public:
-  QuadDrawable();
+  QuadDrawable(bool init = true);
 
   QuadDrawable(const QuadDrawable&) = delete;
   QuadDrawable& operator=(const QuadDrawable&) = delete;

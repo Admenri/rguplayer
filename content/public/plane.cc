@@ -23,13 +23,16 @@ Plane::Plane(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
       ViewportChild(screen, viewport),
       color_(new Color()),
       tone_(new Tone()) {
-  quad_array_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
-  quad_array_->Resize(1);
+  quad_array_ = new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
 
-  layer_tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(layer_tfb_, 16, 16);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(layer_tfb_);
+  screen->renderer()->PostTask(base::BindOnce(
+      [](renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr) {
+        quad_ptr->Init();
+        quad_ptr->Resize(1);
+      },
+      quad_array_));
+
+  layer_tfb_ = screen->AllocTexture(base::Vec2i(16, 16), true);
 
   OnParentViewportRectChanged(parent_rect());
 }
@@ -92,8 +95,8 @@ void Plane::SetZoomY(double zoom_y) {
 void Plane::OnObjectDisposed() {
   RemoveFromList();
 
-  quad_array_.reset();
-  renderer::TextureFrameBuffer::Del(layer_tfb_);
+  screen()->renderer()->DeleteSoon(std::move(quad_array_));
+  screen()->FreeTexture(layer_tfb_);
 }
 
 void Plane::BeforeComposite() {
@@ -114,8 +117,8 @@ void Plane::Composite() {
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransOffset(parent_rect().GetRealOffset());
-    shader.SetTexture(layer_tfb_.tex);
-    shader.SetTextureSize(layer_tfb_.size);
+    shader.SetTexture(layer_tfb_->tex);
+    shader.SetTextureSize(layer_tfb_->size);
 
     shader.SetColor(color_->AsBase());
     shader.SetTone(tone_->AsBase());
@@ -125,8 +128,8 @@ void Plane::Composite() {
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransOffset(parent_rect().GetRealOffset());
-    shader.SetTexture(layer_tfb_.tex);
-    shader.SetTextureSize(layer_tfb_.size);
+    shader.SetTexture(layer_tfb_->tex);
+    shader.SetTextureSize(layer_tfb_->size);
   }
 
   renderer::GSM.states.blend.Push(true);
@@ -154,8 +157,9 @@ void Plane::UpdateQuadArray() {
   const int repeat_y =
       static_cast<int>(std::sqrt(parent_rect().rect.height / scale_height)) + 1;
 
-  renderer::TextureFrameBuffer::Alloc(layer_tfb_, scale_width * repeat_x,
-                                      scale_height * repeat_y);
+  renderer::TextureFrameBuffer::Alloc(
+      *layer_tfb_,
+      base::Vec2i(scale_width * repeat_x, scale_height * repeat_y));
 
   const float item_x = scale_width * repeat_x;
   const float item_y = scale_height * repeat_y;
@@ -176,7 +180,7 @@ void Plane::UpdateQuadArray() {
 
   quad_array_->Update();
 
-  renderer::FrameBuffer::Bind(layer_tfb_.fbo);
+  renderer::FrameBuffer::Bind(layer_tfb_->fbo);
   renderer::FrameBuffer::Clear();
 
   auto element_size =
@@ -184,7 +188,7 @@ void Plane::UpdateQuadArray() {
   auto& shader = renderer::GSM.shaders()->base;
   shader.Bind();
   shader.SetProjectionMatrix(element_size);
-  shader.SetTexture(bitmap_->GetTexture().tex);
+  shader.SetTexture(bitmap_->GetRaw()->tex);
   shader.SetTextureSize(tex);
   shader.SetTransOffset(base::Vec2i());
 

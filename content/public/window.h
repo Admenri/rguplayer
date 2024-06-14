@@ -155,14 +155,14 @@ class Window : public base::RefCounted<Window>,
 
   std::unique_ptr<WindowControlLayer> control_layer_;
 
-  std::unique_ptr<renderer::QuadDrawable> base_quad_;
-  std::unique_ptr<renderer::QuadDrawable> content_quad_;
-  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
-      controls_quads_;
-  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
-      base_tex_quad_array_;
+  renderer::QuadDrawable* base_quad_ = nullptr;
+  renderer::QuadDrawable* content_quad_ = nullptr;
+  renderer::QuadDrawableArray<renderer::CommonVertex>* controls_quads_ =
+      nullptr;
+  renderer::QuadDrawableArray<renderer::CommonVertex>* base_tex_quad_array_ =
+      nullptr;
 
-  renderer::TextureFrameBuffer base_tfb_;
+  renderer::TextureFrameBuffer* base_tfb_;
   int background_quads_count_ = 0;
   int controls_quad_count = 0;
   renderer::CommonVertex* cursor_vertex_ = nullptr;

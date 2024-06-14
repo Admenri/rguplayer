@@ -99,8 +99,7 @@ class Tilemap : public base::RefCounted<Tilemap>,
   base::Vec2i origin_;
   int tile_size_;
 
-  std::unique_ptr<renderer::QuadDrawableArray<renderer::CommonVertex>>
-      tilemap_quads_;
+  renderer::QuadDrawableArray<renderer::CommonVertex>* tilemap_quads_ = nullptr;
   std::vector<renderer::CommonVertex> ground_vertices_;
   std::vector<std::vector<renderer::CommonVertex>> above_vertices_;
   std::vector<size_t> above_offsets_;
@@ -109,7 +108,7 @@ class Tilemap : public base::RefCounted<Tilemap>,
   std::unique_ptr<TilemapGroundLayer> ground_layer_;
   std::vector<std::unique_ptr<TilemapZLayer>> above_layers_;
 
-  renderer::TextureFrameBuffer atlas_tfb_;
+  renderer::TextureFrameBuffer* atlas_tfb_ = nullptr;
   base::Vec2i tilemap_offset_;
   base::Rect tilemap_viewport_;
 

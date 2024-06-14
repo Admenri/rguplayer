@@ -30,14 +30,19 @@ void Shader::Compile(const std::string& vertex_shader,
   location_cache_.clear();
   bind_textures_.clear();
 
-  CompileInternal(vertex_shader, fragment_shader);
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Shader::CompileInternal, base::Unretained(this),
+                     vertex_shader, fragment_shader));
+  screen()->renderer()->WaitForSync();
 }
 
 void Shader::Reset() {
   location_cache_.clear();
   bind_textures_.clear();
 
-  ResetInternal();
+  screen()->renderer()->PostTask(
+      base::BindOnce(&Shader::ResetInternal, base::Unretained(this)));
+  screen()->renderer()->WaitForSync();
 }
 
 void Shader::SetBlend(GLenum mode,
@@ -55,38 +60,50 @@ void Shader::SetBlend(GLenum mode,
 void Shader::SetParam(const std::string& uniform,
                       const std::vector<float>& params,
                       int count) {
-  SetParam1Internal(uniform, params, count);
+  screen()->renderer()->PostTask(base::BindOnce(&Shader::SetParam1Internal,
+                                                base::Unretained(this), uniform,
+                                                params, count));
 }
 
 void Shader::SetParam(const std::string& uniform,
                       const std::vector<int>& params,
                       int count) {
-  SetParam2Internal(uniform, params, count);
+  screen()->renderer()->PostTask(base::BindOnce(&Shader::SetParam2Internal,
+                                                base::Unretained(this), uniform,
+                                                params, count));
 }
 
 void Shader::SetParam(const std::string& uniform,
                       const std::vector<float>& matrix,
                       int count,
                       bool transpose) {
-  SetParam3Internal(uniform, matrix, count, transpose);
+  screen()->renderer()->PostTask(base::BindOnce(&Shader::SetParam3Internal,
+                                                base::Unretained(this), uniform,
+                                                matrix, count, transpose));
 }
 
 void Shader::SetParam(const std::string& uniform,
                       scoped_refptr<Bitmap> texture,
                       int index) {
-  SetParam4Internal(uniform, texture, index);
+  screen()->renderer()->PostTask(base::BindOnce(&Shader::SetParam4Internal,
+                                                base::Unretained(this), uniform,
+                                                texture, index));
 }
 
 void Shader::OnObjectDisposed() {
   location_cache_.clear();
   bind_textures_.clear();
 
-  if (vertex_shader_)
-    renderer::GL.DeleteShader(vertex_shader_);
-  if (frag_shader_)
-    renderer::GL.DeleteShader(frag_shader_);
-  if (program_)
-    renderer::GL.DeleteProgram(program_);
+  screen()->renderer()->PostTask(base::BindOnce(
+      [](GLuint vertex_shader, GLuint frag_shader, GLuint program) {
+        if (vertex_shader)
+          renderer::GL.DeleteShader(vertex_shader);
+        if (frag_shader)
+          renderer::GL.DeleteShader(frag_shader);
+        if (program)
+          renderer::GL.DeleteProgram(program);
+      },
+      vertex_shader_, frag_shader_, program_));
 }
 
 void Shader::CompileInternal(const std::string& vertex_shader,
@@ -349,7 +366,7 @@ void Shader::SetInternalUniform() {
     if (tex_unit.location >= 0 &&
         (tex_unit.texture && !tex_unit.texture->IsDisposed()))
       renderer::GLES2ShaderBase::SetTexture(
-          tex_unit.location, tex_unit.texture->GetTexture().tex.gl, it.first);
+          tex_unit.location, tex_unit.texture->GetRaw()->tex.gl, it.first);
   }
 }
 

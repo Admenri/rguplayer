@@ -13,17 +13,22 @@ namespace renderer {
 template <class VertexType>
 class QuadDrawableArray final {
  public:
-  QuadDrawableArray() {
-    vao_.vbo = VertexBuffer::Gen();
-    vao_.ibo = GSM.quad_ibo()->ibo;
-
-    VertexArray<VertexType>::Init(vao_);
+  QuadDrawableArray(bool init = true) {
+    if (init)
+      Init();
   }
 
   ~QuadDrawableArray() {
     VertexArray<VertexType>::Uninit(vao_);
 
     VertexBuffer::Del(vao_.vbo);
+  }
+
+  inline void Init() {
+    vao_.vbo = VertexBuffer::Gen();
+    vao_.ibo = GSM.quad_ibo()->ibo;
+
+    VertexArray<VertexType>::Init(vao_);
   }
 
   inline void Resize(size_t size) {

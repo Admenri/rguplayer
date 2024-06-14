@@ -36,7 +36,10 @@ void QuadIndexBuffer::EnsureSize(size_t count) {
   IndexBuffer::Unbind();
 }
 
-QuadDrawable::QuadDrawable() : Drawable(GSM.quad_ibo()->ibo) {}
+QuadDrawable::QuadDrawable(bool init) {
+  if (init)
+    Drawable::InitDrawable(GSM.quad_ibo()->ibo);
+}
 
 void QuadDrawable::SetPositionRect(const base::RectF& pos) {
   if (position_cache_ == pos)

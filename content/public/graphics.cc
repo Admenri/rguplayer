@@ -59,50 +59,18 @@ Graphics::Graphics(WorkerShareData* share_data,
   viewport_rect().rect = initial_resolution;
   viewport_rect().scissor = false;
   Font::InitStaticFont(dispatcher_->share_data()->filesystem.get());
-  InitScreenBufferInternal();
 
-  // Setup Dear ImGui context
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO();
-  io.IniFilename = nullptr;
-  io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-  io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-
-  // Apply DPI Settings
-  int display_w, display_h;
-  SDL_GetWindowSizeInPixels(window()->AsSDLWindow(), &display_w, &display_h);
-  io.DisplaySize = ImVec2((float)display_w, (float)display_h);
-  io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
-  float windowScale = SDL_GetWindowDisplayScale(window()->AsSDLWindow());
-  ImGui::GetStyle().ScaleAllSizes(windowScale);
-
-  // Apply default font
-  ImFontConfig font_config;
-  font_config.FontDataOwnedByAtlas = false;
-  int64_t font_data_size;
-  void* font_data = Font::GetDefaultFont(&font_data_size);
-  io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0f * windowScale,
-                                 &font_config,
-                                 io.Fonts->GetGlyphRangesChineseFull());
-
-  // Setup Dear ImGui style
-  ImGui::StyleColorsDark();
-
-  // Setup Platform/Renderer backends
-  ImGui_ImplSDL3_InitForOpenGL(window()->AsSDLWindow(), renderer_->context());
-  ImGui_ImplOpenGL3_Init(nullptr);
+  renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
+                                     base::Unretained(this)));
+  renderer_->WaitForSync();
 }
 
 Graphics::~Graphics() {
   Font::DestroyStaticFont();
-  DestroyBufferInternal();
 
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplSDL3_Shutdown();
-  ImGui::DestroyContext();
+  renderer_->PostTask(
+      base::BindOnce(&Graphics::DestroyBufferInternal, base::Unretained(this)));
+  renderer_->WaitForSync();
 }
 
 int Graphics::GetBrightness() const {
@@ -122,7 +90,11 @@ void Graphics::Wait(int duration) {
 
 scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
   scoped_refptr<Bitmap> snap = new Bitmap(this, resolution_.x, resolution_.y);
-  SnapToBitmapInternal(snap);
+
+  renderer_->PostTask(base::BindOnce(&Graphics::SnapToBitmapInternal,
+                                     base::Unretained(this), snap->GetRaw()));
+  renderer_->WaitForSync();
+
   return snap;
 }
 
@@ -134,7 +106,10 @@ void Graphics::FadeOut(int duration) {
     SetBrightness(current_brightness -
                   current_brightness * (i / static_cast<float>(duration)));
     if (frozen_) {
-      PresentScreenInternal(frozen_snapshot_);
+      renderer_->PostTask(base::BindOnce(&Graphics::PresentScreenInternal,
+                                         base::Unretained(this),
+                                         frozen_snapshot_));
+      renderer_->WaitForSync();
 
       FrameProcessInternal();
       if (dispatcher_->CheckRunnerFlags())
@@ -161,7 +136,10 @@ void Graphics::FadeIn(int duration) {
                   diff * (i / static_cast<float>(duration)));
 
     if (frozen_) {
-      PresentScreenInternal(frozen_snapshot_);
+      renderer_->PostTask(base::BindOnce(&Graphics::PresentScreenInternal,
+                                         base::Unretained(this),
+                                         frozen_snapshot_));
+      renderer_->WaitForSync();
 
       FrameProcessInternal();
       if (dispatcher_->CheckRunnerFlags())
@@ -179,6 +157,7 @@ void Graphics::FadeIn(int duration) {
 }
 
 void Graphics::Update() {
+  bool sync_fence = false;
   if (!frozen_) {
     if (fps_manager_->RequireFrameSkip()) {
       if (config_->allow_frame_skip())
@@ -191,11 +170,17 @@ void Graphics::Update() {
     }
 
     // Launch render processing
-    CompositeScreenInternal();
-    PresentScreenInternal(screen_buffer_[0]);
+    renderer_->PostTask(base::BindOnce(&Graphics::UpdateInternal,
+                                       base::Unretained(this), &sync_fence));
+  } else {
+    // Invalid sync
+    sync_fence = true;
   }
 
   FrameProcessInternal();
+
+  if (!sync_fence)
+    renderer_->WaitForSync();
 
   /* Check flags */
   dispatcher_->CheckRunnerFlags();
@@ -207,7 +192,9 @@ void Graphics::ResizeScreen(const base::Vec2i& resolution) {
     return;
 
   resolution_ = resolution;
-  ResizeResolutionInternal();
+  renderer_->PostTask(base::BindOnce(&Graphics::ResizeResolutionInternal,
+                                     base::Unretained(this)));
+  renderer_->WaitForSync();
 }
 
 void Graphics::Reset() {
@@ -229,7 +216,9 @@ void Graphics::Reset() {
 void Graphics::Freeze() {
   if (frozen_)
     return;
-  FreezeSceneInternal();
+  renderer_->PostTask(
+      base::BindOnce(&Graphics::FreezeSceneInternal, base::Unretained(this)));
+  renderer_->WaitForSync();
   frozen_ = true;
 }
 
@@ -245,10 +234,15 @@ void Graphics::Transition(int duration,
   SetBrightness(255);
   vague = std::clamp<int>(vague, 1, 256);
 
-  TransitionSceneInternal(duration, !!trans_bitmap, vague);
+  renderer_->PostTask(base::BindOnce(&Graphics::TransitionSceneInternal,
+                                     base::Unretained(this), duration,
+                                     !!trans_bitmap, vague));
+
   renderer::GSM.states.blend.Push(false);
   for (int i = 0; i < duration; ++i) {
-    TransitionSceneInternalLoop(i, duration, trans_bitmap);
+    renderer_->PostTask(base::BindOnce(
+        &Graphics::TransitionSceneInternalLoop, base::Unretained(this), i,
+        duration, trans_bitmap ? trans_bitmap->GetRaw() : nullptr));
     FrameProcessInternal();
 
     /* Break draw loop for quit flag */
@@ -259,6 +253,8 @@ void Graphics::Transition(int duration,
 
   /* Transition process complete */
   frozen_ = false;
+
+  renderer_->WaitForSync();
 
   /* Raise signal notify */
   dispatcher_->RaiseRunnerFlags();
@@ -317,7 +313,9 @@ void Graphics::SetFullscreen(bool fullscreen) {
 
 void Graphics::SetVSync(int interval) {
   vsync_interval_ = interval;
-  SetSwapIntervalInternal();
+  renderer_->PostTask(base::BindOnce(&Graphics::SetSwapIntervalInternal,
+                                     base::Unretained(this)));
+  renderer_->WaitForSync();
 }
 
 int Graphics::GetVSync() {
@@ -354,27 +352,99 @@ filesystem::Filesystem* Graphics::filesystem() {
   return dispatcher_->share_data()->filesystem.get();
 }
 
+renderer::TextureFrameBuffer* Graphics::AllocTexture(const base::Vec2i& size,
+                                                     bool clean,
+                                                     GLenum format,
+                                                     void* buffer,
+                                                     size_t buffer_size) {
+  renderer::TextureFrameBuffer* mem = new renderer::TextureFrameBuffer;
+  std::vector<uint8_t> texture_data;
+  if (buffer_size && buffer) {
+    texture_data.assign(buffer_size, 0);
+    memcpy(texture_data.data(), buffer, buffer_size);
+  }
+
+  renderer()->PostTask(base::BindOnce(
+      [](renderer::TextureFrameBuffer* ptr, const base::Vec2i& tex_size,
+         bool need_clean, GLenum tex_format, std::vector<uint8_t> data) {
+        *ptr = renderer::TextureFrameBuffer::Gen();
+
+        renderer::TextureFrameBuffer::Alloc(*ptr, tex_size, tex_format);
+        if (!data.empty())
+          renderer::Texture::TexImage2D(tex_size.x, tex_size.y, tex_format,
+                                        data.data());
+
+        renderer::TextureFrameBuffer::LinkFrameBuffer(*ptr);
+        if (need_clean)
+          renderer::FrameBuffer::Clear();
+      },
+      mem, size, clean, format, std::move(texture_data)));
+
+  return mem;
+}
+
+void Graphics::FreeTexture(renderer::TextureFrameBuffer*& texture_data) {
+  renderer()->PostTask(base::BindOnce(
+      [](renderer::TextureFrameBuffer* texture) {
+        renderer::TextureFrameBuffer::Del(*texture);
+        delete texture;
+      },
+      texture_data));
+  texture_data = nullptr;
+}
+
 void Graphics::InitScreenBufferInternal() {
   SDL_GL_GetSwapInterval(&vsync_interval_);
 
   screen_buffer_[0] = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(screen_buffer_[0], resolution_.x,
-                                      resolution_.y);
+  renderer::TextureFrameBuffer::Alloc(screen_buffer_[0], resolution_);
   renderer::TextureFrameBuffer::LinkFrameBuffer(screen_buffer_[0]);
 
   screen_buffer_[1] = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(screen_buffer_[1], resolution_.x,
-                                      resolution_.y);
+  renderer::TextureFrameBuffer::Alloc(screen_buffer_[1], resolution_);
   renderer::TextureFrameBuffer::LinkFrameBuffer(screen_buffer_[1]);
 
   frozen_snapshot_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(frozen_snapshot_, resolution_.x,
-                                      resolution_.y);
+  renderer::TextureFrameBuffer::Alloc(frozen_snapshot_, resolution_);
   renderer::TextureFrameBuffer::LinkFrameBuffer(frozen_snapshot_);
 
   screen_quad_ = std::make_unique<renderer::QuadDrawable>();
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
+
+  // Setup Dear ImGui context
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO();
+  io.IniFilename = nullptr;
+  io.ConfigFlags |=
+      ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+  io.ConfigFlags |=
+      ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+
+  // Apply DPI Settings
+  int display_w, display_h;
+  SDL_GetWindowSizeInPixels(window()->AsSDLWindow(), &display_w, &display_h);
+  io.DisplaySize = ImVec2((float)display_w, (float)display_h);
+  io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
+  float windowScale = SDL_GetWindowDisplayScale(window()->AsSDLWindow());
+  ImGui::GetStyle().ScaleAllSizes(windowScale);
+
+  // Apply default font
+  ImFontConfig font_config;
+  font_config.FontDataOwnedByAtlas = false;
+  int64_t font_data_size;
+  void* font_data = Font::GetDefaultFont(&font_data_size);
+  io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0f * windowScale,
+                                 &font_config,
+                                 io.Fonts->GetGlyphRangesChineseFull());
+
+  // Setup Dear ImGui style
+  ImGui::StyleColorsDark();
+
+  // Setup Platform/Renderer backends
+  ImGui_ImplSDL3_InitForOpenGL(window()->AsSDLWindow(), renderer_->context());
+  ImGui_ImplOpenGL3_Init(nullptr);
 }
 
 void Graphics::DestroyBufferInternal() {
@@ -383,6 +453,10 @@ void Graphics::DestroyBufferInternal() {
   renderer::TextureFrameBuffer::Del(frozen_snapshot_);
 
   screen_quad_.reset();
+
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplSDL3_Shutdown();
+  ImGui::DestroyContext();
 }
 
 void Graphics::CompositeScreenInternal() {
@@ -411,12 +485,9 @@ void Graphics::CompositeScreenInternal() {
 }
 
 void Graphics::ResizeResolutionInternal() {
-  renderer::TextureFrameBuffer::Alloc(screen_buffer_[0], resolution_.x,
-                                      resolution_.y);
-  renderer::TextureFrameBuffer::Alloc(screen_buffer_[1], resolution_.x,
-                                      resolution_.y);
-  renderer::TextureFrameBuffer::Alloc(frozen_snapshot_, resolution_.x,
-                                      resolution_.y);
+  renderer::TextureFrameBuffer::Alloc(screen_buffer_[0], resolution_);
+  renderer::TextureFrameBuffer::Alloc(screen_buffer_[1], resolution_);
+  renderer::TextureFrameBuffer::Alloc(frozen_snapshot_, resolution_);
 
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
   screen_quad_->SetTexCoordRect(base::Vec2(resolution_));
@@ -471,10 +542,10 @@ void Graphics::PresentScreenInternal(
   SDL_GL_SwapWindow(window->AsSDLWindow());
 }
 
-void Graphics::SnapToBitmapInternal(scoped_refptr<Bitmap> target) {
+void Graphics::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
   CompositeScreenInternal();
 
-  renderer::Blt::BeginDraw(target->GetTexture());
+  renderer::Blt::BeginDraw(*target);
   renderer::Blt::TexSource(screen_buffer_[0]);
   renderer::Blt::BltDraw(resolution_, resolution_);
   renderer::Blt::EndDraw();
@@ -514,9 +585,10 @@ void Graphics::TransitionSceneInternal(int duration,
   }
 }
 
-void Graphics::TransitionSceneInternalLoop(int i,
-                                           int duration,
-                                           scoped_refptr<Bitmap> trans_bitmap) {
+void Graphics::TransitionSceneInternalLoop(
+    int i,
+    int duration,
+    renderer::TextureFrameBuffer* trans_bitmap) {
   auto& alpha_shader = renderer::GSM.shaders()->alpha_trans;
   auto& vague_shader = renderer::GSM.shaders()->vague_shader;
   float progress = i * (1.0f / duration);
@@ -530,7 +602,7 @@ void Graphics::TransitionSceneInternalLoop(int i,
     vague_shader.Bind();
     vague_shader.SetFrozenTexture(frozen_snapshot_.tex);
     vague_shader.SetCurrentTexture(screen_buffer_[0].tex);
-    vague_shader.SetTransTexture(trans_bitmap->GetTexture().tex);
+    vague_shader.SetTransTexture(trans_bitmap->tex);
     vague_shader.SetProgress(progress);
   }
 
@@ -551,6 +623,12 @@ void Graphics::FrameProcessInternal() {
 
   /* Update average fps */
   UpdateAverageFPSInternal();
+}
+
+void Graphics::UpdateInternal(bool* fence) {
+  CompositeScreenInternal();
+  PresentScreenInternal(screen_buffer_[0]);
+  *fence = true;
 }
 
 void Graphics::AddDisposable(Disposable* disp) {

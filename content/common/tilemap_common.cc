@@ -8,6 +8,12 @@
 
 namespace content {
 
+void TilemapFlashLayer::InitFlashLayer(int tile_size) {
+  quads_ =
+      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+  tile_size_ = tile_size;
+}
+
 void TilemapFlashLayer::BeforeComposite() {
   if (buffer_need_update_) {
     UpdateBuffer();

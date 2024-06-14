@@ -1,5 +1,5 @@
-# Content compositor components of RGU Core
-cmake_minimum_required(VERSION 3.18.0)
+# Content compositor components of RGU Kernel
+cmake_minimum_required(VERSION 3.20.1)
 
 #--------------------------------------------------------------------------------
 # Content source of core

@@ -13,6 +13,7 @@ namespace content {
 
 AOMDecoder::AOMDecoder(scoped_refptr<Graphics> host)
     : Disposable(host),
+      GraphicElement(host),
       io_(host->filesystem()),
       last_ticks_(0),
       counter_freq_(SDL_GetPerformanceFrequency()),
@@ -50,7 +51,11 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
 
     // Init yuv texture
     auto& info = *player_->info();
-    CreateYUVInternal(info.width, info.height);
+    frame_data_ = std::make_unique<uvpx::Frame>(info.width, info.height);
+    screen()->renderer()->PostTask(
+        base::BindOnce(&AOMDecoder::CreateYUVInternal, base::Unretained(this),
+                       info.width, info.height));
+    screen()->renderer()->WaitForSync();
 
     // Init Audio components
     SDL_AudioSpec wanted_spec;
@@ -134,38 +139,20 @@ void AOMDecoder::Render(scoped_refptr<Bitmap> target) {
     return;
 
   uvpx::Frame* yuv = nullptr;
-  auto& info = *player_->info();
-  auto canvas_size = target->GetSize();
   if ((yuv = player_->lockRead()) != nullptr) {
-    UpdateYUVTexture(info.width, info.height, yuv->y(), yuv->yPitch(), yuv->u(),
-                     yuv->uvPitch(), yuv->v(), yuv->uvPitch());
+    yuv->copyData(frame_data_.get());
     player_->unlockRead();
 
-    auto frame_size = base::Vec2i(info.width, info.height);
-    auto& shader = renderer::GSM.shaders()->yuv;
-    shader.Bind();
-    shader.SetProjectionMatrix(canvas_size);
-    shader.SetTransOffset(base::Vec2());
-    shader.SetTextureSize(frame_size);
-    shader.SetTextureY(video_planes_[Plane_Y]);
-    shader.SetTextureU(video_planes_[Plane_U]);
-    shader.SetTextureV(video_planes_[Plane_V]);
+    bool sync_fence = false;
+    screen()->renderer()->PostTask(
+        base::BindOnce(&AOMDecoder::UploadInternal, base::Unretained(this),
+                       frame_data_.get(), &sync_fence));
+    while (!sync_fence)
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    auto& tfb = target->GetTexture();
-    renderer::FrameBuffer::Bind(tfb.fbo);
-    renderer::FrameBuffer::ClearColor();
-    renderer::FrameBuffer::Clear();
-
-    renderer::GSM.states.viewport.Push(canvas_size);
-    renderer::GSM.states.blend.Push(false);
-
-    auto* quad = renderer::GSM.common_quad();
-    quad->SetPositionRect(base::Rect(canvas_size));
-    quad->SetTexCoordRect(base::Rect(frame_size));
-    quad->Draw();
-
-    renderer::GSM.states.blend.Pop();
-    renderer::GSM.states.viewport.Pop();
+    screen()->renderer()->PostTask(base::BindOnce(
+        &AOMDecoder::RenderInternal, base::Unretained(this), target->GetRaw()));
+    screen()->renderer()->WaitForSync();
   }
 }
 
@@ -176,9 +163,11 @@ void AOMDecoder::OnObjectDisposed() {
   if (audio_output_)
     SDL_CloseAudioDevice(audio_output_);
 
-  DestroyYUVInternal();
-
   player_.reset();
+
+  screen()->renderer()->PostTask(
+      base::BindOnce(&AOMDecoder::DestroyYUVInternal, base::Unretained(this)));
+  screen()->renderer()->WaitForSync();
 }
 
 void AOMDecoder::OnAudioData(void* userPtr, float* pcm, size_t count) {
@@ -218,6 +207,46 @@ void AOMDecoder::DestroyYUVInternal() {
   renderer::Texture::Del(video_planes_[Plane_Y]);
   renderer::Texture::Del(video_planes_[Plane_U]);
   renderer::Texture::Del(video_planes_[Plane_V]);
+
+  video_quad_.reset();
+}
+
+void AOMDecoder::UploadInternal(uvpx::Frame* yuv, bool* fence) {
+  auto& info = *player_->info();
+  UpdateYUVTexture(info.width, info.height, yuv->y(), yuv->yPitch(), yuv->u(),
+                   yuv->uvPitch(), yuv->v(), yuv->uvPitch());
+  *fence = true;
+}
+
+void AOMDecoder::RenderInternal(renderer::TextureFrameBuffer* target) {
+  auto& info = *player_->info();
+  auto& canvas_size = target->size;
+
+  auto frame_size = base::Vec2i(info.width, info.height);
+  auto& shader = renderer::GSM.shaders()->yuv;
+  shader.Bind();
+  shader.SetProjectionMatrix(canvas_size);
+  shader.SetTransOffset(base::Vec2());
+  shader.SetTextureSize(frame_size);
+  shader.SetTextureY(video_planes_[Plane_Y]);
+  shader.SetTextureU(video_planes_[Plane_U]);
+  shader.SetTextureV(video_planes_[Plane_V]);
+
+  auto& tfb = *target;
+  renderer::FrameBuffer::Bind(tfb.fbo);
+  renderer::FrameBuffer::ClearColor();
+  renderer::FrameBuffer::Clear();
+
+  renderer::GSM.states.viewport.Push(canvas_size);
+  renderer::GSM.states.blend.Push(false);
+
+  auto* quad = renderer::GSM.common_quad();
+  quad->SetPositionRect(base::Rect(canvas_size));
+  quad->SetTexCoordRect(base::Rect(frame_size));
+  quad->Draw();
+
+  renderer::GSM.states.blend.Pop();
+  renderer::GSM.states.viewport.Pop();
 }
 
 void AOMDecoder::UpdateYUVTexture(int width,

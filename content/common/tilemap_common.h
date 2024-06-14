@@ -44,13 +44,13 @@ inline int16_t TableGetFlag(scoped_refptr<content::Table> t, int x) {
 
 class TilemapFlashLayer {
  public:
-  TilemapFlashLayer(int tile_size)
-      : quads_(new renderer::QuadDrawableArray<renderer::CommonVertex>()),
-        tile_size_(tile_size) {}
+  TilemapFlashLayer() = default;
   ~TilemapFlashLayer() {}
 
   TilemapFlashLayer(const TilemapFlashLayer&) = delete;
   TilemapFlashLayer& operator=(const TilemapFlashLayer&) = delete;
+
+  void InitFlashLayer(int tile_size);
 
   scoped_refptr<Table> GetFlashData() const { return flashdata_; }
   void SetFlashData(scoped_refptr<Table> data) {

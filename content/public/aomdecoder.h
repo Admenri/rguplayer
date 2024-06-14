@@ -18,7 +18,9 @@ namespace content {
 
 struct WorkerShareData;
 
-class AOMDecoder : public base::RefCounted<AOMDecoder>, public Disposable {
+class AOMDecoder : public base::RefCounted<AOMDecoder>,
+                   public Disposable,
+                   public GraphicElement {
  public:
   enum class Type {
     Playing = 0,
@@ -54,6 +56,8 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>, public Disposable {
   static void OnVideoFinished(void* userPtr);
   void CreateYUVInternal(int width, int height);
   void DestroyYUVInternal();
+  void UploadInternal(uvpx::Frame* yuv, bool* fence);
+  void RenderInternal(renderer::TextureFrameBuffer* target);
   void UpdateYUVTexture(int width,
                         int height,
                         const Uint8* Yplane,
@@ -75,6 +79,7 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>, public Disposable {
 
   filesystem::Filesystem* io_;
   std::unique_ptr<uvpx::Player> player_;
+  std::unique_ptr<uvpx::Frame> frame_data_;
   uint64_t last_ticks_;
   int64_t counter_freq_;
   float frame_delta_;

@@ -12,11 +12,14 @@ namespace renderer {
 template <typename VertexType, int VertexCount>
 class Drawable {
  public:
+  Drawable() = default;
   Drawable(const GLID<IndexBuffer>& ibo);
   virtual ~Drawable();
 
   Drawable(const Drawable&) = delete;
   Drawable& operator=(const Drawable&) = delete;
+
+  void InitDrawable(const GLID<IndexBuffer>& ibo);
 
  protected:
   virtual void UpdateBuffer();
@@ -33,6 +36,12 @@ class Drawable {
 
 template <typename VertexType, int VertexCount>
 inline Drawable<VertexType, VertexCount>::Drawable(
+    const GLID<IndexBuffer>& ibo) {
+  InitDrawable(ibo);
+}
+
+template <typename VertexType, int VertexCount>
+inline void Drawable<VertexType, VertexCount>::InitDrawable(
     const GLID<IndexBuffer>& ibo) {
   vertex_array_.vbo = VertexBuffer::Gen();
   vertex_array_.ibo = ibo;

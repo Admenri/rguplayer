@@ -323,13 +323,13 @@ void Window2::SetTone(scoped_refptr<Tone> tone) {
 void Window2::OnObjectDisposed() {
   RemoveFromList();
 
-  base_quad_.reset();
-  content_quad_.reset();
-  arrows_quads_.reset();
-  cursor_quads_.reset();
-  base_tex_quad_array_.reset();
+  screen()->renderer()->DeleteSoon(std::move(base_quad_));
+  screen()->renderer()->DeleteSoon(std::move(content_quad_));
+  screen()->renderer()->DeleteSoon(std::move(arrows_quads_));
+  screen()->renderer()->DeleteSoon(std::move(cursor_quads_));
+  screen()->renderer()->DeleteSoon(std::move(base_tex_quad_array_));
 
-  renderer::TextureFrameBuffer::Del(base_tfb_);
+  screen()->FreeTexture(base_tfb_);
 }
 
 void Window2::BeforeComposite() {
@@ -414,7 +414,7 @@ void Window2::Composite() {
   if (windowskin_valid) {
     /* Base window draw */
     if (opacity_ > 0) {
-      shader.SetTexture(base_tfb_.tex);
+      shader.SetTexture(base_tfb_->tex);
       shader.SetTextureSize(rect_.Size());
 
       base_quad_->Draw();
@@ -422,7 +422,7 @@ void Window2::Composite() {
 
     /* Controls draw */
     if (openness_ >= 255) {
-      shader.SetTexture(windowskin_->GetTexture().tex);
+      shader.SetTexture(windowskin_->GetRaw()->tex);
       shader.SetTextureSize(windowskin_->GetSize());
 
       if (arrows_quad_count_)
@@ -468,7 +468,7 @@ void Window2::Composite() {
     content_trans = content_trans - base::Vec2i(ox_, oy_);
 
     shader.SetTransOffset(content_trans);
-    shader.SetTexture(contents_->GetTexture().tex);
+    shader.SetTexture(contents_->GetRaw()->tex);
     shader.SetTextureSize(contents_->GetSize());
 
     content_quad_->Draw();
@@ -501,22 +501,36 @@ void Window2::InitWindow() {
   cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(
       &Window2::CursorRectChangedInternal, base::Unretained(this)));
 
-  base_quad_ = std::make_unique<renderer::QuadDrawable>();
-  content_quad_ = std::make_unique<renderer::QuadDrawable>();
+  base_quad_ = new renderer::QuadDrawable(false);
+  content_quad_ = new renderer::QuadDrawable(false);
   arrows_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
   cursor_quads_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
   base_tex_quad_array_ =
-      std::make_unique<renderer::QuadDrawableArray<renderer::CommonVertex>>();
+      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
 
-  arrows_quads_->Resize(5);
+  screen()->renderer()->PostTask(base::BindOnce(
+      [](renderer::QuadDrawable* quad, renderer::QuadDrawable* contents,
+         renderer::QuadDrawableArray<renderer::CommonVertex>* arrows_ptr,
+         renderer::QuadDrawableArray<renderer::CommonVertex>* cursor_ptr,
+         renderer::QuadDrawableArray<renderer::CommonVertex>* basequad_ptr) {
+        quad->InitDrawable(renderer::GSM.quad_ibo()->ibo);
+        contents->InitDrawable(renderer::GSM.quad_ibo()->ibo);
+
+        arrows_ptr->Init();
+        cursor_ptr->Init();
+        basequad_ptr->Init();
+
+        arrows_ptr->Resize(5);
+        cursor_ptr->Resize(1);
+      },
+      base_quad_, content_quad_, arrows_quads_, cursor_quads_,
+      base_tex_quad_array_));
+
   pause_vertex_ = nullptr;
-  cursor_quads_->Resize(1);
 
-  base_tfb_ = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(base_tfb_, rect_.width, rect_.height);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(base_tfb_);
+  base_tfb_ = screen()->AllocTexture(rect_.Size());
 
   contents_quad_need_update_ = true;
 
@@ -613,9 +627,9 @@ void Window2::UpdateBaseTextureInternal() {
 
   CalcBaseQuadArrayInternal();
 
-  renderer::TextureFrameBuffer::Alloc(base_tfb_, rect_.width, rect_.height);
+  renderer::TextureFrameBuffer::Alloc(*base_tfb_, rect_.Size());
 
-  renderer::FrameBuffer::Bind(base_tfb_.fbo);
+  renderer::FrameBuffer::Bind(base_tfb_->fbo);
   renderer::GSM.states.clear_color.Push(base::Vec4());
   renderer::FrameBuffer::Clear();
   renderer::GSM.states.clear_color.Pop();
@@ -633,7 +647,7 @@ void Window2::UpdateBaseTextureInternal() {
   shader.SetTone(tone_->AsBase());
   shader.SetColor(base::Vec4());
   shader.SetOpacity(back_opacity_ / 255.0f);
-  shader.SetTexture(windowskin_->GetTexture().tex);
+  shader.SetTexture(windowskin_->GetRaw()->tex);
   shader.SetTextureSize(windowskin_->GetSize());
   shader.SetTransOffset(base::Vec2());
   renderer::Texture::SetFilter(GL_LINEAR);
@@ -653,7 +667,7 @@ void Window2::UpdateBaseTextureInternal() {
   frame_shader.Bind();
   frame_shader.SetProjectionMatrix(
       renderer::GSM.states.viewport.Current().Size());
-  frame_shader.SetTexture(windowskin_->GetTexture().tex);
+  frame_shader.SetTexture(windowskin_->GetRaw()->tex);
   frame_shader.SetTextureSize(windowskin_->GetSize());
   frame_shader.SetTransOffset(base::Vec2());
 

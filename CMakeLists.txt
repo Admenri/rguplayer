@@ -1,25 +1,27 @@
 # Main build file of rgu project
-cmake_minimum_required(VERSION 3.18.0)
+cmake_minimum_required(VERSION 3.20.1)
 
-project(rgu_player VERSION 1.0.0)
+project(rgu_player)
+set(CMAKE_CXX_STANDARD 17)
 include_directories("${PROJECT_SOURCE_DIR}")
 
+if (MSVC)
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-set(CMAKE_CXX_STANDARD 17)
+endif ()
 
 #--------------------------------------------------------------------------------
 # Platform and compiler check
 #--------------------------------------------------------------------------------
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_compile_definitions(NOMINMAX)
   link_libraries(
     "shell32;ws2_32;iphlpapi;imagehlp;shlwapi;bcrypt"
     "setupapi;advapi32;uuid;version;oleaut32;ole32;imm32;winmm;user32;rpcrt4;usp10"
   )
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   link_libraries(crypt)
-endif()
+endif ()
 
 #--------------------------------------------------------------------------------
 # Auto-generated directory include path
@@ -27,12 +29,12 @@ endif()
 
 find_package(Python3 COMPONENTS Interpreter)
 
-if(Python3_FOUND)
+if (Python3_FOUND)
     set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
     message(STATUS "Found Python3: ${Python3_EXECUTABLE}")
-else()
+else ()
     message(FATAL_ERROR "Python3 not found.")
-endif()
+endif ()
 
 set(RGU_AUTOGEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/gen")
 include_directories("${RGU_AUTOGEN_DIR}")
@@ -47,27 +49,9 @@ include_directories(third_party)
 
 ### Android compile configure
 set(SDL_STATIC on)
-if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+if (CMAKE_SYSTEM_NAME STREQUAL "Android")
 set(SDL_STATIC off)
-endif()
-
-if(SDL_STATIC)
-  set(BUILD_SHARED_LIBS off)
-else()
-  set(BUILD_SHARED_LIBS on)
-endif()
-
-if(SDL_STATIC)
-  set(SDL3TTF_BUILD_SHARED_LIBS off)
-else()
-  set(SDL3TTF_BUILD_SHARED_LIBS on)
-endif()
-
-if(SDL_STATIC)
-  set(SDL3NET_BUILD_SHARED_LIBS off)
-else()
-  set(SDL3NET_BUILD_SHARED_LIBS on)
-endif()
+endif ()
 
 ## SDL
 add_subdirectory(third_party/SDL)
@@ -85,13 +69,14 @@ add_subdirectory(third_party/text_render)
 include_directories(third_party/text_render/include/SDL3_ttf)
 
 ## CRuby-Mri
-if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+## TODO: Enhance ruby build ins
+if (CMAKE_SYSTEM_NAME STREQUAL "Android")
   add_subdirectory(third_party/cmake-ruby)
   include_directories(third_party/cmake-ruby/include)
-else()
+else ()
   add_library(mri_ruby UNKNOWN IMPORTED)
-  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+  if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    if (CMAKE_SIZEOF_VOID_P EQUAL 4)
       set(RUBY_INCLUDE_PATH
         "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
         "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x86/"
@@ -99,7 +84,7 @@ else()
       set(RUBY_LIBRARY_PATH
         "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x86/vcruntime140-ruby320-static.lib"
       )
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    elseif (CMAKE_SIZEOF_VOID_P EQUAL 8)
       set(RUBY_INCLUDE_PATH
         "${PROJECT_SOURCE_DIR}/third_party/ruby/include/"
         "${PROJECT_SOURCE_DIR}/third_party/ruby/config/x64/"
@@ -107,28 +92,26 @@ else()
       set(RUBY_LIBRARY_PATH
         "${PROJECT_SOURCE_DIR}/third_party/ruby/lib/x64/x64-vcruntime140-ruby320-static.lib"
       )
-    else()
+    else ()
       message("No Implement")
-    endif()
-  else()
+    endif ()
+  else ()
     find_package(Ruby REQUIRED)
     set(RUBY_INCLUDE_PATH "${Ruby_INCLUDE_DIRS}" "${Ruby_CONFIG_INCLUDE_DIR}")
     set(RUBY_LIBRARY_PATH "${Ruby_LIBRARIES}")
     message(${RUBY_INCLUDE_PATH} ${RUBY_LIBRARY_PATH})
-  endif()
+  endif ()
   set_target_properties(mri_ruby PROPERTIES
                         IMPORTED_LOCATION "${RUBY_LIBRARY_PATH}"
                         INTERFACE_INCLUDE_DIRECTORIES "${RUBY_INCLUDE_PATH}")
-endif()
+endif ()
 
-## Google ANGLE
+## Google ANGLE Headers
 include_directories(third_party/angle/include)
 
 ## Physfs
 set(PHYSFS_BUILD_STATIC TRUE)
 set(PHYSFS_BUILD_SHARED FALSE)
-set(PHYSFS_TARGETNAME_UNINSTALL "physfs-uninstall")
-set(PHYSFS_TARGETNAME_DIST "physfs-dist")
 set(PHYSFS_BUILD_DOCS FALSE)
 add_subdirectory(third_party/physfs)
 include_directories(third_party/physfs/src)
