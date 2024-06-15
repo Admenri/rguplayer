@@ -123,14 +123,14 @@ class Bitmap : public base::RefCounted<Bitmap>,
 
   static void GetSurfaceInternal(renderer::TextureFrameBuffer* texture,
                                  SDL_Surface* output,
-                                 bool* fence);
+                                 std::atomic_bool* fence);
   static void UpdateSurfaceInternal(renderer::TextureFrameBuffer* texture,
                                     std::vector<uint8_t> data);
 
   void NeedUpdateSurface();
 
   base::Vec2i size_;
-  renderer::TextureFrameBuffer* texture_ = nullptr;
+  renderer::TextureFrameBuffer* texture_;
   scoped_refptr<Font> font_;
   base::RepeatingClosureList observers_;
   SDL_Surface* surface_buffer_;

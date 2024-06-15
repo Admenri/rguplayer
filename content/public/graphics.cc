@@ -157,7 +157,7 @@ void Graphics::FadeIn(int duration) {
 }
 
 void Graphics::Update() {
-  bool sync_fence = false;
+  std::atomic_bool sync_fence = false;
   if (!frozen_) {
     if (fps_manager_->RequireFrameSkip()) {
       if (config_->allow_frame_skip())
@@ -177,6 +177,7 @@ void Graphics::Update() {
     sync_fence = true;
   }
 
+  // Process frame delay
   FrameProcessInternal();
 
   if (!sync_fence)
@@ -625,7 +626,7 @@ void Graphics::FrameProcessInternal() {
   UpdateAverageFPSInternal();
 }
 
-void Graphics::UpdateInternal(bool* fence) {
+void Graphics::UpdateInternal(std::atomic_bool* fence) {
   CompositeScreenInternal();
   PresentScreenInternal(screen_buffer_[0]);
   *fence = true;

@@ -74,7 +74,6 @@ void Sprite::InitAttributeInternal() {
 
   quad_ = new renderer::QuadDrawable(false);
   wave_quads_ = new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
-
   screen()->renderer()->PostTask(base::BindOnce(
       [](renderer::QuadDrawable* quad,
          renderer::QuadDrawableArray<renderer::CommonVertex>* wave_quads) {

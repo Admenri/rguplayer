@@ -24,7 +24,6 @@ Plane::Plane(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
       color_(new Color()),
       tone_(new Tone()) {
   quad_array_ = new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
-
   screen->renderer()->PostTask(base::BindOnce(
       [](renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr) {
         quad_ptr->Init();
@@ -33,7 +32,6 @@ Plane::Plane(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
       quad_array_));
 
   layer_tfb_ = screen->AllocTexture(base::Vec2i(16, 16), true);
-
   OnParentViewportRectChanged(parent_rect());
 }
 

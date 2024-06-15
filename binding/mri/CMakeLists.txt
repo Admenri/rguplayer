@@ -91,7 +91,6 @@ target_link_libraries(binding_mri PUBLIC core_base core_renderer core_content co
 target_compile_options(binding_mri PRIVATE
   -Wno-unused-parameter
   -Wno-shadow
-  -Wno-cast-function-type
   -Wno-deprecated-declarations
   -Wno-missing-field-initializers
   -Wno-float-conversion

@@ -73,7 +73,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
   }
 
   size_ = base::Vec2i(width, height);
-  texture_ = screen()->AllocTexture(size_, true, GL_RGBA);
+  texture_ = screen()->AllocTexture(size_, true);
 }
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
@@ -345,7 +345,7 @@ SDL_Surface* Bitmap::SurfaceRequired() {
   surface_buffer_ =
       SDL_CreateSurface(size_.x, size_.y, SDL_PIXELFORMAT_ABGR8888);
 
-  bool sync_fence = false;
+  std::atomic_bool sync_fence = false;
   screen()->renderer()->PostTask(base::BindOnce(
       &Bitmap::GetSurfaceInternal, texture_, surface_buffer_, &sync_fence));
 
@@ -609,7 +609,7 @@ void Bitmap::DrawTextInternal(renderer::TextureFrameBuffer* texture,
 
 void Bitmap::GetSurfaceInternal(renderer::TextureFrameBuffer* texture,
                                 SDL_Surface* output,
-                                bool* fence) {
+                                std::atomic_bool* fence) {
   base::Vec2i& size = texture->size;
   renderer::GSM.states.viewport.Push(size);
   renderer::FrameBuffer::Bind(texture->fbo);

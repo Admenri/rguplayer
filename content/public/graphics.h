@@ -112,7 +112,7 @@ class Graphics final : public base::RefCounted<Graphics>,
                                    int duration,
                                    renderer::TextureFrameBuffer* trans_bitmap);
   void FrameProcessInternal();
-  void UpdateInternal(bool* fence);
+  void UpdateInternal(std::atomic_bool* fence);
 
   void AddDisposable(Disposable* disp);
   void RemoveDisposable(Disposable* disp);
