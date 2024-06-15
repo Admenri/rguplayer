@@ -5,6 +5,9 @@
 #ifndef CONTENT_PUBLIC_FONT_H_
 #define CONTENT_PUBLIC_FONT_H_
 
+#include <array>
+#include <fstream>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -13,36 +16,64 @@
 
 #include "base/memory/ref_counted.h"
 #include "components/filesystem/filesystem.h"
+#include "content/config/core_config.h"
 #include "content/public/utility.h"
 
 namespace content {
+
+class Font;
+
+class ScopedFontData {
+ public:
+  ScopedFontData(scoped_refptr<CoreConfigure> config,
+                 filesystem::Filesystem* io);
+  ~ScopedFontData();
+
+  ScopedFontData(const ScopedFontData&) = delete;
+  ScopedFontData& operator=(const ScopedFontData&) = delete;
+
+  void* GetUIDefaultFont(int64_t* font_size);
+
+  bool Existed(const std::string& name);
+  void SetDefaultName(const std::vector<std::string>& name);
+  std::vector<std::string> GetDefaultName();
+  void SetDefaultSize(int size);
+  int GetDefaultSize();
+  void SetDefaultBold(bool bold);
+  bool GetDefaultBold();
+  void SetDefaultItalic(bool italic);
+  bool GetDefaultItalic();
+  void SetDefaultShadow(bool shadow);
+  bool GetDefaultShadow();
+  void SetDefaultOutline(bool outline);
+  bool GetDefaultOutline();
+  void SetDefaultColor(scoped_refptr<Color> color);
+  scoped_refptr<Color> GetDefaultColor();
+  void SetDefaultOutColor(scoped_refptr<Color> color);
+  scoped_refptr<Color> GetDefaultOutColor();
+
+ private:
+  friend class Font;
+
+  std::vector<std::string> default_name_;
+  int default_size_ = 24;
+  bool default_bold_ = false;
+  bool default_italic_ = false;
+  bool default_outline_ = true;
+  bool default_shadow_ = false;
+  scoped_refptr<Color> default_color_ = nullptr;
+  scoped_refptr<Color> default_out_color_ = nullptr;
+
+  std::string font_default_name_;
+  std::map<std::pair<std::string, int>, TTF_Font*> font_cache_;
+  std::map<std::string, std::pair<int64_t, void*>> mem_fonts_;
+};
+
 class Font : public base::RefCounted<Font> {
  public:
-  static void InitStaticFont(filesystem::Filesystem* io);
-  static void* GetDefaultFont(int64_t* font_size);
-  static void DestroyStaticFont();
-
-  static bool Existed(const std::string& name);
-  static void SetDefaultName(const std::vector<std::string>& name);
-  static std::vector<std::string> GetDefaultName();
-  static void SetDefaultSize(int size);
-  static int GetDefaultSize();
-  static void SetDefaultBold(bool bold);
-  static bool GetDefaultBold();
-  static void SetDefaultItalic(bool italic);
-  static bool GetDefaultItalic();
-  static void SetDefaultShadow(bool shadow);
-  static bool GetDefaultShadow();
-  static void SetDefaultOutline(bool outline);
-  static bool GetDefaultOutline();
-  static void SetDefaultColor(scoped_refptr<Color> color);
-  static scoped_refptr<Color> GetDefaultColor();
-  static void SetDefaultOutColor(scoped_refptr<Color> color);
-  static scoped_refptr<Color> GetDefaultOutColor();
-
-  Font();
-  Font(const std::vector<std::string>& name);
-  Font(const std::vector<std::string>& name, int size);
+  Font(ScopedFontData* parent);
+  Font(ScopedFontData* parent, const std::vector<std::string>& name);
+  Font(ScopedFontData* parent, const std::vector<std::string>& name, int size);
   Font(const Font& other);
 
   const Font& operator=(const Font& other);
@@ -81,6 +112,7 @@ class Font : public base::RefCounted<Font> {
   scoped_refptr<Color> color_;
   scoped_refptr<Color> out_color_;
 
+  ScopedFontData* parent_;
   TTF_Font* font_;
 };
 

@@ -59,7 +59,7 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream) {
   /* Parse configure */
   if (!filestream) {
     std::string str = "Failed to load configure file.";
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Core", str.c_str(),
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Kernel", str.c_str(),
                              nullptr);
     return false;
   }
@@ -68,7 +68,7 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream) {
   SDL_CloseIO(filestream);
   if (reader.ParseError()) {
     std::string str = "Error when parse configure.";
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Core", str.c_str(),
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Kernel", str.c_str(),
                              nullptr);
     return false;
   }
@@ -80,8 +80,9 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream) {
   ReplaceStringWidth(game_scripts_, '\\', '/');
 
   /* Core config */
-  disable_audio_ = reader.GetBoolean("Core", "DisableAudio", false);
-  rgss_version_ = (RGSSVersion)reader.GetInteger("Core", "RGSSVerison", 0);
+  async_renderer_ = reader.GetBoolean("Kernel", "AsyncRenderer", true);
+  disable_audio_ = reader.GetBoolean("Kernel", "DisableAudio", false);
+  rgss_version_ = (RGSSVersion)reader.GetInteger("Kernel", "RGSSVerison", 0);
   if (rgss_version_ == RGSSVersion::Null) {
     if (!game_scripts_.empty()) {
       rgss_version_ = RGSSVersion::RGSS1;
@@ -116,12 +117,15 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream) {
   allow_frame_skip_ = reader.GetBoolean("Renderer", "AllowFrameSkip", false);
   smooth_scale_ = reader.GetBoolean("Renderer", "SmoothScale", true);
   keep_ratio_ = reader.GetBoolean("Renderer", "KeepRatio", true);
+  fullscreen_ = reader.GetBoolean("Renderer", "Fullscreen", false);
 
   /* Filesystem */
   int size = reader.GetInteger("Filesystem", "LoadPathListSize", 0);
   for (int i = 0; i < size; ++i)
-    load_paths_.push_back(
-        reader.Get("Filesystem", "LoadPath" + std::to_string(i + 1), ""));
+    load_paths_.push_back(reader.Get(
+        "Filesystem", "LoadPath" + std::to_string(i + 1), std::string()));
+  default_font_path_ =
+      reader.Get("Filesystem", "DefaultFontPath", "Fonts/Default.ttf");
 
   return true;
 }

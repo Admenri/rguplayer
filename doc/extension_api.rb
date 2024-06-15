@@ -105,6 +105,22 @@ get_counter -> Bignum
 get_counter_freq -> Bignum
 取计数器的频率（计数时间 ÷ 频率 = 秒）
 
+msgbox(Integer flags, String title, String msg)
+弹出对话框
+样式表：
+- MESSAGEBOX_ERROR                    0x00000010u /**< error dialog */
+- MESSAGEBOX_WARNING                  0x00000020u /**< warning dialog */
+- MESSAGEBOX_INFORMATION              0x00000040u /**< informational dialog */
+- MESSAGEBOX_BUTTONS_LEFT_TO_RIGHT    0x00000080u /**< buttons placed left to right */
+- MESSAGEBOX_BUTTONS_RIGHT_TO_LEFT    0x00000100u /**< buttons placed right to left */
+
+## Module - RGU::Console : 控制台模块
+puts(...)
+输出对象到控制台中
+
+gets -> String
+从控制台获取输入文本
+
 ## Module - Mouse : 鼠标扩展模块
 update
 更新鼠标状态，每帧调用

@@ -3,9 +3,11 @@
 // found in the LICENSE file.
 
 #include "binding/mri/init_rgu.h"
-#include "init_rgu.h"
+
+#include <iostream>
 
 #include "SDL_locale.h"
+#include "SDL_messagebox.h"
 #include "SDL_misc.h"
 #include "SDL_platform.h"
 #include "SDL_timer.h"
@@ -46,6 +48,39 @@ MRI_METHOD(rgu_get_counter_freq) {
   return rb_uint2big(SDL_GetPerformanceFrequency());
 }
 
+MRI_METHOD(rgu_msgbox) {
+  int flags;
+  std::string title;
+  std::string msg;
+  MriParseArgsTo(argc, argv, "iss", &flags, &title, &msg);
+
+  return INT2FIX(
+      SDL_ShowSimpleMessageBox(flags, title.c_str(), msg.c_str(), nullptr));
+}
+
+MRI_METHOD(rgu_console_puts) {
+  VALUE dispString = rb_str_buf_new(128);
+  ID conv = rb_intern("inspect");
+
+  for (int i = 0; i < argc; ++i) {
+    VALUE str = rb_funcall2(argv[i], conv, 0, NULL);
+    rb_str_buf_append(dispString, str);
+
+    if (i < argc)
+      rb_str_buf_cat2(dispString, " ");
+  }
+
+  LOG(INFO) << "[Console] " << RSTRING_PTR(dispString);
+  return Qnil;
+}
+
+MRI_METHOD(rgu_console_gets) {
+  std::string str;
+  std::cin >> str;
+
+  return rb_utf8_str_new(str.c_str(), str.size());
+}
+
 void InitRGUBinding() {
   scoped_refptr<content::BindingRunner> runner = MriGetGlobalRunner();
 
@@ -69,6 +104,14 @@ void InitRGUBinding() {
   // Graphics Etc
   MriDefineModuleFunction(module, "get_counter", rgu_get_counter);
   MriDefineModuleFunction(module, "get_counter_freq", rgu_get_counter_freq);
+
+  // Etc
+  MriDefineModuleFunction(module, "msgbox", rgu_msgbox);
+
+  // Console operate
+  VALUE console = rb_define_module_under(module, "Console");
+  MriDefineModuleFunction(console, "puts", rgu_console_puts);
+  MriDefineModuleFunction(console, "gets", rgu_console_gets);
 }
 
 }  // namespace binding

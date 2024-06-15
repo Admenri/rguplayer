@@ -58,7 +58,8 @@ Graphics::Graphics(WorkerShareData* share_data,
       fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)) {
   viewport_rect().rect = initial_resolution;
   viewport_rect().scissor = false;
-  Font::InitStaticFont(dispatcher_->share_data()->filesystem.get());
+  static_font_manager_ = std::make_unique<ScopedFontData>(
+      config_, dispatcher_->share_data()->filesystem.get());
 
   renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
                                      base::Unretained(this)));
@@ -66,7 +67,7 @@ Graphics::Graphics(WorkerShareData* share_data,
 }
 
 Graphics::~Graphics() {
-  Font::DestroyStaticFont();
+  static_font_manager_.reset();
 
   renderer_->PostTask(
       base::BindOnce(&Graphics::DestroyBufferInternal, base::Unretained(this)));
@@ -432,13 +433,18 @@ void Graphics::InitScreenBufferInternal() {
   ImGui::GetStyle().ScaleAllSizes(windowScale);
 
   // Apply default font
-  ImFontConfig font_config;
-  font_config.FontDataOwnedByAtlas = false;
   int64_t font_data_size;
-  void* font_data = Font::GetDefaultFont(&font_data_size);
-  io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0f * windowScale,
-                                 &font_config,
-                                 io.Fonts->GetGlyphRangesChineseFull());
+  void* font_data = static_font_manager_->GetUIDefaultFont(&font_data_size);
+  if (font_data) {
+    ImFontConfig font_config;
+    font_config.FontDataOwnedByAtlas = false;
+    io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size,
+                                   16.0f * windowScale, &font_config,
+                                   io.Fonts->GetGlyphRangesChineseFull());
+  } else {
+    // No default for GUI
+    LOG(INFO) << "[GUI] Invalid default font, use internal font.";
+  }
 
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
@@ -841,6 +847,13 @@ void Graphics::DrawGraphicsSettingsGUI() {
 
     // Skip Frame
     ImGui::Checkbox("Frame Skip", &share_data_->config->allow_frame_skip());
+
+    // Fullscreen
+    bool is_fullscreen = window()->IsFullscreen(),
+         last_fullscreen = is_fullscreen;
+    ImGui::Checkbox("Fullscreen", &is_fullscreen);
+    if (last_fullscreen != is_fullscreen)
+      window()->SetFullscreen(is_fullscreen);
   }
 }
 

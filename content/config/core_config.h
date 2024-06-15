@@ -49,6 +49,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
 
   RGSSVersion& content_version() { return rgss_version_; }
   bool& disable_audio() { return disable_audio_; }
+  bool& async_renderer() { return async_renderer_; }
 
   ANGLERenderer& angle_renderer() { return angle_renderer_; }
   bool& renderer_debug_output() { return renderer_debug_output_; }
@@ -57,8 +58,10 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   bool& allow_frame_skip() { return allow_frame_skip_; }
   bool& smooth_scale() { return smooth_scale_; }
   bool& keep_ratio() { return keep_ratio_; }
+  bool& fullscreen() { return fullscreen_; }
 
   std::vector<std::string>& load_paths() { return load_paths_; }
+  std::string& default_font_path() { return default_font_path_; }
 
  private:
   std::string executable_file_;
@@ -71,6 +74,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
 
   RGSSVersion rgss_version_;
   bool disable_audio_;
+  bool async_renderer_;
 
   ANGLERenderer angle_renderer_;
   bool renderer_debug_output_;
@@ -79,8 +83,10 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   bool allow_frame_skip_;
   bool smooth_scale_;
   bool keep_ratio_;
+  bool fullscreen_;
 
   std::vector<std::string> load_paths_;
+  std::string default_font_path_;
 };
 
 }  // namespace content

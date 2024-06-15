@@ -58,7 +58,7 @@ uint16_t utf8_to_ucs2(const char* _input, const char** end_ptr) {
 Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
     : GraphicElement(host),
       Disposable(host),
-      font_(new Font()),
+      font_(new Font(host->font_manager())),
       surface_buffer_(nullptr) {
   if (width <= 0 || height <= 0) {
     throw base::Exception(base::Exception::ContentError,
@@ -79,7 +79,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
     : GraphicElement(host),
       Disposable(host),
-      font_(new Font()),
+      font_(new Font(host->font_manager())),
       surface_buffer_(nullptr) {
   auto file_handler = base::BindRepeating(
       [](SDL_Surface** surf, SDL_IOStream* ops, const std::string& ext) {

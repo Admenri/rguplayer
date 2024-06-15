@@ -29,13 +29,6 @@ class Filesystem {
       base::RepeatingCallback<bool(SDL_IOStream*, const std::string&)>;
   void OpenRead(const std::string& file_path, OpenCallback callback);
   SDL_IOStream* OpenReadRaw(const std::string& filename);
-
-  base::WeakPtr<Filesystem> AsWeakPtr() {
-    return weak_ptr_factory_.GetWeakPtr();
-  }
-
- private:
-  base::WeakPtrFactory<Filesystem> weak_ptr_factory_{this};
 };
 
 }  // namespace filesystem

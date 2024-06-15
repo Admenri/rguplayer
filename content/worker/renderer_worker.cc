@@ -28,7 +28,7 @@ void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
   config_ = config;
   host_window_ = host_window;
 
-  worker_ = std::make_unique<base::ThreadWorker>(false);
+  worker_ = std::make_unique<base::ThreadWorker>(!config->async_renderer());
   worker_->Start(base::RunLoop::MessagePumpType::Worker);
   worker_->WaitUntilStart();
 
@@ -109,6 +109,8 @@ void RenderRunner::InitGLContextInternal() {
   renderer::GSM.InitStates();
   max_texture_size_ = renderer::GSM.max_texture_size();
 
+  if (config_->async_renderer())
+    LOG(INFO) << "[Content] Launching Renderer Thread...";
   LOG(INFO) << "[Content] GLRenderer: " << renderer::GL.GetString(GL_RENDERER);
   LOG(INFO) << "[Content] GLVendor: " << renderer::GL.GetString(GL_VENDOR);
   LOG(INFO) << "[Content] GLVersion: " << renderer::GL.GetString(GL_VERSION);

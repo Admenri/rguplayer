@@ -37,11 +37,13 @@ void font_init_prop(scoped_refptr<content::Font> font, VALUE self) {
 }
 
 MRI_METHOD(font_initialize) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
   scoped_refptr<content::Font> font_obj;
+
   switch (argc) {
     default:
     case 0:
-      font_obj = new content::Font();
+      font_obj = new content::Font(screen->font_manager());
       break;
     case 1: {
       VALUE name;
@@ -50,7 +52,7 @@ MRI_METHOD(font_initialize) {
       std::vector<std::string> name_ary;
       CollectStrings(name, name_ary);
 
-      font_obj = new content::Font(std::move(name_ary));
+      font_obj = new content::Font(screen->font_manager(), std::move(name_ary));
     } break;
     case 2: {
       VALUE name;
@@ -60,7 +62,8 @@ MRI_METHOD(font_initialize) {
       std::vector<std::string> name_ary;
       CollectStrings(name, name_ary);
 
-      font_obj = new content::Font(std::move(name_ary), size);
+      font_obj =
+          new content::Font(screen->font_manager(), std::move(name_ary), size);
     } break;
   }
 
@@ -91,7 +94,8 @@ MRI_METHOD(font_initialize_copy) {
 }
 
 MRI_METHOD(font_get_default_name) {
-  std::vector<std::string> names = content::Font::GetDefaultName();
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+  std::vector<std::string> names = screen->font_manager()->GetDefaultName();
 
   VALUE ary = rb_ary_new();
   for (auto it : names) {
@@ -104,10 +108,12 @@ MRI_METHOD(font_get_default_name) {
 MRI_METHOD(font_set_default_name) {
   MriCheckArgc(argc, 1);
 
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
   std::vector<std::string> names;
   CollectStrings(argv[0], names);
 
-  content::Font::SetDefaultName(std::move(names));
+  screen->font_manager()->SetDefaultName(std::move(names));
 
   return argv[0];
 }
@@ -120,9 +126,11 @@ MRI_METHOD(font_set_default_color) {
   VALUE o;
   MriParseArgsTo(argc, argv, "o", &o);
 
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
   scoped_refptr<content::Color> c =
       MriCheckStructData<content::Color>(o, kColorDataType);
-  content::Font::SetDefaultColor(c);
+  screen->font_manager()->SetDefaultColor(c);
 
   return o;
 }
@@ -135,20 +143,28 @@ MRI_METHOD(font_set_default_outcolor) {
   VALUE o;
   MriParseArgsTo(argc, argv, "o", &o);
 
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
   scoped_refptr<content::Color> c =
       MriCheckStructData<content::Color>(o, kColorDataType);
-  content::Font::SetDefaultOutColor(c);
+  screen->font_manager()->SetDefaultOutColor(c);
 
   return o;
 }
 
-#define FONT_DEFAULT_ATTR(name, type, p, f)                             \
-  MRI_METHOD(font_get_##name) { return f(content::Font::Get##name()); } \
-  MRI_METHOD(font_set_##name) {                                         \
-    type v;                                                             \
-    MriParseArgsTo(argc, argv, #p, &v);                                 \
-    content::Font::Set##name(v);                                        \
-    return self;                                                        \
+#define FONT_DEFAULT_ATTR(name, type, p, f)        \
+  MRI_METHOD(font_get_##name) {                    \
+    scoped_refptr<content::Graphics> screen =      \
+        MriGetGlobalRunner()->graphics();          \
+    return f(screen->font_manager()->Get##name()); \
+  }                                                \
+  MRI_METHOD(font_set_##name) {                    \
+    type v;                                        \
+    MriParseArgsTo(argc, argv, #p, &v);            \
+    scoped_refptr<content::Graphics> screen =      \
+        MriGetGlobalRunner()->graphics();          \
+    screen->font_manager()->Set##name(v);          \
+    return self;                                   \
   }
 
 FONT_DEFAULT_ATTR(DefaultSize, int, i, rb_fix_new);
@@ -240,10 +256,12 @@ void InitFontBinding() {
   VALUE klass = rb_define_class("Font", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kFontDataType>);
 
-  MriWrapProperty(klass, content::Font::GetDefaultColor(), "_color",
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  MriWrapProperty(klass, screen->font_manager()->GetDefaultColor(), "_color",
                   kColorDataType);
-  MriWrapProperty(klass, content::Font::GetDefaultOutColor(), "_out_color",
-                  kColorDataType);
+  MriWrapProperty(klass, screen->font_manager()->GetDefaultOutColor(),
+                  "_out_color", kColorDataType);
 
   MriDefineClassAttr(klass, "default_name", font, default_name);
   MriDefineClassAttr(klass, "default_color", font, default_color);

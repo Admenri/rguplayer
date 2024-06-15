@@ -88,6 +88,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   base::WeakPtr<ui::Widget> window() { return renderer_->window(); }
   int max_texture_size() const { return renderer_->max_texture_size(); }
   filesystem::Filesystem* filesystem();
+  ScopedFontData* font_manager() { return static_font_manager_.get(); }
 
   renderer::TextureFrameBuffer* AllocTexture(const base::Vec2i& size,
                                              bool clean = false,
@@ -148,6 +149,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   scoped_refptr<RenderRunner> renderer_;
   base::Vec2i resolution_;
   base::LinkedList<Disposable> disposable_elements_;
+  std::unique_ptr<ScopedFontData> static_font_manager_;
 
   bool frozen_;
   int brightness_;
