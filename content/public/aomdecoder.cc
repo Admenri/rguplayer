@@ -49,13 +49,8 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
     player_->setOnAudioData(OnAudioData, this);
     player_->setOnVideoFinished(OnVideoFinished, this);
 
-    // Init yuv texture
+    // Extract video info
     auto& info = *player_->info();
-    frame_data_ = std::make_unique<uvpx::Frame>(info.width, info.height);
-    screen()->renderer()->PostTask(
-        base::BindOnce(&AOMDecoder::CreateYUVInternal, base::Unretained(this),
-                       info.width, info.height));
-    screen()->renderer()->WaitForSync();
 
     // Init Audio components
     SDL_AudioSpec wanted_spec;
@@ -69,6 +64,13 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
       audio_stream_ = SDL_CreateAudioStream(&wanted_spec, &wanted_spec);
       SDL_BindAudioStream(audio_output_, audio_stream_);
     }
+
+    // Init yuv texture
+    frame_data_ = std::make_unique<uvpx::Frame>(info.width, info.height);
+    screen()->renderer()->PostTask(
+        base::BindOnce(&AOMDecoder::CreateYUVInternal, base::Unretained(this),
+                       base::Vec2i(info.width, info.height)));
+    screen()->renderer()->WaitForSync();
   }
 
   return result;
@@ -180,7 +182,7 @@ void AOMDecoder::OnVideoFinished(void* userPtr) {
   uvpx::debugLog("instace: %p video play finished.", self);
 }
 
-void AOMDecoder::CreateYUVInternal(int width, int height) {
+void AOMDecoder::CreateYUVInternal(const base::Vec2i& size) {
   if (video_quad_)
     return;
 
@@ -193,9 +195,9 @@ void AOMDecoder::CreateYUVInternal(int width, int height) {
     renderer::Texture::TexImage2D(w, h, GL_LUMINANCE);
   };
 
-  gen_plane(&video_planes_[Plane_Y], width, height);
-  gen_plane(&video_planes_[Plane_U], (width + 1) / 2, (height + 1) / 2);
-  gen_plane(&video_planes_[Plane_V], (width + 1) / 2, (height + 1) / 2);
+  gen_plane(&video_planes_[Plane_Y], size.x, size.y);
+  gen_plane(&video_planes_[Plane_U], (size.x + 1) / 2, (size.y + 1) / 2);
+  gen_plane(&video_planes_[Plane_V], (size.x + 1) / 2, (size.y + 1) / 2);
 
   video_quad_ = std::make_unique<renderer::QuadDrawable>();
 }

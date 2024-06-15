@@ -54,7 +54,7 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>,
  private:
   static void OnAudioData(void* userPtr, float* pcm, size_t count);
   static void OnVideoFinished(void* userPtr);
-  void CreateYUVInternal(int width, int height);
+  void CreateYUVInternal(const base::Vec2i& size);
   void DestroyYUVInternal();
   void UploadInternal(uvpx::Frame* yuv, bool* fence);
   void RenderInternal(renderer::TextureFrameBuffer* target);
