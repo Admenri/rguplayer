@@ -109,9 +109,6 @@ void Viewport::SetShader(scoped_refptr<Shader> shader) {
 
 void Viewport::OnObjectDisposed() {
   RemoveFromList();
-
-  screen()->renderer()->DeleteSoon(std::move(viewport_quad_));
-  screen()->FreeTexture(viewport_buffer_);
 }
 
 void Viewport::BeforeComposite() {
@@ -138,8 +135,9 @@ void Viewport::Composite() {
     else
       target_color = composite_color;
 
-    screen()->RenderEffectRequire(target_color, tone_->AsBase(),
-                                  shader_program_);
+    screen()->ApplyViewportEffect(viewport_rect().rect,
+                                  *screen()->GetScreenBuffer(), target_color,
+                                  tone_->AsBase(), shader_program_);
   }
 
   renderer::GSM.states.scissor_rect.Pop();
@@ -158,16 +156,6 @@ void Viewport::InitViewportInternal(const base::Rect& initial_rect) {
 
   color_ = new Color();
   tone_ = new Tone();
-
-  viewport_buffer_ = screen()->AllocTexture(viewport_rect().rect.Size(), false);
-
-  viewport_quad_ = new renderer::QuadDrawable(false);
-  screen()->renderer()->PostTask(base::BindOnce(
-      [](renderer::QuadDrawable* quad_ptr, const base::Rect& rect) {
-        quad_ptr->SetPositionRect(rect);
-        quad_ptr->SetTexCoordRect(rect);
-      },
-      viewport_quad_, base::Rect(viewport_rect().rect.Size())));
 }
 
 void Viewport::OnRectChangedInternal() {
@@ -176,20 +164,9 @@ void Viewport::OnRectChangedInternal() {
   viewport_rect().rect.y += parent_offset_.y;
 
   NotifyViewportChanged();
-  viewport_rect_need_update_ = true;
 }
 
 void Viewport::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
-  if (viewport_rect_need_update_) {
-    viewport_rect_need_update_ = false;
-    auto rect = base::Rect(viewport_rect().rect.Size());
-    viewport_quad_->SetPositionRect(rect);
-    viewport_quad_->SetTexCoordRect(rect);
-
-    renderer::TextureFrameBuffer::Alloc(*viewport_buffer_,
-                                        viewport_rect().rect.Size());
-  }
-
   NotifyPrepareComposite();
 
   renderer::FrameBuffer::Bind(target->fbo);
@@ -214,9 +191,8 @@ void Viewport::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
     else
       target_color = composite_color;
 
-    screen()->ApplyViewportEffect(*target, *viewport_buffer_, *viewport_quad_,
-                                  target_color, tone_->AsBase(),
-                                  shader_program_);
+    screen()->ApplyViewportEffect(viewport_rect().rect, *target, target_color,
+                                  tone_->AsBase(), shader_program_);
   }
 
   renderer::GSM.states.scissor_rect.Pop();

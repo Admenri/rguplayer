@@ -401,13 +401,9 @@ void Graphics::FreeTexture(renderer::TextureFrameBuffer*& texture_data) {
 void Graphics::InitScreenBufferInternal() {
   SDL_GL_GetSwapInterval(&vsync_interval_);
 
-  screen_buffer_[0] = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(screen_buffer_[0], resolution_);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(screen_buffer_[0]);
-
-  screen_buffer_[1] = renderer::TextureFrameBuffer::Gen();
-  renderer::TextureFrameBuffer::Alloc(screen_buffer_[1], resolution_);
-  renderer::TextureFrameBuffer::LinkFrameBuffer(screen_buffer_[1]);
+  screen_buffer_ = renderer::TextureFrameBuffer::Gen();
+  renderer::TextureFrameBuffer::Alloc(screen_buffer_, resolution_);
+  renderer::TextureFrameBuffer::LinkFrameBuffer(screen_buffer_);
 
   frozen_snapshot_ = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(frozen_snapshot_, resolution_);
@@ -458,8 +454,7 @@ void Graphics::InitScreenBufferInternal() {
 }
 
 void Graphics::DestroyBufferInternal() {
-  renderer::TextureFrameBuffer::Del(screen_buffer_[0]);
-  renderer::TextureFrameBuffer::Del(screen_buffer_[1]);
+  renderer::TextureFrameBuffer::Del(screen_buffer_);
   renderer::TextureFrameBuffer::Del(frozen_snapshot_);
 
   screen_quad_.reset();
@@ -473,7 +468,7 @@ void Graphics::CompositeScreenInternal() {
   /* Prepare composite notify */
   DrawableParent::NotifyPrepareComposite();
 
-  renderer::FrameBuffer::Bind(screen_buffer_[0].fbo);
+  renderer::FrameBuffer::Bind(screen_buffer_.fbo);
   renderer::GSM.states.clear_color.Push(base::Vec4(0, 0, 0, 1));
   renderer::FrameBuffer::Clear();
   renderer::GSM.states.clear_color.Pop();
@@ -495,8 +490,7 @@ void Graphics::CompositeScreenInternal() {
 }
 
 void Graphics::ResizeResolutionInternal() {
-  renderer::TextureFrameBuffer::Alloc(screen_buffer_[0], resolution_);
-  renderer::TextureFrameBuffer::Alloc(screen_buffer_[1], resolution_);
+  renderer::TextureFrameBuffer::Alloc(screen_buffer_, resolution_);
   renderer::TextureFrameBuffer::Alloc(frozen_snapshot_, resolution_);
 
   screen_quad_->SetPositionRect(base::Vec2(resolution_));
@@ -556,7 +550,7 @@ void Graphics::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
   CompositeScreenInternal();
 
   renderer::Blt::BeginDraw(*target);
-  renderer::Blt::TexSource(screen_buffer_[0]);
+  renderer::Blt::TexSource(screen_buffer_);
   renderer::Blt::BltDraw(resolution_, resolution_);
   renderer::Blt::EndDraw();
 }
@@ -565,7 +559,7 @@ void Graphics::FreezeSceneInternal() {
   CompositeScreenInternal();
 
   renderer::Blt::BeginDraw(frozen_snapshot_);
-  renderer::Blt::TexSource(screen_buffer_[0]);
+  renderer::Blt::TexSource(screen_buffer_);
   renderer::Blt::BltDraw(resolution_, resolution_);
   renderer::Blt::EndDraw();
 }
@@ -606,22 +600,23 @@ void Graphics::TransitionSceneInternalLoop(
   if (!trans_bitmap) {
     alpha_shader.Bind();
     alpha_shader.SetFrozenTexture(frozen_snapshot_.tex);
-    alpha_shader.SetCurrentTexture(screen_buffer_[0].tex);
+    alpha_shader.SetCurrentTexture(screen_buffer_.tex);
     alpha_shader.SetProgress(progress);
   } else {
     vague_shader.Bind();
     vague_shader.SetFrozenTexture(frozen_snapshot_.tex);
-    vague_shader.SetCurrentTexture(screen_buffer_[0].tex);
+    vague_shader.SetCurrentTexture(screen_buffer_.tex);
     vague_shader.SetTransTexture(trans_bitmap->tex);
     vague_shader.SetProgress(progress);
   }
 
-  renderer::FrameBuffer::Bind(screen_buffer_[1].fbo);
+  auto& temp_fbo = renderer::GSM.EnsureCommonTFB(resolution_.x, resolution_.y);
+  renderer::FrameBuffer::Bind(temp_fbo.fbo);
   renderer::FrameBuffer::Clear();
   screen_quad_->Draw();
 
   // present with backend buffer
-  PresentScreenInternal(screen_buffer_[1]);
+  PresentScreenInternal(temp_fbo);
 }
 
 void Graphics::FrameProcessInternal() {
@@ -637,7 +632,7 @@ void Graphics::FrameProcessInternal() {
 
 void Graphics::UpdateInternal(std::atomic_bool* fence) {
   CompositeScreenInternal();
-  PresentScreenInternal(screen_buffer_[0]);
+  PresentScreenInternal(screen_buffer_);
   *fence = true;
 }
 
@@ -649,20 +644,13 @@ void Graphics::RemoveDisposable(Disposable* disp) {
   disp->link_.RemoveFromList();
 }
 
-void Graphics::RenderEffectRequire(const base::Vec4& color,
-                                   const base::Vec4& tone,
-                                   scoped_refptr<Shader> program) {
-  ApplyViewportEffect(screen_buffer_[0], screen_buffer_[1], *screen_quad_,
-                      color, tone, program);
-}
-
-void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
-                                   renderer::TextureFrameBuffer& backend,
-                                   renderer::QuadDrawable& quad,
+void Graphics::ApplyViewportEffect(const base::Rect& blend_area,
+                                   renderer::TextureFrameBuffer& effect_target,
                                    const base::Vec4& color,
                                    const base::Vec4& tone,
                                    scoped_refptr<Shader> program) {
-  const base::Rect& screen_rect = resolution_;
+  auto& temp_fbo =
+      renderer::GSM.EnsureCommonTFB(blend_area.width, blend_area.height);
 
   const bool has_tone_effect =
       (tone.x != 0 || tone.y != 0 || tone.z != 0 || tone.w != 0);
@@ -672,23 +660,23 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
     return;
 
   renderer::GSM.states.scissor.Push(false);
-  renderer::Blt::BeginDraw(backend);
-  renderer::Blt::TexSource(frontend);
-  renderer::Blt::BltDraw(screen_rect, screen_rect);
+  renderer::Blt::BeginDraw(temp_fbo);
+  renderer::Blt::TexSource(effect_target);
+  renderer::Blt::BltDraw(blend_area, blend_area.Size());
   renderer::Blt::EndDraw();
   renderer::GSM.states.scissor.Pop();
 
-  renderer::FrameBuffer::Bind(frontend.fbo);
+  renderer::FrameBuffer::Bind(effect_target.fbo);
   if (program && !program->IsDisposed()) {
     program->BindShader();
     program->SetInternalUniform();
 
     GLint texture_location = program->GetUniformLocation("u_texture");
-    renderer::GLES2ShaderBase::SetTexture(texture_location, backend.tex.gl, 1);
+    renderer::GLES2ShaderBase::SetTexture(texture_location, temp_fbo.tex.gl, 1);
 
     GLint texture_size_location = program->GetUniformLocation("u_texSize");
-    renderer::GL.Uniform2f(texture_size_location, 1.0f / screen_rect.width,
-                           1.0f / screen_rect.height);
+    renderer::GL.Uniform2f(texture_size_location, 1.0f / blend_area.width,
+                           1.0f / blend_area.height);
 
     GLint color_location = program->GetUniformLocation("u_color");
     renderer::GL.Uniform4f(color_location, color.x, color.y, color.z, color.w);
@@ -701,12 +689,15 @@ void Graphics::ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTone(tone);
     shader.SetColor(color);
-    shader.SetTexture(backend.tex);
-    shader.SetTextureSize(screen_rect.Size());
+    shader.SetTexture(temp_fbo.tex);
+    shader.SetTextureSize(blend_area.Size());
   }
 
   renderer::GSM.states.blend.Push(false);
-  quad.Draw();
+  auto* quad = renderer::GSM.common_quad();
+  quad->SetPositionRect(blend_area);
+  quad->SetTexCoordRect(base::Rect(blend_area.Size()));
+  quad->Draw();
   renderer::GSM.states.blend.Pop();
 }
 

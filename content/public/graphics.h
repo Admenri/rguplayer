@@ -97,6 +97,10 @@ class Graphics final : public base::RefCounted<Graphics>,
                                              size_t buffer_size = 0);
   void FreeTexture(renderer::TextureFrameBuffer*& texture_data);
 
+  inline renderer::TextureFrameBuffer* GetScreenBuffer() {
+    return &screen_buffer_;
+  }
+
  private:
   friend class Viewport;
   friend class Disposable;
@@ -118,12 +122,8 @@ class Graphics final : public base::RefCounted<Graphics>,
   void AddDisposable(Disposable* disp);
   void RemoveDisposable(Disposable* disp);
 
-  void RenderEffectRequire(const base::Vec4& color,
-                           const base::Vec4& tone,
-                           scoped_refptr<Shader> program);
-  void ApplyViewportEffect(renderer::TextureFrameBuffer& frontend,
-                           renderer::TextureFrameBuffer& backend,
-                           renderer::QuadDrawable& quad,
+  void ApplyViewportEffect(const base::Rect& blend_area,
+                           renderer::TextureFrameBuffer& effect_target,
                            const base::Vec4& color,
                            const base::Vec4& tone,
                            scoped_refptr<Shader> program);
@@ -139,7 +139,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   void DrawGraphicsSettingsGUI();
 
   WorkerShareData* share_data_;
-  renderer::TextureFrameBuffer screen_buffer_[2];
+  renderer::TextureFrameBuffer screen_buffer_;
   renderer::TextureFrameBuffer frozen_snapshot_;
   std::unique_ptr<renderer::QuadDrawable> screen_quad_;
   std::list<renderer::TextureFrameBuffer> texture_pool_;

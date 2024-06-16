@@ -104,11 +104,6 @@ class Viewport : public base::RefCounted<Viewport>,
   scoped_refptr<Tone> tone_;
   base::CallbackListSubscription rect_observer_;
 
-  renderer::QuadDrawable* viewport_quad_ = nullptr;
-  renderer::TextureFrameBuffer* viewport_buffer_ = nullptr;
-
-  bool viewport_rect_need_update_ = false;
-
   scoped_refptr<Shader> shader_program_;
 };
 
