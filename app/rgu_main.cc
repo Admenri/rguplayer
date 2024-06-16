@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  if (!config->LoadConfigure(inifile))
+  if (!config->LoadConfigure(inifile, app))
     return 1;
 
   config->executable_file() = app;
@@ -119,6 +119,9 @@ int main(int argc, char* argv[]) {
                              nullptr);
     return 1;
   }
+
+  // Load i18n translation
+  config->Loadi18nXML(iosystem.get());
 
   SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");

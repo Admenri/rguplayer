@@ -5,6 +5,7 @@
 #include "content/public/graphics.h"
 
 #include "components/fpslimiter/fpslimiter.h"
+#include "content/common/graphics_gui_ids.h"
 #include "content/config/core_config.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
@@ -22,13 +23,15 @@
 
 namespace {
 
-void DrawEngineInfoGUI() {
-  if (ImGui::CollapsingHeader("About")) {
+void DrawEngineInfoGUI(scoped_refptr<content::CoreConfigure> config) {
+  if (ImGui::CollapsingHeader(
+          config->GetI18NString(IDS_SETTINGS_ABOUT, "About").c_str())) {
     ImGui::Text("Ruby Game Universal (RGU) Runtime");
     ImGui::Separator();
     ImGui::Text("Copyright (C) 2015-2024 Admenri.");
-    ImGui::Text("The RGU is licensed under the BSD-3-Clause License, ");
-    ImGui::Text("see LICENSE for more information.");
+    ImGui::TextWrapped(
+        "The RGU is licensed under the BSD-3-Clause License, see LICENSE for "
+        "more information.");
 
     if (ImGui::Button("Github"))
       SDL_OpenURL("https://github.com/Admenri/rguplayer");
@@ -794,7 +797,8 @@ void Graphics::DrawSettingsWindowInternal() {
   ImGui::SetNextWindowPos(ImVec2(), ImGuiCond_FirstUseEver);
   ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
 
-  if (ImGui::Begin("Settings")) {
+  if (ImGui::Begin(
+          config_->GetI18NString(IDS_MENU_SETTINGS, "Settings").c_str())) {
     share_data_->menu_window_focused = ImGui::IsWindowFocused();
 
     // Button settings
@@ -807,7 +811,7 @@ void Graphics::DrawSettingsWindowInternal() {
     share_data_->create_audio_settings_gui.Run();
 
     // Engine Info
-    DrawEngineInfoGUI();
+    DrawEngineInfoGUI(config_);
 
     // End window create
     ImGui::End();
@@ -815,7 +819,8 @@ void Graphics::DrawSettingsWindowInternal() {
 }
 
 void Graphics::DrawGraphicsSettingsGUI() {
-  if (ImGui::CollapsingHeader("Graphics")) {
+  if (ImGui::CollapsingHeader(
+          config_->GetI18NString(IDS_SETTINGS_GRAPHICS, "Graphics").c_str())) {
     static std::string ogl_renderer(
         (const char*)renderer::GL.GetString(GL_RENDERER));
     static std::string ogl_vendor(
@@ -823,35 +828,55 @@ void Graphics::DrawGraphicsSettingsGUI() {
     static std::string ogl_version(
         (const char*)renderer::GL.GetString(GL_VERSION));
 
-    ImGui::TextWrapped("Renderer: %s", ogl_renderer.c_str());
+    ImGui::TextWrapped(
+        config_->GetI18NString(IDS_GRAPHICS_RENDERER, "Renderer: %s").c_str(),
+        ogl_renderer.c_str());
     ImGui::Separator();
-    ImGui::TextWrapped("Vendor: %s", ogl_vendor.c_str());
+    ImGui::TextWrapped(
+        config_->GetI18NString(IDS_GRAPHICS_VENDOR, "Vendor: %s").c_str(),
+        ogl_vendor.c_str());
     ImGui::Separator();
-    ImGui::TextWrapped("Version: %s", ogl_version.c_str());
+    ImGui::TextWrapped(
+        config_->GetI18NString(IDS_GRAPHICS_VERSION, "Version: %s").c_str(),
+        ogl_version.c_str());
     ImGui::Separator();
-    ImGui::Text("Average FPS: %d", share_data_->display_fps);
+    ImGui::Text(
+        config_->GetI18NString(IDS_GRAPHICS_AVERAGE_FPS, "Average FPS: %d")
+            .c_str(),
+        share_data_->display_fps);
     ImGui::Separator();
 
     // V-Sync
     int gl_vsync;
     SDL_GL_GetSwapInterval(&gl_vsync);
     bool ui_vsync = gl_vsync;
-    ImGui::Checkbox("V-Sync", &ui_vsync);
+    ImGui::Checkbox(
+        config_->GetI18NString(IDS_GRAPHICS_VSYNC, "V-Sync").c_str(),
+        &ui_vsync);
     SDL_GL_SetSwapInterval(ui_vsync ? 1 : 0);
 
     // Smooth Scale
-    ImGui::Checkbox("Smooth Scale", &share_data_->config->smooth_scale());
+    ImGui::Checkbox(
+        config_->GetI18NString(IDS_GRAPHICS_SMOOTH_SCALE, "Smooth Scale")
+            .c_str(),
+        &share_data_->config->smooth_scale());
 
     // ScreenRatio
-    ImGui::Checkbox("Keep Ratio", &share_data_->config->keep_ratio());
+    ImGui::Checkbox(
+        config_->GetI18NString(IDS_GRAPHICS_KEEP_RATIO, "Keep Ratio").c_str(),
+        &share_data_->config->keep_ratio());
 
     // Skip Frame
-    ImGui::Checkbox("Frame Skip", &share_data_->config->allow_frame_skip());
+    ImGui::Checkbox(
+        config_->GetI18NString(IDS_GRAPHICS_SKIP_FRAME, "Skip Frame").c_str(),
+        &share_data_->config->allow_frame_skip());
 
     // Fullscreen
     bool is_fullscreen = window()->IsFullscreen(),
          last_fullscreen = is_fullscreen;
-    ImGui::Checkbox("Fullscreen", &is_fullscreen);
+    ImGui::Checkbox(
+        config_->GetI18NString(IDS_GRAPHICS_FULLSCREEN, "Fullscreen").c_str(),
+        &is_fullscreen);
     if (last_fullscreen != is_fullscreen)
       window()->SetFullscreen(is_fullscreen);
   }

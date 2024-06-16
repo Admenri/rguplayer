@@ -5,6 +5,7 @@
 #include "content/public/input.h"
 
 #include "base/worker/run_loop.h"
+#include "content/common/graphics_gui_ids.h"
 #include "third_party/imgui/imgui.h"
 
 #include "SDL_events.h"
@@ -395,10 +396,12 @@ void Input::UpdateDir8Internal() {
 }
 
 void Input::ShowButtonSettingsGUI() {
+  scoped_refptr<CoreConfigure> config = share_data_->config;
   static int selected_button = 0, selected_binding = -1;
   share_data_->disable_gui_key_input = (selected_binding != -1);
 
-  if (ImGui::CollapsingHeader("Button")) {
+  if (ImGui::CollapsingHeader(
+          config->GetI18NString(IDS_SETTINGS_BUTTON, "Button").c_str())) {
     auto list_height = 6 * ImGui::GetTextLineHeightWithSpacing();
     // Button name list box
     if (ImGui::BeginListBox(
@@ -431,7 +434,7 @@ void Input::ShowButtonSettingsGUI() {
             // Generate button sign
             std::string display_button_name = SDL_GetScancodeName(it.scancode);
             if (it.scancode == SDL_SCANCODE_UNKNOWN)
-              display_button_name = "<empty>";
+              display_button_name = "<x>";
             if (is_select)
               display_button_name = "<...>";
             display_button_name += "##";
@@ -474,7 +477,7 @@ void Input::ShowButtonSettingsGUI() {
       }
 
       // Add binding
-      if (ImGui::Button("Add")) {
+      if (ImGui::Button(config->GetI18NString(IDS_BUTTON_ADD, "Add").c_str())) {
         selected_binding = -1;
         setting_bindings_.push_back(
             KeyBinding{button_name, SDL_SCANCODE_UNKNOWN});
@@ -483,7 +486,9 @@ void Input::ShowButtonSettingsGUI() {
       ImGui::SameLine();
 
       // Remove binding
-      if (selected_binding >= 0 && ImGui::Button("Remove")) {
+      if (selected_binding >= 0 &&
+          ImGui::Button(
+              config->GetI18NString(IDS_BUTTON_REMOVE, "Remove").c_str())) {
         auto it = setting_bindings_.begin();
         for (int i = 0; i < selected_binding; ++i)
           it++;
@@ -495,13 +500,17 @@ void Input::ShowButtonSettingsGUI() {
       ImGui::EndGroup();
     }
 
-    if (ImGui::Button("Save Settings")) {
+    if (ImGui::Button(
+            config->GetI18NString(IDS_BUTTON_SAVE_SETTINGS, "Save Settings")
+                .c_str())) {
       key_bindings_ = setting_bindings_;
       selected_binding = -1;
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Reset Settings")) {
+    if (ImGui::Button(
+            config->GetI18NString(IDS_BUTTON_RESET_SETTINGS, "Reset Settings")
+                .c_str())) {
       setting_bindings_ = key_bindings_;
       selected_binding = -1;
     }

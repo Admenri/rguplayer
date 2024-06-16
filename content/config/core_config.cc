@@ -5,7 +5,9 @@
 #include "content/config/core_config.h"
 
 #include "base/debug/logging.h"
+#include "base/exceptions/exception.h"
 #include "inih/INIReader.h"
+#include "rapidxml/rapidxml.hpp"
 
 #include "SDL_messagebox.h"
 
@@ -55,7 +57,8 @@ void CoreConfigure::LoadCommandLine(int argc, char** argv) {
     LOG(INFO) << "[App] Running battle test.";
 }
 
-bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream) {
+bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream,
+                                  const std::string& app) {
   /* Parse configure */
   if (!filestream) {
     std::string str = "Failed to load configure file.";
@@ -126,8 +129,50 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream) {
         "Filesystem", "LoadPath" + std::to_string(i + 1), std::string()));
   default_font_path_ =
       reader.Get("Filesystem", "DefaultFontPath", "Fonts/Default.ttf");
+  i18n_xml_path_ = reader.Get("Filesystem", "XMLPath", app + ".xml");
 
   return true;
+}
+
+void CoreConfigure::Loadi18nXML(filesystem::Filesystem* io) {
+  SDL_IOStream* ops = nullptr;
+  try {
+    ops = io->OpenReadRaw(i18n_xml_path_);
+  } catch (base::Exception& e) {
+    LOG(INFO) << "[Config] Disable i18n XML Configure file.";
+    return;
+  }
+
+  rapidxml::xml_document<> doc;
+
+  int64_t fsize = SDL_GetIOSize(ops);
+  char* buf = new char[fsize + 1];
+  buf[fsize] = '\0';
+  SDL_ReadIO(ops, buf, fsize);
+  doc.parse<rapidxml::parse_default>(buf);
+  delete[] buf;
+
+  rapidxml::xml_node<>* root = doc.first_node("translationbundle");
+  if (root) {
+    if (rapidxml::xml_attribute<>* lang = root->first_attribute("lang"))
+      LOG(INFO) << "[Locate] Engine language: " << lang->value();
+
+    for (rapidxml::xml_node<>* iter = root->first_node("translation"); iter;
+         iter = iter->next_sibling("translation")) {
+      rapidxml::xml_attribute<>* attr = iter->first_attribute("id");
+      if (attr)
+        i18n_translation_.emplace(std::stoi(attr->value()),
+                                  std::string(iter->value()));
+    }
+  }
+}
+
+std::string CoreConfigure::GetI18NString(int ids,
+                                         const std::string& default_value) {
+  auto iter = i18n_translation_.find(ids);
+  if (iter != i18n_translation_.end())
+    return iter->second;
+  return default_value;
 }
 
 }  // namespace content

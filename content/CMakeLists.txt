@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 3.20.1)
 #--------------------------------------------------------------------------------
 
 set(CORE_CONTENT_SRC
+  common/graphics_gui_ids.h
   common/tilemap_common.cc
   common/tilemap_common.h
   common/serializable.cc

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<translationbundle lang="zh-CN">
+<translation id="10001">设置菜单</translation>
+<translation id="20001">图像设置</translation>
+<translation id="20002">渲染器</translation>
+<translation id="20003">厂商</translation>
+<translation id="20004">版本</translation>
+<translation id="20005">平均FPS</translation>
+<translation id="20006">垂直同步</translation>
+<translation id="20007">平滑缩放</translation>
+<translation id="20008">保持比例</translation>
+<translation id="20009">允许跳帧</translation>
+<translation id="20010">全屏</translation>
+<translation id="30001">按键设置</translation>
+<translation id="30002">添加</translation>
+<translation id="30003">移除</translation>
+<translation id="30004">保存设置</translation>
+<translation id="30005">重置设置</translation>
+<translation id="40001">音频设置</translation>
+<translation id="40002">音量</translation>
+<translation id="50001">引擎信息</translation>
+</translationbundle>

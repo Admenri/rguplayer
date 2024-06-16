@@ -5,6 +5,7 @@
 #include "content/public/audio.h"
 
 #include "base/exceptions/exception.h"
+#include "content/common/graphics_gui_ids.h"
 #include "third_party/imgui/imgui.h"
 
 #include "SDL_timer.h"
@@ -463,9 +464,13 @@ void Audio::ResetInternal() {
 }
 
 void Audio::DrawAudioSettingsGUI() {
-  if (ImGui::CollapsingHeader("Audio")) {
+  scoped_refptr<CoreConfigure> config = share_data_->config;
+  if (ImGui::CollapsingHeader(
+          config->GetI18NString(IDS_SETTINGS_AUDIO, "Audio").c_str())) {
     float volume = core_.getGlobalVolume();
-    ImGui::SliderFloat("Volume", &volume, 0, 1);
+    ImGui::SliderFloat(
+        config->GetI18NString(IDS_AUDIO_VOLUME, "Volume").c_str(), &volume, 0,
+        1);
     core_.setGlobalVolume(volume);
   }
 }
