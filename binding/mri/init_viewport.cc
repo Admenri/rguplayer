@@ -34,6 +34,9 @@ MRI_METHOD(viewport_initialize) {
           MriCheckStructData<content::Viewport>(rect, kViewportDataType);
 
       obj = new content::Viewport(screen, vp_obj);
+    } else {
+      // Default create
+      obj = new content::Viewport(screen);
     }
   } else {
     int x, y, width, height;
