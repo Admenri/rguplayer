@@ -146,11 +146,10 @@ void CoreConfigure::Loadi18nXML(filesystem::Filesystem* io) {
   rapidxml::xml_document<> doc;
 
   int64_t fsize = SDL_GetIOSize(ops);
-  char* buf = new char[fsize + 1];
+  char* buf = static_cast<char*>(SDL_malloc(fsize + 1));
   buf[fsize] = '\0';
   SDL_ReadIO(ops, buf, fsize);
   doc.parse<rapidxml::parse_default>(buf);
-  delete[] buf;
 
   rapidxml::xml_node<>* root = doc.first_node("translationbundle");
   if (root) {
@@ -160,11 +159,15 @@ void CoreConfigure::Loadi18nXML(filesystem::Filesystem* io) {
     for (rapidxml::xml_node<>* iter = root->first_node("translation"); iter;
          iter = iter->next_sibling("translation")) {
       rapidxml::xml_attribute<>* attr = iter->first_attribute("id");
-      if (attr)
+      if (attr) {
+        // Insert i18n translation
         i18n_translation_.emplace(std::stoi(attr->value()),
                                   std::string(iter->value()));
+      }
     }
   }
+
+  SDL_free(buf);
 }
 
 std::string CoreConfigure::GetI18NString(int ids,
