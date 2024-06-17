@@ -664,7 +664,6 @@ void Graphics::ApplyViewportEffect(const base::Rect& blend_area,
   renderer::Blt::TexSource(effect_target);
   renderer::Blt::BltDraw(blend_area, blend_area.Size());
   renderer::Blt::EndDraw();
-  renderer::GSM.states.scissor.Pop();
 
   renderer::FrameBuffer::Bind(effect_target.fbo);
   if (program && !program->IsDisposed()) {
@@ -690,7 +689,7 @@ void Graphics::ApplyViewportEffect(const base::Rect& blend_area,
     shader.SetTone(tone);
     shader.SetColor(color);
     shader.SetTexture(temp_fbo.tex);
-    shader.SetTextureSize(blend_area.Size());
+    shader.SetTextureSize(temp_fbo.size);
   }
 
   renderer::GSM.states.blend.Push(false);
@@ -699,6 +698,7 @@ void Graphics::ApplyViewportEffect(const base::Rect& blend_area,
   quad->SetTexCoordRect(base::Rect(blend_area.Size()));
   quad->Draw();
   renderer::GSM.states.blend.Pop();
+  renderer::GSM.states.scissor.Pop();
 }
 
 void Graphics::UpdateAverageFPSInternal() {
