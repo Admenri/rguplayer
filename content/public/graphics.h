@@ -80,6 +80,13 @@ class Graphics final : public base::RefCounted<Graphics>,
   int GetDisplayHeight();
 
   void SetDrawableOffset(const base::Vec2i& offset);
+  const base::Vec2i& GetDrawableOffset();
+
+  void SetWindowFavicon(scoped_refptr<Bitmap> icon);
+  void SetWindowTitle(const std::string& title);
+  void SetWindowMinimumSize(const base::Vec2i& size);
+  void SetWindowAspectRatio(float min_ratio, float max_ratio);
+  void SetWindowAlwaysOnTop(bool top);
 
   inline bool frozen() const { return frozen_; }
   RGSSVersion content_version() const;

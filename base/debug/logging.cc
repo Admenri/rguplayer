@@ -193,13 +193,12 @@ LogMessage::~LogMessage() {
     str_newline += file_;
     str_newline += " - Line: ";
     str_newline += line_;
-    str_newline += "\n";
   }
 
 #ifdef __ANDROID__
   __android_log_write(ANDROID_LOG_DEBUG, "rgucore", str_newline.c_str());
 #else
-  std::cerr << "[LOG] " << str_newline << std::endl;
+  printf("[LOG] %s\n", str_newline.c_str());
 #endif
 }
 

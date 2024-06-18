@@ -81,6 +81,12 @@ MRI_METHOD(rgu_console_gets) {
   return rb_utf8_str_new(str.c_str(), str.size());
 }
 
+MRI_METHOD(rgu_delay) {
+  MriCheckArgc(argc, 1);
+  SDL_Delay(FIX2INT(argv[0]));
+  return Qnil;
+}
+
 void InitRGUBinding() {
   scoped_refptr<content::BindingRunner> runner = MriGetGlobalRunner();
 
@@ -104,6 +110,7 @@ void InitRGUBinding() {
   // Graphics Etc
   MriDefineModuleFunction(module, "get_counter", rgu_get_counter);
   MriDefineModuleFunction(module, "get_counter_freq", rgu_get_counter_freq);
+  MriDefineModuleFunction(module, "delay", rgu_delay);
 
   // Etc
   MriDefineModuleFunction(module, "msgbox", rgu_msgbox);

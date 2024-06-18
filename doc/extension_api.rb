@@ -105,6 +105,9 @@ get_counter -> Bignum
 get_counter_freq -> Bignum
 取计数器的频率（计数时间 ÷ 频率 = 秒）
 
+delay(Integer ms)
+等待ms毫秒
+
 msgbox(Integer flags, String title, String msg)
 弹出对话框
 样式表：
@@ -354,10 +357,18 @@ display_width display_height
 获取游戏窗口的大小
 
 set_drawable_offset(Integer x, Integer y)
+get_drawable_offset -> Array
 设置整体画面的偏移
 
 transition(..., Bitmap transmap, ...)
 将filename参数改为支持Bitmap对象输入参数
+
+set_window_favicon(Bitmap icon)
+set_window_title(String title)
+set_window_minimum_size(Integer min_w, Integer min_h)
+set_window_aspect_ratio(Float min_ratio, Float max_ratio)
+set_window_always_on_top(Boolean top)
+设置窗口相应效果
 
 ## Module - Audio
 set_volume(Integer volume = 100)

@@ -349,6 +349,30 @@ void Graphics::SetDrawableOffset(const base::Vec2i& offset) {
   NotifyViewportChanged();
 }
 
+const base::Vec2i& Graphics::GetDrawableOffset() {
+  return viewport_rect().rect.Position();
+}
+
+void Graphics::SetWindowFavicon(scoped_refptr<Bitmap> icon) {
+  SDL_SetWindowIcon(window()->AsSDLWindow(), icon->SurfaceRequired());
+}
+
+void Graphics::SetWindowTitle(const std::string& title) {
+  window()->SetTitle(title);
+}
+
+void Graphics::SetWindowMinimumSize(const base::Vec2i& size) {
+  SDL_SetWindowMinimumSize(window()->AsSDLWindow(), size.x, size.y);
+}
+
+void Graphics::SetWindowAspectRatio(float min_ratio, float max_ratio) {
+  SDL_SetWindowAspectRatio(window()->AsSDLWindow(), min_ratio, max_ratio);
+}
+
+void Graphics::SetWindowAlwaysOnTop(bool top) {
+  SDL_SetWindowAlwaysOnTop(window()->AsSDLWindow(), top);
+}
+
 RGSSVersion Graphics::content_version() const {
   return dispatcher_->rgss_version();
 }

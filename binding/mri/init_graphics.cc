@@ -206,6 +206,74 @@ MRI_METHOD(graphics_set_offset) {
   return Qnil;
 }
 
+MRI_METHOD(graphics_get_offset) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+  auto size = screen->GetDrawableOffset();
+
+  VALUE ret = rb_ary_new();
+  rb_ary_push(ret, INT2FIX(size.x));
+  rb_ary_push(ret, INT2FIX(size.y));
+  return ret;
+}
+
+MRI_METHOD(graphics_set_window_favicon) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  VALUE bitmap;
+  MriParseArgsTo(argc, argv, "o", &bitmap);
+
+  scoped_refptr<content::Bitmap> target =
+      MriCheckStructData<content::Bitmap>(bitmap, kBitmapDataType);
+
+  screen->SetWindowFavicon(target);
+
+  return Qnil;
+}
+
+MRI_METHOD(graphics_set_window_title) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  std::string title;
+  MriParseArgsTo(argc, argv, "s", &title);
+
+  screen->SetWindowTitle(title);
+
+  return Qnil;
+}
+
+MRI_METHOD(graphics_set_window_minimum_size) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  int min_w, min_h;
+  MriParseArgsTo(argc, argv, "ii", &min_w, &min_h);
+
+  screen->SetWindowMinimumSize(base::Vec2i(min_w, min_h));
+
+  return Qnil;
+}
+
+MRI_METHOD(graphics_set_window_aspect_ratio) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  double min_r, max_r;
+  MriParseArgsTo(argc, argv, "ff", &min_r, &max_r);
+
+  screen->SetWindowAspectRatio(min_r, max_r);
+
+  return Qnil;
+}
+
+MRI_METHOD(graphics_set_window_always_on_top) {
+  scoped_refptr<content::Graphics> screen = MriGetGlobalRunner()->graphics();
+
+  bool on_top;
+  MriParseArgsTo(argc, argv, "b", &on_top);
+
+  screen->SetWindowAlwaysOnTop(on_top);
+
+  return Qnil;
+}
+
 void InitGraphicsBinding() {
   VALUE module = rb_define_module("Graphics");
 
@@ -237,6 +305,18 @@ void InitGraphicsBinding() {
   MriDefineModuleFunction(module, "display_height", graphics_display_height);
 
   MriDefineModuleFunction(module, "set_drawable_offset", graphics_set_offset);
+  MriDefineModuleFunction(module, "get_drawable_offset", graphics_get_offset);
+
+  MriDefineModuleFunction(module, "set_window_favicon",
+                          graphics_set_window_favicon);
+  MriDefineModuleFunction(module, "set_window_title",
+                          graphics_set_window_title);
+  MriDefineModuleFunction(module, "set_window_minimum_size",
+                          graphics_set_window_minimum_size);
+  MriDefineModuleFunction(module, "set_window_aspect_ratio",
+                          graphics_set_window_aspect_ratio);
+  MriDefineModuleFunction(module, "set_window_always_on_top",
+                          graphics_set_window_always_on_top);
 }
 
 }  // namespace binding
