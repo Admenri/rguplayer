@@ -36,7 +36,9 @@ MRI_METHOD(graphics_transition) {
   scoped_refptr<content::Bitmap> transmap;
   if (RB_TYPE_P(trans_bitmap, RUBY_T_STRING)) {
     std::string filename(RSTRING_PTR(trans_bitmap), RSTRING_LEN(trans_bitmap));
-    MRI_GUARD(transmap = new content::Bitmap(screen, filename););
+    if (!filename.empty()) {
+      MRI_GUARD(transmap = new content::Bitmap(screen, filename););
+    }
   } else if (rb_typeddata_is_kind_of(trans_bitmap, &kBitmapDataType)) {
     MRI_GUARD(transmap = MriCheckStructData<content::Bitmap>(trans_bitmap,
                                                              kBitmapDataType););
