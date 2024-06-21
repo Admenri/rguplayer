@@ -348,7 +348,7 @@ void Tilemap::OnObjectDisposed() {
   above_layers_.clear();
 
   screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
-  flash_layer_.reset();
+  screen()->renderer()->DeleteSoon(std::move(flash_layer_));
 
   screen()->FreeTexture(atlas_tfb_);
 }

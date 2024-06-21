@@ -363,10 +363,17 @@ void Window::InitWindow() {
       new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
 
   screen()->renderer()->PostTask(base::BindOnce(
-      [](renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr) {
+      [](renderer::QuadDrawable* base_quad,
+         renderer::QuadDrawable* controls_quad,
+         renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr,
+         renderer::QuadDrawableArray<renderer::CommonVertex>* base_ptr) {
+        base_quad->InitDrawable(renderer::GSM.quad_ibo()->ibo);
+        controls_quad->InitDrawable(renderer::GSM.quad_ibo()->ibo);
+        quad_ptr->Init();
+        base_ptr->Init();
         quad_ptr->Resize(14);
       },
-      controls_quads_));
+      base_quad_, content_quad_, controls_quads_, base_tex_quad_array_));
 
   base_tfb_ = screen()->AllocTexture(base::Vec2i(32, 32));
 }
