@@ -1,0 +1,36 @@
+name: Linux
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup environment
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y build-essential cmake ruby-full yasm libgl1-mesa-dev
+
+    - name: Build RGU
+      run: |
+        cmake -S . -B out -DCMAKE_C_FLAGS="-D_GNU_SOURCE" -DCMAKE_CXX_FLAGS="-D_GNU_SOURCE"
+        cmake --build out
+        mv out/app/rgu out/app/rgu_player
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: rguplayer
+        path: |
+          out/app/rgu_player
+          doc/extension_api.rb
+          doc/rgu_player.ini
+          doc/rgu_player.xml
+        retention-days: 90
