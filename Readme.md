@@ -2,11 +2,11 @@
 
 ## 概述
 
- - RGU是一款兼容RGSS 1/2/3，使用 SDL3 作为底层，OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。  
- - RGU在提供兼容原版RGSS的同时提供跨平台与性能提升支持，同时提供诸如自定义着色器与网络扩展在内的加强功能。  
- - 本项目使用BSD-3协议开源。  
- - 本项目语法风格与代码结构与The Chromium Project相似。
- - 程序灵感来源于 Chromium RGM RGD MKXP
+ - RGU 是一款兼容RGSS 1/2/3，使用 SDL3 作为底层，OpenGL ES(2.0) 图像标准编写渲染部分的异步多线程2D游戏引擎。  
+ - RGU 在提供兼容原版RGSS的同时提供跨平台与性能提升支持，同时提供诸如自定义着色器与网络扩展在内的加强功能。  
+ - 本项目使用 BSD-3-Clause 协议开源。  
+ - 本项目语法风格与代码结构与 Chromium 相似。
+ - 程序启发于 Chromium RGM RGD MKXP
 
 ## 程序结构
 
@@ -28,6 +28,14 @@
 <img src="app/test/4.png" height="300">
 
 <img src="app/test/5.jpg" height="300">
+
+## 使用方法
+
+ - 将得到的可执行文件覆盖原版Game.exe
+ - 复制一份RTP，引擎无法直接读取系统的RTP
+ - 复制一份字体文件 -> Fonts/Default.ttf，引擎没有自带字体且无法读取系统字体
+ - 确保游戏没有使用Win32API
+ - 启动游戏
 
 ## 构建项目
 ### 0. 注意事项
@@ -83,6 +91,12 @@
 - ogg - https://github.com/xiph/ogg
 - boost_asio - https://github.com/boostorg/boost
 - rapidxml - https://rapidxml.sourceforge.net/
+
+## 仍需努力
+
+- 改进音频库的性能（SoLoud -> OpenAL）
+- 增加内置骨骼动画（Spine, Cubism）
+- 增加专用脚本（灯光, 联机）
 
 ## 联系方式
 
