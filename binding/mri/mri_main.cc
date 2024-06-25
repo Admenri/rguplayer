@@ -39,6 +39,10 @@
 #include "zlib.h"
 
 extern "C" {
+#if RAPI_FULL >= 300
+void rb_call_builtin_inits();
+#endif
+
 void Init_zlib(void);
 void Init_fiddle(void);
 }
@@ -182,17 +186,7 @@ void BindingEngineMri::InitializeBinding(
   ruby_init_loadpath();
 
 #if RAPI_FULL >= 300
-  const char* ruby_console_args[] = {config->args()[0].c_str(), "-e "};
-  void* node =
-      ruby_options(sizeof(ruby_console_args) / sizeof(ruby_console_args[0]),
-                   const_cast<char**>(ruby_console_args));
-
-  int state = 0;
-  bool valid = ruby_executable_node(node, &state);
-  if (valid)
-    state = ruby_exec_node(node);
-  if (state || !valid)
-    LOG(INFO) << "[Binding] Failed to initialize CRuby Interpreter.";
+  rb_call_builtin_inits();
 #endif  //! RAPI_FULL >= 300
 
   rb_enc_set_default_internal(rb_enc_from_encoding(rb_utf8_encoding()));
