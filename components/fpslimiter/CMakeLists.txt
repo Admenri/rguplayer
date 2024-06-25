@@ -12,3 +12,7 @@ set(COMPONENTS_FPSLIMITER_SRC
 
 add_library(components_fpslimiter ${COMPONENTS_FPSLIMITER_SRC})
 target_link_libraries(components_fpslimiter core_base)
+target_compile_options(components_fpslimiter PRIVATE
+  -Wno-float-conversion
+  -Wno-unused-parameter
+)

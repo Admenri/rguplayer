@@ -367,7 +367,7 @@ void Audio::PlaySlotInternal(SlotInfo* slot,
           filename, base::BindRepeating(
                         [](SoLoud::Wav* loader, SDL_IOStream* ops,
                            const std::string& ext) {
-                          size_t out_size;
+                          size_t out_size = 0;
                           uint8_t* mem = static_cast<uint8_t*>(
                               read_mem_file(ops, &out_size, SDL_TRUE));
                           return loader->loadMem(mem, out_size) ==
@@ -421,7 +421,7 @@ void Audio::EmitSoundInternal(const std::string& filename,
           filename, base::BindRepeating(
                         [](SoLoud::Wav* loader, SDL_IOStream* ops,
                            const std::string& ext) {
-                          size_t out_size;
+                          size_t out_size = 0;
                           uint8_t* mem = static_cast<uint8_t*>(
                               read_mem_file(ops, &out_size, SDL_TRUE));
                           return loader->loadMem(mem, out_size) ==

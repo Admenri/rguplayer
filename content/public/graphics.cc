@@ -349,7 +349,7 @@ void Graphics::SetDrawableOffset(const base::Vec2i& offset) {
   NotifyViewportChanged();
 }
 
-const base::Vec2i& Graphics::GetDrawableOffset() {
+base::Vec2i Graphics::GetDrawableOffset() {
   return viewport_rect().rect.Position();
 }
 
@@ -844,20 +844,22 @@ void Graphics::DrawGraphicsSettingsGUI() {
         (const char*)renderer::GL.GetString(GL_VERSION));
 
     ImGui::TextWrapped(
-        config_->GetI18NString(IDS_GRAPHICS_RENDERER, "Renderer: %s").c_str(),
+        "%s: %s",
+        config_->GetI18NString(IDS_GRAPHICS_RENDERER, "Renderer").c_str(),
         ogl_renderer.c_str());
     ImGui::Separator();
     ImGui::TextWrapped(
-        config_->GetI18NString(IDS_GRAPHICS_VENDOR, "Vendor: %s").c_str(),
+        "%s: %s", config_->GetI18NString(IDS_GRAPHICS_VENDOR, "Vendor").c_str(),
         ogl_vendor.c_str());
     ImGui::Separator();
     ImGui::TextWrapped(
-        config_->GetI18NString(IDS_GRAPHICS_VERSION, "Version: %s").c_str(),
+        "%s: %s",
+        config_->GetI18NString(IDS_GRAPHICS_VERSION, "Version").c_str(),
         ogl_version.c_str());
     ImGui::Separator();
     ImGui::Text(
-        config_->GetI18NString(IDS_GRAPHICS_AVERAGE_FPS, "Average FPS: %d")
-            .c_str(),
+        "%s: %d",
+        config_->GetI18NString(IDS_GRAPHICS_AVERAGE_FPS, "Average FPS").c_str(),
         share_data_->display_fps);
     ImGui::Separator();
 

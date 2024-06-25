@@ -80,7 +80,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   int GetDisplayHeight();
 
   void SetDrawableOffset(const base::Vec2i& offset);
-  const base::Vec2i& GetDrawableOffset();
+  base::Vec2i GetDrawableOffset();
 
   void SetWindowFavicon(scoped_refptr<Bitmap> icon);
   void SetWindowTitle(const std::string& title);

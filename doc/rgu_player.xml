@@ -2,10 +2,10 @@
 <translationbundle lang="zh-CN">
 <translation id="10001">设置菜单</translation>
 <translation id="20001">图像设置</translation>
-<translation id="20002">渲染器: %s</translation>
-<translation id="20003">厂商: %s</translation>
-<translation id="20004">版本: %s</translation>
-<translation id="20005">平均FPS: %d</translation>
+<translation id="20002">渲染器</translation>
+<translation id="20003">厂商</translation>
+<translation id="20004">版本</translation>
+<translation id="20005">平均FPS</translation>
 <translation id="20006">垂直同步</translation>
 <translation id="20007">平滑缩放</translation>
 <translation id="20008">保持比例</translation>

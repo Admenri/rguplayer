@@ -29,3 +29,7 @@ set(SRC_AOM_PLAYER
 
 add_library(aom_player ${SRC_AOM_PLAYER})
 target_link_libraries(aom_player aom core_base aom webm ogg vorbis)
+target_compile_options(aom_player PRIVATE
+  -Wno-float-conversion
+  -Wno-unused-parameter
+)

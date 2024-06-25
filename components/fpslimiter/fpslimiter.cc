@@ -20,7 +20,7 @@ FPSLimiter::FPSLimiter(int frame_rate)
       freq_ns_(NS_PER_S / counter_freq_),
       error_ticks_(0),
       interval_ticks_(std::round((double)counter_freq_ / frame_rate)),
-      adjust_{last_ticks_, 0} {}
+      adjust_{last_ticks_, 0, false} {}
 
 void FPSLimiter::SetFrameRate(int frame_rate) {
   interval_ticks_ = std::round((double)counter_freq_ / frame_rate);

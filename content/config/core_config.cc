@@ -41,6 +41,9 @@ char* IniStreamReader(char* str, int num, void* stream) {
 }  // namespace
 
 void CoreConfigure::LoadCommandLine(int argc, char** argv) {
+  for (int i = 0; i < argc; ++i)
+    args_.push_back(argv[i]);
+
   game_debug_ = false;
   game_battle_test_ = false;
 

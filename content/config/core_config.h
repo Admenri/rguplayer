@@ -43,6 +43,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   void Loadi18nXML(filesystem::Filesystem* io);
   std::string GetI18NString(int ids, const std::string& default_value);
 
+  inline std::vector<std::string>& args() { return args_; }
   inline std::string& executable_file() { return executable_file_; }
 
   inline std::string& game_rtp() { return game_rtp_; }
@@ -70,6 +71,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   inline std::string& i18n_xml_path() { return i18n_xml_path_; }
 
  private:
+  std::vector<std::string> args_;
   std::string executable_file_;
 
   std::string game_rtp_;

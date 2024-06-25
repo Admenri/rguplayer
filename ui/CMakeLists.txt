@@ -12,4 +12,7 @@ set(UI_SRC
 
 add_library(core_ui ${UI_SRC})
 target_link_libraries(core_ui PUBLIC core_base)
-
+target_compile_options(core_ui PRIVATE
+  -Wno-float-conversion
+  -Wno-unused-parameter
+)

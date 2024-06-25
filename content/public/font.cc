@@ -96,9 +96,9 @@ ScopedFontData::ScopedFontData(scoped_refptr<CoreConfigure> config,
   LOG(INFO) << "[Font] Default Font: " << file;
   default_name_.push_back(file);
 
-  auto files = io->EnumDir(dir);
-  for (auto& file : files) {
-    std::string filepath = dir + file;
+  auto font_files = io->EnumDir(dir);
+  for (auto& file_iter : font_files) {
+    std::string filepath = dir + file_iter;
 
     SDL_IOStream* font_ops = nullptr;
     try {
@@ -110,8 +110,8 @@ ScopedFontData::ScopedFontData(scoped_refptr<CoreConfigure> config,
 
     // Cached in memory
     if (font_ops) {
-      LOG(INFO) << "[Font] Loaded Font: " << file;
-      mem_fonts_.emplace(file, ReadFontToMemory(font_ops));
+      LOG(INFO) << "[Font] Loaded Font: " << file_iter;
+      mem_fonts_.emplace(file_iter, ReadFontToMemory(font_ops));
     }
   }
 }
