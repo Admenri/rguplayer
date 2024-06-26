@@ -118,7 +118,11 @@ void MriSetStructData(VALUE obj, Ty* ptr) {
 
 template <typename Ty>
 Ty* MriGetStructData(VALUE obj) {
-  return static_cast<Ty*>(RTYPEDDATA_DATA(obj));
+  Ty* struct_data = static_cast<Ty*>(RTYPEDDATA_DATA(obj));
+  if (!struct_data)
+    rb_raise(rb_eRuntimeError,
+             "Invalid instance data for variable: Missing call to super?");
+  return struct_data;
 }
 
 template <typename Ty>
