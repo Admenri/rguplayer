@@ -304,7 +304,7 @@ void Window::BeforeComposite() {
 
   if (contents_quad_need_update_) {
     contents_quad_need_update_ = false;
-    if (contents_ && !contents_->IsDisposed()) {
+    if (IsObjectValid(contents_.get())) {
       base::Rect size = contents_->GetSize();
       content_quad_->SetTexCoordRect(size);
       content_quad_->SetPositionRect(size);
@@ -315,7 +315,7 @@ void Window::BeforeComposite() {
 }
 
 void Window::Composite() {
-  if (!windowskin_ || windowskin_->IsDisposed())
+  if (!IsObjectValid(windowskin_.get()))
     return;
 
   if (rect_.width <= 0 || rect_.height <= 0)
@@ -452,7 +452,7 @@ void Window::UpdateBaseTexInternal() {
   renderer::FrameBuffer::Clear();
   renderer::GSM.states.clear_color.Pop();
 
-  if (!windowskin_ || windowskin_->IsDisposed())
+  if (!IsObjectValid(windowskin_.get()))
     return;
 
   renderer::GSM.states.viewport.Push(rect_.Size());
@@ -545,7 +545,7 @@ void Window::UpdateControlsQuadsInternal() {
   scroll_arrows.top = base::Rect(scroll.x, 4, 16, 8);
   scroll_arrows.bottom = base::Rect(scroll.x, rect_.height - 12, 16, 8);
 
-  if (contents_ && !contents_->IsDisposed()) {
+  if (IsObjectValid(contents_.get())) {
     if (origin_.x > 0)
       i += renderer::QuadSetTexPosRect(&vert[i * 4], kScrollArrowSrc.left,
                                        scroll_arrows.left);
@@ -602,8 +602,7 @@ void Window::CursorRectChangedInternal() {
 }
 
 void Window::CompositeControls() {
-  if ((!windowskin_ || windowskin_->IsDisposed()) &&
-      (!contents_ || contents_->IsDisposed()))
+  if (!IsObjectValid(windowskin_.get()) && !IsObjectValid(contents_.get()))
     return;
 
   if (rect_.width <= 0 || rect_.height <= 0)
@@ -622,7 +621,7 @@ void Window::CompositeControls() {
   shader.Bind();
   shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
 
-  if (windowskin_ && !windowskin_->IsDisposed()) {
+  if (IsObjectValid(windowskin_.get())) {
     shader.SetTransOffset(offset);
     shader.SetTexture(windowskin_->GetRaw()->tex);
     shader.SetTextureSize(windowskin_->GetSize());
@@ -632,7 +631,7 @@ void Window::CompositeControls() {
     renderer::Texture::SetFilter();
   }
 
-  if (contents_ && !contents_->IsDisposed()) {
+  if (IsObjectValid(contents_.get())) {
     renderer::GSM.states.scissor_rect.SetIntersect(contents_rect);
 
     shader.SetTransOffset(offset + (base::Vec2i(16, 16) - origin_));

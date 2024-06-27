@@ -363,8 +363,7 @@ void Shader::SetInternalUniform() {
   // Apply bind texture unit
   for (auto& it : bind_textures_) {
     auto& tex_unit = it.second;
-    if (tex_unit.location >= 0 &&
-        (tex_unit.texture && !tex_unit.texture->IsDisposed()))
+    if (tex_unit.location >= 0 && IsObjectValid(tex_unit.texture.get()))
       renderer::GLES2ShaderBase::SetTexture(
           tex_unit.location, tex_unit.texture->GetRaw()->tex.gl, it.first);
   }

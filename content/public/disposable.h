@@ -59,6 +59,10 @@ class Disposable {
   bool is_disposed_ = false;
 };
 
+inline static bool IsObjectValid(Disposable* target) {
+  return target && !target->IsDisposed();
+}
+
 }  // namespace content
 
 #endif  // !CONTENT_PUBLIC_DISPOSABLE_H_

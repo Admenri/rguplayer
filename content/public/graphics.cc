@@ -230,31 +230,33 @@ void Graphics::Freeze() {
 void Graphics::Transition(int duration,
                           scoped_refptr<Bitmap> trans_bitmap,
                           int vague) {
-  if (trans_bitmap && trans_bitmap->IsDisposed())
-    return;
-
   if (!frozen_)
     return;
 
   SetBrightness(255);
   vague = std::clamp<int>(vague, 1, 256);
+  const bool is_transmap_valid = IsObjectValid(trans_bitmap.get());
 
   renderer_->PostTask(base::BindOnce(&Graphics::TransitionSceneInternal,
                                      base::Unretained(this), duration,
-                                     !!trans_bitmap, vague));
+                                     is_transmap_valid, vague));
 
-  renderer::GSM.states.blend.Push(false);
+  renderer_->PostTask(
+      base::BindOnce([]() { renderer::GSM.states.blend.Push(false); }));
+
   for (int i = 0; i < duration; ++i) {
     renderer_->PostTask(base::BindOnce(
         &Graphics::TransitionSceneInternalLoop, base::Unretained(this), i,
-        duration, trans_bitmap ? trans_bitmap->GetRaw() : nullptr));
+        duration, is_transmap_valid ? trans_bitmap->GetRaw() : nullptr));
     FrameProcessInternal();
 
     /* Break draw loop for quit flag */
     if (dispatcher_->CheckRunnerFlags())
       break;
   }
-  renderer::GSM.states.blend.Pop();
+
+  renderer_->PostTask(
+      base::BindOnce([]() { renderer::GSM.states.blend.Pop(); }));
 
   /* Transition process complete */
   frozen_ = false;
@@ -690,7 +692,7 @@ void Graphics::ApplyViewportEffect(const base::Rect& blend_area,
   renderer::Blt::EndDraw();
 
   renderer::FrameBuffer::Bind(effect_target.fbo);
-  if (program && !program->IsDisposed()) {
+  if (IsObjectValid(program.get())) {
     program->BindShader();
     program->SetInternalUniform();
 

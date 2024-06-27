@@ -660,7 +660,7 @@ void Tilemap2::SetBitmap(int index, scoped_refptr<Bitmap> bitmap) {
   bitmaps_[index] = bitmap;
   atlas_need_update_ = true;
 
-  if (bitmap && !bitmap->IsDisposed())
+  if (IsObjectValid(bitmap.get()))
     bitmap_observers_[index] = bitmap->AddBitmapObserver(base::BindRepeating(
         &Tilemap2::SetAtlasUpdateInternal, base::Unretained(this)));
 }
@@ -725,7 +725,7 @@ scoped_refptr<Viewport> Tilemap2::GetViewport() const {
 void Tilemap2::SetViewport(scoped_refptr<Viewport> viewport) {
   CheckIsDisposed();
 
-  if (!viewport || viewport->IsDisposed())
+  if (!IsObjectValid(viewport.get()))
     return;
 
   if (viewport_ == viewport)
@@ -810,7 +810,7 @@ void Tilemap2::CreateTileAtlasInternal() {
     auto& atlas_info = kTilemapAtlas[i];
     scoped_refptr<Bitmap> atlas_bitmap = bitmaps_[atlas_info.tile_id];
 
-    if (!atlas_bitmap || atlas_bitmap->IsDisposed())
+    if (!IsObjectValid(atlas_bitmap.get()))
       continue;
 
     base::Rect src_rect(

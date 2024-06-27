@@ -69,12 +69,13 @@ class Tilemap : public base::RefCounted<Tilemap>,
   void BeforeTilemapComposite();
 
   void MakeAtlasInternal();
-  void UpdateViewportInternal();
+  void UpdateViewportInternal(
+      const DrawableParent::ViewportInfo& viewport_rect);
   void UpdateMapBufferInternal();
   void RaiseUpdateAtlasInternal();
   void RaiseUpdateBufferInternal();
   void DrawFlashLayerInternal();
-  void ResetDrawLayersInternal();
+  void SetupDrawLayersInternal();
 
   enum class AutotileType {
     Animated = 0,

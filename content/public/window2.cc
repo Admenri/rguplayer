@@ -126,7 +126,7 @@ void Window2::SetWindowskin(scoped_refptr<Bitmap> windowskin) {
   windowskin_ = windowskin;
   base_tex_need_update_ = true;
 
-  if (windowskin_ && !windowskin_->IsDisposed())
+  if (IsObjectValid(windowskin_.get()))
     windowskin_observer_ = windowskin_->AddBitmapObserver(base::BindRepeating(
         &Window2::WindowskinChangedInternal, base::Unretained(this)));
 }
@@ -376,7 +376,7 @@ void Window2::BeforeComposite() {
 
   if (contents_quad_need_update_) {
     contents_quad_need_update_ = false;
-    if (contents_ && !contents_->IsDisposed()) {
+    if (IsObjectValid(contents_.get())) {
       base::Rect contents_rect = contents_->GetSize();
       content_quad_->SetTexCoordRect(contents_rect);
       content_quad_->SetPositionRect(contents_rect);
@@ -394,8 +394,8 @@ void Window2::BeforeComposite() {
 }
 
 void Window2::Composite() {
-  bool windowskin_valid = windowskin_ && !windowskin_->IsDisposed();
-  bool contents_valid = contents_ && !contents_->IsDisposed();
+  bool windowskin_valid = IsObjectValid(windowskin_.get());
+  bool contents_valid = IsObjectValid(contents_.get());
 
   base::Vec2i trans_offset = rect_.Position() + parent_rect().GetRealOffset();
 
@@ -634,7 +634,7 @@ void Window2::UpdateBaseTextureInternal() {
   renderer::FrameBuffer::Clear();
   renderer::GSM.states.clear_color.Pop();
 
-  if (!windowskin_ || windowskin_->IsDisposed())
+  if (!IsObjectValid(windowskin_.get()))
     return;
 
   renderer::GSM.states.viewport.Push(rect_.Size());
@@ -707,7 +707,7 @@ void Window2::CalcArrowsQuadArrayInternal() {
   arrows_quads_->Resize(5);
   renderer::CommonVertex* vert = arrows_quads_->vertices().data();
 
-  if (contents_ && !contents_->IsDisposed() && arrows_visible_) {
+  if (IsObjectValid(contents_.get()) && arrows_visible_) {
     if (ox_ > 0)
       i += renderer::QuadSetTexPosRect(&vert[i * 4], scroll_arrow_src.left,
                                        arrowPos.left);

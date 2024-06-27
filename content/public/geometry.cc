@@ -108,7 +108,7 @@ void Geometry::BeforeComposite() {
 }
 
 void Geometry::Composite() {
-  const bool texture_valid = bitmap_ && !bitmap_->IsDisposed();
+  const bool texture_valid = IsObjectValid(bitmap_.get());
 
   if (shader_program_ && !shader_program_->IsDisposed()) {
     shader_program_->BindShader();

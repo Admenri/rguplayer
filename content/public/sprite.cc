@@ -30,7 +30,7 @@ void Sprite::SetBitmap(scoped_refptr<Bitmap> bitmap) {
     return;
   bitmap_ = bitmap;
 
-  if (bitmap_ && !bitmap_->IsDisposed()) {
+  if (IsObjectValid(bitmap_.get())) {
     src_rect_->Set(bitmap_->GetSize());
     OnSrcRectChangedInternal();
   }
@@ -100,7 +100,7 @@ void Sprite::BeforeComposite() {
   if (src_rect_need_update_) {
     src_rect_need_update_ = false;
 
-    if (bitmap_ && !bitmap_->IsDisposed()) {
+    if (IsObjectValid(bitmap_.get())) {
       auto bitmap_size = bitmap_->GetSize();
       auto rect = src_rect_->AsBase();
 
@@ -273,7 +273,7 @@ void Sprite::UpdateVisibilityInternal() {
   if (opacity_ == 0)
     return;
 
-  if (!bitmap_ || bitmap_->IsDisposed())
+  if (!IsObjectValid(bitmap_.get()))
     return;
 
   if (wave_.active) {

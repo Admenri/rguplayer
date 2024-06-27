@@ -125,7 +125,7 @@ void Viewport::Composite() {
 
   DrawableParent::CompositeChildren();
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
-      (shader_program_ && !shader_program_->IsDisposed())) {
+      IsObjectValid(shader_program_.get())) {
     base::Vec4 composite_color = color_->AsBase();
     base::Vec4 flash_color = Flashable::GetFlashColor();
     base::Vec4 target_color;
@@ -181,7 +181,7 @@ void Viewport::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
 
   CompositeChildren();
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
-      (shader_program_ && !shader_program_->IsDisposed())) {
+      IsObjectValid(shader_program_.get())) {
     base::Vec4 composite_color = color_->AsBase();
     base::Vec4 flash_color = Flashable::GetFlashColor();
     base::Vec4 target_color;

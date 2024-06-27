@@ -186,7 +186,6 @@ Tilemap::Tilemap(scoped_refptr<Graphics> screen,
       viewport_(viewport),
       tile_size_(tilesize) {
   InitTilemapData();
-  ResetDrawLayersInternal();
 }
 
 Tilemap::~Tilemap() {
@@ -217,7 +216,7 @@ void Tilemap::SetTileset(scoped_refptr<Bitmap> bitmap) {
 
   tileset_ = bitmap;
   atlas_need_update_ = true;
-  if (tileset_)
+  if (IsObjectValid(tileset_.get()))
     tileset_->AddBitmapObserver(base::BindRepeating(
         &Tilemap::RaiseUpdateAtlasInternal, base::Unretained(this)));
 }
@@ -235,7 +234,7 @@ void Tilemap::SetAutotiles(int index, scoped_refptr<Bitmap> bitmap) {
 
   autotiles_[index].bitmap = bitmap;
   atlas_need_update_ = true;
-  if (autotiles_[index].bitmap)
+  if (IsObjectValid(autotiles_[index].bitmap.get()))
     autotiles_[index].bitmap->AddBitmapObserver(base::BindRepeating(
         &Tilemap::RaiseUpdateAtlasInternal, base::Unretained(this)));
 }
@@ -368,12 +367,14 @@ void Tilemap::InitTilemapData() {
 
   atlas_tfb_ =
       screen()->AllocTexture(base::Vec2i(tile_size_, tile_size_), false);
+
+  SetupDrawLayersInternal();
 }
 
 void Tilemap::BeforeTilemapComposite() {
   flash_layer_->BeforeComposite();
 
-  UpdateViewportInternal();
+  UpdateViewportInternal(ground_layer_->parent_rect());
 
   if (atlas_need_update_) {
     atlas_need_update_ = false;
@@ -388,7 +389,7 @@ void Tilemap::BeforeTilemapComposite() {
 
 void Tilemap::MakeAtlasInternal() {
   int atlas_height = 28 * tile_size_;
-  if (tileset_ && !tileset_->IsDisposed())
+  if (IsObjectValid(tileset_.get()))
     atlas_height = std::max(atlas_height, tileset_->GetSize().y);
   renderer::TextureFrameBuffer::Alloc(
       *atlas_tfb_, base::Vec2i(tile_size_ * 20, atlas_height));
@@ -400,7 +401,7 @@ void Tilemap::MakeAtlasInternal() {
   // Autotile part
   int offset = 0;
   for (auto& it : autotiles_) {
-    if (!it.bitmap || it.bitmap->IsDisposed()) {
+    if (!IsObjectValid(it.bitmap.get())) {
       ++offset;
       continue;
     }
@@ -450,7 +451,7 @@ void Tilemap::MakeAtlasInternal() {
   }
 
   // Tileset part
-  if (!tileset_ || tileset_->IsDisposed())
+  if (!IsObjectValid(tileset_.get()))
     return;
 
   auto tileset_size = tileset_->GetSize();
@@ -464,10 +465,8 @@ void Tilemap::MakeAtlasInternal() {
   renderer::Blt::EndDraw();
 }
 
-void Tilemap::UpdateViewportInternal() {
-  const DrawableParent::ViewportInfo& viewport_rect =
-      ground_layer_->parent_rect();
-
+void Tilemap::UpdateViewportInternal(
+    const DrawableParent::ViewportInfo& viewport_rect) {
   const base::Vec2i tilemap_origin = origin_ + viewport_rect.origin;
   const base::Vec2i viewport_size = viewport_rect.rect.Size();
 
@@ -533,7 +532,7 @@ void Tilemap::UpdateMapBufferInternal() {
     int patternID = tileID % 48;
 
     AutotileInfo& info = autotiles_[autotileID];
-    if (!info.bitmap || info.bitmap->IsDisposed())
+    if (!IsObjectValid(info.bitmap.get()))
       return;
 
     switch (info.type) {
@@ -669,18 +668,21 @@ void Tilemap::UpdateMapBufferInternal() {
   }
 }
 
-void Tilemap::ResetDrawLayersInternal() {
+void Tilemap::SetupDrawLayersInternal() {
   ground_layer_.reset(new TilemapGroundLayer(screen(), this));
   const DrawableParent::ViewportInfo& viewport_rect =
       ground_layer_->parent_rect();
+
+  UpdateViewportInternal(viewport_rect);
+
   const base::Vec2i viewport_size = viewport_rect.rect.Size();
+  int layer_num =
+      (viewport_size.y / tile_size_) + !!(viewport_size.y % tile_size_) + 7;
 
   auto calc_z_order = [&](int index) {
     return 32 * (index + tilemap_viewport_.y + 1) - origin_.y;
   };
 
-  int layer_num =
-      (viewport_size.y / tile_size_) + !!(viewport_size.y % tile_size_) + 7;
   for (int i = 0; i < layer_num; ++i) {
     std::unique_ptr<TilemapZLayer> new_layer(new TilemapZLayer(screen(), this));
     new_layer->SetZ(calc_z_order(i));

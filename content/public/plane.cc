@@ -46,7 +46,7 @@ void Plane::SetBitmap(scoped_refptr<Bitmap> bitmap) {
     return;
   bitmap_ = bitmap;
 
-  if (bitmap_ && !bitmap_->IsDisposed())
+  if (IsObjectValid(bitmap_.get()))
     quad_array_dirty_ = true;
 }
 
@@ -107,7 +107,7 @@ void Plane::BeforeComposite() {
 void Plane::Composite() {
   if (!opacity_)
     return;
-  if (!bitmap_ || bitmap_->IsDisposed())
+  if (!IsObjectValid(bitmap_.get()))
     return;
 
   if (color_->IsValid() || tone_->IsValid() || opacity_ != 255) {
@@ -142,7 +142,7 @@ void Plane::OnParentViewportRectChanged(const DrawableParent::ViewportInfo&) {
 }
 
 void Plane::UpdateQuadArray() {
-  if (!bitmap_ || bitmap_->IsDisposed())
+  if (!IsObjectValid(bitmap_.get()))
     return;
 
   const float scale_width =
