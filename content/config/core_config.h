@@ -26,7 +26,6 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   // ANGLE Graphics API backend choose
   enum class ANGLERenderer : int32_t {
     DefaultES = 0,
-    D3D9,
     D3D11,
     Vulkan,
     Metal,

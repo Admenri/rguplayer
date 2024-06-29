@@ -45,7 +45,7 @@ void RenderRunner::DestroyRenderer() {
 
 void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, SDL_TRUE);
 
@@ -56,9 +56,6 @@ void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
   SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
   g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
   switch (renderer) {
-    case content::CoreConfigure::ANGLERenderer::D3D9:
-      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE);
-      break;
     case content::CoreConfigure::ANGLERenderer::D3D11:
       g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE);
       break;
@@ -97,8 +94,7 @@ void RenderRunner::InitGLContextInternal() {
 
   renderer::GLES2Context::ContextParams context_params;
   context_params.enable_vertex_array = true;
-  context_params.enable_framebuffer_blit =
-      config_->angle_renderer() != content::CoreConfigure::ANGLERenderer::D3D9;
+  context_params.enable_framebuffer_blit = true;
   renderer::GLES2Context::CreateForCurrentThread(context_params);
 
   if (config_->renderer_debug_output())
