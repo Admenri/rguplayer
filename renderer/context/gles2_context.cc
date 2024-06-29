@@ -25,49 +25,17 @@ void GL_APIENTRY DebugOutput(GLenum,
 // Thread based GLESContext
 thread_local GLES2Context GL;
 
-void GLES2Context::CreateForCurrentThread(const ContextParams& params) {
-  GL.InitGLESContext(params);
+void GLES2Context::CreateForCurrentThread() {
+  GL.InitGLESContext();
 }
 
 void GLES2Context::EnableDebugOutputForCurrentThread() {
   GL.EnableDebugOutput();
 }
 
-void GLES2Context::InitGLESContext(const ContextParams& params) {
+void GLES2Context::InitGLESContext() {
   suffix_.clear();
 #include "renderer/context/gles2_command_buffer_header_autogen.cc"
-#define BIND_GLES_FUN(x) x = reinterpret_cast<decltype(x)>(GetGLProc(#x));
-
-  // VertexArray extension
-  if (params.enable_vertex_array) {
-    if (SDL_GL_ExtensionSupported("GL_ARB_vertex_array_object"))
-      suffix_.clear();
-    else if (SDL_GL_ExtensionSupported("GL_OES_vertex_array_object"))
-      suffix_ = "OES";
-    BIND_GLES_FUN(BindVertexArray);
-    BIND_GLES_FUN(DeleteVertexArrays);
-    BIND_GLES_FUN(GenVertexArrays);
-    BIND_GLES_FUN(IsVertexArray);
-  }
-
-  if (!GenVertexArrays)
-    LOG(INFO) << "[Renderer] Disable Vertex Array extension.";
-
-  // FrameBuffer blit
-  if (params.enable_framebuffer_blit) {
-    if (SDL_GL_ExtensionSupported("GL_ARB_framebuffer_object"))
-      suffix_.clear();
-    else if (SDL_GL_ExtensionSupported("GL_EXT_framebuffer_blit"))
-      suffix_ = "EXT";
-    else
-      suffix_.clear();
-    BIND_GLES_FUN(BlitFramebuffer);
-  }
-
-  if (!BlitFramebuffer)
-    LOG(INFO) << "[Renderer] Disable FrameBuffer blit extension.";
-
-#undef BIND_GLES_FUN
 }
 
 void GLES2Context::EnableDebugOutput() {
