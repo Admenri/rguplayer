@@ -1,3 +1,5 @@
+#version 300 es
+precision mediump float;
 
 uniform sampler2D u_texture;
 
@@ -12,10 +14,12 @@ uniform float u_bushOpacity;
 
 const vec3 lumaF = vec3(.299, .587, .114);
 
-varying vec2 v_texCoord;
+in vec2 v_texCoord;
+
+out vec4 fragColor;
 
 void main() {
-	vec4 frag = texture2D(u_texture, v_texCoord);
+	vec4 frag = texture(u_texture, v_texCoord);
 
 	/* Tone */
 	float luma = dot(frag.rgb, lumaF);
@@ -33,5 +37,5 @@ void main() {
 	float underBush = float(u_bushDepth > currentPos);
 	frag.a *= clamp(u_bushOpacity + underBush, 0.0, 1.0);
 
-	gl_FragColor = frag;
+	fragColor = frag;
 }

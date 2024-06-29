@@ -1,15 +1,19 @@
+#version 300 es
+precision mediump float;
 
 uniform sampler2D u_texture;
 
 uniform vec4 u_color;
 uniform vec4 u_tone;
 
-varying vec2 v_texCoord;
+in vec2 v_texCoord;
+
+out vec4 fragColor;
 
 const vec3 lumaF = vec3(.299, .587, .114);
 
 void main() {
-	vec4 frag = texture2D(u_texture, v_texCoord);
+	vec4 frag = texture(u_texture, v_texCoord);
 
 	/* Tone */
 	float luma = dot(frag.rgb, lumaF);
@@ -19,5 +23,5 @@ void main() {
 	/* Color */
 	frag.rgb = mix(frag.rgb, u_color.rgb, u_color.a);
 
-	gl_FragColor = frag;
+	fragColor = frag;
 }

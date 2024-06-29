@@ -1,8 +1,12 @@
+#version 300 es
+precision mediump float;
 
 uniform sampler2D u_texture;
 uniform float u_hueAdjustValue;
 
-varying vec2 v_texCoord;
+in vec2 v_texCoord;
+
+out vec4 fragColor;
 
 // Referrence: https://stackoverflow.com/questions/15095909/from-rgb-to-hsv-in-opengl-glsl
 vec3 rgb2hsv(vec3 c) {
@@ -22,11 +26,11 @@ vec3 hsv2rgb(vec3 c) {
 }
 
 void main() {
-	vec4 frag = texture2D(u_texture, v_texCoord);
+	vec4 frag = texture(u_texture, v_texCoord);
   vec3 hsv = rgb2hsv(frag.rgb);
 
   hsv.x += u_hueAdjustValue;
 
-	gl_FragColor.rgb = hsv2rgb(hsv);
-  gl_FragColor.a = frag.a;
+	fragColor.rgb = hsv2rgb(hsv);
+  fragColor.a = frag.a;
 }

@@ -105,7 +105,6 @@ void RenderRunner::InitGLContextInternal() {
     renderer::GLES2Context::EnableDebugOutputForCurrentThread();
 
   // Always enable opengl es mode for ANGLE backend
-  renderer::GSM.enable_es_shaders() = true;
   renderer::GSM.InitStates();
   max_texture_size_ = renderer::GSM.max_texture_size();
 

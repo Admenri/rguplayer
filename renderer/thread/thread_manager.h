@@ -66,7 +66,6 @@ class GlobalStateManager final {
   QuadDrawable* common_quad() const { return common_quad_.get(); }
   QuadIndexBuffer* quad_ibo() const { return quad_ibo_.get(); }
   int& max_texture_size() { return max_texture_size_; }
-  bool& enable_es_shaders() { return enable_es_shaders_; }
 
  private:
   std::unique_ptr<GLShaderWare> shaders_;
@@ -79,7 +78,6 @@ class GlobalStateManager final {
   base::Vec2i generic_tex_size_;
 
   int max_texture_size_;
-  bool enable_es_shaders_;
 };
 
 }  // namespace renderer

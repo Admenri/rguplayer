@@ -1,3 +1,5 @@
+#version 300 es
+precision mediump float;
 
 uniform mat4 u_projectionMat;
 
@@ -7,10 +9,10 @@ uniform vec2 u_transOffset;
 uniform float u_tileSize;
 uniform float u_animateIndex;
 
-attribute vec2 a_position;
-attribute vec2 a_texCoord;
+in vec2 a_position;
+in vec2 a_texCoord;
 
-varying vec2 v_texCoord;
+out vec2 v_texCoord;
 
 const vec2 k_autotileArea = vec2(3.0, 28.0);
 

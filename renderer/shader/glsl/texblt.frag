@@ -1,3 +1,5 @@
+#version 300 es
+precision mediump float;
 
 uniform sampler2D u_texture;
 uniform sampler2D u_dst_texture;
@@ -5,13 +7,15 @@ uniform sampler2D u_dst_texture;
 uniform vec4 u_offset_scale;
 uniform float u_opacity;
 
-varying vec2 v_texCoord;
+in vec2 v_texCoord;
+
+out vec4 fragColor;
 
 void main() {
 	vec2 dst_texCoord = (v_texCoord - u_offset_scale.xy) * u_offset_scale.zw;
 
-	vec4 src_frag = texture2D(u_texture, v_texCoord);
-	vec4 dst_frag = texture2D(u_dst_texture, dst_texCoord);
+	vec4 src_frag = texture(u_texture, v_texCoord);
+	vec4 dst_frag = texture(u_dst_texture, dst_texCoord);
 
 	vec4 result_frag;
 
@@ -24,5 +28,5 @@ void main() {
 	else
 		result_frag.rgb = (src_alpha * src_frag.rgb + dst_alpha * dst_frag.rgb) / result_frag.a;
 
-	gl_FragColor = result_frag;
+	fragColor = result_frag;
 }

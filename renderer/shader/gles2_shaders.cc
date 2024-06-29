@@ -8,8 +8,6 @@
 
 namespace renderer {
 
-static char kGLESPrecisionDefine[] = "precision mediump float;";
-
 namespace shader {
 
 #include "renderer/shader/glsl/alphasprite.frag.xxd"
@@ -117,14 +115,6 @@ bool GLES2Shader::CompileShader(GLuint glshader,
   std::vector<const GLchar*> shader_srcs;
   std::vector<GLint> shader_sizes;
 
-  // Common header source
-  if (GSM.enable_es_shaders()) {
-    shader_srcs.push_back(
-        reinterpret_cast<const GLchar*>(kGLESPrecisionDefine));
-    shader_sizes.push_back(
-        static_cast<GLint>(sizeof(kGLESPrecisionDefine) - 1));
-  }
-
   // Setup shader source
   shader_srcs.push_back(reinterpret_cast<const GLchar*>(shader_source.c_str()));
   shader_sizes.push_back(static_cast<GLint>(shader_source.size()));
@@ -158,7 +148,8 @@ bool GLES2ShaderBase::Setup(const std::string& vertex_shader,
                             const std::string& frag_shader,
                             const std::string& frag_name) {
   if (!GLES2Shader::Setup(vertex_shader, vertex_name, frag_shader, frag_name)) {
-    LOG(ERROR) << "ShaderBase compile error.";
+    LOG(ERROR) << "Shader: " << vertex_name << " - " << frag_name
+               << " compile error.";
     return false;
   }
 
