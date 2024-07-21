@@ -161,7 +161,7 @@ SDL_Surface *IMG_LoadLBM_IO(SDL_IOStream *src )
 
         bytesloaded = 0;
 
-        size = SDL_SwapBE32( size );
+        size = SDL_Swap32BE( size );
 
         if ( !SDL_memcmp( id, "BMHD", 4 ) ) /* Bitmap header */
         {
@@ -173,13 +173,13 @@ SDL_Surface *IMG_LoadLBM_IO(SDL_IOStream *src )
 
             bytesloaded = sizeof( BMHD );
 
-            bmhd.w      = SDL_SwapBE16( bmhd.w );
-            bmhd.h      = SDL_SwapBE16( bmhd.h );
-            bmhd.x      = SDL_SwapBE16( bmhd.x );
-            bmhd.y      = SDL_SwapBE16( bmhd.y );
-            bmhd.tcolor = SDL_SwapBE16( bmhd.tcolor );
-            bmhd.Lpage  = SDL_SwapBE16( bmhd.Lpage );
-            bmhd.Hpage  = SDL_SwapBE16( bmhd.Hpage );
+            bmhd.w      = SDL_Swap16BE( bmhd.w );
+            bmhd.h      = SDL_Swap16BE( bmhd.h );
+            bmhd.x      = SDL_Swap16BE( bmhd.x );
+            bmhd.y      = SDL_Swap16BE( bmhd.y );
+            bmhd.tcolor = SDL_Swap16BE( bmhd.tcolor );
+            bmhd.Lpage  = SDL_Swap16BE( bmhd.Lpage );
+            bmhd.Hpage  = SDL_Swap16BE( bmhd.Hpage );
         }
 
         if ( !SDL_memcmp( id, "CMAP", 4 ) ) /* palette ( Color Map ) */
@@ -209,7 +209,7 @@ SDL_Surface *IMG_LoadLBM_IO(SDL_IOStream *src )
             }
 
             bytesloaded = size;
-            viewmodes = SDL_SwapBE32( viewmodes );
+            viewmodes = SDL_Swap32BE( viewmodes );
             if ( viewmodes & 0x0800 )
                 flagHAM = 1;
             if ( viewmodes & 0x0080 )
@@ -274,14 +274,20 @@ SDL_Surface *IMG_LoadLBM_IO(SDL_IOStream *src )
     if ( nbcolors>0 && flagHAM==0 )
     {
         /* FIXME: Should this include the stencil? See comment below */
+        SDL_Palette *palette;
         int nbrcolorsfinal = 1 << (nbplanes + stencil);
         ptr = &colormap[0];
 
+        palette = SDL_CreateSurfacePalette(Image);
+        if (!palette) {
+            goto done;
+        }
+
         for ( i=0; i<nbcolors; i++ )
         {
-            Image->format->palette->colors[i].r = *ptr++;
-            Image->format->palette->colors[i].g = *ptr++;
-            Image->format->palette->colors[i].b = *ptr++;
+            palette->colors[i].r = *ptr++;
+            palette->colors[i].g = *ptr++;
+            palette->colors[i].b = *ptr++;
         }
 
         /* Amiga EHB mode (Extra-Half-Bright) */
@@ -295,9 +301,9 @@ SDL_Surface *IMG_LoadLBM_IO(SDL_IOStream *src )
             ptr = &colormap[0];
             for ( i=32; i<64; i++ )
             {
-                Image->format->palette->colors[i].r = (*ptr++)/2;
-                Image->format->palette->colors[i].g = (*ptr++)/2;
-                Image->format->palette->colors[i].b = (*ptr++)/2;
+                palette->colors[i].r = (*ptr++)/2;
+                palette->colors[i].g = (*ptr++)/2;
+                palette->colors[i].b = (*ptr++)/2;
             }
         }
 
@@ -308,12 +314,12 @@ SDL_Surface *IMG_LoadLBM_IO(SDL_IOStream *src )
         }
         for ( i=nbcolors; i < (Uint32)nbrcolorsfinal; i++ )
         {
-            Image->format->palette->colors[i].r = Image->format->palette->colors[i%nbcolors].r;
-            Image->format->palette->colors[i].g = Image->format->palette->colors[i%nbcolors].g;
-            Image->format->palette->colors[i].b = Image->format->palette->colors[i%nbcolors].b;
+            palette->colors[i].r = palette->colors[i%nbcolors].r;
+            palette->colors[i].g = palette->colors[i%nbcolors].g;
+            palette->colors[i].b = palette->colors[i%nbcolors].b;
         }
         if ( !pbm )
-            Image->format->palette->ncolors = nbrcolorsfinal;
+            palette->ncolors = nbrcolorsfinal;
     }
 
     /* Get the bitmap */

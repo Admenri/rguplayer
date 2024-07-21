@@ -135,6 +135,7 @@ struct FrameBuffer {
 
 using VertexBuffer = Buffer<GL_ARRAY_BUFFER>;
 using IndexBuffer = Buffer<GL_ELEMENT_ARRAY_BUFFER>;
+using UniformBuffer = Buffer<GL_UNIFORM_BUFFER>;
 
 struct TextureFrameBuffer {
   GLID<Texture> tex;

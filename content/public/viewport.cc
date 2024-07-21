@@ -12,7 +12,7 @@ namespace content {
 
 Viewport::Viewport(scoped_refptr<Graphics> screen)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       Drawable(screen.get(), 0, true) {
   parent_offset_ = screen->viewport_rect().GetRealOffset();
   viewport_rect() = screen->viewport_rect();
@@ -21,7 +21,7 @@ Viewport::Viewport(scoped_refptr<Graphics> screen)
 
 Viewport::Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       Drawable(screen.get(), 0, true) {
   parent_offset_ = screen->viewport_rect().GetRealOffset();
   viewport_rect().rect = rect;
@@ -33,7 +33,7 @@ Viewport::Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect)
 Viewport::Viewport(scoped_refptr<Graphics> screen,
                    scoped_refptr<Viewport> viewport)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       Drawable(viewport.get(), 0, true) {
   auto parent_rect = viewport->viewport_rect();
   parent_offset_ = parent_rect.GetRealOffset();
@@ -135,9 +135,8 @@ void Viewport::Composite() {
     else
       target_color = composite_color;
 
-    screen()->ApplyViewportEffect(viewport_rect().rect,
-                                  *screen()->GetScreenBuffer(), target_color,
-                                  tone_->AsBase(), shader_program_);
+    ApplyViewportEffect(viewport_rect().rect, *screen()->GetScreenBuffer(),
+                        target_color, tone_->AsBase(), shader_program_);
   }
 
   renderer::GSM.states.scissor_rect.Pop();
@@ -191,11 +190,68 @@ void Viewport::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
     else
       target_color = composite_color;
 
-    screen()->ApplyViewportEffect(viewport_rect().rect, *target, target_color,
-                                  tone_->AsBase(), shader_program_);
+    ApplyViewportEffect(viewport_rect().rect, *target, target_color,
+                        tone_->AsBase(), shader_program_);
   }
 
   renderer::GSM.states.scissor_rect.Pop();
+  renderer::GSM.states.scissor.Pop();
+}
+
+void Viewport::ApplyViewportEffect(const base::Rect& blend_area,
+                                   renderer::TextureFrameBuffer& effect_target,
+                                   const base::Vec4& color,
+                                   const base::Vec4& tone,
+                                   scoped_refptr<Shader> program) {
+  auto& temp_fbo =
+      renderer::GSM.EnsureCommonTFB(blend_area.width, blend_area.height);
+
+  const bool has_tone_effect =
+      (tone.x != 0 || tone.y != 0 || tone.z != 0 || tone.w != 0);
+  const bool has_color_effect = color.w != 0;
+
+  if (!program && !has_tone_effect && !has_color_effect)
+    return;
+
+  renderer::GSM.states.scissor.Push(false);
+  renderer::Blt::BeginDraw(temp_fbo);
+  renderer::Blt::TexSource(effect_target);
+  renderer::Blt::BltDraw(blend_area, blend_area.Size());
+  renderer::Blt::EndDraw();
+
+  renderer::FrameBuffer::Bind(effect_target.fbo);
+  if (IsObjectValid(program.get())) {
+    program->BindShader();
+    program->SetInternalUniform();
+
+    GLint texture_location = program->GetUniformLocation("u_texture");
+    renderer::GLES2ShaderBase::SetTexture(texture_location, temp_fbo.tex.gl, 1);
+
+    GLint texture_size_location = program->GetUniformLocation("u_texSize");
+    renderer::GL.Uniform2f(texture_size_location, 1.0f / blend_area.width,
+                           1.0f / blend_area.height);
+
+    GLint color_location = program->GetUniformLocation("u_color");
+    renderer::GL.Uniform4f(color_location, color.x, color.y, color.z, color.w);
+
+    GLint tone_location = program->GetUniformLocation("u_tone");
+    renderer::GL.Uniform4f(tone_location, tone.x, tone.y, tone.z, tone.w);
+  } else {
+    auto& shader = renderer::GSM.shaders()->viewport;
+    shader.Bind();
+    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
+    shader.SetTone(tone);
+    shader.SetColor(color);
+    shader.SetTexture(temp_fbo.tex);
+    shader.SetTextureSize(temp_fbo.size);
+  }
+
+  renderer::GSM.states.blend.Push(false);
+  auto* quad = renderer::GSM.common_quad();
+  quad->SetPositionRect(blend_area);
+  quad->SetTexCoordRect(base::Rect(blend_area.Size()));
+  quad->Draw();
+  renderer::GSM.states.blend.Pop();
   renderer::GSM.states.scissor.Pop();
 }
 

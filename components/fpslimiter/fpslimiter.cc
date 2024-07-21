@@ -7,6 +7,7 @@
 #include "SDL_timer.h"
 #include "base/debug/logging.h"
 
+#include <stdint.h>
 #include <algorithm>
 #include <cmath>
 
@@ -20,7 +21,7 @@ FPSLimiter::FPSLimiter(int frame_rate)
       freq_ns_(NS_PER_S / counter_freq_),
       error_ticks_(0),
       interval_ticks_(std::round((double)counter_freq_ / frame_rate)),
-      adjust_{last_ticks_, 0, false} {}
+      adjust_{last_ticks_, 0, true} {}
 
 void FPSLimiter::SetFrameRate(int frame_rate) {
   interval_ticks_ = std::round((double)counter_freq_ / frame_rate);
@@ -53,6 +54,7 @@ void FPSLimiter::Delay() {
   int64_t frame_diff = diff_counter - adjust_.last_ticks;
   adjust_.last_ticks = diff_counter;
   adjust_.frame_diff += frame_diff - interval_ticks_;
+  adjust_.frame_diff = std::max<int64_t>(adjust_.frame_diff, 0);
 
   if (adjust_.reset) {
     adjust_.reset = false;

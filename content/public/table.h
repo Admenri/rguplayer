@@ -9,7 +9,7 @@
 
 #include "base/bind/callback_list.h"
 #include "base/memory/ref_counted.h"
-#include "content/common/serializable.h"
+#include "content/public/serializable.h"
 
 namespace content {
 

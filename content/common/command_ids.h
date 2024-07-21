@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CONTENT_COMMON_GRAPHICS_GUI_IDS_H_
-#define CONTENT_COMMON_GRAPHICS_GUI_IDS_H_
+#ifndef CONTENT_COMMON_COMMAND_IDS_H_
+#define CONTENT_COMMON_COMMAND_IDS_H_
 
 #define IDS_MENU_SETTINGS 10001
 
@@ -29,4 +29,4 @@
 
 #define IDS_SETTINGS_ABOUT 50001
 
-#endif  //! CONTENT_COMMON_GRAPHICS_GUI_IDS_H_
+#endif  //! CONTENT_COMMON_COMMAND_IDS_H_

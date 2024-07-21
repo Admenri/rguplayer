@@ -4,8 +4,8 @@
 
 #include "content/public/window2.h"
 
-#include "content/common/tilemap_common.h"
 #include "content/public/tilequad.h"
+#include "content/public/tileutils.h"
 
 namespace content {
 
@@ -64,7 +64,7 @@ static const uint8_t cursor_alpha_reset = 0x10;
 Window2::Window2(scoped_refptr<Graphics> screen,
                  scoped_refptr<Viewport> viewport)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       ViewportChild(screen,
                     viewport,
                     (screen->content_version() >= RGSSVersion::RGSS3 ? 100 : 0),
@@ -81,7 +81,7 @@ Window2::Window2(scoped_refptr<Graphics> screen,
                  int width,
                  int height)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       ViewportChild(screen,
                     nullptr,
                     (screen->content_version() >= RGSSVersion::RGSS3 ? 100 : 0),

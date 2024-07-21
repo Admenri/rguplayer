@@ -7,18 +7,28 @@
 
 #include "base/bind/callback_list.h"
 #include "base/buildflags/build.h"
+#include "base/containers/linked_list.h"
 #include "base/exceptions/exception.h"
-#include "content/public/graphics.h"
+
+#include <string>
 
 namespace content {
 
+class Disposable;
+
+class DisposableCollection {
+ public:
+  virtual void AddDisposable(Disposable* disp) = 0;
+  virtual void RemoveDisposable(Disposable* disp) = 0;
+};
+
 class Disposable {
  public:
-  Disposable(scoped_refptr<Graphics> screen) : screen_(screen), link_(this) {
-    screen_->AddDisposable(this);
+  Disposable(DisposableCollection* parent) : parent_(parent), link_(this) {
+    parent_->AddDisposable(this);
   }
 
-  virtual ~Disposable() { screen_->RemoveDisposable(this); }
+  virtual ~Disposable() { parent_->RemoveDisposable(this); }
 
   Disposable(const Disposable&) = delete;
   Disposable& operator=(const Disposable&) = delete;
@@ -53,7 +63,7 @@ class Disposable {
  private:
   friend class Graphics;
   base::OnceClosureList observers_;
-  scoped_refptr<Graphics> screen_;
+  DisposableCollection* parent_;
   base::LinkNode<Disposable> link_;
 
   bool is_disposed_ = false;

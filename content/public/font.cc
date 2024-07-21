@@ -14,8 +14,9 @@ namespace content {
 namespace {
 
 void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
-  SDL_Surface* out =
-      SDL_CreateSurface(in->w + 1, in->h + 1, in->format->format);
+  auto* pixel_detail = SDL_GetPixelFormatDetails(in->format);
+
+  SDL_Surface* out = SDL_CreateSurface(in->w + 1, in->h + 1, in->format);
   float fr = color.r / 255.0f, fg = color.g / 255.0f, fb = color.b / 255.0f;
 
   for (int y = 0; y < in->h + 1; ++y) {
@@ -27,20 +28,21 @@ void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
         src = ((uint32_t*)((uint8_t*)in->pixels + y * in->pitch))[x];
       if (y > 0 && x > 0)
         shd = ((uint32_t*)((uint8_t*)in->pixels + (y - 1) * in->pitch))[x - 1] &
-              in->format->Amask;
+              pixel_detail->Amask;
 
-      if (x == 0 || y == 0 || src & in->format->Amask) {
+      if (x == 0 || y == 0 || src & pixel_detail->Amask) {
         *outP = (x == in->w || y == in->h) ? shd : src;
         continue;
       }
 
-      uint8_t srcA = (src & in->format->Amask) >> in->format->Ashift;
+      uint8_t srcA = (src & pixel_detail->Amask) >> pixel_detail->Ashift;
       float fSrcA = srcA / 255.0f,
-            fShdA = ((shd & in->format->Amask) >> in->format->Ashift) / 255.0f;
+            fShdA =
+                ((shd & pixel_detail->Amask) >> pixel_detail->Ashift) / 255.0f;
       float fa = fSrcA + fShdA * (1.0f - fSrcA), co3 = fSrcA / fa;
 
       *outP = SDL_MapRGBA(
-          in->format,
+          pixel_detail, nullptr,
           static_cast<uint8_t>(std::clamp(fr * co3, 0.0f, 1.0f) * 255),
           static_cast<uint8_t>(std::clamp(fg * co3, 0.0f, 1.0f) * 255),
           static_cast<uint8_t>(std::clamp(fb * co3, 0.0f, 1.0f) * 255),
@@ -373,8 +375,8 @@ std::string Font::FixupString(const std::string& text) {
 SDL_Surface* Font::RenderText(const std::string& text, uint8_t* font_opacity) {
   auto ensure_format = [](SDL_Surface*& surf) {
     SDL_Surface* format_surf = nullptr;
-    if (surf->format->format != SDL_PIXELFORMAT_ABGR8888) {
-      format_surf = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_ABGR8888);
+    if (surf->format != SDL_PIXELFORMAT_ABGR8888) {
+      format_surf = SDL_ConvertSurface(surf, SDL_PIXELFORMAT_ABGR8888);
       SDL_DestroySurface(surf);
       surf = format_surf;
     }

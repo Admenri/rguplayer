@@ -118,7 +118,7 @@ void RenderRunner::InitGLContextInternal() {
 void RenderRunner::QuitGLContextInternal() {
   renderer::GSM.QuitStates();
 
-  SDL_GL_DeleteContext(glcontext_);
+  SDL_GL_DestroyContext(glcontext_);
   glcontext_ = nullptr;
 
   LOG(INFO) << "[Content] Destroy renderer.";

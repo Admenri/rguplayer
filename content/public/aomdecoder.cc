@@ -12,7 +12,7 @@
 namespace content {
 
 AOMDecoder::AOMDecoder(scoped_refptr<Graphics> host)
-    : Disposable(host),
+    : Disposable(host.get()),
       GraphicElement(host),
       io_(host->filesystem()),
       last_ticks_(0),
@@ -59,7 +59,7 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
     wanted_spec.channels = info.audioChannels;
 
     audio_output_ =
-        SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &wanted_spec);
+        SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &wanted_spec);
     if (audio_output_) {
       audio_stream_ = SDL_CreateAudioStream(&wanted_spec, &wanted_spec);
       SDL_BindAudioStream(audio_output_, audio_stream_);

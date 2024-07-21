@@ -57,7 +57,7 @@ uint16_t utf8_to_ucs2(const char* _input, const char** end_ptr) {
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
     : GraphicElement(host),
-      Disposable(host),
+      Disposable(host.get()),
       font_(new Font(host->font_manager())),
       surface_buffer_(nullptr) {
   if (width <= 0 || height <= 0) {
@@ -78,7 +78,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
 
 Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
     : GraphicElement(host),
-      Disposable(host),
+      Disposable(host.get()),
       font_(new Font(host->font_manager())),
       surface_buffer_(nullptr) {
   auto file_handler = base::BindRepeating(
@@ -104,9 +104,9 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
   }
 
   size_ = base::Vec2i(surface_buffer_->w, surface_buffer_->h);
-  if (surface_buffer_->format->format != SDL_PIXELFORMAT_ABGR8888) {
+  if (surface_buffer_->format != SDL_PIXELFORMAT_ABGR8888) {
     SDL_Surface* conv =
-        SDL_ConvertSurfaceFormat(surface_buffer_, SDL_PIXELFORMAT_ABGR8888);
+        SDL_ConvertSurface(surface_buffer_, SDL_PIXELFORMAT_ABGR8888);
     SDL_DestroySurface(surface_buffer_);
     surface_buffer_ = conv;
   }
@@ -233,12 +233,13 @@ scoped_refptr<Color> Bitmap::GetPixel(int x, int y) {
     return nullptr;
 
   SurfaceRequired();
-  int bpp = surface_buffer_->format->bytes_per_pixel;
+  auto* pixel_detail = SDL_GetPixelFormatDetails(surface_buffer_->format);
+  int bpp = pixel_detail->bytes_per_pixel;
   uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
                    y * surface_buffer_->pitch + x * bpp;
 
   uint8_t color[4];
-  SDL_GetRGBA(*reinterpret_cast<uint32_t*>(pixel), surface_buffer_->format,
+  SDL_GetRGBA(*reinterpret_cast<uint32_t*>(pixel), pixel_detail, nullptr,
               &color[0], &color[1], &color[2], &color[3]);
 
   return new Color(color[0], color[1], color[2], color[3]);
@@ -251,12 +252,13 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
     return;
 
   auto data = color->AsNormal();
+  auto* pixel_detail = SDL_GetPixelFormatDetails(surface_buffer_->format);
   if (surface_buffer_) {
-    int bpp = surface_buffer_->format->bytes_per_pixel;
+    int bpp = pixel_detail->bytes_per_pixel;
     uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
                      y * surface_buffer_->pitch + x * bpp;
     *reinterpret_cast<uint32_t*>(pixel) =
-        SDL_MapRGBA(surface_buffer_->format, static_cast<uint8_t>(data.x),
+        SDL_MapRGBA(pixel_detail, nullptr, static_cast<uint8_t>(data.x),
                     static_cast<uint8_t>(data.y), static_cast<uint8_t>(data.z),
                     static_cast<uint8_t>(data.w));
   }

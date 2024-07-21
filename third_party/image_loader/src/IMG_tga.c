@@ -189,12 +189,22 @@ SDL_Surface *IMG_LoadTGA_IO(SDL_IOStream *src)
         size_t palsiz = ncols * ((hdr.cmap_bits + 7) >> 3);
         if (indexed && !grey) {
             Uint8 *pal = (Uint8 *)SDL_malloc(palsiz), *p = pal;
-            SDL_Color *colors = img->format->palette->colors;
-            img->format->palette->ncolors = ncols;
-            if (SDL_ReadIO(src, pal, palsiz) != palsiz) {
-                error = "Error reading TGA data";
+            SDL_Palette *palette = SDL_CreateSurfacePalette(img);
+            if (!palette) {
+                error = "Couldn't create palette";
+                SDL_free(pal);
                 goto error;
             }
+            if (SDL_ReadIO(src, pal, palsiz) != palsiz) {
+                error = "Error reading TGA data";
+                SDL_free(pal);
+                goto error;
+            }
+            if (ncols > palette->ncolors) {
+                ncols = palette->ncolors;
+            }
+            palette->ncolors = ncols;
+
             for(i = 0; i < ncols; i++) {
                 switch(hdr.cmap_bits) {
                 case 15:
@@ -202,22 +212,23 @@ SDL_Surface *IMG_LoadTGA_IO(SDL_IOStream *src)
                     {
                     Uint16 c = p[0] + (p[1] << 8);
                     p += 2;
-                    colors[i].r = (c >> 7) & 0xf8;
-                    colors[i].g = (c >> 2) & 0xf8;
-                    colors[i].b = c << 3;
+                    palette->colors[i].r = (c >> 7) & 0xf8;
+                    palette->colors[i].g = (c >> 2) & 0xf8;
+                    palette->colors[i].b = c << 3;
                     }
                     break;
                 case 24:
                 case 32:
-                    colors[i].b = *p++;
-                    colors[i].g = *p++;
-                    colors[i].r = *p++;
+                    palette->colors[i].b = *p++;
+                    palette->colors[i].g = *p++;
+                    palette->colors[i].r = *p++;
                     if (hdr.cmap_bits == 32 && *p++ < 128)
-                    ckey = i;
+                        ckey = i;
                     break;
                 }
             }
             SDL_free(pal);
+
             if (ckey >= 0)
                 SDL_SetSurfaceColorKey(img, SDL_TRUE, ckey);
         } else {
@@ -227,10 +238,15 @@ SDL_Surface *IMG_LoadTGA_IO(SDL_IOStream *src)
     }
 
     if (grey) {
-        SDL_Color *colors = img->format->palette->colors;
+        SDL_Palette *palette = SDL_CreateSurfacePalette(img);
+        SDL_Color *colors;
+        if (!palette) {
+            error = "Couldn't create palette";
+            goto error;
+        }
+        colors = palette->colors;
         for(i = 0; i < 256; i++)
             colors[i].r = colors[i].g = colors[i].b = i;
-        img->format->palette->ncolors = 256;
     }
 
     if (hdr.flags & TGA_ORIGIN_UPPER) {

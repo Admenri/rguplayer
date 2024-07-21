@@ -162,19 +162,30 @@ SDL_Surface *IMG_LoadPNM_IO(SDL_IOStream *src)
     }
     if ( surface == NULL )
         ERROR("Out of memory");
-    bpl = width * surface->format->bytes_per_pixel;
+    bpl = width * SDL_BYTESPERPIXEL(surface->format);
     if(kind == PGM) {
-        SDL_Color *c = surface->format->palette->colors;
+        SDL_Palette *palette = SDL_CreateSurfacePalette(surface);
+        SDL_Color *c;
         int i;
+        if (!palette) {
+            ERROR("Couldn't create palette");
+        }
+        c = palette->colors;
         for(i = 0; i < 256; i++)
             c[i].r = c[i].g = c[i].b = i;
-        surface->format->palette->ncolors = 256;
     } else if(kind == PBM) {
         /* for some reason PBM has 1=black, 0=white */
-        SDL_Color *c = surface->format->palette->colors;
+        SDL_Palette *palette = SDL_CreatePalette(2);
+        SDL_Color *c;
+        if (!palette) {
+            ERROR("Couldn't create palette");
+        }
+        c = palette->colors;
         c[0].r = c[0].g = c[0].b = 255;
         c[1].r = c[1].g = c[1].b = 0;
-        surface->format->palette->ncolors = 2;
+        SDL_SetSurfacePalette(surface, palette);
+        SDL_DestroyPalette(palette);
+
         bpl = (width + 7) >> 3;
         buf = (Uint8 *)SDL_malloc(bpl);
         if(buf == NULL)

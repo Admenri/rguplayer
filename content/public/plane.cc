@@ -19,7 +19,7 @@ namespace content {
 
 Plane::Plane(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       ViewportChild(screen, viewport),
       color_(new Color()),
       tone_(new Tone()) {

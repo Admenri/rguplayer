@@ -6,11 +6,7 @@ cmake_minimum_required(VERSION 3.20.1)
 #--------------------------------------------------------------------------------
 
 set(CORE_CONTENT_SRC
-  common/graphics_gui_ids.h
-  common/tilemap_common.cc
-  common/tilemap_common.h
-  common/serializable.cc
-  common/serializable.h
+  common/command_ids.h
   config/core_config.cc
   config/core_config.h
   engine/binding_engine.cc
@@ -37,6 +33,8 @@ set(CORE_CONTENT_SRC
   public/mouse.h
   public/plane.cc
   public/plane.h
+  public/serializable.cc
+  public/serializable.h
   public/shader.cc
   public/shader.h
   public/sprite.cc
@@ -48,6 +46,8 @@ set(CORE_CONTENT_SRC
   public/tilemap2.cc
   public/tilemap2.h
   public/tilequad.h
+  public/tileutils.cc
+  public/tileutils.h
   public/touch.cc
   public/touch.h
   public/utility.cc
@@ -70,7 +70,7 @@ set(CORE_CONTENT_SRC
   worker/worker_share.h
 )
 
-add_library(core_content ${CORE_CONTENT_SRC})
+add_library(core_content ${CORE_CONTENT_SRC} )
 target_link_libraries(core_content PUBLIC
                       core_base
                       core_renderer

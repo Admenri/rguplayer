@@ -8,10 +8,10 @@
 #include <array>
 
 #include "base/memory/ref_counted.h"
-#include "content/common/tilemap_common.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
 #include "content/public/table.h"
+#include "content/public/tileutils.h"
 #include "content/public/viewport.h"
 #include "renderer/quad/quad_array.h"
 

@@ -53,50 +53,47 @@
 
 ### 2. 针对不同环境开始构建
 #### Windows (测试环境：Windows 11 23H2 & Visual Studio 2019 & Clang-LLVM)
- - 可以直接使用 Visual Studio 内置的 CMake 功能进行快捷构建，编译器建议选择Clang-LLVM
+ - 可以直接使用 Visual Studio 内置的 CMake 功能进行快捷构建，编译器建议选择Clang-LLVM  
+ - * 需要单独编译Ruby解释器  
 
 #### Linux (测试环境：Ubuntu 23.10 & Visual Studio Code & GCC 13)
- - 确保系统安装了OpenGL开发库和CRuby开发库
- - 在目录执行：cmake -S . -B out 以生成工程
- - 之后执行cmake --build out执行构建
+ - 确保系统安装了OpenGL开发库和CRuby开发库  
+ - 在目录执行：cmake -S . -B out 以生成工程  
+ - 之后执行cmake --build out执行构建  
 
 #### Android (测试环境：Android 13.0 & Android Studio & Windows 11 23H2)
- - 确保系统安装了Android Studio，Android NDK，CMake
- - 确保可以在开发环境下编译出成品程序（例如Windows下先编译出exe）
- - 然后使用Android Studio打开 “android-project” 文件夹
- - 之后即可直接执行 Build Project 开始构建
+ - 确保系统安装了Android Studio，Android NDK，CMake  
+ - 确保可以在开发环境下编译出成品程序（例如Windows下先编译出exe） 
+ - 然后使用Android Studio打开 “android-project” 文件夹 
+ - 之后即可直接执行 Build Project 开始构建  
 
 ## 系统支持
 
-- Microsoft Windows 7 及以上
-- GNU/Linux 6.5.0 及以上
-- Android 8.0 及以上
-- 目前不支持Apple系的任何操作系统（macOS，iOS），欢迎有mac设备的同志贡献代码
+- Microsoft Windows 7 及以上 
+- GNU/Linux 6.5.0 及以上 
+- Android 8.0 及以上 
+- 目前不支持Apple系的任何操作系统（macOS，iOS），欢迎有mac设备的同志贡献代码 
 
 ## 第三方库使用
 
-- SDL - https://github.com/libsdl-org/SDL
-- SDL_image - https://github.com/libsdl-org/SDL_image
-- SDL_ttf - https://github.com/libsdl-org/SDL_ttf
-- ANGLE - https://chromium.googlesource.com/angle/angle
-- concurrentqueue - https://github.com/cameron314/concurrentqueue
-- CRuby - https://www.ruby-lang.org/zh_cn/
-- Physfs - https://github.com/icculus/physfs
-- zlib - https://github.com/madler/zlib
-- inih - https://github.com/jtilly/inih
-- soloud - https://github.com/jarikomppa/soloud
-- imgui - https://github.com/ocornut/imgui
-- aom - https://aomedia.googlesource.com/aom/
-- vorbis - https://github.com/xiph/vorbis
-- ogg - https://github.com/xiph/ogg
-- boost_asio - https://github.com/boostorg/boost
-- rapidxml - https://rapidxml.sourceforge.net/
+### 包含源码
+- concurrentqueue - https://github.com/cameron314/concurrentqueue 
+- zlib - https://github.com/madler/zlib 
+- soloud - https://github.com/jarikomppa/soloud 
+- imgui - https://github.com/ocornut/imgui  
+- boost_asio - https://github.com/boostorg/boost  
+- rapidxml - https://rapidxml.sourceforge.net/  
+- json - https://github.com/nlohmann/json 
 
-## 仍需努力
+### 外部引用
+- SDL - https://github.com/libsdl-org/SDL 
+- Physfs - https://github.com/icculus/physfs  
+- aom - https://aomedia.googlesource.com/aom/ 
+- vorbis - https://github.com/xiph/vorbis 
+- ogg - https://github.com/xiph/ogg 
 
-- 改进音频库的性能（SoLoud -> OpenAL）
-- 增加内置骨骼动画（Spine, Cubism）
-- 增加专用脚本（灯光, 联机）
+### 特殊构建引用
+- CRuby - https://www.ruby-lang.org/zh_cn/  
 
 ## 联系方式
 

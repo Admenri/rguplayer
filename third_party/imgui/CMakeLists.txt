@@ -9,7 +9,6 @@ set(IMGUI_SOURCE
   imconfig.h
   imgui.cpp
   imgui.h
-  imgui_demo.cpp
   imgui_draw.cpp
   imgui_tables.cpp
   imgui_widgets.cpp

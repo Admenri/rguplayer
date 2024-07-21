@@ -91,10 +91,14 @@ class Viewport : public base::RefCounted<Viewport>,
   void OnParentViewportRectChanged(const ViewportInfo& rect) override;
 
   void InitViewportInternal(const base::Rect& initial_rect);
-
   void SnapToBitmapInternal(renderer::TextureFrameBuffer* target);
-
   void OnRectChangedInternal();
+
+  void ApplyViewportEffect(const base::Rect& blend_area,
+                           renderer::TextureFrameBuffer& effect_target,
+                           const base::Vec4& color,
+                           const base::Vec4& tone,
+                           scoped_refptr<Shader> program);
 
   scoped_refptr<Viewport> parent_;
 

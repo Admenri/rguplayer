@@ -45,7 +45,7 @@ Sint64 PHYS_RWopsSize(void* userdata) {
   return PHYSFS_fileLength(f);
 }
 
-Sint64 PHYS_RWopsSeek(void* userdata, int64_t offset, int whence) {
+Sint64 PHYS_RWopsSeek(void* userdata, int64_t offset, SDL_IOWhence whence) {
   PHYSFS_File* f = PHYSPtr(userdata);
   if (!f)
     return -1;

@@ -47,38 +47,37 @@ extern "C" {
 /**
  * This is the version number macro for the current SDL_image version.
  */
-#define SDL_IMAGE_VERSION                                          \
-  SDL_VERSIONNUM(SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION, \
-                 SDL_IMAGE_MICRO_VERSION)
+#define SDL_IMAGE_VERSION \
+    SDL_VERSIONNUM(SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION, SDL_IMAGE_MICRO_VERSION)
 
 /**
  * This macro will evaluate to true if compiled with SDL_image at least X.Y.Z.
  */
-#define SDL_IMAGE_VERSION_ATLEAST(X, Y, Z)                          \
-  ((SDL_IMAGE_MAJOR_VERSION >= X) &&                                \
-   (SDL_IMAGE_MAJOR_VERSION > X || SDL_IMAGE_MINOR_VERSION >= Y) && \
-   (SDL_IMAGE_MAJOR_VERSION > X || SDL_IMAGE_MINOR_VERSION > Y ||   \
-    SDL_IMAGE_MICRO_VERSION >= Z))
+#define SDL_IMAGE_VERSION_ATLEAST(X, Y, Z) \
+    ((SDL_IMAGE_MAJOR_VERSION >= X) && \
+     (SDL_IMAGE_MAJOR_VERSION > X || SDL_IMAGE_MINOR_VERSION >= Y) && \
+     (SDL_IMAGE_MAJOR_VERSION > X || SDL_IMAGE_MINOR_VERSION > Y || SDL_IMAGE_MICRO_VERSION >= Z))
 
 /**
  * This function gets the version of the dynamically linked SDL_image library.
  *
- * \returns SDL_image version
+ * \returns SDL_image version.
  *
  * \since This function is available since SDL_image 3.0.0.
  */
-extern int SDLCALL IMG_Version(void);
+extern SDL_DECLSPEC int SDLCALL IMG_Version(void);
 
 /**
  * Initialization flags
  */
-typedef enum IMG_InitFlags {
-  IMG_INIT_JPG = 0x00000001,
-  IMG_INIT_PNG = 0x00000002,
-  IMG_INIT_TIF = 0x00000004,
-  IMG_INIT_WEBP = 0x00000008,
-  IMG_INIT_JXL = 0x00000010,
-  IMG_INIT_AVIF = 0x00000020
+typedef enum IMG_InitFlags
+{
+    IMG_INIT_JPG    = 0x00000001,
+    IMG_INIT_PNG    = 0x00000002,
+    IMG_INIT_TIF    = 0x00000004,
+    IMG_INIT_WEBP   = 0x00000008,
+    IMG_INIT_JXL    = 0x00000010,
+    IMG_INIT_AVIF   = 0x00000020
 } IMG_InitFlags;
 
 /**
@@ -143,7 +142,7 @@ typedef enum IMG_InitFlags {
  *
  * \sa IMG_Quit
  */
-extern int SDLCALL IMG_Init(int flags);
+extern SDL_DECLSPEC int SDLCALL IMG_Init(int flags);
 
 /**
  * Deinitialize SDL_image.
@@ -168,7 +167,7 @@ extern int SDLCALL IMG_Init(int flags);
  *
  * \sa IMG_Init
  */
-extern void SDLCALL IMG_Quit(void);
+extern SDL_DECLSPEC void SDLCALL IMG_Quit(void);
 
 /**
  * Load an image from an SDL data source into a software surface.
@@ -230,9 +229,7 @@ extern void SDLCALL IMG_Quit(void);
  * \sa IMG_Load_IO
  * \sa SDL_DestroySurface
  */
-extern SDL_Surface* SDLCALL IMG_LoadTyped_IO(SDL_IOStream* src,
-                                             SDL_bool closeio,
-                                             const char* type);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadTyped_IO(SDL_IOStream *src, SDL_bool closeio, const char *type);
 
 /**
  * Load an image from a filesystem path into a software surface.
@@ -264,7 +261,9 @@ extern SDL_Surface* SDLCALL IMG_LoadTyped_IO(SDL_IOStream* src,
  * software surface: call IMG_LoadTexture() instead.
  *
  * When done with the returned surface, the app should dispose of it with a
- * call to SDL_DestroySurface().
+ * call to
+ * [SDL_DestroySurface](https://wiki.libsdl.org/SDL3/SDL_DestroySurface)
+ * ().
  *
  * \param file a path on the filesystem to load an image from.
  * \returns a new SDL surface, or NULL on error.
@@ -275,7 +274,7 @@ extern SDL_Surface* SDLCALL IMG_LoadTyped_IO(SDL_IOStream* src,
  * \sa IMG_Load_IO
  * \sa SDL_DestroySurface
  */
-extern SDL_Surface* SDLCALL IMG_Load(const char* file);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_Load(const char *file);
 
 /**
  * Load an image from an SDL data source into a software surface.
@@ -329,9 +328,9 @@ extern SDL_Surface* SDLCALL IMG_Load(const char* file);
  * \sa IMG_LoadTyped_IO
  * \sa SDL_DestroySurface
  */
-extern SDL_Surface* SDLCALL IMG_Load_IO(SDL_IOStream* src, SDL_bool closeio);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_Load_IO(SDL_IOStream *src, SDL_bool closeio);
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
+#if SDL_VERSION_ATLEAST(2,0,0)
 
 /**
  * Load an image from a filesystem path into a GPU texture.
@@ -366,8 +365,7 @@ extern SDL_Surface* SDLCALL IMG_Load_IO(SDL_IOStream* src, SDL_bool closeio);
  * \sa IMG_LoadTextureTyped_IO
  * \sa IMG_LoadTexture_IO
  */
-extern SDL_Texture* SDLCALL IMG_LoadTexture(SDL_Renderer* renderer,
-                                            const char* file);
+extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture(SDL_Renderer *renderer, const char *file);
 
 /**
  * Load an image from an SDL data source into a GPU texture.
@@ -414,9 +412,7 @@ extern SDL_Texture* SDLCALL IMG_LoadTexture(SDL_Renderer* renderer,
  * \sa IMG_LoadTextureTyped_IO
  * \sa SDL_DestroyTexture
  */
-extern SDL_Texture* SDLCALL IMG_LoadTexture_IO(SDL_Renderer* renderer,
-                                               SDL_IOStream* src,
-                                               SDL_bool closeio);
+extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture_IO(SDL_Renderer *renderer, SDL_IOStream *src, SDL_bool closeio);
 
 /**
  * Load an image from an SDL data source into a GPU texture.
@@ -471,10 +467,7 @@ extern SDL_Texture* SDLCALL IMG_LoadTexture_IO(SDL_Renderer* renderer,
  * \sa IMG_LoadTexture_IO
  * \sa SDL_DestroyTexture
  */
-extern SDL_Texture* SDLCALL IMG_LoadTextureTyped_IO(SDL_Renderer* renderer,
-                                                    SDL_IOStream* src,
-                                                    SDL_bool closeio,
-                                                    const char* type);
+extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTextureTyped_IO(SDL_Renderer *renderer, SDL_IOStream *src, SDL_bool closeio, const char *type);
 #endif /* SDL 2.0 */
 
 /**
@@ -519,7 +512,7 @@ extern SDL_Texture* SDLCALL IMG_LoadTextureTyped_IO(SDL_Renderer* renderer,
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isAVIF(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isAVIF(SDL_IOStream *src);
 
 /**
  * Detect ICO image data on a readable/seekable SDL_IOStream.
@@ -562,7 +555,7 @@ extern int SDLCALL IMG_isAVIF(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isICO(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isICO(SDL_IOStream *src);
 
 /**
  * Detect CUR image data on a readable/seekable SDL_IOStream.
@@ -605,7 +598,7 @@ extern int SDLCALL IMG_isICO(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isCUR(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isCUR(SDL_IOStream *src);
 
 /**
  * Detect BMP image data on a readable/seekable SDL_IOStream.
@@ -648,7 +641,7 @@ extern int SDLCALL IMG_isCUR(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isBMP(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isBMP(SDL_IOStream *src);
 
 /**
  * Detect GIF image data on a readable/seekable SDL_IOStream.
@@ -691,7 +684,7 @@ extern int SDLCALL IMG_isBMP(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isGIF(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isGIF(SDL_IOStream *src);
 
 /**
  * Detect JPG image data on a readable/seekable SDL_IOStream.
@@ -734,7 +727,7 @@ extern int SDLCALL IMG_isGIF(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isJPG(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isJPG(SDL_IOStream *src);
 
 /**
  * Detect JXL image data on a readable/seekable SDL_IOStream.
@@ -777,7 +770,7 @@ extern int SDLCALL IMG_isJPG(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isJXL(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isJXL(SDL_IOStream *src);
 
 /**
  * Detect LBM image data on a readable/seekable SDL_IOStream.
@@ -820,7 +813,7 @@ extern int SDLCALL IMG_isJXL(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isLBM(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isLBM(SDL_IOStream *src);
 
 /**
  * Detect PCX image data on a readable/seekable SDL_IOStream.
@@ -863,7 +856,7 @@ extern int SDLCALL IMG_isLBM(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isPCX(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isPCX(SDL_IOStream *src);
 
 /**
  * Detect PNG image data on a readable/seekable SDL_IOStream.
@@ -906,7 +899,7 @@ extern int SDLCALL IMG_isPCX(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isPNG(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isPNG(SDL_IOStream *src);
 
 /**
  * Detect PNM image data on a readable/seekable SDL_IOStream.
@@ -949,7 +942,7 @@ extern int SDLCALL IMG_isPNG(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isPNM(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isPNM(SDL_IOStream *src);
 
 /**
  * Detect SVG image data on a readable/seekable SDL_IOStream.
@@ -992,7 +985,7 @@ extern int SDLCALL IMG_isPNM(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isSVG(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isSVG(SDL_IOStream *src);
 
 /**
  * Detect QOI image data on a readable/seekable SDL_IOStream.
@@ -1035,7 +1028,7 @@ extern int SDLCALL IMG_isSVG(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isQOI(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isQOI(SDL_IOStream *src);
 
 /**
  * Detect TIFF image data on a readable/seekable SDL_IOStream.
@@ -1078,7 +1071,7 @@ extern int SDLCALL IMG_isQOI(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isTIF(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isTIF(SDL_IOStream *src);
 
 /**
  * Detect XCF image data on a readable/seekable SDL_IOStream.
@@ -1121,7 +1114,7 @@ extern int SDLCALL IMG_isTIF(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isXCF(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isXCF(SDL_IOStream *src);
 
 /**
  * Detect XPM image data on a readable/seekable SDL_IOStream.
@@ -1164,7 +1157,7 @@ extern int SDLCALL IMG_isXCF(SDL_IOStream* src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isXPM(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isXPM(SDL_IOStream *src);
 
 /**
  * Detect XV image data on a readable/seekable SDL_IOStream.
@@ -1207,7 +1200,7 @@ extern int SDLCALL IMG_isXPM(SDL_IOStream* src);
  * \sa IMG_isXPM
  * \sa IMG_isWEBP
  */
-extern int SDLCALL IMG_isXV(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isXV(SDL_IOStream *src);
 
 /**
  * Detect WEBP image data on a readable/seekable SDL_IOStream.
@@ -1250,7 +1243,7 @@ extern int SDLCALL IMG_isXV(SDL_IOStream* src);
  * \sa IMG_isXPM
  * \sa IMG_isXV
  */
-extern int SDLCALL IMG_isWEBP(SDL_IOStream* src);
+extern SDL_DECLSPEC int SDLCALL IMG_isWEBP(SDL_IOStream *src);
 
 /**
  * Load a AVIF image directly.
@@ -1261,7 +1254,7 @@ extern int SDLCALL IMG_isWEBP(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1284,7 +1277,7 @@ extern int SDLCALL IMG_isWEBP(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadAVIF_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadAVIF_IO(SDL_IOStream *src);
 
 /**
  * Load a ICO image directly.
@@ -1295,7 +1288,7 @@ extern SDL_Surface* SDLCALL IMG_LoadAVIF_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1318,7 +1311,7 @@ extern SDL_Surface* SDLCALL IMG_LoadAVIF_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadICO_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadICO_IO(SDL_IOStream *src);
 
 /**
  * Load a CUR image directly.
@@ -1329,7 +1322,7 @@ extern SDL_Surface* SDLCALL IMG_LoadICO_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1352,7 +1345,7 @@ extern SDL_Surface* SDLCALL IMG_LoadICO_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadCUR_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadCUR_IO(SDL_IOStream *src);
 
 /**
  * Load a BMP image directly.
@@ -1363,7 +1356,7 @@ extern SDL_Surface* SDLCALL IMG_LoadCUR_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1386,7 +1379,7 @@ extern SDL_Surface* SDLCALL IMG_LoadCUR_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadBMP_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadBMP_IO(SDL_IOStream *src);
 
 /**
  * Load a GIF image directly.
@@ -1397,7 +1390,7 @@ extern SDL_Surface* SDLCALL IMG_LoadBMP_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1420,7 +1413,7 @@ extern SDL_Surface* SDLCALL IMG_LoadBMP_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadGIF_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadGIF_IO(SDL_IOStream *src);
 
 /**
  * Load a JPG image directly.
@@ -1431,7 +1424,7 @@ extern SDL_Surface* SDLCALL IMG_LoadGIF_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1454,7 +1447,7 @@ extern SDL_Surface* SDLCALL IMG_LoadGIF_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadJPG_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadJPG_IO(SDL_IOStream *src);
 
 /**
  * Load a JXL image directly.
@@ -1465,7 +1458,7 @@ extern SDL_Surface* SDLCALL IMG_LoadJPG_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1488,7 +1481,7 @@ extern SDL_Surface* SDLCALL IMG_LoadJPG_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadJXL_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadJXL_IO(SDL_IOStream *src);
 
 /**
  * Load a LBM image directly.
@@ -1499,7 +1492,7 @@ extern SDL_Surface* SDLCALL IMG_LoadJXL_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1522,7 +1515,7 @@ extern SDL_Surface* SDLCALL IMG_LoadJXL_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadLBM_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadLBM_IO(SDL_IOStream *src);
 
 /**
  * Load a PCX image directly.
@@ -1533,7 +1526,7 @@ extern SDL_Surface* SDLCALL IMG_LoadLBM_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1556,7 +1549,7 @@ extern SDL_Surface* SDLCALL IMG_LoadLBM_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadPCX_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadPCX_IO(SDL_IOStream *src);
 
 /**
  * Load a PNG image directly.
@@ -1567,7 +1560,7 @@ extern SDL_Surface* SDLCALL IMG_LoadPCX_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1590,7 +1583,7 @@ extern SDL_Surface* SDLCALL IMG_LoadPCX_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadPNG_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadPNG_IO(SDL_IOStream *src);
 
 /**
  * Load a PNM image directly.
@@ -1601,7 +1594,7 @@ extern SDL_Surface* SDLCALL IMG_LoadPNG_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1624,7 +1617,7 @@ extern SDL_Surface* SDLCALL IMG_LoadPNG_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadPNM_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadPNM_IO(SDL_IOStream *src);
 
 /**
  * Load a SVG image directly.
@@ -1635,7 +1628,7 @@ extern SDL_Surface* SDLCALL IMG_LoadPNM_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1658,7 +1651,7 @@ extern SDL_Surface* SDLCALL IMG_LoadPNM_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadSVG_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadSVG_IO(SDL_IOStream *src);
 
 /**
  * Load a QOI image directly.
@@ -1669,7 +1662,7 @@ extern SDL_Surface* SDLCALL IMG_LoadSVG_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1692,7 +1685,7 @@ extern SDL_Surface* SDLCALL IMG_LoadSVG_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadQOI_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadQOI_IO(SDL_IOStream *src);
 
 /**
  * Load a TGA image directly.
@@ -1703,7 +1696,7 @@ extern SDL_Surface* SDLCALL IMG_LoadQOI_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1726,7 +1719,7 @@ extern SDL_Surface* SDLCALL IMG_LoadQOI_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadTGA_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadTGA_IO(SDL_IOStream *src);
 
 /**
  * Load a TIFF image directly.
@@ -1737,7 +1730,7 @@ extern SDL_Surface* SDLCALL IMG_LoadTGA_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1760,7 +1753,7 @@ extern SDL_Surface* SDLCALL IMG_LoadTGA_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadTIF_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadTIF_IO(SDL_IOStream *src);
 
 /**
  * Load a XCF image directly.
@@ -1771,7 +1764,7 @@ extern SDL_Surface* SDLCALL IMG_LoadTIF_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1794,7 +1787,7 @@ extern SDL_Surface* SDLCALL IMG_LoadTIF_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadXCF_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadXCF_IO(SDL_IOStream *src);
 
 /**
  * Load a XPM image directly.
@@ -1805,7 +1798,7 @@ extern SDL_Surface* SDLCALL IMG_LoadXCF_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1828,7 +1821,7 @@ extern SDL_Surface* SDLCALL IMG_LoadXCF_IO(SDL_IOStream* src);
  * \sa IMG_LoadXV_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadXPM_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadXPM_IO(SDL_IOStream *src);
 
 /**
  * Load a XV image directly.
@@ -1839,7 +1832,7 @@ extern SDL_Surface* SDLCALL IMG_LoadXPM_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1862,7 +1855,7 @@ extern SDL_Surface* SDLCALL IMG_LoadXPM_IO(SDL_IOStream* src);
  * \sa IMG_LoadXPM_IO
  * \sa IMG_LoadWEBP_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadXV_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadXV_IO(SDL_IOStream *src);
 
 /**
  * Load a WEBP image directly.
@@ -1873,7 +1866,7 @@ extern SDL_Surface* SDLCALL IMG_LoadXV_IO(SDL_IOStream* src);
  * interface available here.
  *
  * \param src an SDL_IOStream to load image data from.
- * \returns SDL surface, or NULL on error
+ * \returns SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
@@ -1896,7 +1889,7 @@ extern SDL_Surface* SDLCALL IMG_LoadXV_IO(SDL_IOStream* src);
  * \sa IMG_LoadXPM_IO
  * \sa IMG_LoadXV_IO
  */
-extern SDL_Surface* SDLCALL IMG_LoadWEBP_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadWEBP_IO(SDL_IOStream *src);
 
 /**
  * Load an SVG image, scaled to a specific size.
@@ -1917,9 +1910,7 @@ extern SDL_Surface* SDLCALL IMG_LoadWEBP_IO(SDL_IOStream* src);
  *
  * \since This function is available since SDL_image 3.0.0.
  */
-extern SDL_Surface* SDLCALL IMG_LoadSizedSVG_IO(SDL_IOStream* src,
-                                                int width,
-                                                int height);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadSizedSVG_IO(SDL_IOStream *src, int width, int height);
 
 /**
  * Load an XPM image from a memory array.
@@ -1938,7 +1929,7 @@ extern SDL_Surface* SDLCALL IMG_LoadSizedSVG_IO(SDL_IOStream* src,
  *
  * \sa IMG_ReadXPMFromArrayToRGB888
  */
-extern SDL_Surface* SDLCALL IMG_ReadXPMFromArray(char** xpm);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_ReadXPMFromArray(char **xpm);
 
 /**
  * Load an XPM image from a memory array.
@@ -1957,26 +1948,24 @@ extern SDL_Surface* SDLCALL IMG_ReadXPMFromArray(char** xpm);
  *
  * \sa IMG_ReadXPMFromArray
  */
-extern SDL_Surface* SDLCALL IMG_ReadXPMFromArrayToRGB888(char** xpm);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_ReadXPMFromArrayToRGB888(char **xpm);
 
 /**
  * Save an SDL_Surface into a AVIF image file.
  *
  * If the file already exists, it will be overwritten.
  *
- * \param surface the SDL surface to save
+ * \param surface the SDL surface to save.
  * \param file path on the filesystem to write new file to.
  * \param quality the desired quality, ranging between 0 (lowest) and 100
- *                (highest)
- * \returns 0 if successful, -1 on error
+ *                (highest).
+ * \returns 0 if successful, -1 on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
  * \sa IMG_SaveAVIF_IO
  */
-extern int SDLCALL IMG_SaveAVIF(SDL_Surface* surface,
-                                const char* file,
-                                int quality);
+extern SDL_DECLSPEC int SDLCALL IMG_SaveAVIF(SDL_Surface *surface, const char *file, int quality);
 
 /**
  * Save an SDL_Surface into AVIF image data, via an SDL_IOStream.
@@ -1986,37 +1975,34 @@ extern int SDLCALL IMG_SaveAVIF(SDL_Surface* surface,
  * If `closeio` is SDL_TRUE, `dst` will be closed before returning, whether
  * this function succeeds or not.
  *
- * \param surface the SDL surface to save
+ * \param surface the SDL surface to save.
  * \param dst the SDL_IOStream to save the image data to.
  * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
  *                SDL_FALSE to leave it open.
  * \param quality the desired quality, ranging between 0 (lowest) and 100
- *                (highest)
+ *                (highest).
  * \returns 0 if successful, -1 on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
  * \sa IMG_SaveAVIF
  */
-extern int SDLCALL IMG_SaveAVIF_IO(SDL_Surface* surface,
-                                   SDL_IOStream* dst,
-                                   int closeio,
-                                   int quality);
+extern SDL_DECLSPEC int SDLCALL IMG_SaveAVIF_IO(SDL_Surface *surface, SDL_IOStream *dst, int closeio, int quality);
 
 /**
  * Save an SDL_Surface into a PNG image file.
  *
  * If the file already exists, it will be overwritten.
  *
- * \param surface the SDL surface to save
+ * \param surface the SDL surface to save.
  * \param file path on the filesystem to write new file to.
- * \returns 0 if successful, -1 on error
+ * \returns 0 if successful, -1 on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
  * \sa IMG_SavePNG_IO
  */
-extern int SDLCALL IMG_SavePNG(SDL_Surface* surface, const char* file);
+extern SDL_DECLSPEC int SDLCALL IMG_SavePNG(SDL_Surface *surface, const char *file);
 
 /**
  * Save an SDL_Surface into PNG image data, via an SDL_IOStream.
@@ -2026,7 +2012,7 @@ extern int SDLCALL IMG_SavePNG(SDL_Surface* surface, const char* file);
  * If `closeio` is SDL_TRUE, `dst` will be closed before returning, whether
  * this function succeeds or not.
  *
- * \param surface the SDL surface to save
+ * \param surface the SDL surface to save.
  * \param dst the SDL_IOStream to save the image data to.
  * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
  *                SDL_FALSE to leave it open.
@@ -2036,28 +2022,24 @@ extern int SDLCALL IMG_SavePNG(SDL_Surface* surface, const char* file);
  *
  * \sa IMG_SavePNG
  */
-extern int SDLCALL IMG_SavePNG_IO(SDL_Surface* surface,
-                                  SDL_IOStream* dst,
-                                  int closeio);
+extern SDL_DECLSPEC int SDLCALL IMG_SavePNG_IO(SDL_Surface *surface, SDL_IOStream *dst, int closeio);
 
 /**
  * Save an SDL_Surface into a JPEG image file.
  *
  * If the file already exists, it will be overwritten.
  *
- * \param surface the SDL surface to save
+ * \param surface the SDL surface to save.
  * \param file path on the filesystem to write new file to.
  * \param quality [0; 33] is Lowest quality, [34; 66] is Middle quality, [67;
- *                100] is Highest quality
- * \returns 0 if successful, -1 on error
+ *                100] is Highest quality.
+ * \returns 0 if successful, -1 on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
  * \sa IMG_SaveJPG_IO
  */
-extern int SDLCALL IMG_SaveJPG(SDL_Surface* surface,
-                               const char* file,
-                               int quality);
+extern SDL_DECLSPEC int SDLCALL IMG_SaveJPG(SDL_Surface *surface, const char *file, int quality);
 
 /**
  * Save an SDL_Surface into JPEG image data, via an SDL_IOStream.
@@ -2067,31 +2049,29 @@ extern int SDLCALL IMG_SaveJPG(SDL_Surface* surface,
  * If `closeio` is SDL_TRUE, `dst` will be closed before returning, whether
  * this function succeeds or not.
  *
- * \param surface the SDL surface to save
+ * \param surface the SDL surface to save.
  * \param dst the SDL_IOStream to save the image data to.
  * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
  *                SDL_FALSE to leave it open.
  * \param quality [0; 33] is Lowest quality, [34; 66] is Middle quality, [67;
- *                100] is Highest quality
+ *                100] is Highest quality.
  * \returns 0 if successful, -1 on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
  * \sa IMG_SaveJPG
  */
-extern int SDLCALL IMG_SaveJPG_IO(SDL_Surface* surface,
-                                  SDL_IOStream* dst,
-                                  int closeio,
-                                  int quality);
+extern SDL_DECLSPEC int SDLCALL IMG_SaveJPG_IO(SDL_Surface *surface, SDL_IOStream *dst, int closeio, int quality);
 
 /**
  * Animated image support Currently only animated GIFs are supported.
  */
-typedef struct IMG_Animation {
-  int w, h;
-  int count;
-  SDL_Surface** frames;
-  int* delays;
+typedef struct IMG_Animation
+{
+	int w, h;
+	int count;
+	SDL_Surface **frames;
+	int *delays;
 } IMG_Animation;
 
 /**
@@ -2107,7 +2087,7 @@ typedef struct IMG_Animation {
  *
  * \sa IMG_FreeAnimation
  */
-extern IMG_Animation* SDLCALL IMG_LoadAnimation(const char* file);
+extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimation(const char *file);
 
 /**
  * Load an animation from an SDL_IOStream.
@@ -2128,8 +2108,7 @@ extern IMG_Animation* SDLCALL IMG_LoadAnimation(const char* file);
  *
  * \sa IMG_FreeAnimation
  */
-extern IMG_Animation* SDLCALL IMG_LoadAnimation_IO(SDL_IOStream* src,
-                                                   SDL_bool closeio);
+extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimation_IO(SDL_IOStream *src, SDL_bool closeio);
 
 /**
  * Load an animation from an SDL datasource
@@ -2159,9 +2138,7 @@ extern IMG_Animation* SDLCALL IMG_LoadAnimation_IO(SDL_IOStream* src,
  * \sa IMG_LoadAnimation_IO
  * \sa IMG_FreeAnimation
  */
-extern IMG_Animation* SDLCALL IMG_LoadAnimationTyped_IO(SDL_IOStream* src,
-                                                        SDL_bool closeio,
-                                                        const char* type);
+extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimationTyped_IO(SDL_IOStream *src, SDL_bool closeio, const char *type);
 
 /**
  * Dispose of an IMG_Animation and free its resources.
@@ -2176,7 +2153,7 @@ extern IMG_Animation* SDLCALL IMG_LoadAnimationTyped_IO(SDL_IOStream* src,
  * \sa IMG_LoadAnimation_IO
  * \sa IMG_LoadAnimationTyped_IO
  */
-extern void SDLCALL IMG_FreeAnimation(IMG_Animation* anim);
+extern SDL_DECLSPEC void SDLCALL IMG_FreeAnimation(IMG_Animation *anim);
 
 /**
  * Load a GIF animation directly.
@@ -2196,7 +2173,7 @@ extern void SDLCALL IMG_FreeAnimation(IMG_Animation* anim);
  * \sa IMG_LoadAnimationTyped_IO
  * \sa IMG_FreeAnimation
  */
-extern IMG_Animation* SDLCALL IMG_LoadGIFAnimation_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadGIFAnimation_IO(SDL_IOStream *src);
 
 /**
  * Load a WEBP animation directly.
@@ -2216,21 +2193,21 @@ extern IMG_Animation* SDLCALL IMG_LoadGIFAnimation_IO(SDL_IOStream* src);
  * \sa IMG_LoadAnimationTyped_IO
  * \sa IMG_FreeAnimation
  */
-extern IMG_Animation* SDLCALL IMG_LoadWEBPAnimation_IO(SDL_IOStream* src);
+extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadWEBPAnimation_IO(SDL_IOStream *src);
 
 /**
  * Report SDL_image errors
  *
  * \sa IMG_GetError
  */
-#define IMG_SetError SDL_SetError
+#define IMG_SetError    SDL_SetError
 
 /**
  * Get last SDL_image error
  *
  * \sa IMG_SetError
  */
-#define IMG_GetError SDL_GetError
+#define IMG_GetError    SDL_GetError
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

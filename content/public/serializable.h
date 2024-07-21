@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CONTENT_COMMON_SERIALIZABLE_H_
-#define CONTENT_COMMON_SERIALIZABLE_H_
+#ifndef CONTENT_PUBLIC_SERIALIZABLE_H_
+#define CONTENT_PUBLIC_SERIALIZABLE_H_
 
 #include <stdint.h>
 #include <string>
@@ -35,4 +35,4 @@ class Serializable {
 
 }  // namespace content
 
-#endif  // !CONTENT_COMMON_SERIALIZABLE_H_
+#endif  // !CONTENT_PUBLIC_SERIALIZABLE_H_

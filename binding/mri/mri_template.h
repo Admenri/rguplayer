@@ -5,10 +5,10 @@
 #ifndef BINDING_MRI_MRI_TEMPLATE_H_
 #define BINDING_MRI_MRI_TEMPLATE_H_
 
-#include "content/common/serializable.h"
 #include "content/public/disposable.h"
 #include "content/public/drawable.h"
 #include "content/public/flashable.h"
+#include "content/public/serializable.h"
 #include "content/public/viewport.h"
 
 namespace binding {

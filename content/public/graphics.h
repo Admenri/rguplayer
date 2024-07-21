@@ -8,6 +8,7 @@
 #include "base/memory/weak_ptr.h"
 #include "components/filesystem/filesystem.h"
 #include "content/config/core_config.h"
+#include "content/public/disposable.h"
 #include "content/public/drawable.h"
 #include "content/public/font.h"
 #include "content/worker/renderer_worker.h"
@@ -21,11 +22,12 @@ namespace content {
 
 class Bitmap;
 class Shader;
-class Disposable;
 class BindingRunner;
+class GraphicElement;
 
 class Graphics final : public base::RefCounted<Graphics>,
-                       public DrawableParent {
+                       public DrawableParent,
+                       public DisposableCollection {
  public:
   Graphics(WorkerShareData* share_data,
            base::WeakPtr<BindingRunner> dispatcher,
@@ -108,10 +110,11 @@ class Graphics final : public base::RefCounted<Graphics>,
     return &screen_buffer_;
   }
 
- private:
-  friend class Viewport;
-  friend class Disposable;
+ protected:
+  void AddDisposable(Disposable* disp) override;
+  void RemoveDisposable(Disposable* disp) override;
 
+ private:
   void InitScreenBufferInternal();
   void DestroyBufferInternal();
   void CompositeScreenInternal();
@@ -125,15 +128,6 @@ class Graphics final : public base::RefCounted<Graphics>,
                                    renderer::TextureFrameBuffer* trans_bitmap);
   void FrameProcessInternal();
   void UpdateInternal(std::atomic_bool* fence);
-
-  void AddDisposable(Disposable* disp);
-  void RemoveDisposable(Disposable* disp);
-
-  void ApplyViewportEffect(const base::Rect& blend_area,
-                           renderer::TextureFrameBuffer& effect_target,
-                           const base::Vec4& color,
-                           const base::Vec4& tone,
-                           scoped_refptr<Shader> program);
 
   void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();
@@ -171,16 +165,15 @@ class Graphics final : public base::RefCounted<Graphics>,
 
 class GraphicElement {
  public:
-  GraphicElement(scoped_refptr<Graphics> screen) : host_screen_(screen) {}
-  virtual ~GraphicElement() = default;
+  GraphicElement(scoped_refptr<Graphics> screen) : screen_(screen) {}
 
   GraphicElement(const GraphicElement&) = delete;
   GraphicElement& operator=(const GraphicElement&) = delete;
 
-  scoped_refptr<Graphics> screen() { return host_screen_; }
+  scoped_refptr<Graphics> screen() { return screen_; }
 
  private:
-  scoped_refptr<Graphics> host_screen_;
+  scoped_refptr<Graphics> screen_;
 };
 
 }  // namespace content

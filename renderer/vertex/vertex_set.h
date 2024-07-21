@@ -24,7 +24,7 @@ struct CommonVertex {
 struct GeometryVertex {
   base::Vec4 position;
   base::Vec2 texCoord;
-  base::Vec4 color;
+  base::Vec4 color{0, 0, 0, 1.0f};
 };
 
 struct VertexItemAttribute {

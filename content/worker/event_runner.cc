@@ -82,10 +82,10 @@ void EventRunner::EventDispatch(const SDL_Event& event) {
   /* Reset content */
   if (event.type == SDL_EVENT_KEY_UP &&
       event.window.windowID == window->GetWindowID()) {
-    if (event.key.keysym.scancode == SDL_SCANCODE_F1) {
+    if (event.key.scancode == SDL_SCANCODE_F1) {
       // Settings menu
       share_data_->enable_settings_menu = !share_data_->enable_settings_menu;
-    } else if (event.key.keysym.scancode == SDL_SCANCODE_F12) {
+    } else if (event.key.scancode == SDL_SCANCODE_F10) {
       // Trigger reset process
       binding_runner_->RequestReset();
     }

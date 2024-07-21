@@ -4,7 +4,7 @@
 
 #include "content/public/tilemap.h"
 
-#include "content/common/tilemap_common.h"
+#include "content/public/tileutils.h"
 
 namespace content {
 
@@ -182,7 +182,7 @@ Tilemap::Tilemap(scoped_refptr<Graphics> screen,
                  scoped_refptr<Viewport> viewport,
                  int tilesize)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       viewport_(viewport),
       tile_size_(tilesize) {
   InitTilemapData();

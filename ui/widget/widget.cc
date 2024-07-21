@@ -18,7 +18,7 @@ const char kNativeWidgetKey[] = "UIBase::Widget";
 
 Widget* Widget::FromWindowID(SDL_WindowID window_id) {
   SDL_Window* sdl_window = SDL_GetWindowFromID(window_id);
-  return static_cast<Widget*>(SDL_GetProperty(
+  return static_cast<Widget*>(SDL_GetPointerProperty(
       SDL_GetWindowProperties(sdl_window), kNativeWidgetKey, nullptr));
 }
 
@@ -82,8 +82,8 @@ void Widget::Init(InitParams params) {
   SDL_SetBooleanProperty(property_id, SDL_PROP_WINDOW_CREATE_UTILITY_BOOLEAN,
                          params.utility_window);
   if (params.parent_window)
-    SDL_SetProperty(property_id, SDL_PROP_WINDOW_CREATE_PARENT_POINTER,
-                    params.parent_window->AsSDLWindow());
+    SDL_GetPointerProperty(property_id, SDL_PROP_WINDOW_CREATE_PARENT_POINTER,
+                           params.parent_window->AsSDLWindow());
 
   SDL_SetBooleanProperty(property_id,
                          SDL_PROP_WINDOW_CREATE_HIGH_PIXEL_DENSITY_BOOLEAN,
@@ -105,7 +105,8 @@ void Widget::Init(InitParams params) {
                           SDL_WINDOWPOS_CENTERED);
   }
 
-  SDL_SetProperty(SDL_GetWindowProperties(window_), kNativeWidgetKey, this);
+  SDL_SetPointerProperty(SDL_GetWindowProperties(window_), kNativeWidgetKey,
+                         this);
   SDL_DestroyProperties(property_id);
 
   if (params.window_state == WindowPlacement::Show)
@@ -164,8 +165,8 @@ std::string Widget::FetchInputText() {
 void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
   if (sdl_event.type == SDL_EVENT_KEY_DOWN) {
     if (sdl_event.key.windowID == window_id_) {
-      if (sdl_event.key.keysym.scancode == SDL_SCANCODE_RETURN &&
-          (sdl_event.key.keysym.mod & SDL_KMOD_ALT)) {
+      if (sdl_event.key.scancode == SDL_SCANCODE_RETURN &&
+          (sdl_event.key.mod & SDL_KMOD_ALT)) {
         // Toggle fullscreen
         SetFullscreen(!IsFullscreen());
         return;
@@ -176,11 +177,11 @@ void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
   switch (sdl_event.type) {
     case SDL_EVENT_KEY_DOWN:
       if (sdl_event.key.windowID == window_id_)
-        key_states_[sdl_event.key.keysym.scancode] = true;
+        key_states_[sdl_event.key.scancode] = true;
       break;
     case SDL_EVENT_KEY_UP:
       if (sdl_event.key.windowID == window_id_)
-        key_states_[sdl_event.key.keysym.scancode] = false;
+        key_states_[sdl_event.key.scancode] = false;
       break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN: {
       if (sdl_event.button.windowID == window_id_)

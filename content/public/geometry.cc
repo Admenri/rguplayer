@@ -9,7 +9,7 @@ namespace content {
 Geometry::Geometry(scoped_refptr<Graphics> screen,
                    scoped_refptr<Viewport> viewport)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       ViewportChild(screen, viewport),
       triangle_count_(64) {
   triangle_vertices_.resize(triangle_count_ * 3);

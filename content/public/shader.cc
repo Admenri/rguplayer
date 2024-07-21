@@ -11,7 +11,7 @@ namespace content {
 
 Shader::Shader(scoped_refptr<Graphics> screen)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       vertex_shader_(0),
       frag_shader_(0),
       program_(0),

@@ -4,8 +4,8 @@
 
 #include "content/public/window.h"
 
-#include "content/common/tilemap_common.h"
 #include "content/public/tilequad.h"
+#include "content/public/tileutils.h"
 
 namespace content {
 
@@ -86,7 +86,7 @@ class WindowControlLayer : public ViewportChild {
 
 Window::Window(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       ViewportChild(screen, viewport) {
   InitWindow();
 }

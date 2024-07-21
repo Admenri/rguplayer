@@ -5,7 +5,7 @@
 #include "content/public/audio.h"
 
 #include "base/exceptions/exception.h"
-#include "content/common/graphics_gui_ids.h"
+#include "content/common/command_ids.h"
 #include "third_party/imgui/imgui.h"
 
 #include "SDL_timer.h"
@@ -307,7 +307,7 @@ void Audio::InitAudioDeviceInternal() {
   soloud_spec_.format = SDL_AUDIO_F32;
   soloud_spec_.channels = 2;
   output_device_ =
-      SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &soloud_spec_);
+      SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &soloud_spec_);
 
   if (!output_device_) {
     LOG(INFO) << "[Content] Failed to initialize audio device, audio module "

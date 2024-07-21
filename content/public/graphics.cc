@@ -5,7 +5,7 @@
 #include "content/public/graphics.h"
 
 #include "components/fpslimiter/fpslimiter.h"
-#include "content/common/graphics_gui_ids.h"
+#include "content/common/command_ids.h"
 #include "content/config/core_config.h"
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
@@ -164,10 +164,10 @@ void Graphics::Update() {
   std::atomic_bool sync_fence = false;
   if (!frozen_) {
     if (fps_manager_->RequireFrameSkip()) {
-      if (config_->allow_frame_skip())
+      if (config_->allow_frame_skip()) {
         // Skip render frame
         return FrameProcessInternal();
-      else {
+      } else {
         // Reset frame interval diff
         fps_manager_->Reset();
       }
@@ -292,7 +292,7 @@ void Graphics::FrameReset() {
 uint64_t Graphics::GetWindowHandle() {
   uint64_t window_handle = 0;
 #if defined(OS_WIN)
-  window_handle = (uint64_t)SDL_GetProperty(
+  window_handle = (uint64_t)SDL_GetPointerProperty(
       SDL_GetWindowProperties(renderer()->window()->AsSDLWindow()),
       "SDL.window.win32.hwnd", NULL);
 #else
@@ -670,63 +670,6 @@ void Graphics::RemoveDisposable(Disposable* disp) {
   disp->link_.RemoveFromList();
 }
 
-void Graphics::ApplyViewportEffect(const base::Rect& blend_area,
-                                   renderer::TextureFrameBuffer& effect_target,
-                                   const base::Vec4& color,
-                                   const base::Vec4& tone,
-                                   scoped_refptr<Shader> program) {
-  auto& temp_fbo =
-      renderer::GSM.EnsureCommonTFB(blend_area.width, blend_area.height);
-
-  const bool has_tone_effect =
-      (tone.x != 0 || tone.y != 0 || tone.z != 0 || tone.w != 0);
-  const bool has_color_effect = color.w != 0;
-
-  if (!program && !has_tone_effect && !has_color_effect)
-    return;
-
-  renderer::GSM.states.scissor.Push(false);
-  renderer::Blt::BeginDraw(temp_fbo);
-  renderer::Blt::TexSource(effect_target);
-  renderer::Blt::BltDraw(blend_area, blend_area.Size());
-  renderer::Blt::EndDraw();
-
-  renderer::FrameBuffer::Bind(effect_target.fbo);
-  if (IsObjectValid(program.get())) {
-    program->BindShader();
-    program->SetInternalUniform();
-
-    GLint texture_location = program->GetUniformLocation("u_texture");
-    renderer::GLES2ShaderBase::SetTexture(texture_location, temp_fbo.tex.gl, 1);
-
-    GLint texture_size_location = program->GetUniformLocation("u_texSize");
-    renderer::GL.Uniform2f(texture_size_location, 1.0f / blend_area.width,
-                           1.0f / blend_area.height);
-
-    GLint color_location = program->GetUniformLocation("u_color");
-    renderer::GL.Uniform4f(color_location, color.x, color.y, color.z, color.w);
-
-    GLint tone_location = program->GetUniformLocation("u_tone");
-    renderer::GL.Uniform4f(tone_location, tone.x, tone.y, tone.z, tone.w);
-  } else {
-    auto& shader = renderer::GSM.shaders()->viewport;
-    shader.Bind();
-    shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
-    shader.SetTone(tone);
-    shader.SetColor(color);
-    shader.SetTexture(temp_fbo.tex);
-    shader.SetTextureSize(temp_fbo.size);
-  }
-
-  renderer::GSM.states.blend.Push(false);
-  auto* quad = renderer::GSM.common_quad();
-  quad->SetPositionRect(blend_area);
-  quad->SetTexCoordRect(base::Rect(blend_area.Size()));
-  quad->Draw();
-  renderer::GSM.states.blend.Pop();
-  renderer::GSM.states.scissor.Pop();
-}
-
 void Graphics::UpdateAverageFPSInternal() {
   SDL_Event quit_event;
   quit_event.type = dispatcher_->share_data()->user_event_id +
@@ -802,8 +745,10 @@ void Graphics::DrawGUIInternal() {
   // IME Process
   ImGui::EndFrame();
   share_data_->event_runner->PostTask(base::BindOnce(
-      [](bool enable) { enable ? SDL_StartTextInput() : SDL_StopTextInput(); },
-      SDL_TextInputActive()));
+      [](SDL_Window* window, bool enable) {
+        enable ? SDL_StartTextInput(window) : SDL_StopTextInput(window);
+      },
+      window()->AsSDLWindow(), SDL_TextInputActive(window()->AsSDLWindow())));
 
   // Render
   ImGui::Render();

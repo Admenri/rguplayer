@@ -526,7 +526,8 @@ SDL_Surface* CreateShadowSet(int tilesize) {
   }
 
   /* Fill rects with half opacity black */
-  uint32_t color = (0x80808080 & surf->format->Amask);
+  auto* pixel_detail = SDL_GetPixelFormatDetails(surf->format);
+  uint32_t color = (0x80808080 & pixel_detail->Amask);
   SDL_FillSurfaceRects(surf, rects.data(), rects.size(), color);
 
   return surf;
@@ -616,7 +617,7 @@ Tilemap2::Tilemap2(scoped_refptr<Graphics> screen,
                    scoped_refptr<Viewport> viewport,
                    int tilesize)
     : GraphicElement(screen),
-      Disposable(screen),
+      Disposable(screen.get()),
       viewport_(viewport),
       tile_size_(tilesize) {
   InitDrawableData();

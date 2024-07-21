@@ -5,7 +5,7 @@
 #include "content/public/input.h"
 
 #include "base/worker/run_loop.h"
-#include "content/common/graphics_gui_ids.h"
+#include "content/common/command_ids.h"
 #include "third_party/imgui/imgui.h"
 
 #include "SDL_events.h"
@@ -194,7 +194,8 @@ bool Input::KeyRepeated(int scancode) {
 }
 
 std::string Input::GetKeyName(int scancode) {
-  SDL_Keycode key = SDL_GetKeyFromScancode(static_cast<SDL_Scancode>(scancode));
+  SDL_Keycode key = SDL_GetKeyFromScancode(static_cast<SDL_Scancode>(scancode),
+                                           SDL_KMOD_NONE);
   return std::string(SDL_GetKeyName(key));
 }
 
@@ -273,17 +274,17 @@ void Input::EmulateKeyState(int scancode, bool pressed) {
 
 void Input::SetTextInput(bool enable) {
   share_data_->event_runner->PostTask(base::BindOnce(
-      [](bool enable_input) {
-        enable_input ? SDL_StartTextInput() : SDL_StopTextInput();
+      [](SDL_Window* window, bool enable_input) {
+        enable_input ? SDL_StartTextInput(window) : SDL_StopTextInput(window);
       },
-      enable));
+      window_->AsSDLWindow(), enable));
   share_data_->event_runner->WaitForSync();
 
   FetchText();
 }
 
 bool Input::IsTextInput() {
-  return SDL_TextInputActive();
+  return SDL_TextInputActive(window_->AsSDLWindow());
 }
 
 std::string Input::FetchText() {
@@ -295,7 +296,10 @@ void Input::SetTextInputRect(scoped_refptr<Rect> region) {
   SDL_Rect sdlrt{rt.x, rt.y, rt.width, rt.height};
 
   share_data_->event_runner->PostTask(base::BindOnce(
-      [](SDL_Rect* rect) { SDL_SetTextInputRect(rect); }, &sdlrt));
+      [](SDL_Window* window, SDL_Rect* rect) {
+        SDL_SetTextInputArea(window, rect, 0);
+      },
+      window_->AsSDLWindow(), &sdlrt));
   share_data_->event_runner->WaitForSync();
 }
 

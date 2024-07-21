@@ -8,6 +8,8 @@
 #include "base/containers/linked_list.h"
 #include "base/math/math.h"
 
+#include <list>
+
 namespace content {
 
 class Drawable;
@@ -43,10 +45,12 @@ class DrawableParent {
   inline ViewportInfo& viewport_rect() { return viewport_rect_; }
 
  private:
+  friend class Drawable;
   bool CalcDrawableOrder(Drawable* self, Drawable* other);
 
   ViewportInfo viewport_rect_;
   base::LinkedList<Drawable> drawables_;
+  base::LinkedList<Drawable> children_;
 };
 
 class Drawable {
@@ -102,6 +106,7 @@ class Drawable {
   friend class DrawableParent;
 
   base::LinkNode<Drawable> node_;
+  base::LinkNode<Drawable> child_;
   DrawableParent* parent_;
   int z_;
   bool visible_;

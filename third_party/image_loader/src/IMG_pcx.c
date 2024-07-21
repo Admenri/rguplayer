@@ -110,11 +110,11 @@ SDL_Surface *IMG_LoadPCX_IO(SDL_IOStream *src)
         error = "file truncated";
         goto done;
     }
-    pcxh.Xmin = SDL_SwapLE16(pcxh.Xmin);
-    pcxh.Ymin = SDL_SwapLE16(pcxh.Ymin);
-    pcxh.Xmax = SDL_SwapLE16(pcxh.Xmax);
-    pcxh.Ymax = SDL_SwapLE16(pcxh.Ymax);
-    pcxh.BytesPerLine = SDL_SwapLE16(pcxh.BytesPerLine);
+    pcxh.Xmin = SDL_Swap16LE(pcxh.Xmin);
+    pcxh.Ymin = SDL_Swap16LE(pcxh.Ymin);
+    pcxh.Xmax = SDL_Swap16LE(pcxh.Xmax);
+    pcxh.Ymax = SDL_Swap16LE(pcxh.Ymax);
+    pcxh.BytesPerLine = SDL_Swap16LE(pcxh.BytesPerLine);
 
 #if 0
     printf("Manufacturer = %d\n", pcxh.Manufacturer);
@@ -233,11 +233,20 @@ SDL_Surface *IMG_LoadPCX_IO(SDL_IOStream *src)
     }
 
     if ( bits == 8 ) {
-        SDL_Color *colors = surface->format->palette->colors;
         int nc = 1 << src_bits;
+        SDL_Palette *palette;
         int i;
 
-        surface->format->palette->ncolors = nc;
+        palette = SDL_CreateSurfacePalette(surface);
+        if (!palette) {
+            error = "Couldn't create palette";
+            goto done;
+        }
+        if (nc > palette->ncolors) {
+            nc = palette->ncolors;
+        }
+        palette->ncolors = nc;
+
         if ( src_bits == 8 ) {
             Uint8 pch;
             Uint8 colormap[768];
@@ -256,15 +265,15 @@ SDL_Surface *IMG_LoadPCX_IO(SDL_IOStream *src)
                 goto done;
             }
             for ( i = 0; i < 256; i++ ) {
-                colors[i].r = colormap[i * 3 + 0];
-                colors[i].g = colormap[i * 3 + 1];
-                colors[i].b = colormap[i * 3 + 2];
+                palette->colors[i].r = colormap[i * 3 + 0];
+                palette->colors[i].g = colormap[i * 3 + 1];
+                palette->colors[i].b = colormap[i * 3 + 2];
             }
         } else {
             for ( i = 0; i < nc; i++ ) {
-                colors[i].r = pcxh.Colormap[i * 3 + 0];
-                colors[i].g = pcxh.Colormap[i * 3 + 1];
-                colors[i].b = pcxh.Colormap[i * 3 + 2];
+                palette->colors[i].r = pcxh.Colormap[i * 3 + 0];
+                palette->colors[i].g = pcxh.Colormap[i * 3 + 1];
+                palette->colors[i].b = pcxh.Colormap[i * 3 + 2];
             }
         }
     }

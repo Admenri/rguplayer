@@ -14,18 +14,6 @@
 
 namespace binding {
 
-MRI_METHOD(rgu_get_locate) {
-  auto* locale = SDL_GetPreferredLocales();
-
-  VALUE hash = rb_hash_new();
-  if (locale->country)
-    rb_hash_aset(hash, rb_str_new2("country"), rb_str_new2(locale->country));
-  if (locale->language)
-    rb_hash_aset(hash, rb_str_new2("language"), rb_str_new2(locale->language));
-
-  return hash;
-}
-
 MRI_METHOD(rgu_open_url) {
   std::string url;
   MriParseArgsTo(argc, argv, "s", &url);
@@ -97,9 +85,6 @@ void InitRGUBinding() {
                INT2FIX((int)runner->rgss_version()));
   rb_const_set(module, rb_intern("SDLVERSION"), INT2FIX(SDL_VERSION));
   rb_const_set(module, rb_intern("PLATFORM"), rb_str_new2(SDL_GetPlatform()));
-
-  // Locale in host
-  MriDefineModuleFunction(module, "get_locale", rgu_get_locate);
 
   // Open url
   MriDefineModuleFunction(module, "open_url", rgu_open_url);

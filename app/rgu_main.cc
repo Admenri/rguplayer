@@ -124,8 +124,6 @@ int main(int argc, char* argv[]) {
   config->Loadi18nXML(iosystem.get());
 
   SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
-  SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
-
   SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
   SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
 
@@ -147,7 +145,6 @@ int main(int argc, char* argv[]) {
   win_params.size = config->window_size();
   win_params.title = config->game_title();
   win_params.resizable = true;
-  win_params.hpixeldensity = true;
   win->Init(std::move(win_params));
 
 #if defined(OS_LINUX)

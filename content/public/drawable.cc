@@ -12,15 +12,18 @@ uint64_t g_creation_stamp = 0;
 
 Drawable::Drawable(DrawableParent* parent, int z, bool visible, int sprite_y)
     : node_(this),
+      child_(this),
       parent_(parent),
       z_(z),
       visible_(visible),
       creation_stamp_(++g_creation_stamp),
       sprite_y_(sprite_y) {
+  parent_->children_.Append(&child_);
   parent_->InsertDrawable(this);
 }
 
 Drawable::~Drawable() {
+  child_.RemoveFromList();
   node_.RemoveFromList();
 }
 
@@ -50,6 +53,7 @@ void Drawable::SetZ(int z) {
 }
 
 void Drawable::RemoveFromList() {
+  child_.RemoveFromList();
   node_.RemoveFromList();
 }
 
@@ -79,11 +83,10 @@ void DrawableParent::InsertDrawable(Drawable* drawable) {
 }
 
 void DrawableParent::NotifyPrepareComposite() {
-  if (drawables_.empty())
+  if (children_.empty())
     return;
 
-  for (auto it = drawables_.tail(); it != drawables_.end();
-       it = it->previous()) {
+  for (auto it = children_.tail(); it != children_.end(); it = it->previous()) {
     auto* child = it->value();
     if (child->visible_)
       child->BeforeComposite();

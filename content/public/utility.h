@@ -10,7 +10,7 @@
 #include "base/bind/callback_list.h"
 #include "base/math/math.h"
 #include "base/memory/ref_counted.h"
-#include "content/common/serializable.h"
+#include "content/public/serializable.h"
 
 #include "SDL_pixels.h"
 
