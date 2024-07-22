@@ -252,8 +252,8 @@ void Bitmap::SetPixel(int x, int y, scoped_refptr<Color> color) {
     return;
 
   auto data = color->AsNormal();
-  auto* pixel_detail = SDL_GetPixelFormatDetails(surface_buffer_->format);
   if (surface_buffer_) {
+    auto* pixel_detail = SDL_GetPixelFormatDetails(surface_buffer_->format);
     int bpp = pixel_detail->bytes_per_pixel;
     uint8_t* pixel = static_cast<uint8_t*>(surface_buffer_->pixels) +
                      y * surface_buffer_->pitch + x * bpp;
