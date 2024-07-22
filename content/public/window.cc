@@ -270,10 +270,7 @@ void Window::OnObjectDisposed() {
   RemoveFromList();
 
   control_layer_.reset();
-  screen()->renderer()->DeleteSoon(std::move(base_quad_));
-  screen()->renderer()->DeleteSoon(std::move(content_quad_));
-  screen()->renderer()->DeleteSoon(std::move(controls_quads_));
-  screen()->renderer()->DeleteSoon(std::move(base_tex_quad_array_));
+  screen()->renderer()->DeleteSoon(std::move(renderer_data_));
 
   screen()->FreeTexture(base_tfb_);
 }
@@ -291,9 +288,10 @@ void Window::BeforeComposite() {
 
   if (base_quad_need_update_) {
     base_quad_need_update_ = false;
-    base_quad_->SetTexCoordRect(base::Rect(rect_.Size()));
-    base_quad_->SetPositionRect(base::Rect(rect_.Size()));
-    base_quad_->SetColor(-1, base::Vec4(0, 0, 0, opacity_ / 255.0f));
+    renderer_data_->base_quad->SetTexCoordRect(base::Rect(rect_.Size()));
+    renderer_data_->base_quad->SetPositionRect(base::Rect(rect_.Size()));
+    renderer_data_->base_quad->SetColor(-1,
+                                        base::Vec4(0, 0, 0, opacity_ / 255.0f));
   }
 
   if (controls_quads_need_update_) {
@@ -306,10 +304,10 @@ void Window::BeforeComposite() {
     contents_quad_need_update_ = false;
     if (IsObjectValid(contents_.get())) {
       base::Rect size = contents_->GetSize();
-      content_quad_->SetTexCoordRect(size);
-      content_quad_->SetPositionRect(size);
-      content_quad_->SetColor(-1,
-                              base::Vec4(0, 0, 0, contents_opacity_ / 255.0f));
+      renderer_data_->content_quad->SetTexCoordRect(size);
+      renderer_data_->content_quad->SetPositionRect(size);
+      renderer_data_->content_quad->SetColor(
+          -1, base::Vec4(0, 0, 0, contents_opacity_ / 255.0f));
     }
   }
 }
@@ -336,7 +334,7 @@ void Window::Composite() {
   shader.SetTransOffset(offset);
   renderer::Texture::SetFilter(GL_LINEAR);
 
-  base_quad_->Draw();
+  renderer_data_->base_quad->Draw();
   renderer::Texture::SetFilter();
 
   renderer::GSM.states.scissor_rect.Pop();
@@ -355,25 +353,19 @@ void Window::InitWindow() {
   cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(
       &Window::CursorRectChangedInternal, base::Unretained(this)));
 
-  base_quad_ = new renderer::QuadDrawable(false);
-  content_quad_ = new renderer::QuadDrawable(false);
-  controls_quads_ =
-      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
-  base_tex_quad_array_ =
-      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
-
+  renderer_data_ = new WindowRendererData;
   screen()->renderer()->PostTask(base::BindOnce(
-      [](renderer::QuadDrawable* base_quad,
-         renderer::QuadDrawable* controls_quad,
-         renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr,
-         renderer::QuadDrawableArray<renderer::CommonVertex>* base_ptr) {
-        base_quad->InitDrawable(renderer::GSM.quad_ibo()->ibo);
-        controls_quad->InitDrawable(renderer::GSM.quad_ibo()->ibo);
-        quad_ptr->Init();
-        base_ptr->Init();
-        quad_ptr->Resize(14);
+      [](WindowRendererData* renderer_data) {
+        renderer_data->base_quad = std::make_unique<renderer::QuadDrawable>();
+        renderer_data->content_quad =
+            std::make_unique<renderer::QuadDrawable>();
+        renderer_data->controls_quads =
+            std::make_unique<renderer::CommonQuadArray>();
+        renderer_data->base_tex_quad_array =
+            std::make_unique<renderer::CommonQuadArray>();
+        renderer_data->controls_quads->Resize(14);
       },
-      base_quad_, content_quad_, controls_quads_, base_tex_quad_array_));
+      renderer_data_));
 
   base_tfb_ = screen()->AllocTexture(base::Vec2i(32, 32));
 }
@@ -403,8 +395,8 @@ void Window::ResetBaseTexQuadsInternal() {
   count += QuadTileCount(32, rect_.height - 16) * 2;
   count += 4;
 
-  base_tex_quad_array_->Resize(count);
-  auto* vert = base_tex_quad_array_->vertices().data();
+  renderer_data_->base_tex_quad_array->Resize(count);
+  auto* vert = renderer_data_->base_tex_quad_array->vertices().data();
 
   int i = 0;
   if (stretch_) {
@@ -436,7 +428,7 @@ void Window::ResetBaseTexQuadsInternal() {
                                    corner_rects.bottom_left);
   i += renderer::QuadSetTexPosRect(&vert[i * 4], kCornersSrc.bottom_right,
                                    corner_rects.bottom_right);
-  base_tex_quad_array_->Update();
+  renderer_data_->base_tex_quad_array->Update();
 }
 
 void Window::UpdateBaseTexInternal() {
@@ -467,14 +459,14 @@ void Window::UpdateBaseTexInternal() {
   renderer::Texture::SetFilter(GL_LINEAR);
 
   /* Draw stretch layer */
-  base_tex_quad_array_->Draw(0, background_quads_count_);
+  renderer_data_->base_tex_quad_array->Draw(0, background_quads_count_);
 
   renderer::GSM.states.blend.Set(true);
   renderer::GSM.states.blend_func.Push(renderer::GLBlendType::Normal);
 
-  base_tex_quad_array_->Draw(
+  renderer_data_->base_tex_quad_array->Draw(
       background_quads_count_,
-      base_tex_quad_array_->count() - background_quads_count_);
+      renderer_data_->base_tex_quad_array->count() - background_quads_count_);
 
   renderer::GSM.states.blend_func.Pop();
   renderer::GSM.states.viewport.Pop();
@@ -525,7 +517,7 @@ void Window::UpdateControlsQuadsInternal() {
   };
 
   int i = 0;
-  auto* vert = controls_quads_->vertices().data();
+  auto* vert = renderer_data_->controls_quads->vertices().data();
 
   cursor_vertex_ = nullptr;
   auto cur_rect = cursor_rect_->AsBase();
@@ -571,7 +563,7 @@ void Window::UpdateControlsQuadsInternal() {
         base::RectF((rect_.width - 16) / 2, rect_.height - 16, 16, 16));
   }
 
-  controls_quads_->Update();
+  renderer_data_->controls_quads->Update();
   controls_quad_count = i;
 }
 
@@ -594,7 +586,7 @@ void Window::UpdateControlsInternal() {
   }
 
   if (update_buffer)
-    controls_quads_->Update();
+    renderer_data_->controls_quads->Update();
 }
 
 void Window::CursorRectChangedInternal() {
@@ -627,7 +619,7 @@ void Window::CompositeControls() {
     shader.SetTextureSize(windowskin_->GetSize());
     renderer::Texture::SetFilter(GL_LINEAR);
 
-    controls_quads_->Draw(0, controls_quad_count);
+    renderer_data_->controls_quads->Draw(0, controls_quad_count);
     renderer::Texture::SetFilter();
   }
 
@@ -638,7 +630,7 @@ void Window::CompositeControls() {
     shader.SetTexture(contents_->GetRaw()->tex);
     shader.SetTextureSize(contents_->GetSize());
 
-    content_quad_->Draw();
+    renderer_data_->content_quad->Draw();
   }
 
   renderer::GSM.states.scissor_rect.Pop();

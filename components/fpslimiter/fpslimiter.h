@@ -22,17 +22,13 @@ class FPSLimiter {
   void Reset();
 
  private:
-  uint64_t last_ticks_;
-  uint64_t counter_freq_;
-  double freq_ns_;
-  int64_t error_ticks_;
-  double interval_ticks_;
-
-  struct {
-    uint64_t last_ticks;
-    int64_t frame_diff;
-    bool reset;
-  } adjust_;
+  uint64_t last_tick_count_;
+  int64_t ticks_per_frame_;
+  const uint64_t tick_freq_;
+  const double tick_freq_ns_;
+  uint64_t skip_last_;
+  int64_t skip_ideal_diff_;
+  bool skip_reset_flag_;
 };
 
 }  // namespace fpslimiter

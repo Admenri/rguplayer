@@ -217,7 +217,6 @@ void Viewport::ApplyViewportEffect(const base::Rect& blend_area,
   renderer::Blt::BeginDraw(temp_fbo);
   renderer::Blt::TexSource(effect_target);
   renderer::Blt::BltDraw(blend_area, blend_area.Size());
-  renderer::Blt::EndDraw();
 
   renderer::FrameBuffer::Bind(effect_target.fbo);
   if (IsObjectValid(program.get())) {

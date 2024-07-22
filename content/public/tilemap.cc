@@ -129,7 +129,7 @@ class TilemapGroundLayer : public ViewportChild {
     shader.SetTileSize(tilemap_->tile_size_);
 
     int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
-    tilemap_->tilemap_quads_->Draw(0, ground_quad_size);
+    tilemap_->renderer_data_->tilemap_quads->Draw(0, ground_quad_size);
 
     tilemap_->DrawFlashLayerInternal();
   }
@@ -168,7 +168,7 @@ class TilemapZLayer : public ViewportChild {
 
     int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
     int offset = index_ ? tilemap_->above_offsets_[index_] / 4 : 0;
-    tilemap_->tilemap_quads_->Draw(
+    tilemap_->renderer_data_->tilemap_quads->Draw(
         ground_quad_size + offset,
         tilemap_->above_vertices_[index_].size() / 4);
   }
@@ -346,28 +346,28 @@ void Tilemap::OnObjectDisposed() {
   ground_layer_.reset();
   above_layers_.clear();
 
-  screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
+  screen()->renderer()->DeleteSoon(std::move(renderer_data_));
   screen()->renderer()->DeleteSoon(std::move(flash_layer_));
 
   screen()->FreeTexture(atlas_tfb_);
 }
 
 void Tilemap::InitTilemapData() {
-  tilemap_quads_ =
-      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
   flash_layer_ = std::make_unique<TilemapFlashLayer>();
-
+  renderer_data_ = new TilemapRendererData;
   screen()->renderer()->PostTask(base::BindOnce(
-      [](renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr,
-         TilemapFlashLayer* flash_layer, int tile_size) {
-        quad_ptr->Init();
+      [](TilemapRendererData* renderer_data, TilemapFlashLayer* flash_layer,
+         int tile_size) {
+        renderer_data->tilemap_quads =
+            std::make_unique<renderer::CommonQuadArray>();
         flash_layer->InitFlashLayer(tile_size);
       },
-      tilemap_quads_, flash_layer_.get(), tile_size_));
+      renderer_data_, flash_layer_.get(), tile_size_));
 
   atlas_tfb_ =
       screen()->AllocTexture(base::Vec2i(tile_size_, tile_size_), false);
 
+  ground_layer_.reset(new TilemapGroundLayer(screen(), this));
   SetupDrawLayersInternal();
 }
 
@@ -375,6 +375,7 @@ void Tilemap::BeforeTilemapComposite() {
   flash_layer_->BeforeComposite();
 
   UpdateViewportInternal(ground_layer_->parent_rect());
+  ResetZLayerInternal();
 
   if (atlas_need_update_) {
     atlas_need_update_ = false;
@@ -434,7 +435,6 @@ void Tilemap::MakeAtlasInternal() {
             base::Rect(base::Vec2i(tile_size_ * i, 0), single_size),
             base::Rect(base::Vec2i(tile_size_ * i * 3, 0), single_size));
       }
-      renderer::Blt::EndDraw();
 
       ++offset;
       continue;
@@ -445,7 +445,6 @@ void Tilemap::MakeAtlasInternal() {
     renderer::Blt::BeginDraw(*atlas_tfb_);
     renderer::Blt::TexSource(*it.bitmap->GetRaw());
     renderer::Blt::BltDraw(autotile_size, dst_pos);
-    renderer::Blt::EndDraw();
 
     ++offset;
   }
@@ -462,7 +461,6 @@ void Tilemap::MakeAtlasInternal() {
   renderer::Blt::BeginDraw(*atlas_tfb_);
   renderer::Blt::TexSource(*tileset_->GetRaw());
   renderer::Blt::BltDraw(tileset_size, dst_rect);
-  renderer::Blt::EndDraw();
 }
 
 void Tilemap::UpdateViewportInternal(
@@ -634,13 +632,14 @@ void Tilemap::UpdateMapBufferInternal() {
   int vertex_count = ground_vertices_.size();
   for (auto& it : above_vertices_)
     vertex_count += it.size();
-  tilemap_quads_->Resize(vertex_count / 4);
+  renderer_data_->tilemap_quads->Resize(vertex_count / 4);
   if (!vertex_count)
     return;
 
   above_offsets_.clear();
   int vert_add = 0;
-  renderer::CommonVertex* vert = tilemap_quads_->vertices().data();
+  renderer::CommonVertex* vert =
+      renderer_data_->tilemap_quads->vertices().data();
   memcpy(vert, ground_vertices_.data(),
          ground_vertices_.size() * sizeof(renderer::CommonVertex));
   vert += ground_vertices_.size();
@@ -652,7 +651,7 @@ void Tilemap::UpdateMapBufferInternal() {
     vert_add += it.size();
   }
 
-  tilemap_quads_->Update();
+  renderer_data_->tilemap_quads->Update();
 
   // Update z-layers for new buffer
   for (size_t i = 0; i < above_vertices_.size(); ++i) {
@@ -669,24 +668,26 @@ void Tilemap::UpdateMapBufferInternal() {
 }
 
 void Tilemap::SetupDrawLayersInternal() {
-  ground_layer_.reset(new TilemapGroundLayer(screen(), this));
   const DrawableParent::ViewportInfo& viewport_rect =
       ground_layer_->parent_rect();
-
   UpdateViewportInternal(viewport_rect);
 
   const base::Vec2i viewport_size = viewport_rect.rect.Size();
   int layer_num =
       (viewport_size.y / tile_size_) + !!(viewport_size.y % tile_size_) + 7;
 
+  for (int i = 0; i < layer_num; ++i)
+    above_layers_.push_back(std::make_unique<TilemapZLayer>(screen(), this));
+}
+
+void Tilemap::ResetZLayerInternal() {
   auto calc_z_order = [&](int index) {
     return 32 * (index + tilemap_viewport_.y + 1) - origin_.y;
   };
 
-  for (int i = 0; i < layer_num; ++i) {
+  for (int i = 0; i < above_layers_.size(); ++i) {
     std::unique_ptr<TilemapZLayer> new_layer(new TilemapZLayer(screen(), this));
-    new_layer->SetZ(calc_z_order(i));
-    above_layers_.push_back(std::move(new_layer));
+    above_layers_[i]->SetZ(calc_z_order(i));
   }
 }
 

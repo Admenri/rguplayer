@@ -563,7 +563,7 @@ class TilemapGroundLayer2 : public ViewportChild {
     shader.SetAnimationOffset(tilemap_->animation_offset_);
     shader.SetTileSize(tilemap_->tile_size_);
 
-    tilemap_->tilemap_quads_->Draw(0, ground_quad_size);
+    tilemap_->renderer_data_->tilemap_quads->Draw(0, ground_quad_size);
     tilemap_->DrawFlashLayerInternal();
   }
 
@@ -601,7 +601,8 @@ class TilemapAboveLayer2 : public ViewportChild {
     shader.SetTexture(tilemap_->atlas_tfb_->tex);
     shader.SetTransOffset(tilemap_->tilemap_offset_);
 
-    tilemap_->tilemap_quads_->Draw(ground_quad_size, above_quad_size);
+    tilemap_->renderer_data_->tilemap_quads->Draw(ground_quad_size,
+                                                  above_quad_size);
   }
 
   void CheckDisposed() const override { tilemap_->CheckIsDisposed(); }
@@ -776,7 +777,7 @@ void Tilemap2::OnObjectDisposed() {
 
   weak_ptr_factory_.InvalidateWeakPtrs();
 
-  screen()->renderer()->DeleteSoon(std::move(tilemap_quads_));
+  screen()->renderer()->DeleteSoon(std::move(renderer_data_));
   screen()->renderer()->DeleteSoon(std::move(flash_layer_));
 
   screen()->FreeTexture(atlas_tfb_);
@@ -824,7 +825,6 @@ void Tilemap2::CreateTileAtlasInternal() {
     renderer::Blt::BeginDraw(*atlas_tfb_);
     renderer::Blt::TexSource(*atlas_bitmap->GetRaw());
     renderer::Blt::BltDraw(src_rect, dst_rect);
-    renderer::Blt::EndDraw();
   }
 
   /* shadow set atlas */
@@ -1242,9 +1242,9 @@ void Tilemap2::ParseMapDataBufferInternal() {
 
   /* Process quad array */
   size_t quad_size = (ground_vertices_.size() + above_vertices_.size()) / 4;
-  tilemap_quads_->Resize(quad_size);
+  renderer_data_->tilemap_quads->Resize(quad_size);
 
-  auto* base_addr = tilemap_quads_->vertices().data();
+  auto* base_addr = renderer_data_->tilemap_quads->vertices().data();
 
   if (!ground_vertices_.empty()) {
     memcpy(base_addr, ground_vertices_.data(),
@@ -1256,7 +1256,7 @@ void Tilemap2::ParseMapDataBufferInternal() {
            above_vertices_.size() * sizeof(renderer::CommonVertex));
   }
 
-  tilemap_quads_->Update();
+  renderer_data_->tilemap_quads->Update();
   renderer::GSM.quad_ibo()->EnsureSize(quad_size);
 }
 
@@ -1274,20 +1274,19 @@ void Tilemap2::UpdateMapBufferInternal() {
 }
 
 void Tilemap2::InitDrawableData() {
-  if (tilemap_quads_)
+  if (flash_layer_)
     return;
 
-  tilemap_quads_ =
-      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
   flash_layer_ = std::make_unique<TilemapFlashLayer>();
-
+  renderer_data_ = new Tilemap2RendererData;
   screen()->renderer()->PostTask(base::BindOnce(
-      [](renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr,
-         TilemapFlashLayer* flash_layer, int tile_size) {
-        quad_ptr->Init();
+      [](Tilemap2RendererData* renderer_data, TilemapFlashLayer* flash_layer,
+         int tile_size) {
+        renderer_data->tilemap_quads =
+            std::make_unique<renderer::CommonQuadArray>();
         flash_layer->InitFlashLayer(tile_size);
       },
-      tilemap_quads_, flash_layer_.get(), tile_size_));
+      renderer_data_, flash_layer_.get(), tile_size_));
 
   atlas_tfb_ =
       screen()->AllocTexture(base::Vec2i(tile_size_, tile_size_), false);

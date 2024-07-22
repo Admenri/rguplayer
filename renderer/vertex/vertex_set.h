@@ -14,16 +14,10 @@
 namespace renderer {
 
 struct CommonVertex {
-  base::Vec2 position;
+  base::Vec4 position;
   base::Vec2 texCoord;
 
   /* Default color for alpha composite */
-  base::Vec4 color{0, 0, 0, 1.0f};
-};
-
-struct GeometryVertex {
-  base::Vec4 position;
-  base::Vec2 texCoord;
   base::Vec4 color{0, 0, 0, 1.0f};
 };
 
@@ -44,11 +38,6 @@ template <>
 const VertexItemAttribute* VertexInfo<CommonVertex>::attrs;
 template <>
 const int VertexInfo<CommonVertex>::attr_size;
-
-template <>
-const VertexItemAttribute* VertexInfo<GeometryVertex>::attrs;
-template <>
-const int VertexInfo<GeometryVertex>::attr_size;
 
 template <typename VertexType>
 struct VertexArray {
@@ -74,40 +63,21 @@ struct VertexArray {
   }
 
   inline static void Init(VertexArray& vao) {
-    if (GL.GenVertexArrays) {
-      GL.GenVertexArrays(1, &vao.id.gl);
-      GL.BindVertexArray(vao.id.gl);
-      SetAttrib(vao);
-      GL.BindVertexArray(0);
-    }
+    GL.GenVertexArrays(1, &vao.id.gl);
+    GL.BindVertexArray(vao.id.gl);
+    SetAttrib(vao);
+    GL.BindVertexArray(0);
   }
 
   inline static void Uninit(const VertexArray& vao) {
-    if (GL.GenVertexArrays) {
-      GL.DeleteVertexArrays(1, &vao.id.gl);
-    }
+    GL.DeleteVertexArrays(1, &vao.id.gl);
   }
 
   inline static void Bind(const VertexArray& vao) {
-    if (GL.GenVertexArrays) {
-      GL.BindVertexArray(vao.id.gl);
-    } else {
-      SetAttrib(vao);
-    }
+    GL.BindVertexArray(vao.id.gl);
   }
 
-  inline static void Unbind() {
-    if (GL.GenVertexArrays) {
-      GL.BindVertexArray(0);
-    } else {
-      for (int i = 0; i < VertexInfo<Type>::attr_size; i++) {
-        GL.DisableVertexAttribArray(VertexInfo<Type>::attrs[i].index);
-      }
-
-      IndexBuffer::Unbind();
-      VertexBuffer::Unbind();
-    }
-  }
+  inline static void Unbind() { GL.BindVertexArray(0); }
 };
 
 }  // namespace renderer

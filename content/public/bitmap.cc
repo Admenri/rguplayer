@@ -399,7 +399,6 @@ void Bitmap::StretchBltInternal(renderer::TextureFrameBuffer* texture,
   renderer::Blt::BeginDraw(dst_tex);
   renderer::Blt::TexSource(*texture);
   renderer::Blt::BltDraw(dest_rect, dest_rect.Size());
-  renderer::Blt::EndDraw();
 
   /*
    * (texCoord - src_offset) * src_dst_factor
@@ -531,7 +530,6 @@ void Bitmap::HueChangeInternal(renderer::TextureFrameBuffer* texture, int hue) {
   renderer::Blt::BeginDraw(*texture);
   renderer::Blt::TexSource(dst_tex);
   renderer::Blt::BltDraw(size, size);
-  renderer::Blt::EndDraw();
 }
 
 void Bitmap::DrawTextInternal(renderer::TextureFrameBuffer* texture,
@@ -568,7 +566,6 @@ void Bitmap::DrawTextInternal(renderer::TextureFrameBuffer* texture,
   renderer::Blt::BeginDraw(common_frame_buffer);
   renderer::Blt::TexSource(*texture);
   renderer::Blt::BltDraw(pos, pos.Size());
-  renderer::Blt::EndDraw();
 
   base::Vec2i rendered_text_size;
   auto& generic_tex = renderer::GSM.EnsureGenericTex(txt_surf->w, txt_surf->h,

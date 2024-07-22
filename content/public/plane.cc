@@ -23,13 +23,14 @@ Plane::Plane(scoped_refptr<Graphics> screen, scoped_refptr<Viewport> viewport)
       ViewportChild(screen, viewport),
       color_(new Color()),
       tone_(new Tone()) {
-  quad_array_ = new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
+  renderer_data_ = new PlaneRendererData;
   screen->renderer()->PostTask(base::BindOnce(
-      [](renderer::QuadDrawableArray<renderer::CommonVertex>* quad_ptr) {
-        quad_ptr->Init();
-        quad_ptr->Resize(1);
+      [](PlaneRendererData* renderer_data) {
+        renderer_data->quad_array =
+            std::make_unique<renderer::CommonQuadArray>();
+        renderer_data->quad_array->Resize(1);
       },
-      quad_array_));
+      renderer_data_));
 
   layer_tfb_ = screen->AllocTexture(base::Vec2i(16, 16), true);
   OnParentViewportRectChanged(parent_rect());
@@ -93,7 +94,7 @@ void Plane::SetZoomY(double zoom_y) {
 void Plane::OnObjectDisposed() {
   RemoveFromList();
 
-  screen()->renderer()->DeleteSoon(std::move(quad_array_));
+  screen()->renderer()->DeleteSoon(std::move(renderer_data_));
   screen()->FreeTexture(layer_tfb_);
 }
 
@@ -132,7 +133,7 @@ void Plane::Composite() {
 
   renderer::GSM.states.blend.Push(true);
   renderer::GSM.states.blend_func.Push(blend_type_);
-  quad_array_->Draw();
+  renderer_data_->quad_array->Draw();
   renderer::GSM.states.blend_func.Pop();
   renderer::GSM.states.blend.Pop();
 }
@@ -163,11 +164,12 @@ void Plane::UpdateQuadArray() {
   const float item_y = scale_height * repeat_y;
 
   auto tex = bitmap_->GetSize();
-  quad_array_->Resize(repeat_x * repeat_y);
+  renderer_data_->quad_array->Resize(repeat_x * repeat_y);
   for (int y = 0; y < repeat_y; ++y) {
     for (int x = 0; x < repeat_x; ++x) {
       size_t index = (y * repeat_x + x) * 4;
-      renderer::CommonVertex* vert = &quad_array_->vertices()[index];
+      renderer::CommonVertex* vert =
+          &renderer_data_->quad_array->vertices()[index];
       base::RectF pos(x * scale_width, y * scale_height, scale_width,
                       scale_height);
 
@@ -176,7 +178,7 @@ void Plane::UpdateQuadArray() {
     }
   }
 
-  quad_array_->Update();
+  renderer_data_->quad_array->Update();
 
   renderer::FrameBuffer::Bind(layer_tfb_->fbo);
   renderer::FrameBuffer::Clear();
@@ -192,7 +194,7 @@ void Plane::UpdateQuadArray() {
 
   renderer::GSM.states.viewport.Push(element_size);
   renderer::GSM.states.blend.Push(false);
-  quad_array_->Draw();
+  renderer_data_->quad_array->Draw();
   renderer::GSM.states.viewport.Pop();
   renderer::GSM.states.blend.Pop();
 
@@ -204,12 +206,13 @@ void Plane::UpdateQuadArray() {
   int tile_y =
       std::ceil((parent_rect().rect.height + wrap_oy - item_y) / item_y) + 1;
 
-  quad_array_->Resize(tile_x * tile_y);
+  renderer_data_->quad_array->Resize(tile_x * tile_y);
 
   for (int y = 0; y < tile_y; ++y) {
     for (int x = 0; x < tile_x; ++x) {
       size_t index = (y * tile_x + x) * 4;
-      renderer::CommonVertex* vert = &quad_array_->vertices()[index];
+      renderer::CommonVertex* vert =
+          &renderer_data_->quad_array->vertices()[index];
       base::RectF pos(x * item_x - wrap_ox, y * item_y - wrap_oy, item_x,
                       item_y);
 
@@ -218,7 +221,7 @@ void Plane::UpdateQuadArray() {
     }
   }
 
-  quad_array_->Update();
+  renderer_data_->quad_array->Update();
 }
 
 }  // namespace content

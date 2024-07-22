@@ -323,11 +323,7 @@ void Window2::SetTone(scoped_refptr<Tone> tone) {
 void Window2::OnObjectDisposed() {
   RemoveFromList();
 
-  screen()->renderer()->DeleteSoon(std::move(base_quad_));
-  screen()->renderer()->DeleteSoon(std::move(content_quad_));
-  screen()->renderer()->DeleteSoon(std::move(arrows_quads_));
-  screen()->renderer()->DeleteSoon(std::move(cursor_quads_));
-  screen()->renderer()->DeleteSoon(std::move(base_tex_quad_array_));
+  screen()->renderer()->DeleteSoon(std::move(renderer_data_));
 
   screen()->FreeTexture(base_tfb_);
 }
@@ -366,10 +362,11 @@ void Window2::BeforeComposite() {
 
   if (cursor_step_need_update_) {
     cursor_step_need_update_ = false;
-    if (cursor_quads_->count() > 0) {
+    if (renderer_data_->cursor_quads->count() > 0) {
       base::Vec4 color(0, 0, 0, cursor_alpha[cursor_alpha_index_] / 255.0f);
-      for (size_t i = 0; i < cursor_quads_->count(); ++i)
-        renderer::QuadSetColor(&cursor_quads_->vertices()[i * 4], -1, color);
+      for (size_t i = 0; i < renderer_data_->cursor_quads->count(); ++i)
+        renderer::QuadSetColor(&renderer_data_->cursor_quads->vertices()[i * 4],
+                               -1, color);
       cursor_data_need_update_ = true;
     }
   }
@@ -378,9 +375,9 @@ void Window2::BeforeComposite() {
     contents_quad_need_update_ = false;
     if (IsObjectValid(contents_.get())) {
       base::Rect contents_rect = contents_->GetSize();
-      content_quad_->SetTexCoordRect(contents_rect);
-      content_quad_->SetPositionRect(contents_rect);
-      content_quad_->SetColor(
+      renderer_data_->content_quad->SetTexCoordRect(contents_rect);
+      renderer_data_->content_quad->SetPositionRect(contents_rect);
+      renderer_data_->content_quad->SetColor(
           -1,
           base::Vec4(0, 0, 0, static_cast<float>(contents_opacity_) / 255.0f));
       cursor_data_need_update_ = true;
@@ -389,7 +386,7 @@ void Window2::BeforeComposite() {
 
   if (cursor_data_need_update_) {
     cursor_data_need_update_ = false;
-    cursor_quads_->Update();
+    renderer_data_->cursor_quads->Update();
   }
 }
 
@@ -417,7 +414,7 @@ void Window2::Composite() {
       shader.SetTexture(base_tfb_->tex);
       shader.SetTextureSize(rect_.Size());
 
-      base_quad_->Draw();
+      renderer_data_->base_quad->Draw();
     }
 
     /* Controls draw */
@@ -426,7 +423,7 @@ void Window2::Composite() {
       shader.SetTextureSize(windowskin_->GetSize());
 
       if (arrows_quad_count_)
-        arrows_quads_->Draw(0, arrows_quad_count_);
+        renderer_data_->arrows_quads->Draw(0, arrows_quad_count_);
     }
   }
 
@@ -445,7 +442,7 @@ void Window2::Composite() {
     renderer::GSM.states.scissor_rect.SetIntersect(padding_trans_rect);
 
   /* Cursor draw */
-  if (cursor_quads_->count() > 0 && windowskin_valid) {
+  if (renderer_data_->cursor_quads->count() > 0 && windowskin_valid) {
     base::Vec2i cursor_trans = padding_trans_rect.Position();
     cursor_trans.x += cursor_rect_->GetX();
     cursor_trans.y += cursor_rect_->GetY();
@@ -454,7 +451,7 @@ void Window2::Composite() {
       cursor_trans = cursor_trans - base::Vec2i(ox_, oy_);
     shader.SetTransOffset(cursor_trans);
 
-    cursor_quads_->Draw();
+    renderer_data_->cursor_quads->Draw();
   }
 
   renderer::Texture::SetFilter();
@@ -471,7 +468,7 @@ void Window2::Composite() {
     shader.SetTexture(contents_->GetRaw()->tex);
     shader.SetTextureSize(contents_->GetSize());
 
-    content_quad_->Draw();
+    renderer_data_->content_quad->Draw();
   }
 
   renderer::GSM.states.scissor_rect.Pop();
@@ -501,32 +498,23 @@ void Window2::InitWindow() {
   cursor_rect_observer_ = cursor_rect_->AddChangedObserver(base::BindRepeating(
       &Window2::CursorRectChangedInternal, base::Unretained(this)));
 
-  base_quad_ = new renderer::QuadDrawable(false);
-  content_quad_ = new renderer::QuadDrawable(false);
-  arrows_quads_ =
-      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
-  cursor_quads_ =
-      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
-  base_tex_quad_array_ =
-      new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
-
+  renderer_data_ = new Window2RendererData;
   screen()->renderer()->PostTask(base::BindOnce(
-      [](renderer::QuadDrawable* quad, renderer::QuadDrawable* contents,
-         renderer::QuadDrawableArray<renderer::CommonVertex>* arrows_ptr,
-         renderer::QuadDrawableArray<renderer::CommonVertex>* cursor_ptr,
-         renderer::QuadDrawableArray<renderer::CommonVertex>* basequad_ptr) {
-        quad->InitDrawable(renderer::GSM.quad_ibo()->ibo);
-        contents->InitDrawable(renderer::GSM.quad_ibo()->ibo);
+      [](Window2RendererData* renderer_data) {
+        renderer_data->base_quad = std::make_unique<renderer::QuadDrawable>();
+        renderer_data->content_quad =
+            std::make_unique<renderer::QuadDrawable>();
+        renderer_data->arrows_quads =
+            std::make_unique<renderer::CommonQuadArray>();
+        renderer_data->cursor_quads =
+            std::make_unique<renderer::CommonQuadArray>();
+        renderer_data->base_tex_quad_array =
+            std::make_unique<renderer::CommonQuadArray>();
 
-        arrows_ptr->Init();
-        cursor_ptr->Init();
-        basequad_ptr->Init();
-
-        arrows_ptr->Resize(5);
-        cursor_ptr->Resize(1);
+        renderer_data->cursor_quads->Resize(1);
+        renderer_data->arrows_quads->Resize(5);
       },
-      base_quad_, content_quad_, arrows_quads_, cursor_quads_,
-      base_tex_quad_array_));
+      renderer_data_));
 
   pause_vertex_ = nullptr;
 
@@ -571,10 +559,11 @@ void Window2::CalcBaseQuadArrayInternal() {
   quad_count += base_frame_tile_count_;
 
   /* Set vertex data */
-  base_tex_quad_array_->Resize(quad_count);
+  renderer_data_->base_tex_quad_array->Resize(quad_count);
 
   /* Fill vertex data */
-  renderer::CommonVertex* vertex = base_tex_quad_array_->vertices().data();
+  renderer::CommonVertex* vertex =
+      renderer_data_->base_tex_quad_array->vertices().data();
 
   int i = 0;
   /* Stretch background */
@@ -618,7 +607,7 @@ void Window2::CalcBaseQuadArrayInternal() {
   }
 
   /* Update vertex buffer data */
-  base_tex_quad_array_->Update();
+  renderer_data_->base_tex_quad_array->Update();
 }
 
 void Window2::UpdateBaseTextureInternal() {
@@ -653,13 +642,13 @@ void Window2::UpdateBaseTextureInternal() {
   renderer::Texture::SetFilter(GL_LINEAR);
 
   /* Draw stretch layer */
-  base_tex_quad_array_->Draw(0, 1);
+  renderer_data_->base_tex_quad_array->Draw(0, 1);
 
   renderer::GSM.states.blend.Set(true);
   renderer::GSM.states.blend_func.Push(renderer::GLBlendType::KeepDestAlpha);
 
   /* Background tiles */
-  base_tex_quad_array_->Draw(1, base_bg_tile_count_);
+  renderer_data_->base_tex_quad_array->Draw(1, base_bg_tile_count_);
 
   renderer::GSM.states.blend_func.Set(renderer::GLBlendType::Normal);
 
@@ -672,7 +661,8 @@ void Window2::UpdateBaseTextureInternal() {
   frame_shader.SetTransOffset(base::Vec2());
 
   /* Frame corner and sides */
-  base_tex_quad_array_->Draw(1 + base_bg_tile_count_, base_frame_tile_count_);
+  renderer_data_->base_tex_quad_array->Draw(1 + base_bg_tile_count_,
+                                            base_frame_tile_count_);
 
   renderer::Texture::SetFilter();
   renderer::GSM.states.blend_func.Pop();
@@ -686,9 +676,10 @@ void Window2::UpdateBaseQuadInternal() {
   const base::Rect pos(0, (rect_.height / 2.0f) * (1.0f - openness),
                        rect_.width, rect_.height * openness);
 
-  base_quad_->SetTexCoordRect(tex);
-  base_quad_->SetPositionRect(pos);
-  base_quad_->SetColor(-1, base::Vec4(0, 0, 0, opacity_ / 255.0f));
+  renderer_data_->base_quad->SetTexCoordRect(tex);
+  renderer_data_->base_quad->SetPositionRect(pos);
+  renderer_data_->base_quad->SetColor(-1,
+                                      base::Vec4(0, 0, 0, opacity_ / 255.0f));
 }
 
 void Window2::CalcArrowsQuadArrayInternal() {
@@ -704,8 +695,9 @@ void Window2::CalcArrowsQuadArrayInternal() {
   };
 
   size_t i = 0;
-  arrows_quads_->Resize(5);
-  renderer::CommonVertex* vert = arrows_quads_->vertices().data();
+  renderer_data_->arrows_quads->Resize(5);
+  renderer::CommonVertex* vert =
+      renderer_data_->arrows_quads->vertices().data();
 
   if (IsObjectValid(contents_.get()) && arrows_visible_) {
     if (ox_ > 0)
@@ -732,7 +724,7 @@ void Window2::CalcArrowsQuadArrayInternal() {
   }
 
   arrows_quad_count_ = i;
-  arrows_quads_->Update();
+  renderer_data_->arrows_quads->Update();
 }
 
 void Window2::UpdateInternal() {
@@ -774,7 +766,7 @@ void Window2::UpdatePauseStepInternal() {
     renderer::QuadSetColor(
         pause_vertex_, -1,
         base::Vec4(0, 0, 0, pause_alpha[pause_alpha_index_] / 255.0f));
-    arrows_quads_->Update();
+    renderer_data_->arrows_quads->Update();
   }
 }
 
@@ -783,7 +775,7 @@ void Window2::UpdateCursorQuadsInternal() {
   const CursorSrc& src = cursor_src;
 
   if (rect.width == 0 || rect.height == 0) {
-    cursor_quads_->Clear();
+    renderer_data_->cursor_quads->Clear();
     cursor_data_need_update_ = true;
     return;
   }
@@ -824,8 +816,9 @@ void Window2::UpdateCursorQuadsInternal() {
   if (drawBg)
     quads += 1;
 
-  cursor_quads_->Resize(quads);
-  renderer::CommonVertex* vert = cursor_quads_->vertices().data();
+  renderer_data_->cursor_quads->Resize(quads);
+  renderer::CommonVertex* vert =
+      renderer_data_->cursor_quads->vertices().data();
   size_t i = 0;
 
   i += renderer::QuadSetTexPosRect(&vert[i * 4], src.corners.top_left,

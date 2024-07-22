@@ -227,12 +227,15 @@ class Window2 : public base::RefCounted<Window2>,
 
   base::Rect padding_rect_;
 
-  renderer::QuadDrawable* base_quad_ = nullptr;
-  renderer::QuadDrawable* content_quad_ = nullptr;
-  renderer::QuadDrawableArray<renderer::CommonVertex>* arrows_quads_ = nullptr;
-  renderer::QuadDrawableArray<renderer::CommonVertex>* cursor_quads_ = nullptr;
-  renderer::QuadDrawableArray<renderer::CommonVertex>* base_tex_quad_array_ =
-      nullptr;
+  struct Window2RendererData {
+    std::unique_ptr<renderer::QuadDrawable> base_quad;
+    std::unique_ptr<renderer::QuadDrawable> content_quad;
+    std::unique_ptr<renderer::CommonQuadArray> arrows_quads;
+    std::unique_ptr<renderer::CommonQuadArray> cursor_quads;
+    std::unique_ptr<renderer::CommonQuadArray> base_tex_quad_array;
+  };
+
+  Window2RendererData* renderer_data_;
   renderer::TextureFrameBuffer* base_tfb_ = nullptr;
 
   bool update_required_ = false;

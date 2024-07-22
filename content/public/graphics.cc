@@ -67,6 +67,8 @@ Graphics::Graphics(WorkerShareData* share_data,
   renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
                                      base::Unretained(this)));
   renderer_->WaitForSync();
+
+  fps_manager_->Reset();
 }
 
 Graphics::~Graphics() {
@@ -559,7 +561,6 @@ void Graphics::PresentScreenInternal(
   renderer::FrameBuffer::Clear();
   renderer::Blt::TexSource(screen_buffer);
   renderer::Blt::BltDraw(resolution_, target_rect, config_->smooth_scale());
-  renderer::Blt::EndDraw();
 
   // Draw GUI panel
   DrawGUIInternal();
@@ -578,7 +579,6 @@ void Graphics::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
   renderer::Blt::BeginDraw(*target);
   renderer::Blt::TexSource(screen_buffer_);
   renderer::Blt::BltDraw(resolution_, resolution_);
-  renderer::Blt::EndDraw();
 }
 
 void Graphics::FreezeSceneInternal() {
@@ -587,7 +587,6 @@ void Graphics::FreezeSceneInternal() {
   renderer::Blt::BeginDraw(frozen_snapshot_);
   renderer::Blt::TexSource(screen_buffer_);
   renderer::Blt::BltDraw(resolution_, resolution_);
-  renderer::Blt::EndDraw();
 }
 
 void Graphics::TransitionSceneInternal(int duration,

@@ -72,15 +72,14 @@ void Sprite::InitAttributeInternal() {
   src_rect_observer_ = src_rect_->AddChangedObserver(base::BindRepeating(
       &Sprite::OnSrcRectChangedInternal, base::Unretained(this)));
 
-  quad_ = new renderer::QuadDrawable(false);
-  wave_quads_ = new renderer::QuadDrawableArray<renderer::CommonVertex>(false);
+  renderer_data_ = new SpriteRendererData;
   screen()->renderer()->PostTask(base::BindOnce(
-      [](renderer::QuadDrawable* quad,
-         renderer::QuadDrawableArray<renderer::CommonVertex>* wave_quads) {
-        quad->InitDrawable(renderer::GSM.quad_ibo()->ibo);
-        wave_quads->Init();
+      [](SpriteRendererData* renderer_data) {
+        renderer_data->quad = std::make_unique<renderer::QuadDrawable>();
+        renderer_data->wave_quads =
+            std::make_unique<renderer::CommonQuadArray>();
       },
-      quad_, wave_quads_));
+      renderer_data_));
 
   OnParentViewportRectChanged(parent_rect());
 }
@@ -88,8 +87,7 @@ void Sprite::InitAttributeInternal() {
 void Sprite::OnObjectDisposed() {
   RemoveFromList();
 
-  screen()->renderer()->DeleteSoon(std::move(quad_));
-  screen()->renderer()->DeleteSoon(std::move(wave_quads_));
+  screen()->renderer()->DeleteSoon(std::move(renderer_data_));
 }
 
 void Sprite::BeforeComposite() {
@@ -107,13 +105,13 @@ void Sprite::BeforeComposite() {
       rect.width = std::clamp(rect.width, 0, bitmap_size.x - rect.x);
       rect.height = std::clamp(rect.height, 0, bitmap_size.y - rect.y);
 
-      quad_->SetPositionRect(base::Vec2(static_cast<float>(rect.width),
-                                        static_cast<float>(rect.height)));
+      renderer_data_->quad->SetPositionRect(base::Vec2(
+          static_cast<float>(rect.width), static_cast<float>(rect.height)));
       if (mirror_) {
-        quad_->SetTexCoordRect(
+        renderer_data_->quad->SetTexCoordRect(
             base::Rect(rect.x + rect.width, rect.y, -rect.width, rect.height));
       } else {
-        quad_->SetTexCoordRect(rect);
+        renderer_data_->quad->SetTexCoordRect(rect);
       }
     }
   }
@@ -177,9 +175,9 @@ void Sprite::Composite() {
   renderer::GSM.states.blend_func.Push(blend_mode_);
 
   if (wave_.active)
-    wave_quads_->Draw();
+    renderer_data_->wave_quads->Draw();
   else
-    quad_->Draw();
+    renderer_data_->quad->Draw();
 
   renderer::GSM.states.blend_func.Pop();
   renderer::GSM.states.blend.Pop();
@@ -231,8 +229,8 @@ void Sprite::UpdateWaveQuadsInternal() {
   float zoomY = transform_.GetScale().y;
 
   if (wave_.amp < -(width / 2)) {
-    wave_quads_->Resize(0);
-    wave_quads_->Update();
+    renderer_data_->wave_quads->Resize(0);
+    renderer_data_->wave_quads->Update();
 
     return;
   }
@@ -249,8 +247,8 @@ void Sprite::UpdateWaveQuadsInternal() {
   /* Final chunk length */
   int lastLength = (visibleLength - firstLength) % 8;
 
-  wave_quads_->Resize(!!firstLength + chunks + !!lastLength);
-  renderer::CommonVertex* vert = wave_quads_->vertices().data();
+  renderer_data_->wave_quads->Resize(!!firstLength + chunks + !!lastLength);
+  renderer::CommonVertex* vert = renderer_data_->wave_quads->vertices().data();
 
   float phase = (wave_.phase * (float)M_PI) / 180.0f;
 
@@ -264,7 +262,7 @@ void Sprite::UpdateWaveQuadsInternal() {
     emitWaveChunk(vert, phase, width, zoomY, firstLength + chunks * 8,
                   lastLength);
 
-  wave_quads_->Update();
+  renderer_data_->wave_quads->Update();
 }
 
 void Sprite::UpdateVisibilityInternal() {

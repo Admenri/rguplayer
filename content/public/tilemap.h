@@ -76,6 +76,7 @@ class Tilemap : public base::RefCounted<Tilemap>,
   void RaiseUpdateBufferInternal();
   void DrawFlashLayerInternal();
   void SetupDrawLayersInternal();
+  void ResetZLayerInternal();
 
   enum class AutotileType {
     Animated = 0,
@@ -100,7 +101,11 @@ class Tilemap : public base::RefCounted<Tilemap>,
   base::Vec2i origin_;
   int tile_size_;
 
-  renderer::QuadDrawableArray<renderer::CommonVertex>* tilemap_quads_ = nullptr;
+  struct TilemapRendererData {
+    std::unique_ptr<renderer::CommonQuadArray> tilemap_quads;
+  };
+
+  TilemapRendererData* renderer_data_;
   std::vector<renderer::CommonVertex> ground_vertices_;
   std::vector<std::vector<renderer::CommonVertex>> above_vertices_;
   std::vector<size_t> above_offsets_;

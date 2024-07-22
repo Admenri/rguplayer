@@ -17,26 +17,9 @@ const VertexItemAttribute CommonVertexInfo[] = {
 const int CommonVertexInfoSize =
     sizeof(CommonVertexInfo) / sizeof(CommonVertexInfo[0]);
 
-const VertexItemAttribute GeometryVertexInfo[] = {
-    {GLES2Shader::AttribLocation::Position, 4, GL_FLOAT,
-     (const void*)offsetof(GeometryVertex, position)},
-    {GLES2Shader::AttribLocation::TexCoord, 2, GL_FLOAT,
-     (const void*)offsetof(GeometryVertex, texCoord)},
-    {GLES2Shader::AttribLocation::Color, 4, GL_FLOAT,
-     (const void*)offsetof(GeometryVertex, color)}};
-
-const int GeometryVertexInfoSize =
-    sizeof(GeometryVertexInfo) / sizeof(GeometryVertexInfo[0]);
-
 template <>
 const VertexItemAttribute* VertexInfo<CommonVertex>::attrs = CommonVertexInfo;
 template <>
 const int VertexInfo<CommonVertex>::attr_size = CommonVertexInfoSize;
-
-template <>
-const VertexItemAttribute* VertexInfo<GeometryVertex>::attrs =
-    GeometryVertexInfo;
-template <>
-const int VertexInfo<GeometryVertex>::attr_size = GeometryVertexInfoSize;
 
 }  // namespace renderer

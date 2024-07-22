@@ -5,6 +5,7 @@
 #ifndef RENDERER_QUAD_QUAD_DRAWABLE_H_
 #define RENDERER_QUAD_QUAD_DRAWABLE_H_
 
+#include "base/math/math.h"
 #include "renderer/draw/drawable.h"
 #include "renderer/vertex/vertex_set.h"
 
@@ -22,15 +23,16 @@ class QuadIndexBuffer {
 
   void EnsureSize(size_t count);
 
-  GLID<IndexBuffer> ibo;
+  GLID<IndexBuffer> GetBuffer() { return ibo_; }
 
  private:
-  std::vector<uint16_t> buffer;
+  GLID<IndexBuffer> ibo_;
+  std::vector<uint16_t> buffer_;
 };
 
 class QuadDrawable final : public Drawable<CommonVertex, 4> {
  public:
-  QuadDrawable(bool init = true);
+  QuadDrawable();
 
   QuadDrawable(const QuadDrawable&) = delete;
   QuadDrawable& operator=(const QuadDrawable&) = delete;
@@ -49,10 +51,10 @@ class QuadDrawable final : public Drawable<CommonVertex, 4> {
 template <typename V>
 static void QuadSetPositionRect(V* vert, const base::RectF& pos) {
   int i = -1;
-  vert[++i].position = base::Vec2(pos.x, pos.y);
-  vert[++i].position = base::Vec2(pos.x + pos.width, pos.y);
-  vert[++i].position = base::Vec2(pos.x + pos.width, pos.y + pos.height);
-  vert[++i].position = base::Vec2(pos.x, pos.y + pos.height);
+  vert[++i].position = base::Vec4(pos.x, pos.y, 0, 1);
+  vert[++i].position = base::Vec4(pos.x + pos.width, pos.y, 0, 1);
+  vert[++i].position = base::Vec4(pos.x + pos.width, pos.y + pos.height, 0, 1);
+  vert[++i].position = base::Vec4(pos.x, pos.y + pos.height, 0, 1);
 }
 
 template <typename V>
@@ -101,7 +103,6 @@ struct Blt {
   static void BltDraw(const base::RectF& src_rect,
                       const base::RectF& dest_rect,
                       bool smooth = false);
-  static void EndDraw();
 };
 
 }  // namespace renderer

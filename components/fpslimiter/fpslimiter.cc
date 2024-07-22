@@ -16,58 +16,51 @@
 namespace fpslimiter {
 
 FPSLimiter::FPSLimiter(int frame_rate)
-    : last_ticks_(SDL_GetPerformanceCounter()),
-      counter_freq_(SDL_GetPerformanceFrequency()),
-      freq_ns_(NS_PER_S / counter_freq_),
-      error_ticks_(0),
-      interval_ticks_(std::round((double)counter_freq_ / frame_rate)),
-      adjust_{last_ticks_, 0, true} {}
+    : last_tick_count_(SDL_GetPerformanceCounter()),
+      tick_freq_(SDL_GetPerformanceFrequency()),
+      tick_freq_ns_((double)tick_freq_ / NS_PER_S),
+      skip_last_(SDL_GetPerformanceCounter()),
+      skip_ideal_diff_(0),
+      skip_reset_flag_(false) {
+  SetFrameRate(frame_rate);
+}
 
 void FPSLimiter::SetFrameRate(int frame_rate) {
-  interval_ticks_ = std::round((double)counter_freq_ / frame_rate);
+  ticks_per_frame_ = tick_freq_ / frame_rate;
 }
 
 void FPSLimiter::Delay() {
-  uint64_t expect_ticks = last_ticks_ + interval_ticks_;
-  uint64_t real_ticks = SDL_GetPerformanceCounter();
-  uint64_t diff_counter = 0;
+  {
+    int64_t frame_delta = SDL_GetPerformanceCounter() - last_tick_count_;
+    int64_t delay_tick = ticks_per_frame_ - frame_delta;
 
-  if (expect_ticks > real_ticks) [[likely]] {
-    int64_t delta_ticks = (expect_ticks - real_ticks) - error_ticks_;
-    time_t delay_ns = static_cast<time_t>(delta_ticks * freq_ns_);
+    delay_tick -= skip_ideal_diff_;
+    delay_tick = std::max<int64_t>(0, delay_tick);
 
-    if (delay_ns > 0 && delay_ns < NS_PER_S) {
-      SDL_DelayNS(delay_ns);
-    }
+    SDL_DelayNS(delay_tick / tick_freq_ns_);
 
-    last_ticks_ = SDL_GetPerformanceCounter();
-    uint64_t real_delay_counter = last_ticks_ - real_ticks;
-    error_ticks_ = static_cast<int64_t>(real_delay_counter - delta_ticks);
-    diff_counter = last_ticks_;
-  } else [[unlikely]] {
-    last_ticks_ = real_ticks;
-    error_ticks_ = 0;
+    last_tick_count_ = SDL_GetPerformanceCounter();
   }
 
-  if (!diff_counter)
-    diff_counter = SDL_GetPerformanceCounter();
-  int64_t frame_diff = diff_counter - adjust_.last_ticks;
-  adjust_.last_ticks = diff_counter;
-  adjust_.frame_diff += frame_diff - interval_ticks_;
-  adjust_.frame_diff = std::max<int64_t>(adjust_.frame_diff, 0);
+  {
+    uint64_t skip_now = last_tick_count_;
+    int64_t frame_diff = skip_now - skip_last_;
+    skip_last_ = skip_now;
 
-  if (adjust_.reset) {
-    adjust_.reset = false;
-    adjust_.frame_diff = 0;
+    skip_ideal_diff_ += frame_diff - ticks_per_frame_;
+
+    if (skip_reset_flag_)
+      skip_ideal_diff_ = 0;
+    skip_reset_flag_ = false;
   }
 }
 
 bool FPSLimiter::RequireFrameSkip() {
-  return adjust_.frame_diff >= interval_ticks_;
+  return skip_ideal_diff_ > ticks_per_frame_;
 }
 
 void FPSLimiter::Reset() {
-  adjust_.reset = true;
+  skip_reset_flag_ = true;
 }
 
 }  // namespace fpslimiter

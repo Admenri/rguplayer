@@ -14,32 +14,29 @@ namespace renderer {
 static const std::array<uint16_t, 6> kQuadIndexTemplate = {0, 1, 2, 2, 3, 0};
 
 QuadIndexBuffer::QuadIndexBuffer() {
-  ibo = IndexBuffer::Gen();
+  ibo_ = IndexBuffer::Gen();
 }
 
 QuadIndexBuffer::~QuadIndexBuffer() {
-  IndexBuffer::Del(ibo);
+  IndexBuffer::Del(ibo_);
 }
 
 void QuadIndexBuffer::EnsureSize(size_t count) {
-  if (buffer.size() >= count * 6)
+  if (buffer_.size() >= count * 6)
     return;
 
-  size_t begin = buffer.size() / 6;
-  buffer.reserve(count * 6);
+  size_t begin = buffer_.size() / 6;
+  buffer_.reserve(count * 6);
   for (size_t i = begin; i < count; ++i)
     for (size_t j = 0; j < 6; ++j)
-      buffer.push_back(static_cast<uint16_t>(i * 4 + kQuadIndexTemplate[j]));
+      buffer_.push_back(static_cast<uint16_t>(i * 4 + kQuadIndexTemplate[j]));
 
-  IndexBuffer::Bind(ibo);
-  IndexBuffer::BufferData(buffer.size() * sizeof(uint16_t), buffer.data());
+  IndexBuffer::Bind(ibo_);
+  IndexBuffer::BufferData(buffer_.size() * sizeof(uint16_t), buffer_.data());
   IndexBuffer::Unbind();
 }
 
-QuadDrawable::QuadDrawable(bool init) {
-  if (init)
-    Drawable::InitDrawable(GSM.quad_ibo()->ibo);
-}
+QuadDrawable::QuadDrawable() : Drawable(GSM.quad_ibo()->GetBuffer()) {}
 
 void QuadDrawable::SetPositionRect(const base::RectF& pos) {
   if (position_cache_ == pos)
@@ -47,10 +44,11 @@ void QuadDrawable::SetPositionRect(const base::RectF& pos) {
   position_cache_ = pos;
 
   int i = 0;
-  vertices()[i++].position = base::Vec2(pos.x, pos.y);
-  vertices()[i++].position = base::Vec2(pos.x + pos.width, pos.y);
-  vertices()[i++].position = base::Vec2(pos.x + pos.width, pos.y + pos.height);
-  vertices()[i++].position = base::Vec2(pos.x, pos.y + pos.height);
+  vertices()[i++].position = base::Vec4(pos.x, pos.y, 0, 1);
+  vertices()[i++].position = base::Vec4(pos.x + pos.width, pos.y, 0, 1);
+  vertices()[i++].position =
+      base::Vec4(pos.x + pos.width, pos.y + pos.height, 0, 1);
+  vertices()[i++].position = base::Vec4(pos.x, pos.y + pos.height, 0, 1);
   NotifyUpdate();
 }
 
@@ -97,87 +95,35 @@ void QuadDrawable::Draw() {
 }
 
 void Blt::BeginScreen(const base::Rect& rect) {
-  if (GL.BlitFramebuffer)
-    return GL.BindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-  FrameBuffer::Unbind();
-  GSM.states.viewport.Push(rect);
-  auto& shader = GSM.shaders()->base;
-  shader.Bind();
-  shader.SetProjectionMatrix(rect.Size());
-  shader.SetTransOffset(base::Vec2i());
+  GL.BindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 void Blt::BeginDraw(const TextureFrameBuffer& dest_tfb) {
-  if (GL.BlitFramebuffer)
-    return GL.BindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_tfb.fbo.gl);
-
-  FrameBuffer::Bind(dest_tfb.fbo);
-  const auto& size = dest_tfb.size;
-  GSM.states.viewport.Push(size);
-  auto& shader = GSM.shaders()->base;
-  shader.Bind();
-  shader.SetProjectionMatrix(size);
-  shader.SetTransOffset(base::Vec2i());
+  GL.BindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_tfb.fbo.gl);
 }
 
 void Blt::TexSource(const TextureFrameBuffer& src_tfb) {
-  if (GL.BlitFramebuffer)
-    return GL.BindFramebuffer(GL_READ_FRAMEBUFFER, src_tfb.fbo.gl);
-
-  auto& shader = GSM.shaders()->base;
-  shader.SetTexture(src_tfb.tex);
-  shader.SetTextureSize(src_tfb.size);
+  return GL.BindFramebuffer(GL_READ_FRAMEBUFFER, src_tfb.fbo.gl);
 }
 
 void Blt::BltDraw(const base::RectF& src_rect,
                   const base::RectF& dest_rect,
                   bool smooth) {
-  if (GL.BlitFramebuffer)
-    return GL.BlitFramebuffer(
-        src_rect.x, src_rect.y, src_rect.x + src_rect.width,
-        src_rect.y + src_rect.height, dest_rect.x, dest_rect.y,
-        dest_rect.x + dest_rect.width, dest_rect.y + dest_rect.height,
-        GL_COLOR_BUFFER_BIT, smooth ? GL_LINEAR : GL_NEAREST);
-
-  if (smooth)
-    Texture::SetFilter(GL_LINEAR);
-  auto* quad = GSM.common_quad();
-  GSM.states.blend.Push(false);
-  quad->SetPositionRect(dest_rect);
-  quad->SetTexCoordRect(src_rect);
-  quad->Draw();
-  GSM.states.blend.Pop();
-  if (smooth)
-    Texture::SetFilter(GL_NEAREST);
+  GL.BlitFramebuffer(src_rect.x, src_rect.y, src_rect.x + src_rect.width,
+                     src_rect.y + src_rect.height, dest_rect.x, dest_rect.y,
+                     dest_rect.x + dest_rect.width,
+                     dest_rect.y + dest_rect.height, GL_COLOR_BUFFER_BIT,
+                     smooth ? GL_LINEAR : GL_NEAREST);
 }
 
 void Blt::BltDraw(const base::Rect& src_rect,
                   const base::Rect& dest_rect,
                   bool smooth) {
-  if (GL.BlitFramebuffer)
-    return GL.BlitFramebuffer(
-        src_rect.x, src_rect.y, src_rect.x + src_rect.width,
-        src_rect.y + src_rect.height, dest_rect.x, dest_rect.y,
-        dest_rect.x + dest_rect.width, dest_rect.y + dest_rect.height,
-        GL_COLOR_BUFFER_BIT, smooth ? GL_LINEAR : GL_NEAREST);
-
-  if (smooth)
-    Texture::SetFilter(GL_LINEAR);
-  auto* quad = GSM.common_quad();
-  GSM.states.blend.Push(false);
-  quad->SetPositionRect(dest_rect);
-  quad->SetTexCoordRect(src_rect);
-  quad->Draw();
-  GSM.states.blend.Pop();
-  if (smooth)
-    Texture::SetFilter(GL_NEAREST);
-}
-
-void Blt::EndDraw() {
-  if (GL.BlitFramebuffer)
-    return;
-  GSM.states.viewport.Pop();
+  GL.BlitFramebuffer(src_rect.x, src_rect.y, src_rect.x + src_rect.width,
+                     src_rect.y + src_rect.height, dest_rect.x, dest_rect.y,
+                     dest_rect.x + dest_rect.width,
+                     dest_rect.y + dest_rect.height, GL_COLOR_BUFFER_BIT,
+                     smooth ? GL_LINEAR : GL_NEAREST);
 }
 
 }  // namespace renderer

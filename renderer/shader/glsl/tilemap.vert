@@ -9,7 +9,7 @@ uniform vec2 u_transOffset;
 uniform float u_tileSize;
 uniform float u_animateIndex;
 
-in vec2 a_position;
+in vec4 a_position;
 in vec2 a_texCoord;
 
 out vec2 v_texCoord;
@@ -23,7 +23,7 @@ void main() {
 	float addition = float(tex.x <= k_autotileArea.x * u_tileSize && tex.y <= k_autotileArea.y * u_tileSize);
 	tex.x += 3.0 * u_tileSize * u_animateIndex * addition;
 
-	gl_Position = u_projectionMat * vec4(a_position + u_transOffset, 0.0, 1.0);
+	gl_Position = u_projectionMat * vec4(a_position.xy + u_transOffset, 0.0, 1.0);
 
 	v_texCoord = tex * u_texSize;
 }

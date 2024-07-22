@@ -102,9 +102,14 @@ class Tilemap2 : public base::RefCounted<Tilemap2>,
   scoped_refptr<Table> flash_data_;
   scoped_refptr<Table> flags_;
 
+  struct Tilemap2RendererData {
+    std::unique_ptr<renderer::CommonQuadArray> tilemap_quads;
+  };
+
+  Tilemap2RendererData* renderer_data_;
+
   std::vector<renderer::CommonVertex> ground_vertices_;
   std::vector<renderer::CommonVertex> above_vertices_;
-  renderer::QuadDrawableArray<renderer::CommonVertex>* tilemap_quads_ = nullptr;
   renderer::TextureFrameBuffer* atlas_tfb_ = nullptr;
   int tile_size_;
   base::Rect tilemap_viewport_;

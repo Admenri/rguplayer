@@ -63,8 +63,8 @@ class Geometry : public base::RefCounted<Geometry>,
   scoped_refptr<Bitmap> bitmap_;
   renderer::GLBlendType blend_mode_ = renderer::GLBlendType::Normal;
 
-  renderer::VertexArray<renderer::GeometryVertex>* vao_;
-  std::vector<renderer::GeometryVertex> triangle_vertices_;
+  renderer::VertexArray<renderer::CommonVertex>* vao_;
+  std::vector<renderer::CommonVertex> triangle_vertices_;
   size_t triangle_count_ = 0;
   size_t vbo_size_ = 0;
 
