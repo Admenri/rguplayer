@@ -268,7 +268,7 @@ void Sprite::UpdateWaveQuadsInternal() {
 void Sprite::UpdateVisibilityInternal() {
   need_invisible_ = true;
 
-  if (opacity_ == 0)
+  if (!opacity_)
     return;
 
   if (!IsObjectValid(bitmap_.get()))

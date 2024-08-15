@@ -34,7 +34,9 @@ void Drawable::SetParent(DrawableParent* parent) {
     return;
   parent_ = parent;
 
+  child_.RemoveFromList();
   node_.RemoveFromList();
+  parent_->children_.Append(&child_);
   parent_->InsertDrawable(this);
 
   OnParentViewportRectChanged(parent->viewport_rect());

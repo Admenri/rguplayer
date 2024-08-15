@@ -85,7 +85,7 @@ void EventRunner::EventDispatch(const SDL_Event& event) {
     if (event.key.scancode == SDL_SCANCODE_F1) {
       // Settings menu
       share_data_->enable_settings_menu = !share_data_->enable_settings_menu;
-    } else if (event.key.scancode == SDL_SCANCODE_F10) {
+    } else if (event.key.scancode == SDL_SCANCODE_F12) {
       // Trigger reset process
       binding_runner_->RequestReset();
     }
