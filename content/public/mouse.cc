@@ -22,6 +22,7 @@ void Mouse::Update() {
 
     states_[i].pressed = press_state;
     states_[i].click_count = mouse_state.clicks[i];
+    mouse_state.clicks[i] = 0;
 
     if (states_[i].last_x != mouse_state.x ||
         states_[i].last_y != mouse_state.y)
