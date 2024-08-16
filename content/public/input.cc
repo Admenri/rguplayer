@@ -195,7 +195,7 @@ bool Input::KeyRepeated(int scancode) {
 
 std::string Input::GetKeyName(int scancode) {
   SDL_Keycode key = SDL_GetKeyFromScancode(static_cast<SDL_Scancode>(scancode),
-                                           SDL_KMOD_NONE);
+                                           SDL_KMOD_NONE, SDL_FALSE);
   return std::string(SDL_GetKeyName(key));
 }
 

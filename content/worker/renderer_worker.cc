@@ -76,7 +76,7 @@ void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
       break;
   }
   g_angle_platform.push_back(EGL_NONE);
-  SDL_EGL_SetEGLAttributeCallbacks(GetANGLEPlatformCallback, nullptr, nullptr);
+  SDL_EGL_SetAttributeCallbacks(GetANGLEPlatformCallback, nullptr, nullptr);
 }
 
 void RenderRunner::PostTask(base::OnceClosure task) {
