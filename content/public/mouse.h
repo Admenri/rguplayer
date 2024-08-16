@@ -38,6 +38,7 @@ class Mouse : public base::RefCounted<Mouse> {
   bool IsUp(int button);
   bool IsDoubleClick(int button);
   bool IsPressed(int button);
+  bool IsMoved();
   int GetScrollX();
   int GetScrollY();
   void SetCursor(scoped_refptr<Bitmap> cursor, int hot_x, int hot_y);
@@ -52,10 +53,14 @@ class Mouse : public base::RefCounted<Mouse> {
     bool down = false;
     int click_count = 0;
     bool pressed = false;
+  };
 
+  struct MouseState {
     float last_x = 0, last_y = 0;
     bool moved = false;
-  };
+    int scroll_x = 0, scroll_y = 0;
+    int last_scroll_x = 0, last_scroll_y = 0;
+  } entity_state_;
 
   WorkerShareData* share_data_;
   std::array<BindingState, sizeof(ui::Widget::MouseState::states)> states_;

@@ -29,7 +29,9 @@ MRI_METHOD(aom_load_video) {
 
   std::string filename;
   MriParseArgsTo(argc, argv, "s", &filename);
-  auto ret = obj->LoadVideo(filename);
+
+  uvpx::Player::LoadResult ret;
+  MRI_GUARD(ret = obj->LoadVideo(filename););
 
   return INT2FIX((int)ret);
 }

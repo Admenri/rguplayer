@@ -30,7 +30,14 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
     return uvpx::Player::LoadResult::AlreadyReaded;
 
   // Read video file
-  SDL_IOStream* ops = io_->OpenReadRaw(filename);
+  SDL_IOStream* ops = nullptr;
+  try {
+    ops = io_->OpenReadRaw(filename);
+  } catch (base::Exception& e) {
+    LOG(INFO) << "[AOMDecoder] Video file \"" << filename
+              << "\" was not found.";
+    return uvpx::Player::LoadResult::FileNotExists;
+  }
 
   // Create player instance
   player_ = std::make_unique<uvpx::Player>(uvpx::Player::defaultConfig());

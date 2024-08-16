@@ -89,7 +89,7 @@ struct Texture {
    * Warning: Texture must set min filter when drawing, otherwise invalid
    * display.
    */
-  inline static void SetFilter(GLint filter = GL_NEAREST) {
+  inline static void SetFilter(GLint filter = GL_LINEAR) {
     GL.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
     GL.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
   }

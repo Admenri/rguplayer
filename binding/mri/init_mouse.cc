@@ -119,6 +119,11 @@ MRI_METHOD(mouse_cursor) {
   return Qnil;
 }
 
+MRI_METHOD(mouse_moved) {
+  scoped_refptr<content::Mouse> mouse = MriGetGlobalRunner()->mouse();
+  return MRI_BOOL_NEW(mouse->IsMoved());
+}
+
 void InitMouseBinding() {
   VALUE module = rb_define_module("Mouse");
 
@@ -132,7 +137,8 @@ void InitMouseBinding() {
   MriDefineModuleFunction(module, "press?", mouse_is_pressed);
   MriDefineModuleFunction(module, "scroll_x", mouse_scroll_x);
   MriDefineModuleFunction(module, "scroll_y", mouse_scroll_y);
-  MriDefineModuleFunction(module, "cursor", mouse_cursor);
+  MriDefineModuleFunction(module, "set_cursor", mouse_cursor);
+  MriDefineModuleFunction(module, "moved?", mouse_moved);
 
   MriDefineModuleAttr(module, "visible", mouse, visible);
 

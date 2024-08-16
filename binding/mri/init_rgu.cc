@@ -14,6 +14,25 @@
 
 namespace binding {
 
+static void InspectString(int argc,
+                          VALUE* argv,
+                          const char* convMethod,
+                          const char* sep) {
+  VALUE dispString = rb_str_buf_new(128);
+  ID conv = rb_intern(convMethod);
+
+  for (int i = 0; i < argc; ++i) {
+    VALUE str = rb_funcall2(argv[i], conv, 0, NULL);
+    rb_str_buf_append(dispString, str);
+
+    if (i < argc)
+      rb_str_buf_cat2(dispString, sep);
+  }
+
+  SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "RGU Msgbox",
+                           RSTRING_PTR(dispString), nullptr);
+}
+
 MRI_METHOD(rgu_open_url) {
   std::string url;
   MriParseArgsTo(argc, argv, "s", &url);
@@ -37,13 +56,8 @@ MRI_METHOD(rgu_get_counter_freq) {
 }
 
 MRI_METHOD(rgu_msgbox) {
-  int flags;
-  std::string title;
-  std::string msg;
-  MriParseArgsTo(argc, argv, "iss", &flags, &title, &msg);
-
-  return INT2FIX(
-      SDL_ShowSimpleMessageBox(flags, title.c_str(), msg.c_str(), nullptr));
+  InspectString(argc, argv, "to_s", "");
+  return Qnil;
 }
 
 MRI_METHOD(rgu_console_puts) {
