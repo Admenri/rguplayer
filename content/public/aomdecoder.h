@@ -58,17 +58,7 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>,
   void DestroyYUVInternal();
   void UploadInternal(uvpx::Frame* yuv, bool* fence);
   void RenderInternal(renderer::TextureFrameBuffer* target);
-  void UpdateYUVTexture(int width,
-                        int height,
-                        const Uint8* Yplane,
-                        int Ypitch,
-                        const Uint8* Uplane,
-                        int Upitch,
-                        const Uint8* Vplane,
-                        int Vpitch);
   int VideoTexSubImage2D(GLenum target,
-                         GLint xoffset,
-                         GLint yoffset,
                          GLsizei width,
                          GLsizei height,
                          GLenum format,
@@ -87,6 +77,7 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>,
   enum PlaneType { Plane_Y = 0, Plane_U, Plane_V };
   renderer::GLID<renderer::Texture> video_planes_[3];
   std::unique_ptr<renderer::QuadDrawable> video_quad_;
+  base::Vec2i frame_size_;
 
   SDL_AudioDeviceID audio_output_;
   SDL_AudioStream* audio_stream_;

@@ -10,41 +10,22 @@ namespace uvpx {
 
 class UVPX_EXPORT Frame {
  private:
-  unsigned char* m_y;
-  unsigned char* m_u;
-  unsigned char* m_v;
-
-  size_t m_ySize;
-  size_t m_uvSize;
-
-  size_t m_width;
-  size_t m_height;
-  size_t m_displayWidth;
-  size_t m_displayHeight;
+  unsigned char* m_planes[3];
+  size_t m_width[3];
+  size_t m_height[3];
 
   double m_time;
 
  public:
-  Frame(size_t width, size_t height);
+  Frame();
   ~Frame();
 
-  void resize(size_t frame_width, size_t frame_height);
+  void resize(int id, size_t frame_width, size_t frame_height);
   void copyData(Frame* dst);
 
-  unsigned char* y() const;
-  unsigned char* u() const;
-  unsigned char* v() const;
-
-  size_t ySize() const;
-  size_t uvSize() const;
-
-  size_t yPitch() const;
-  size_t uvPitch() const;
-
-  size_t width() const;
-  size_t height() const;
-  size_t displayWidth() const;
-  size_t displayHeight() const;
+  unsigned char* plane(int id) const;
+  size_t width(int id) const;
+  size_t height(int id) const;
 
   void setTime(double time);
   double time() const;

@@ -17,10 +17,10 @@ FrameBuffer::FrameBuffer(VideoPlayer* parent,
       m_height(height),
       m_writeFrame(nullptr),
       m_readTime(0.0) {
-  m_readFrame = new Frame(width, height);
+  m_readFrame = new Frame();
 
   for (size_t i = 0; i < frameCount; i++)
-    m_writeQueue.push(new Frame(width, height));
+    m_writeQueue.push(new Frame());
 }
 
 FrameBuffer::~FrameBuffer() {

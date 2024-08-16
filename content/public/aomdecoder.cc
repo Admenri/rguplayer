@@ -19,10 +19,7 @@ AOMDecoder::AOMDecoder(scoped_refptr<Graphics> host)
       counter_freq_(SDL_GetPerformanceFrequency()),
       frame_delta_(0.0f),
       audio_output_(0),
-      audio_stream_(nullptr) {
-  uvpx::setDebugLog(
-      [](const char* msg) { LOG(INFO) << "[AOMDecoder] " << msg; });
-}
+      audio_stream_(nullptr) {}
 
 AOMDecoder::~AOMDecoder() {
   Dispose();
@@ -66,7 +63,7 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
     }
 
     // Init yuv texture
-    frame_data_ = std::make_unique<uvpx::Frame>(info.width, info.height);
+    frame_data_ = std::make_unique<uvpx::Frame>();
     screen()->renderer()->PostTask(
         base::BindOnce(&AOMDecoder::CreateYUVInternal, base::Unretained(this),
                        base::Vec2i(info.width, info.height)));
@@ -214,9 +211,14 @@ void AOMDecoder::DestroyYUVInternal() {
 }
 
 void AOMDecoder::UploadInternal(uvpx::Frame* yuv, bool* fence) {
-  auto& info = *player_->info();
-  UpdateYUVTexture(info.width, info.height, yuv->y(), yuv->yPitch(), yuv->u(),
-                   yuv->uvPitch(), yuv->v(), yuv->uvPitch());
+  for (int i = 0; i < 3; ++i) {
+    renderer::Texture::Bind(video_planes_[i]);
+    VideoTexSubImage2D(GL_TEXTURE_2D, yuv->width(i), yuv->height(i),
+                       GL_LUMINANCE, GL_UNSIGNED_BYTE, yuv->plane(i),
+                       yuv->width(i), 1);
+  }
+
+  frame_size_ = base::Vec2i(yuv->width(0), yuv->height(0));
   *fence = true;
 }
 
@@ -224,12 +226,11 @@ void AOMDecoder::RenderInternal(renderer::TextureFrameBuffer* target) {
   auto& info = *player_->info();
   auto& canvas_size = target->size;
 
-  auto frame_size = base::Vec2i(info.width, info.height);
   auto& shader = renderer::GSM.shaders()->yuv;
   shader.Bind();
   shader.SetProjectionMatrix(canvas_size);
   shader.SetTransOffset(base::Vec2());
-  shader.SetTextureSize(frame_size);
+  shader.SetTextureSize(frame_size_);
   shader.SetTextureY(video_planes_[Plane_Y]);
   shader.SetTextureU(video_planes_[Plane_U]);
   shader.SetTextureV(video_planes_[Plane_V]);
@@ -242,6 +243,7 @@ void AOMDecoder::RenderInternal(renderer::TextureFrameBuffer* target) {
   renderer::GSM.states.viewport.Push(canvas_size);
   renderer::GSM.states.blend.Push(false);
 
+  auto frame_size = base::Vec2i(info.width, info.height);
   auto* quad = renderer::GSM.common_quad();
   quad->SetPositionRect(base::Rect(canvas_size));
   quad->SetTexCoordRect(base::Rect(frame_size));
@@ -251,30 +253,7 @@ void AOMDecoder::RenderInternal(renderer::TextureFrameBuffer* target) {
   renderer::GSM.states.viewport.Pop();
 }
 
-void AOMDecoder::UpdateYUVTexture(int width,
-                                  int height,
-                                  const Uint8* Yplane,
-                                  int Ypitch,
-                                  const Uint8* Uplane,
-                                  int Upitch,
-                                  const Uint8* Vplane,
-                                  int Vpitch) {
-  renderer::Texture::Bind(video_planes_[Plane_V]);
-  VideoTexSubImage2D(GL_TEXTURE_2D, 0, 0, (width + 1) / 2, (height + 1) / 2,
-                     GL_LUMINANCE, GL_UNSIGNED_BYTE, Vplane, Vpitch, 1);
-
-  renderer::Texture::Bind(video_planes_[Plane_U]);
-  VideoTexSubImage2D(GL_TEXTURE_2D, 0, 0, (width + 1) / 2, (height + 1) / 2,
-                     GL_LUMINANCE, GL_UNSIGNED_BYTE, Uplane, Upitch, 1);
-
-  renderer::Texture::Bind(video_planes_[Plane_Y]);
-  VideoTexSubImage2D(GL_TEXTURE_2D, 0, 0, width, height, GL_LUMINANCE,
-                     GL_UNSIGNED_BYTE, Yplane, Ypitch, 1);
-}
-
 int AOMDecoder::VideoTexSubImage2D(GLenum target,
-                                   GLint xoffset,
-                                   GLint yoffset,
                                    GLsizei width,
                                    GLsizei height,
                                    GLenum format,
@@ -329,8 +308,8 @@ int AOMDecoder::VideoTexSubImage2D(GLenum target,
   }
 #endif
 
-  renderer::GL.TexSubImage2D(target, 0, xoffset, yoffset, width, height, format,
-                             type, src);
+  renderer::GL.TexImage2D(target, 0, format, width, height, 0, format, type,
+                          src);
 
   if (blob) {
     SDL_free(blob);

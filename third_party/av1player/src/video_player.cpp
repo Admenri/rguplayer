@@ -2,6 +2,8 @@
 
 #include "timer.hpp"
 
+#include "aom/aom_image.h"
+
 #include <algorithm>
 #include <cstdarg>
 #include <cstdio>
@@ -289,28 +291,33 @@ void VideoPlayer::updateYUVData(double time) {
   if (m_decoderData.img == nullptr)
     return;
 
-  const int h = m_decoderData.img->d_h;
-  const int h2 = h / 2;
-
   Frame* curYUV = m_frameBuffer->lockWrite(time);
 
-  const unsigned char* src_y = m_decoderData.img->planes[AOM_PLANE_Y];
-  const unsigned char* src_u = m_decoderData.img->planes[AOM_PLANE_U];
-  const unsigned char* src_v = m_decoderData.img->planes[AOM_PLANE_V];
+  int plane;
+  const int bytespp =
+      (m_decoderData.img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) ? 2 : 1;
 
-  const int stride_y = m_decoderData.img->stride[AOM_PLANE_Y];
-  const int stride_u = m_decoderData.img->stride[AOM_PLANE_U];
-  const int stride_v = m_decoderData.img->stride[AOM_PLANE_V];
+  for (plane = 0; plane < 3; ++plane) {
+    const unsigned char* buf = m_decoderData.img->planes[plane];
+    const int stride = m_decoderData.img->stride[plane];
+    int w = aom_img_plane_width(m_decoderData.img, plane);
+    const int h = aom_img_plane_height(m_decoderData.img, plane);
+    int y;
 
-  curYUV->resize(stride_y, h);
+    // Assuming that for nv12 we write all chroma data at once
+    if (m_decoderData.img->fmt == AOM_IMG_FMT_NV12 && plane > 1)
+      break;
+    if (m_decoderData.img->fmt == AOM_IMG_FMT_NV12 && plane == 1)
+      w *= 2;
 
-  unsigned char* y = curYUV->y();
-  unsigned char* u = curYUV->u();
-  unsigned char* v = curYUV->v();
-
-  memcpy(y, src_y, stride_y * h);
-  memcpy(u, src_u, stride_u * h2);
-  memcpy(v, src_v, stride_v * h2);
+    curYUV->resize(plane, stride, h);
+    auto* dst = curYUV->plane(plane);
+    for (y = 0; y < h; ++y) {
+      std::memcpy(dst, buf, stride * bytespp);
+      buf += stride;
+      dst += stride;
+    }
+  }
 
   m_frameBuffer->unlockWrite();
 }

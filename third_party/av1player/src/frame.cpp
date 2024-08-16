@@ -6,76 +6,23 @@
 
 namespace uvpx {
 
-Frame::Frame(size_t width, size_t height)
-    : m_width(0),
-      m_height(0),
-      m_displayWidth(width),
-      m_displayHeight(height),
-      m_time(0.0) {
-  // vpx size is +64 aligned to 16
-  m_width = (((width + 64) - 1) & ~15) + 16;
-  m_height = (((height + 64) - 1) & ~15) + 16;
-
-  m_ySize = m_width * m_height;
-  m_uvSize = (m_width / 2) * (m_height / 2);
-
-  m_y = new unsigned char[m_ySize];
-  m_u = new unsigned char[m_uvSize];
-  m_v = new unsigned char[m_uvSize];
-
-  std::memset(m_y, 0, m_ySize);
-  std::memset(m_u, 128, m_uvSize);
-  std::memset(m_v, 128, m_uvSize);
-}
+Frame::Frame() : m_planes{0}, m_width{0}, m_height{0}, m_time(0.0) {}
 
 Frame::~Frame() {
-  SafeDeleteArray<unsigned char>(m_y);
-  SafeDeleteArray<unsigned char>(m_u);
-  SafeDeleteArray<unsigned char>(m_v);
+  for (int i = 0; i < 3; ++i)
+    SafeDeleteArray<unsigned char>(m_planes[i]);
 }
 
-unsigned char* Frame::y() const {
-  return m_y;
+unsigned char* Frame::plane(int id) const {
+  return m_planes[id];
 }
 
-unsigned char* Frame::u() const {
-  return m_u;
+size_t Frame::width(int id) const {
+  return m_width[id];
 }
 
-unsigned char* Frame::v() const {
-  return m_v;
-}
-
-size_t Frame::ySize() const {
-  return m_ySize;
-}
-
-size_t Frame::uvSize() const {
-  return m_uvSize;
-}
-
-size_t Frame::yPitch() const {
-  return m_width;
-}
-
-size_t Frame::uvPitch() const {
-  return m_width / 2;
-}
-
-size_t Frame::width() const {
-  return m_width;
-}
-
-size_t Frame::height() const {
-  return m_height;
-}
-
-size_t Frame::displayWidth() const {
-  return m_displayWidth;
-}
-
-size_t Frame::displayHeight() const {
-  return m_displayHeight;
+size_t Frame::height(int id) const {
+  return m_height[id];
 }
 
 void Frame::setTime(double time) {
@@ -86,36 +33,29 @@ double Frame::time() const {
   return m_time;
 }
 
-void Frame::resize(size_t frame_width, size_t frame_height) {
-  if (frame_width == m_width && frame_height == m_height)
-    return;
+void Frame::resize(int id, size_t frame_width, size_t frame_height) {
+  if (m_planes[id])
+    SafeDeleteArray<unsigned char>(m_planes[id]);
 
-  SafeDeleteArray<unsigned char>(m_y);
-  SafeDeleteArray<unsigned char>(m_u);
-  SafeDeleteArray<unsigned char>(m_v);
+  m_width[id] = frame_width;
+  m_height[id] = frame_height;
 
-  m_width = frame_width;
-  m_height = frame_height;
+  size_t plane_size = frame_width * frame_height;
+  m_planes[id] = new unsigned char[plane_size];
 
-  m_ySize = m_width * m_height;
-  m_uvSize = (m_width / 2) * (m_height / 2);
-
-  m_y = new unsigned char[m_ySize];
-  m_u = new unsigned char[m_uvSize];
-  m_v = new unsigned char[m_uvSize];
-
-  std::memset(m_y, 0, m_ySize);
-  std::memset(m_u, 128, m_uvSize);
-  std::memset(m_v, 128, m_uvSize);
+  if (id > 0)
+    std::memset(m_planes[id], 128, plane_size);
+  else
+    std::memset(m_planes[id], 0, plane_size);
 }
 
 void Frame::copyData(Frame* dst) {
-  if (dst->m_width != m_width || dst->m_height != m_height)
-    dst->resize(m_width, m_height);
+  for (int i = 0; i < 3; ++i) {
+    if (dst->m_width[i] != m_width[i] || dst->m_height[i] != m_height[i])
+      dst->resize(i, m_width[i], m_height[i]);
 
-  std::memcpy(dst->y(), m_y, m_ySize);
-  std::memcpy(dst->u(), m_u, m_uvSize);
-  std::memcpy(dst->v(), m_v, m_uvSize);
+    std::memcpy(dst->m_planes[i], m_planes[i], m_width[i] * m_height[i]);
+  }
 }
 
 }  // namespace uvpx
