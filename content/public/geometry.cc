@@ -125,7 +125,7 @@ void Geometry::Composite() {
     if (texture_valid) {
       GLint texture_location = shader_program_->GetUniformLocation("u_texture");
       renderer::GLES2ShaderBase::SetTexture(texture_location,
-                                            bitmap_->GetRaw()->tex.gl, 1);
+                                            bitmap_->GetRaw()->tex.gl, 0);
     }
   } else {
     auto& shader = renderer::GSM.shaders()->geometry;

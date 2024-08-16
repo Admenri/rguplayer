@@ -10,6 +10,7 @@
 #include "content/public/disposable.h"
 #include "content/public/flashable.h"
 #include "content/public/graphics.h"
+#include "content/public/shader.h"
 #include "content/public/utility.h"
 #include "content/public/viewport.h"
 #include "renderer/quad/quad_array.h"
@@ -256,6 +257,10 @@ class Sprite : public base::RefCounted<Sprite>,
   /* Update wave flash */
   void Update() override;
 
+  /* Set custom shader program */
+  scoped_refptr<Shader> GetShader() const { return shader_program_; }
+  void SetShader(scoped_refptr<Shader> shader);
+
  private:
   void InitAttributeInternal();
 
@@ -310,6 +315,8 @@ class Sprite : public base::RefCounted<Sprite>,
 
   bool need_invisible_ = false;
   bool src_rect_need_update_ = false;
+
+  scoped_refptr<Shader> shader_program_;
 };
 
 }  // namespace content

@@ -51,6 +51,7 @@ class Shader : public base::RefCounted<Shader>,
  private:
   friend class Geometry;
   friend class Viewport;
+  friend class Sprite;
 
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Shader"; }

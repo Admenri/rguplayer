@@ -224,7 +224,7 @@ void Viewport::ApplyViewportEffect(const base::Rect& blend_area,
     program->SetInternalUniform();
 
     GLint texture_location = program->GetUniformLocation("u_texture");
-    renderer::GLES2ShaderBase::SetTexture(texture_location, temp_fbo.tex.gl, 1);
+    renderer::GLES2ShaderBase::SetTexture(texture_location, temp_fbo.tex.gl, 0);
 
     GLint texture_size_location = program->GetUniformLocation("u_texSize");
     renderer::GL.Uniform2f(texture_size_location, 1.0f / blend_area.width,

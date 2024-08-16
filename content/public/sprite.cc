@@ -84,6 +84,14 @@ void Sprite::InitAttributeInternal() {
   OnParentViewportRectChanged(parent_rect());
 }
 
+void Sprite::SetShader(scoped_refptr<Shader> shader) {
+  CheckIsDisposed();
+
+  if (shader_program_ == shader)
+    return;
+  shader_program_ = shader;
+}
+
 void Sprite::OnObjectDisposed() {
   RemoveFromList();
 
@@ -125,6 +133,55 @@ void Sprite::BeforeComposite() {
 void Sprite::Composite() {
   if (need_invisible_)
     return;
+
+  if (shader_program_) {
+    // Plain render pass
+    shader_program_->BindShader();
+    shader_program_->SetInternalUniform();
+
+    auto& bitmap_texture = *bitmap_->GetRaw();
+    auto tone = tone_->AsBase();
+    auto color = color_->AsBase();
+    auto blend_area = bitmap_texture.size;
+
+    GLint transform_location =
+        shader_program_->GetUniformLocation("u_transformMat");
+    renderer::GL.UniformMatrix4fv(transform_location, 1, GL_FALSE,
+                                  transform_.GetMatrixDataUnsafe());
+
+    GLint texture_location = shader_program_->GetUniformLocation("u_texture");
+    renderer::GLES2ShaderBase::SetTexture(texture_location,
+                                          bitmap_texture.tex.gl, 0);
+
+    GLint texture_size_location =
+        shader_program_->GetUniformLocation("u_texSize");
+    renderer::GL.Uniform2f(texture_size_location, 1.0f / blend_area.x,
+                           1.0f / blend_area.y);
+
+    GLint color_location = shader_program_->GetUniformLocation("u_color");
+    renderer::GL.Uniform4f(color_location, color.x, color.y, color.z, color.w);
+
+    GLint tone_location = shader_program_->GetUniformLocation("u_tone");
+    renderer::GL.Uniform4f(tone_location, tone.x, tone.y, tone.z, tone.w);
+
+    GLint opacity_location = shader_program_->GetUniformLocation("u_opacity");
+    renderer::GL.Uniform1f(opacity_location, opacity_ / 255.0f);
+
+    renderer::GSM.states.blend.Push(true);
+    renderer::GSM.states.blend_func.PushOnly();
+    shader_program_->SetBlendFunc();
+
+    if (wave_.active)
+      renderer_data_->wave_quads->Draw();
+    else
+      renderer_data_->quad->Draw();
+
+    renderer::GSM.states.blend_func.Pop();
+    renderer::GSM.states.blend.Pop();
+
+    return;
+  }
+
   if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
     return;
 
@@ -153,6 +210,7 @@ void Sprite::Composite() {
     shader.SetBushDepth(static_cast<float>(
         src_rect_->GetY() + src_rect_->GetHeight() - bush_.depth));
     shader.SetBushOpacity(bush_.opacity / 255.0f);
+    shader.SetTexture(bitmap_texture.tex);
   } else if (opacity_ != 255) {
     auto& shader = renderer::GSM.shaders()->alphasprite;
     shader.Bind();
@@ -160,16 +218,15 @@ void Sprite::Composite() {
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
     shader.SetTextureSize(bitmap_texture.size);
     shader.SetOpacity(opacity_ / 255.0f);
+    shader.SetTexture(bitmap_texture.tex);
   } else {
     auto& shader = renderer::GSM.shaders()->basesprite;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTransformMatrix(transform_.GetMatrixDataUnsafe());
     shader.SetTextureSize(bitmap_texture.size);
+    shader.SetTexture(bitmap_texture.tex);
   }
-
-  // Bind texture default
-  renderer::GL.BindTexture(GL_TEXTURE_2D, bitmap_->GetRaw()->tex.gl);
 
   renderer::GSM.states.blend.Push(true);
   renderer::GSM.states.blend_func.Push(blend_mode_);
@@ -287,6 +344,11 @@ void Sprite::UpdateVisibilityInternal() {
 
   auto& viewport = parent_rect();
   if (!viewport.scissor) {
+    need_invisible_ = false;
+    return;
+  }
+
+  if (shader_program_) {
     need_invisible_ = false;
     return;
   }

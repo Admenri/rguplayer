@@ -5,6 +5,7 @@
 #include "binding/mri/init_sprite.h"
 
 #include "binding/mri/init_bitmap.h"
+#include "binding/mri/init_shader.h"
 #include "binding/mri/init_utility.h"
 #include "binding/mri/mri_template.h"
 #include "content/public/sprite.h"
@@ -163,6 +164,23 @@ DEFINE_SPRITE_FLOAT_ATTR(ZoomY);
 DEFINE_SPRITE_FLOAT_ATTR(Angle);
 DEFINE_SPRITE_FLOAT_ATTR(WavePhase);
 
+MRI_METHOD(sprite_get_shader) {
+  scoped_refptr<content::Sprite> obj = MriGetStructData<content::Sprite>(self);
+  return rb_iv_get(self, "_shader");
+}
+
+MRI_METHOD(sprite_set_shader) {
+  MriCheckArgc(argc, 1);
+  scoped_refptr<content::Sprite> obj = MriGetStructData<content::Sprite>(self);
+  VALUE propObj = *argv;
+  scoped_refptr<content::Shader> prop;
+  if (!NIL_P(propObj))
+    prop = MriCheckStructData<content::Shader>(propObj, kShaderDataType);
+  MRI_GUARD(obj->SetShader(prop););
+  rb_iv_set(self, "_shader", *argv);
+  return propObj;
+}
+
 void InitSpriteBinding() {
   VALUE klass = rb_define_class("Sprite", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kSpriteDataType>);
@@ -196,6 +214,8 @@ void InitSpriteBinding() {
   MriDefineAttr(klass, "zoom_x", sprite, ZoomX);
   MriDefineAttr(klass, "zoom_y", sprite, ZoomY);
   MriDefineAttr(klass, "angle", sprite, Angle);
+
+  MriDefineAttr(klass, "shader", sprite, shader);
 }
 
 }  // namespace binding
