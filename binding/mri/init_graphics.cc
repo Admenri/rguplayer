@@ -161,6 +161,7 @@ GRAPHICS_DEFINE_ATTR(Brightness);
 GRAPHICS_DEFINE_ATTR(VSync);
 GRAPHICS_DEFINE_ATTR_BOOL(Fullscreen);
 GRAPHICS_DEFINE_ATTR_BOOL(FrameSkip);
+GRAPHICS_DEFINE_ATTR_BOOL(BackgroundRunning);
 
 MRI_METHOD(graphics_play_movie) {
   LOG(WARNING) << "Not implement Graphics#play_movie";
@@ -302,6 +303,8 @@ void InitGraphicsBinding() {
   MriDefineModuleAttr(module, "vsync", graphics, VSync);
   MriDefineModuleAttr(module, "fullscreen", graphics, Fullscreen);
   MriDefineModuleAttr(module, "frame_skip", graphics, FrameSkip);
+  MriDefineModuleAttr(module, "background_running", graphics,
+                      BackgroundRunning);
 
   MriDefineModuleFunction(module, "display_width", graphics_display_width);
   MriDefineModuleFunction(module, "display_height", graphics_display_height);

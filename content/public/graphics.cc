@@ -339,6 +339,14 @@ void Graphics::SetFrameSkip(bool skip) {
   config_->allow_frame_skip() = skip;
 }
 
+bool Graphics::GetBackgroundRunning() {
+  return config_->background_running();
+}
+
+void Graphics::SetBackgroundRunning(bool allow) {
+  config_->background_running() = allow;
+}
+
 int Graphics::GetDisplayWidth() {
   return renderer()->window()->GetSize().x;
 }
@@ -842,6 +850,13 @@ void Graphics::DrawGraphicsSettingsGUI() {
         &is_fullscreen);
     if (last_fullscreen != is_fullscreen)
       window()->SetFullscreen(is_fullscreen);
+
+    // Background running
+    ImGui::Checkbox(config_
+                        ->GetI18NString(IDS_GRAPHICS_BACKGROUND_RUNNING,
+                                        "Background Running")
+                        .c_str(),
+                    &share_data_->config->background_running());
   }
 }
 

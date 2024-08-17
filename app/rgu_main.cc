@@ -108,6 +108,13 @@ int main(int argc, char* argv[]) {
   if (!config->LoadConfigure(inifile, app))
     return 1;
 
+#if defined(OS_WIN)
+  if (config->disable_ime()) {
+    LOG(INFO) << "[Windows] Disable process IME.";
+    ::ImmDisableIME(-1);
+  }
+#endif
+
   config->executable_file() = app;
   for (auto& it : config->load_paths())
     iosystem->AddLoadPath(it);

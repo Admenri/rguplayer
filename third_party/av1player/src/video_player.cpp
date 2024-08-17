@@ -310,6 +310,7 @@ void VideoPlayer::updateYUVData(double time) {
     if (m_decoderData.img->fmt == AOM_IMG_FMT_NV12 && plane == 1)
       w *= 2;
 
+    curYUV->setDraw();
     curYUV->resize(plane, stride, h);
     auto* dst = curYUV->plane(plane);
     for (y = 0; y < h; ++y) {

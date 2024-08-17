@@ -146,6 +146,9 @@ void AOMDecoder::Render(scoped_refptr<Bitmap> target) {
 
   uvpx::Frame* yuv = nullptr;
   if ((yuv = player_->lockRead()) != nullptr) {
+    if (yuv->isEmpty())
+      return player_->unlockRead();
+
     yuv->copyData(frame_data_.get());
     player_->unlockRead();
 

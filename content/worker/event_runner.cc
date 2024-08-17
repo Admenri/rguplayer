@@ -81,13 +81,31 @@ void EventRunner::EventDispatch(const SDL_Event& event) {
 
   /* Reset content */
   if (event.type == SDL_EVENT_KEY_UP &&
-      event.window.windowID == window->GetWindowID()) {
+      event.key.windowID == window->GetWindowID()) {
     if (event.key.scancode == SDL_SCANCODE_F1) {
       // Settings menu
-      share_data_->enable_settings_menu = !share_data_->enable_settings_menu;
+      if (!share_data_->config->disable_menu())
+        share_data_->enable_settings_menu = !share_data_->enable_settings_menu;
     } else if (event.key.scancode == SDL_SCANCODE_F12) {
       // Trigger reset process
-      binding_runner_->RequestReset();
+      if (!share_data_->config->disable_reset())
+        binding_runner_->RequestReset();
+    }
+  }
+
+  // Window focus
+  bool background_allow = share_data_->config->background_running();
+  if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST && !background_allow) {
+    if (event.window.windowID == window->GetWindowID()) {
+      share_data_->background_sync.require.store(true);
+      share_data_->background_sync.signal.store(false);
+    }
+  }
+
+  if (event.type == SDL_EVENT_WINDOW_FOCUS_GAINED || background_allow) {
+    if (event.window.windowID == window->GetWindowID() || background_allow) {
+      share_data_->background_sync.require.store(false);
+      share_data_->background_sync.signal.store(true);
     }
   }
 

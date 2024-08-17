@@ -6,7 +6,8 @@
 
 namespace uvpx {
 
-Frame::Frame() : m_planes{0}, m_width{0}, m_height{0}, m_time(0.0) {}
+Frame::Frame()
+    : m_planes{0}, m_width{0}, m_height{0}, m_time(0.0), m_empty(true) {}
 
 Frame::~Frame() {
   for (int i = 0; i < 3; ++i)
@@ -54,6 +55,7 @@ void Frame::copyData(Frame* dst) {
     if (dst->m_width[i] != m_width[i] || dst->m_height[i] != m_height[i])
       dst->resize(i, m_width[i], m_height[i]);
 
+    dst->m_empty = m_empty;
     std::memcpy(dst->m_planes[i], m_planes[i], m_width[i] * m_height[i]);
   }
 }

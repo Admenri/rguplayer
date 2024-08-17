@@ -86,12 +86,13 @@ class TransformMatrix {
 
  private:
   void UpdateMatrix() {
-    if (rotation_ >= 360 || rotation_ < -360)
-      rotation_ = std::fmod(rotation_, 360.f);
-    if (rotation_ < 0)
-      rotation_ += 360;
+    float angle = rotation_;
+    if (angle >= 360 || angle < -360)
+      angle = std::fmod(angle, 360.f);
+    if (angle < 0)
+      angle += 360;
 
-    float angle = rotation_ * 3.141592654f / 180.0f;
+    angle = angle * 3.141592654f / 180.0f;
     float cosine = std::cos(angle);
     float sine = std::sin(angle);
     float sxc = scale_.x * cosine;

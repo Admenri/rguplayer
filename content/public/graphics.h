@@ -78,6 +78,9 @@ class Graphics final : public base::RefCounted<Graphics>,
   bool GetFrameSkip();
   void SetFrameSkip(bool skip);
 
+  bool GetBackgroundRunning();
+  void SetBackgroundRunning(bool allow);
+
   int GetDisplayWidth();
   int GetDisplayHeight();
 

@@ -15,6 +15,7 @@ class UVPX_EXPORT Frame {
   size_t m_height[3];
 
   double m_time;
+  bool m_empty;
 
  public:
   Frame();
@@ -23,10 +24,12 @@ class UVPX_EXPORT Frame {
   void resize(int id, size_t frame_width, size_t frame_height);
   void copyData(Frame* dst);
 
+  void setDraw() { m_empty = false; }
   unsigned char* plane(int id) const;
   size_t width(int id) const;
   size_t height(int id) const;
 
+  bool isEmpty() { return m_empty; }
   void setTime(double time);
   double time() const;
 };

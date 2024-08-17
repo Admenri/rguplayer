@@ -86,6 +86,8 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream,
   ReplaceStringWidth(game_scripts_, '\\', '/');
 
   /* Core config */
+  disable_menu_ = reader.GetBoolean("Kernel", "DisableMenu", false);
+  disable_reset_ = reader.GetBoolean("Kernel", "DisableReset", false);
   async_renderer_ = reader.GetBoolean("Kernel", "AsyncRenderer", true);
   disable_audio_ = reader.GetBoolean("Kernel", "DisableAudio", false);
   rgss_version_ = (RGSSVersion)reader.GetInteger("Kernel", "RGSSVerison", 0);
@@ -124,6 +126,8 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream,
   smooth_scale_ = reader.GetBoolean("Renderer", "SmoothScale", true);
   keep_ratio_ = reader.GetBoolean("Renderer", "KeepRatio", true);
   fullscreen_ = reader.GetBoolean("Renderer", "Fullscreen", false);
+  background_running_ =
+      reader.GetBoolean("Renderer", "BackgroundRunning", true);
 
   /* Filesystem */
   int size = reader.GetInteger("Filesystem", "LoadPathListSize", 0);
@@ -133,6 +137,9 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream,
   default_font_path_ =
       reader.Get("Filesystem", "DefaultFontPath", "Fonts/Default.ttf");
   i18n_xml_path_ = reader.Get("Filesystem", "XMLPath", app + ".xml");
+
+  /* Platform */
+  disable_ime_ = reader.GetBoolean("Platform", "DisableIME", false);
 
   return true;
 }
