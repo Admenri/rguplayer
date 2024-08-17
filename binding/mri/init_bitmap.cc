@@ -460,9 +460,9 @@ MRI_METHOD(bitmap_set_sampler) {
 
   bool nearest = false;
   int wrap = GL_CLAMP_TO_EDGE;
-  MriParseArgsTo(argc, argv, "|bi", &nearest, wrap);
+  MriParseArgsTo(argc, argv, "bi", &nearest, &wrap);
 
-  obj->SetSamplerInfo();
+  MRI_GUARD(obj->SetSamplerInfo(nearest, wrap););
 
   return Qnil;
 }
@@ -507,10 +507,13 @@ void InitBitmapBinding() {
   MriDefineMethod(pixel_array, "load_data", pixelarray_loaddata);
   MriDefineMethod(pixel_array, "size", pixelarray_size);
 
-  rb_const_set(klass, rb_intern("GL_REPEAT"), GL_REPEAT);
-  rb_const_set(klass, rb_intern("GL_MIRRORED_REPEAT"), GL_MIRRORED_REPEAT);
-  rb_const_set(klass, rb_intern("GL_CLAMP_TO_EDGE"), GL_CLAMP_TO_EDGE);
-  rb_const_set(klass, rb_intern("GL_CLAMP_TO_BORDER"), GL_CLAMP_TO_BORDER);
+  rb_const_set(klass, rb_intern("GL_REPEAT"), rb_fix_new(GL_REPEAT));
+  rb_const_set(klass, rb_intern("GL_MIRRORED_REPEAT"),
+               rb_fix_new(GL_MIRRORED_REPEAT));
+  rb_const_set(klass, rb_intern("GL_CLAMP_TO_EDGE"),
+               rb_fix_new(GL_CLAMP_TO_EDGE));
+  rb_const_set(klass, rb_intern("GL_CLAMP_TO_BORDER"),
+               rb_fix_new(GL_CLAMP_TO_BORDER));
 }
 
 }  // namespace binding

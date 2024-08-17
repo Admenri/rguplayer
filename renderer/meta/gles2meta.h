@@ -94,7 +94,7 @@ struct Texture {
     GL.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
   }
 
-  inline static void SetWrap(GLint wrap = GL_CLAMP_TO_BORDER) {
+  inline static void SetWrap(GLint wrap = GL_CLAMP_TO_EDGE) {
     GL.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
     GL.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
   }
