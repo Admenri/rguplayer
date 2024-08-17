@@ -30,7 +30,10 @@ void GlobalStateManager::InitStates() {
   common_tfb_ = TextureFrameBuffer::Gen();
   TextureFrameBuffer::Alloc(common_tfb_, base::Vec2i(64, 64));
   TextureFrameBuffer::LinkFrameBuffer(common_tfb_);
-  FrameBuffer::Unbind();
+
+  explicit_tfb_ = TextureFrameBuffer::Gen();
+  TextureFrameBuffer::Alloc(explicit_tfb_, base::Vec2i(64, 64));
+  TextureFrameBuffer::LinkFrameBuffer(explicit_tfb_);
 
   generic_tex_ = Texture::Gen();
   Texture::Bind(generic_tex_);
@@ -47,6 +50,7 @@ void GlobalStateManager::QuitStates() {
   quad_ibo_.reset();
   shaders_.reset();
 
+  TextureFrameBuffer::Del(explicit_tfb_);
   TextureFrameBuffer::Del(common_tfb_);
   Texture::Del(generic_tex_);
 }
@@ -79,6 +83,14 @@ GLID<Texture>& GlobalStateManager::EnsureGenericTex(int width,
 
   out_size = generic_tex_size_;
   return generic_tex_;
+}
+
+TextureFrameBuffer& GlobalStateManager::ClampExplicitTFB(int width,
+                                                         int height) {
+  if (explicit_tfb_.size.x != width || explicit_tfb_.size.y != height)
+    TextureFrameBuffer::Alloc(explicit_tfb_, base::Vec2i(width, height));
+
+  return explicit_tfb_;
 }
 
 }  // namespace renderer

@@ -204,7 +204,7 @@ void Viewport::ApplyViewportEffect(const base::Rect& blend_area,
                                    const base::Vec4& tone,
                                    scoped_refptr<Shader> program) {
   auto& temp_fbo =
-      renderer::GSM.EnsureCommonTFB(blend_area.width, blend_area.height);
+      renderer::GSM.ClampExplicitTFB(blend_area.width, blend_area.height);
 
   const bool has_tone_effect =
       (tone.x != 0 || tone.y != 0 || tone.z != 0 || tone.w != 0);

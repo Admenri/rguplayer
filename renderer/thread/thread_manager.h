@@ -49,6 +49,7 @@ class GlobalStateManager final {
   void QuitStates();
 
   TextureFrameBuffer& EnsureCommonTFB(int width, int height);
+  TextureFrameBuffer& ClampExplicitTFB(int width, int height);
   GLID<Texture>& EnsureGenericTex(int width, int height, base::Vec2i& out_size);
 
   struct {
@@ -71,6 +72,7 @@ class GlobalStateManager final {
   std::unique_ptr<GLShaderWare> shaders_;
 
   TextureFrameBuffer common_tfb_;
+  TextureFrameBuffer explicit_tfb_;
   std::unique_ptr<QuadDrawable> common_quad_;
   std::unique_ptr<QuadIndexBuffer> quad_ibo_;
 
