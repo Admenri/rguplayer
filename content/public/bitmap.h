@@ -81,6 +81,8 @@ class Bitmap : public base::RefCounted<Bitmap>,
   scoped_refptr<Font> GetFont() const;
   void SetFont(scoped_refptr<Font> font);
 
+  void SetSamplerInfo(bool nearest, int wrap = GL_CLAMP_TO_EDGE);
+
   /* Sync Method */
   SDL_Surface* SurfaceRequired();
   void UpdateSurface();

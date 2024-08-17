@@ -339,6 +339,18 @@ void Bitmap::SetFont(scoped_refptr<Font> font) {
   *font_ = *font;
 }
 
+void Bitmap::SetSamplerInfo(bool nearest, int wrap) {
+  CheckIsDisposed();
+
+  screen()->renderer()->PostTask(base::BindOnce(
+      [](renderer::TextureFrameBuffer* tfb, bool nearest, int wrap) {
+        renderer::Texture::Bind(tfb->tex);
+        renderer::Texture::SetFilter(nearest ? GL_NEAREST : GL_LINEAR);
+        renderer::Texture::SetWrap(wrap);
+      },
+      texture_, nearest, wrap));
+}
+
 SDL_Surface* Bitmap::SurfaceRequired() {
   CheckIsDisposed();
 

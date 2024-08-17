@@ -455,6 +455,18 @@ MRI_METHOD(pixelarray_size) {
   return INT2FIX(surf->w * surf->h * 4);
 }
 
+MRI_METHOD(bitmap_set_sampler) {
+  scoped_refptr<content::Bitmap> obj = MriGetStructData<content::Bitmap>(self);
+
+  bool nearest = false;
+  int wrap = GL_CLAMP_TO_EDGE;
+  MriParseArgsTo(argc, argv, "|bi", &nearest, wrap);
+
+  obj->SetSamplerInfo();
+
+  return Qnil;
+}
+
 void InitBitmapBinding() {
   VALUE klass = rb_define_class("Bitmap", rb_cObject);
   rb_define_alloc_func(klass, MriClassAllocate<&kBitmapDataType>);
@@ -484,6 +496,7 @@ void InitBitmapBinding() {
 
   MriDefineMethod(klass, "save_png", bitmap_save_png);
   MriDefineMethod(klass, "process_pixel", bitmap_process_pixel);
+  MriDefineMethod(klass, "set_sampler", bitmap_set_sampler);
 
   /* Pixel Process extension */
   VALUE pixel_array = rb_define_class("PixelArray", rb_cObject);
@@ -493,6 +506,11 @@ void InitBitmapBinding() {
   MriDefineMethod(pixel_array, "save_data", pixelarray_savedata);
   MriDefineMethod(pixel_array, "load_data", pixelarray_loaddata);
   MriDefineMethod(pixel_array, "size", pixelarray_size);
+
+  rb_const_set(klass, rb_intern("GL_REPEAT"), GL_REPEAT);
+  rb_const_set(klass, rb_intern("GL_MIRRORED_REPEAT"), GL_MIRRORED_REPEAT);
+  rb_const_set(klass, rb_intern("GL_CLAMP_TO_EDGE"), GL_CLAMP_TO_EDGE);
+  rb_const_set(klass, rb_intern("GL_CLAMP_TO_BORDER"), GL_CLAMP_TO_BORDER);
 }
 
 }  // namespace binding
