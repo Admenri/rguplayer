@@ -138,10 +138,6 @@ add_subdirectory(third_party/sound_decoder)
 add_subdirectory(third_party/ogg)
 add_subdirectory(third_party/vorbis)
 
-## Network
-add_subdirectory(third_party/boost_asio)
-include_directories(third_party/websocketpp)
-
 #--------------------------------------------------------------------------------
 # Components of Core
 #--------------------------------------------------------------------------------
