@@ -13,9 +13,6 @@
 
 #include "SDL_audio.h"
 
-#include "soloud.h"
-#include "soloud_wav.h"
-
 #include <list>
 #include <unordered_map>
 
@@ -55,59 +52,11 @@ class Audio final : public base::RefCounted<Audio> {
 
   void Reset();
 
-  void SetGlobalVolume(int volume = 100);
-
-  SDL_AudioDeviceID& output_device() { return output_device_; }
-  SDL_AudioStream*& soloud_stream() { return soloud_stream_; }
-  SDL_AudioSpec& soloud_spec() { return soloud_spec_; }
-
  private:
-  friend class Stream;
-
-  struct SlotInfo {
-    std::unique_ptr<SoLoud::Wav> source;
-    std::string filename;
-    SoLoud::handle play_handle = 0;
-  };
-
-  void InitAudioDeviceInternal();
-  void DestroyAudioDeviceInternal();
-  void MeMonitorInternal();
-
-  void PlaySlotInternal(SlotInfo* slot,
-                        const std::string& filename,
-                        int volume = 100,
-                        int pitch = 100,
-                        double pos = 0,
-                        bool loop = true);
-  void StopSlotInternal(SlotInfo* slot);
-  void FadeSlotInternal(SlotInfo* slot, int time);
-  void GetSlotPosInternal(SlotInfo* slot, double* out);
-
-  void EmitSoundInternal(const std::string& filename,
-                         int volume = 100,
-                         int pitch = 100);
-  void StopEmitInternal();
-
-  void ResetInternal();
-
   void DrawAudioSettingsGUI();
 
-  std::unique_ptr<base::ThreadWorker> audio_runner_;
-
-  SoLoud::Soloud core_;
-  SDL_AudioDeviceID output_device_;
-  SDL_AudioStream* soloud_stream_;
-  SDL_AudioSpec soloud_spec_;
-
-  SlotInfo bgm_;
-  SlotInfo bgs_;
-  SlotInfo me_;
-  std::unordered_map<std::string, std::unique_ptr<SoLoud::Wav>> se_cache_;
-
   WorkerShareData* share_data_;
-  std::unique_ptr<std::thread> me_watcher_;
-  std::atomic_bool quit_flag_;
+  std::unique_ptr<base::ThreadWorker> audio_runner_;
 
   base::WeakPtrFactory<Audio> weak_ptr_factory_{this};
 };

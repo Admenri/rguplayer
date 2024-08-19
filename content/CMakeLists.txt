@@ -79,7 +79,6 @@ target_link_libraries(core_content PUBLIC
                       components_fpslimiter
                       sdl_image_loader
                       sdl_ttf_render
-                      soloud
                       base_imgui
                       aom_player)
 target_compile_options(core_content PRIVATE

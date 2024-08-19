@@ -140,16 +140,6 @@ MRI_METHOD(audio_reset) {
   return Qnil;
 }
 
-MRI_METHOD(audio_set_volume) {
-  scoped_refptr<content::Audio> audio = MriGetGlobalRunner()->audio();
-
-  int volume;
-  MriParseArgsTo(argc, argv, "i", &volume);
-  audio->SetGlobalVolume(volume);
-
-  return Qnil;
-}
-
 void InitAudioBinding() {
   VALUE module = rb_define_module("Audio");
 
@@ -169,8 +159,6 @@ void InitAudioBinding() {
   MriDefineModuleFunction(module, "se_play", audio_se_play);
   MriDefineModuleFunction(module, "se_stop", audio_se_stop);
   MriDefineModuleFunction(module, "__reset__", audio_reset);
-
-  MriDefineModuleFunction(module, "set_volume", audio_set_volume);
 }
 
 }  // namespace binding

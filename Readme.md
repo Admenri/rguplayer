@@ -14,7 +14,6 @@
 - 游戏的图像渲染采用 OpenGL ES 3.0 标准以获得兼容与特性的平衡。  
 - 用户可以选择使用ANGLE运行其他渲染器后端（D3D9 D3D11 Vulkan Metal 软渲染等）以应对显卡驱动兼容问题。  
 - 引擎的事件输入处理基于 SDL 的事件处理。  
-- 引擎的音频处理基于 SoLoud 库，音频数据通过Soloud核心处理后输出到SDL的音频设备接口。  
 - 引擎的脚本处理部分使用了 Ruby3 的解释器。  
 
 ## 软件截图
@@ -72,14 +71,12 @@
 - Microsoft Windows 7 及以上 
 - GNU/Linux 6.5.0 及以上 
 - Android 8.0 及以上 
-- 目前不支持Apple系的任何操作系统（macOS，iOS），欢迎有mac设备的同志贡献代码 
 
 ## 第三方库使用
 
 ### 包含源码
 - concurrentqueue - https://github.com/cameron314/concurrentqueue 
 - zlib - https://github.com/madler/zlib 
-- soloud - https://github.com/jarikomppa/soloud 
 - imgui - https://github.com/ocornut/imgui  
 - boost_asio - https://github.com/boostorg/boost  
 - rapidxml - https://rapidxml.sourceforge.net/  
@@ -97,7 +94,7 @@
 
 ## 联系方式
 
-- AFDian: https://afdian.net/a/rguplayer
-- Mail: 2755482106@qq.com
+- AFDian: https://afdian.com/a/rguplayer
+- Mail: admenri0504@gmail.com
 
 © 2015-2024 Admenri

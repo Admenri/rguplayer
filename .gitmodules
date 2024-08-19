@@ -4,7 +4,7 @@
 	branch = main
 [submodule "third_party/zlib"]
 	path = third_party/zlib
-	url = https://github.com/Admenri/zlib.git
+	url = https://github.com/madler/zlib.git
 	branch = master
 [submodule "third_party/physfs"]
 	path = third_party/physfs
@@ -25,4 +25,8 @@
 [submodule "third_party/freetype"]
 	path = third_party/freetype
 	url = https://github.com/freetype/freetype.git
+	branch = master
+[submodule "third_party/openal-soft"]
+	path = third_party/openal-soft
+	url = https://github.com/kcat/openal-soft.git
 	branch = master

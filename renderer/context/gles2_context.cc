@@ -35,7 +35,7 @@ void GLES2Context::EnableDebugOutputForCurrentThread() {
 
 void GLES2Context::InitGLESContext() {
   suffix_.clear();
-#include "renderer/context/gles2_command_buffer_header_autogen.cc"
+#include "renderer/context/gles_command_buffer_define_autogen.inc"
 }
 
 void GLES2Context::EnableDebugOutput() {
