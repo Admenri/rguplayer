@@ -80,7 +80,8 @@ target_link_libraries(core_content PUBLIC
                       sdl_image_loader
                       sdl_ttf_render
                       base_imgui
-                      aom_player)
+                      aom_player
+                      sdl_sound_decoder)
 target_compile_options(core_content PRIVATE
   -Wno-float-conversion
   -Wno-unused-parameter
