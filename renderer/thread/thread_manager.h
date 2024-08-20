@@ -36,6 +36,7 @@ class GlobalStateManager final {
     BaseSpriteShader basesprite;
     AlphaSpriteShader alphasprite;
     GeometryShader geometry;
+    SpineShader spine;
     YUVShader yuv;
   };
 

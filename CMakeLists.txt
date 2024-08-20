@@ -47,9 +47,6 @@ include_directories("${RGU_AUTOGEN_DIR}")
 include_directories(base/third_party)
 include_directories(third_party)
 
-## Google ANGLE Headers
-include_directories(third_party/angle/include)
-
 ### Android compile configure
 set(SDL_STATIC on)
 if (CMAKE_SYSTEM_NAME STREQUAL "Android")
@@ -109,7 +106,10 @@ else ()
                         INTERFACE_INCLUDE_DIRECTORIES "${RUBY_INCLUDE_PATH}")
 endif ()
 
-## Physfs I/O
+## Google ANGLE Headers
+include_directories(third_party/angle/include)
+
+## Physfs
 set(PHYSFS_BUILD_STATIC TRUE)
 set(PHYSFS_BUILD_SHARED FALSE)
 set(PHYSFS_BUILD_DOCS FALSE)
@@ -120,26 +120,31 @@ include_directories(third_party/physfs/src)
 add_subdirectory(third_party/zlib)
 include_directories(third_party/zlib)
 
-## AOM/Video Decode
+## AOM
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/third_party/aom")
 add_subdirectory(third_party/aom)
 include_directories(third_party/aom)
 include_directories(third_party/aom/third_party/libwebm)
-add_subdirectory(third_party/av1player)
+
+## Soloud
+add_subdirectory(third_party/soloud)
+include_directories(third_party/soloud/include)
 
 ## IMGUI
 add_subdirectory(third_party/imgui)
 include_directories(third_party/imgui)
 
-## Audio
-set(LIBTYPE STATIC)
-add_subdirectory(third_party/openal-soft)
-add_subdirectory(third_party/sound_decoder)
+## Vorbis OGG
 add_subdirectory(third_party/ogg)
 add_subdirectory(third_party/vorbis)
 
-## Network
+## AOMPLAYER
+add_subdirectory(third_party/av1player)
+
+## Boost-ASIO
 add_subdirectory(third_party/boost_asio)
+
+## WebSocketpp
 include_directories(third_party/websocketpp)
 
 #--------------------------------------------------------------------------------

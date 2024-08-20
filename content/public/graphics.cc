@@ -35,6 +35,9 @@ void DrawEngineInfoGUI(scoped_refptr<content::CoreConfigure> config) {
 
     if (ImGui::Button("Github"))
       SDL_OpenURL("https://github.com/Admenri/rguplayer");
+    ImGui::SameLine();
+    if (ImGui::Button("AFDian"))
+      SDL_OpenURL("https://afdian.net/a/rguplayer");
   }
 }
 
@@ -47,19 +50,19 @@ Graphics::Graphics(WorkerShareData* share_data,
                    scoped_refptr<RenderRunner> renderer,
                    const base::Vec2i& initial_resolution)
     : share_data_(share_data),
-      config_(share_data_->config),
+      config_(dispatcher->config()),
       dispatcher_(dispatcher),
       renderer_(renderer),
       resolution_(initial_resolution),
       frozen_(false),
       brightness_(255),
       frame_count_(0),
-      frame_rate_(config_->content_version() >= RGSSVersion::RGSS2 ? 60 : 40),
+      frame_rate_(dispatcher->rgss_version() >= RGSSVersion::RGSS2 ? 60 : 40),
       fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)) {
   viewport_rect().rect = initial_resolution;
   viewport_rect().scissor = false;
-  static_font_manager_ =
-      std::make_unique<ScopedFontData>(config_, share_data_->filesystem.get());
+  static_font_manager_ = std::make_unique<ScopedFontData>(
+      config_, dispatcher_->share_data()->filesystem.get());
 
   renderer_->PostTask(base::BindOnce(&Graphics::InitScreenBufferInternal,
                                      base::Unretained(this)));
@@ -212,7 +215,7 @@ void Graphics::Reset() {
   }
 
   /* Reset attribute */
-  SetFrameRate(config_->content_version() >= RGSSVersion::RGSS2 ? 60 : 40);
+  SetFrameRate(dispatcher_->rgss_version() >= RGSSVersion::RGSS2 ? 60 : 40);
   SetBrightness(255);
   FrameReset();
 }
@@ -383,11 +386,11 @@ void Graphics::SetWindowAlwaysOnTop(bool top) {
 }
 
 RGSSVersion Graphics::content_version() const {
-  return config_->content_version();
+  return dispatcher_->rgss_version();
 }
 
 filesystem::Filesystem* Graphics::filesystem() {
-  return share_data_->filesystem.get();
+  return dispatcher_->share_data()->filesystem.get();
 }
 
 renderer::TextureFrameBuffer* Graphics::AllocTexture(const base::Vec2i& size,

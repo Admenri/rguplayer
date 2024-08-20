@@ -26,6 +26,8 @@ namespace shader {
 #include "renderer/shader/glsl/hue.frag.xxd"
 #include "renderer/shader/glsl/minimum.vert.xxd"
 #include "renderer/shader/glsl/plane.frag.xxd"
+#include "renderer/shader/glsl/spine.frag.xxd"
+#include "renderer/shader/glsl/spine.vert.xxd"
 #include "renderer/shader/glsl/sprite.frag.xxd"
 #include "renderer/shader/glsl/texblt.frag.xxd"
 #include "renderer/shader/glsl/tilemap.vert.xxd"
@@ -688,6 +690,25 @@ void GeometryShader::SetTexture(GLID<Texture> tex) {
 
 void GeometryShader::SetTextureEmptyFlag(float flag) {
   GL.Uniform1f(u_textureEmptyFlag_, flag);
+}
+
+SpineShader::SpineShader() {
+  GLES2ShaderBase::Setup(
+      shader::FromRawData(shader::spine_vert, shader::spine_vert_len),
+      "spine_vert",
+      shader::FromRawData(shader::spine_frag, shader::spine_frag_len),
+      "spine_frag");
+
+  u_transOffset_ = GL.GetUniformLocation(program(), "u_transOffset");
+  u_texture_ = GL.GetUniformLocation(program(), "u_texture");
+}
+
+void SpineShader::SetTransOffset(const base::Vec2& offset) {
+  GL.Uniform2f(u_transOffset_, offset.x, offset.y);
+}
+
+void SpineShader::SetTexture(GLID<Texture> tex) {
+  GLES2ShaderBase::SetTexture(u_texture_, tex.gl, 1);
 }
 
 YUVShader::YUVShader() {

@@ -37,7 +37,7 @@ class GLES2Context {
 
  public:
   // Import from autogen-commands
-#include "renderer/context/gles_command_buffer_header_autogen.inc"
+#include "renderer/context/gles2_command_buffer_header_autogen.h"
 
  private:
   void InitGLESContext();
