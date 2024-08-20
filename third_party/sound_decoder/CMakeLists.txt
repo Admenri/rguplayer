@@ -33,5 +33,5 @@ set(SDLSOUND_ALL_SRCS
     ${TIMIDITY_HDRS}
 )
 
-add_library(sdl_sound_decoder STATIC ${SDLSOUND_ALL_SRCS})
-target_include_directories(sdl_sound_decoder PUBLIC src)
+add_library(sound_decoder STATIC ${SDLSOUND_ALL_SRCS})
+target_include_directories(sound_decoder PUBLIC src)

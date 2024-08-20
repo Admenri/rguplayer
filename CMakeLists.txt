@@ -133,7 +133,6 @@ include_directories(third_party/imgui)
 
 ## Audio
 set(LIBTYPE STATIC)
-include_directories(third_party/sound_decoder/src)
 add_subdirectory(third_party/openal-soft)
 add_subdirectory(third_party/sound_decoder)
 add_subdirectory(third_party/ogg)
