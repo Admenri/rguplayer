@@ -1,6 +1,6 @@
 /*
 SoLoud audio engine
-Copyright (c) 2013-2015 Jari Komppa
+Copyright (c) 2013-2021 Jari Komppa
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
@@ -22,36 +22,49 @@ freely, subject to the following restrictions:
    distribution.
 */
 
-#ifndef SOLOUD_DCREMOVAL_H
-#define SOLOUD_DCREMOVAL_H
+#ifndef SOLOUD_DUCKFILTER_H
+#define SOLOUD_DUCKFILTER_H
 
 #include "soloud.h"
 
 namespace SoLoud
 {
-	class DCRemovalFilter;
+	class DuckFilter;
 
-	class DCRemovalFilterInstance : public FilterInstance
+	class DuckFilterInstance : public FilterInstance
 	{
-		float *mBuffer;
-		float *mTotals;
-		int mBufferLength;
-		DCRemovalFilter *mParent;
-		int mOffset;
-
+		handle mListenTo;
+		Soloud* mSoloud;
+		float mCurrentLevel;
 	public:
 		virtual void filter(float *aBuffer, unsigned int aSamples, unsigned int aBufferSize, unsigned int aChannels, float aSamplerate, time aTime);
-		virtual ~DCRemovalFilterInstance();
-		DCRemovalFilterInstance(DCRemovalFilter *aParent);
+		virtual ~DuckFilterInstance();
+		DuckFilterInstance(DuckFilter *aParent);
 	};
 
-	class DCRemovalFilter : public Filter
+	class DuckFilter : public Filter
 	{
 	public:
-		float mLength;
+		enum FILTERATTRIBUTE
+		{
+			WET = 0,
+			ONRAMP,
+			OFFRAMP,
+			LEVEL
+		};
+		Soloud* mSoloud;
+		float mOnRamp;
+		float mOffRamp;
+		float mLevel;
+		handle mListenTo;
+		virtual int getParamCount();
+		virtual const char* getParamName(unsigned int aParamIndex);
+		virtual unsigned int getParamType(unsigned int aParamIndex);
+		virtual float getParamMax(unsigned int aParamIndex);
+		virtual float getParamMin(unsigned int aParamIndex);
 		virtual FilterInstance *createInstance();
-		DCRemovalFilter();
-		result setParams(float aLength = 0.1f);
+		DuckFilter();
+		result setParams(Soloud* aSoloud, handle aListenTo, float aOnRamp = 0.1f, float aOffRamp = 0.5f, float aLevel = 0.1f);
 	};
 }
 

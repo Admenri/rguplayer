@@ -34,10 +34,12 @@ struct VertexInfo {
   static const int attr_size;
 };
 
+#if !defined(COMPILER_MSVC)
 template <>
 const VertexItemAttribute* VertexInfo<CommonVertex>::attrs;
 template <>
 const int VertexInfo<CommonVertex>::attr_size;
+#endif
 
 template <typename VertexType>
 struct VertexArray {

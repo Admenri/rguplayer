@@ -143,6 +143,10 @@ namespace SoLoud
 		{
 			mFlags |= AudioSourceInstance::INAUDIBLE_TICK;
 		}
+		if (aSource.mFlags & AudioSource::DISABLE_AUTOSTOP)
+		{
+			mFlags |= AudioSourceInstance::DISABLE_AUTOSTOP;
+		}
 	}
 
 	result AudioSourceInstance::rewind()
@@ -172,7 +176,7 @@ namespace SoLoud
 			getAudio(mScratch, samples, samples);
 			samples_to_discard -= samples;
 		}
-		mStreamPosition = offset;
+		mStreamPosition = aSeconds;
 		return SO_NO_ERROR;
 	}
 
@@ -242,6 +246,18 @@ namespace SoLoud
 		else
 		{
 			mFlags &= ~SINGLE_INSTANCE;
+		}
+	}
+
+	void AudioSource::setAutoStop(bool aAutoStop)
+	{
+		if (aAutoStop)
+		{
+			mFlags &= ~DISABLE_AUTOSTOP;
+		}
+		else
+		{
+			mFlags |= DISABLE_AUTOSTOP;
 		}
 	}
 

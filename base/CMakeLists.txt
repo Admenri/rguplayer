@@ -62,5 +62,3 @@ target_link_libraries(core_base PUBLIC SDL3::SDL3-static ${LOG_LIBS})
 else()
 target_link_libraries(core_base PUBLIC SDL3-shared ${LOG_LIBS})
 endif()
-
-target_compile_options(core_base PRIVATE -Werror)

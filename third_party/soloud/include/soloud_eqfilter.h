@@ -1,6 +1,6 @@
 /*
 SoLoud audio engine
-Copyright (c) 2013-2015 Jari Komppa
+Copyright (c) 2013-2020 Jari Komppa
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
@@ -22,44 +22,60 @@ freely, subject to the following restrictions:
    distribution.
 */
 
-#ifndef SOLOUD_FFTFILTER_H
-#define SOLOUD_FFTFILTER_H
+#ifndef SOLOUD_EQFILTER_H
+#define SOLOUD_EQFILTER_H
 
 #include "soloud.h"
+#include "soloud_fftfilter.h"
 
 namespace SoLoud
 {
-	class FFTFilter;
+	class EqFilter;
 
-	class FFTFilterInstance : public FilterInstance
+	class EqFilterInstance : public FFTFilterInstance
 	{
-		float *mTemp;
-		float *mInputBuffer;
-		float *mMixBuffer;
-		float *mLastPhase;
-		float *mSumPhase;
-		unsigned int mInputOffset[MAX_CHANNELS];
-		unsigned int mMixOffset[MAX_CHANNELS];
-		unsigned int mReadOffset[MAX_CHANNELS];
-		FFTFilter *mParent;
+		enum FILTERATTRIBUTE
+		{
+			WET = 0,
+			BAND1 = 1,
+			BAND2 = 2,
+			BAND3 = 3,
+			BAND4 = 4,
+			BAND5 = 5,
+			BAND6 = 6,
+			BAND7 = 7,
+			BAND8 = 8
+		};
+		EqFilter *mParent;
 	public:
 		virtual void fftFilterChannel(float *aFFTBuffer, unsigned int aSamples, float aSamplerate, time aTime, unsigned int aChannel, unsigned int aChannels);
-		virtual void filterChannel(float *aBuffer, unsigned int aSamples, float aSamplerate, time aTime, unsigned int aChannel, unsigned int aChannels);
-		virtual ~FFTFilterInstance();
-		FFTFilterInstance(FFTFilter *aParent);
-		FFTFilterInstance();
-		void comp2MagPhase(float* aFFTBuffer, unsigned int aSamples);
-		void magPhase2MagFreq(float* aFFTBuffer, unsigned int aSamples, float aSamplerate, unsigned int aChannel);
-		void magFreq2MagPhase(float* aFFTBuffer, unsigned int aSamples, float aSamplerate, unsigned int aChannel);
-		void magPhase2Comp(float* aFFTBuffer, unsigned int aSamples);
-		void init();
+		EqFilterInstance(EqFilter *aParent);
 	};
 
-	class FFTFilter : public Filter
+	class EqFilter : public FFTFilter
 	{
 	public:
+		enum FILTERATTRIBUTE
+		{
+			WET = 0,
+			BAND1 = 1,
+			BAND2 = 2,
+			BAND3 = 3,
+			BAND4 = 4,
+			BAND5 = 5,
+			BAND6 = 6,
+			BAND7 = 7,
+			BAND8 = 8
+		};
+		virtual int getParamCount();
+		virtual const char* getParamName(unsigned int aParamIndex);
+		virtual unsigned int getParamType(unsigned int aParamIndex);
+		virtual float getParamMax(unsigned int aParamIndex);
+		virtual float getParamMin(unsigned int aParamIndex);
+		float mVolume[8];
+		result setParam(unsigned int aBand, float aVolume);
 		virtual FilterInstance *createInstance();
-		FFTFilter();
+		EqFilter();
 	};
 }
 

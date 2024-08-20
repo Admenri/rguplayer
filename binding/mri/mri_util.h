@@ -52,7 +52,7 @@ enum MriException {
 #else
 #define MRI_DEFINE_DATATYPE(Klass, Name, Free) \
   const rb_data_type_t k##Klass##DataType = {  \
-      Name, {.dfree = Free}, 0, 0, DEF_TYPE_FLAGS}
+      Name, {0, Free, 0, 0}, 0, 0, DEF_TYPE_FLAGS}
 #endif
 
 #define MRI_DECLARE_DATATYPE(Klass) \

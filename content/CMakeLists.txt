@@ -82,7 +82,3 @@ target_link_libraries(core_content PUBLIC
                       soloud
                       base_imgui
                       aom_player)
-target_compile_options(core_content PRIVATE
-  -Wno-float-conversion
-  -Wno-unused-parameter
-)

@@ -38,6 +38,11 @@ namespace SoLoud
 		return mPostClipScaler;
 	}
 
+	unsigned int Soloud::getMainResampler() const
+	{
+		return mResampler;
+	}
+
 	float Soloud::getGlobalVolume() const
 	{
 		return mGlobalVolume;
@@ -145,6 +150,20 @@ namespace SoLoud
 		bool v = (mVoice[ch]->mFlags & AudioSourceInstance::LOOPING) != 0;
 		unlockAudioMutex_internal();
 		return v;
+	}
+
+	bool Soloud::getAutoStop(handle aVoiceHandle)
+	{
+		lockAudioMutex_internal();
+		int ch = getVoiceFromHandle_internal(aVoiceHandle);
+		if (ch == -1)
+		{
+			unlockAudioMutex_internal();
+			return 0;
+		}
+		bool v = (mVoice[ch]->mFlags & AudioSourceInstance::DISABLE_AUTOSTOP) != 0;
+		unlockAudioMutex_internal();
+		return !v;
 	}
 
 	float Soloud::getInfo(handle aVoiceHandle, unsigned int mInfoKey)

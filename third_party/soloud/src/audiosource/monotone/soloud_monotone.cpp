@@ -121,7 +121,7 @@ namespace SoLoud
 							mChannel[j].mVibratoIndex = 0;
 						}
 						else
-						if (note == 0)
+//						if (note == 0)
 						{
 							note = mChannel[j].mLastNote;
 						}
@@ -307,7 +307,9 @@ namespace SoLoud
 		}
 
 		for (i = 0; i < 32; i++)
+		{
 			mVibTable[i] = (int)floor(0.5 + 64 * sin(i * M_PI / 32 * 2));
+		}
 
 		mSong.mTitle = 0;
 		mSong.mComment = 0;
@@ -317,7 +319,7 @@ namespace SoLoud
 		mChannels = 1;
 
 		mHardwareChannels = 1;
-		mWaveform = SoLoud::Misc::WAVE_SQUARE;
+		mWaveform = Soloud::WAVE_SQUARE;
 	}
 
 	void Monotone::clear()

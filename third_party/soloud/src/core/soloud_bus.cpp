@@ -31,12 +31,13 @@ namespace SoLoud
 	BusInstance::BusInstance(Bus *aParent)
 	{
 		mParent = aParent;
-		mScratchSize = 0;
 		mFlags |= PROTECTED | INAUDIBLE_TICK;		
 		for (int i = 0; i < MAX_CHANNELS; i++)
 			mVisualizationChannelVolume[i] = 0;
 		for (int i = 0; i < 256; i++)
 			mVisualizationWaveData[i] = 0;
+		mScratchSize = SAMPLE_GRANULARITY;
+		mScratch.init(mScratchSize * MAX_CHANNELS);
 	}
 	
 	unsigned int BusInstance::getAudio(float *aBuffer, unsigned int aSamplesToRead, unsigned int aBufferSize)
@@ -52,13 +53,8 @@ namespace SoLoud
 		}
 		
 		Soloud *s = mParent->mSoloud;
-		if (s->mScratchNeeded != mScratchSize)
-		{
-			mScratchSize = s->mScratchNeeded;
-			mScratch.init(mScratchSize * MAX_CHANNELS);
-		}
 		
-		s->mixBus_internal(aBuffer, aSamplesToRead, aBufferSize, mScratch.mData, handle, mSamplerate, mChannels);
+		s->mixBus_internal(aBuffer, aSamplesToRead, aBufferSize, mScratch.mData, handle, mSamplerate, mChannels, mParent->mResampler);
 
 		int i;
 		if (mParent->mFlags & AudioSource::VISUALIZATION_DATA)
@@ -127,6 +123,7 @@ namespace SoLoud
 		mChannelHandle = 0;
 		mInstance = 0;
 		mChannels = 2;
+		mResampler = SOLOUD_DEFAULT_RESAMPLER;
 		for (int i = 0; i < 256; i++)
 		{
 			mFFTData[i] = 0;
@@ -345,4 +342,16 @@ namespace SoLoud
 		mSoloud->unlockAudioMutex_internal();
 		return count;
 	}
+
+	unsigned int Bus::getResampler()
+	{
+		return mResampler;
+	}
+
+	void Bus::setResampler(unsigned int aResampler)
+	{
+		if (aResampler <= Soloud::RESAMPLER_CATMULLROM)
+			mResampler = aResampler;
+	}
+
 };
