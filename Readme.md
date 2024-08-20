@@ -78,6 +78,7 @@
 - concurrentqueue - https://github.com/cameron314/concurrentqueue 
 - zlib - https://github.com/madler/zlib 
 - imgui - https://github.com/ocornut/imgui  
+- boost_asio - https://github.com/boostorg/boost  
 - rapidxml - https://rapidxml.sourceforge.net/  
 - json - https://github.com/nlohmann/json 
 
