@@ -11,7 +11,8 @@ namespace binding {
 MRI_METHOD(steam_init) {
   SteamErrMsg msg;
   auto ret = SteamAPI_InitEx(&msg);
-  LOG(INFO) << "[Steamworks] " << msg;
+  if (ret != k_ESteamAPIInitResult_OK)
+    LOG(INFO) << "[Steamworks] " << msg;
 
   return MRI_BOOL_NEW(ret == k_ESteamAPIInitResult_OK);
 }

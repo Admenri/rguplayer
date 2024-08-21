@@ -38,8 +38,6 @@
 #include "binding/rpg/module_rpg2.rb.xxd"
 #include "binding/rpg/module_rpg3.rb.xxd"
 
-#include "fiddle/fiddle.wrapper.xxd"
-
 #include "zlib.h"
 
 extern "C" {
@@ -48,7 +46,6 @@ void rb_call_builtin_inits();
 #endif
 
 void Init_zlib(void);
-void Init_fiddle(void);
 }
 
 namespace binding {
@@ -224,11 +221,7 @@ void BindingEngineMri::InitializeBinding(
   InitRGUBinding();
   InitAOMDecodeBinding();
   Init_zlib();
-#if HAS_LIBFFI_SUPPORT
-  LOG(INFO) << "[Binding] Fiddle extension loaded.";
-  Init_fiddle();
-  rb_eval_string(fiddle_wrapper);
-#endif
+
 #if HAS_STEAMWORKS_SUPPORT
   InitSteamworksBinding();
 #endif

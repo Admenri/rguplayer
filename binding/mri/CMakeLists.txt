@@ -60,33 +60,7 @@ set(BINDING_MRI_SRC
 )
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
-set(LIBFFI_DIR ${PROJECT_SOURCE_DIR}/third_party/libffi)
 set(STEAMWORKS_DIR ${PROJECT_SOURCE_DIR}/steamworks)
-
-if(EXISTS ${LIBFFI_DIR})
-  add_library(external-libffi UNKNOWN IMPORTED)
-  set_target_properties(external-libffi PROPERTIES
-                        IMPORTED_LOCATION "${LIBFFI_DIR}/lib/ffi.lib"
-                        INTERFACE_INCLUDE_DIRECTORIES "${LIBFFI_DIR}/include")
-
-  set(BINDING_MRI_SRC
-    ${BINDING_MRI_SRC}
-
-    fiddle/closure.c
-    fiddle/closure.h
-    fiddle/conversions.c
-    fiddle/conversions.h
-    fiddle/fiddle.c
-    fiddle/fiddle.h
-    fiddle/function.c
-    fiddle/function.h
-    fiddle/handle.c
-    fiddle/memory_view.c
-    fiddle/pinned.c
-    fiddle/pointer.c
-  )
-endif()
-
 if(EXISTS ${STEAMWORKS_DIR})
   add_library(external-steamworks UNKNOWN IMPORTED)
 
@@ -118,12 +92,6 @@ add_library(binding_mri ${BINDING_MRI_SRC})
 target_link_libraries(binding_mri PUBLIC core_base core_renderer core_content core_ui mri_ruby zlibstatic)
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
-if(EXISTS ${LIBFFI_DIR})
-  target_compile_definitions(binding_mri PRIVATE HAS_LIBFFI_SUPPORT=1)
-  target_link_libraries(binding_mri PRIVATE external-libffi)
-  target_include_directories(binding_mri PRIVATE fiddle)
-endif()
-
 if(EXISTS ${STEAMWORKS_DIR})
   target_compile_definitions(binding_mri PRIVATE HAS_STEAMWORKS_SUPPORT=1)
   target_link_libraries(binding_mri PRIVATE external-steamworks)

@@ -73,6 +73,7 @@ class AOMDecoder : public base::RefCounted<AOMDecoder>,
   uint64_t last_ticks_;
   int64_t counter_freq_;
   float frame_delta_;
+  bool video_load_success_;
 
   enum PlaneType { Plane_Y = 0, Plane_U, Plane_V };
   renderer::GLID<renderer::Texture> video_planes_[3];

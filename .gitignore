@@ -363,8 +363,5 @@ FodyWeavers.xsd
 /android-project/app/src/main/assets
 /android-project/app/release
 
-# FFI
-/third_party/libffi
-
 # Steamworks
 /steamworks/

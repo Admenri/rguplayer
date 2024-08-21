@@ -76,7 +76,8 @@ MRI_METHOD(shader_set_param) {
 
       std::vector<float> array_data;
       for (int i = 0; i < RARRAY_LEN(data); ++i)
-        array_data.push_back(RFLOAT_VALUE(rb_to_float(rb_ary_entry(data, i))));
+        array_data.push_back(static_cast<float>(
+            RFLOAT_VALUE(rb_to_float(rb_ary_entry(data, i)))));
 
       obj->SetParam(uniform, array_data, element);
     } else {
@@ -105,7 +106,8 @@ MRI_METHOD(shader_set_param) {
 
     std::vector<float> matrix_data;
     for (int i = 0; i < RARRAY_LEN(matrix); ++i)
-      matrix_data.push_back(RFLOAT_VALUE(rb_to_float(rb_ary_entry(matrix, i))));
+      matrix_data.push_back(static_cast<float>(
+          RFLOAT_VALUE(rb_to_float(rb_ary_entry(matrix, i)))));
 
     obj->SetParam(uniform, matrix_data, element, transpose);
   }

@@ -18,6 +18,7 @@ AOMDecoder::AOMDecoder(scoped_refptr<Graphics> host)
       last_ticks_(0),
       counter_freq_(SDL_GetPerformanceFrequency()),
       frame_delta_(0.0f),
+      video_load_success_(false),
       audio_output_(0),
       audio_stream_(nullptr) {}
 
@@ -31,13 +32,7 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
 
   // Read video file
   SDL_IOStream* ops = nullptr;
-  try {
-    ops = io_->OpenReadRaw(filename);
-  } catch (base::Exception& e) {
-    LOG(INFO) << "[AOMDecoder] Video file \"" << filename
-              << "\" was not found.";
-    return uvpx::Player::LoadResult::FileNotExists;
-  }
+  ops = io_->OpenReadRaw(filename);
 
   // Create player instance
   player_ = std::make_unique<uvpx::Player>(uvpx::Player::defaultConfig());
@@ -75,13 +70,16 @@ uvpx::Player::LoadResult AOMDecoder::LoadVideo(const std::string& filename) {
         base::BindOnce(&AOMDecoder::CreateYUVInternal, base::Unretained(this),
                        base::Vec2i(info.width, info.height)));
     screen()->renderer()->WaitForSync();
+
+    // Loaded video
+    video_load_success_ = true;
   }
 
   return result;
 }
 
 void AOMDecoder::Update() {
-  if (!player_)
+  if (!player_ || !video_load_success_)
     return;
 
   // Update frame delta
@@ -95,14 +93,14 @@ void AOMDecoder::Update() {
 }
 
 uvpx::Player::VideoInfo* AOMDecoder::GetVideoInfo() {
-  if (!player_)
+  if (!player_ || !video_load_success_)
     return nullptr;
 
   return player_->info();
 }
 
 void AOMDecoder::SetPlayState(Type state) {
-  if (!player_)
+  if (!player_ || !video_load_success_)
     return;
 
   switch (state) {
@@ -125,7 +123,7 @@ void AOMDecoder::SetPlayState(Type state) {
 }
 
 AOMDecoder::Type AOMDecoder::GetPlayState() {
-  if (!player_)
+  if (!player_ || !video_load_success_)
     return Type::Stopped;
 
   if (player_->isPlaying())
@@ -141,7 +139,7 @@ AOMDecoder::Type AOMDecoder::GetPlayState() {
 }
 
 void AOMDecoder::Render(scoped_refptr<Bitmap> target) {
-  if (!player_ || !target)
+  if (!player_ || !target || !video_load_success_)
     return;
 
   uvpx::Frame* yuv = nullptr;
@@ -173,10 +171,13 @@ void AOMDecoder::OnObjectDisposed() {
     SDL_CloseAudioDevice(audio_output_);
 
   player_.reset();
+  video_load_success_ = false;
 
-  screen()->renderer()->PostTask(
-      base::BindOnce(&AOMDecoder::DestroyYUVInternal, base::Unretained(this)));
-  screen()->renderer()->WaitForSync();
+  if (frame_data_) {
+    screen()->renderer()->PostTask(base::BindOnce(
+        &AOMDecoder::DestroyYUVInternal, base::Unretained(this)));
+    screen()->renderer()->WaitForSync();
+  }
 }
 
 void AOMDecoder::OnAudioData(void* userPtr, float* pcm, size_t count) {
