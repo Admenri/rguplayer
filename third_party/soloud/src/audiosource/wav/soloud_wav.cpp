@@ -28,10 +28,12 @@ freely, subject to the following restrictions:
 #include "soloud.h"
 #include "soloud_wav.h"
 #include "soloud_file.h"
-#include "stb_vorbis.h"
 #include "dr_mp3.h"
 #include "dr_wav.h"
 #include "dr_flac.h"
+
+#include "vorbis/vorbisfile.h"
+#include "SDL_iostream.h"
 
 namespace SoLoud
 {
@@ -134,26 +136,83 @@ namespace SoLoud
 
 	result Wav::loadogg(MemoryFile *aReader)
 	{	
-		int e = 0;
-		stb_vorbis *vorbis = 0;
-		vorbis = stb_vorbis_open_memory(aReader->getMemPtr(), aReader->length(), &e, 0);
+		ov_callbacks callbacks = {
+              [](void* ptr, size_t size, size_t nmemb,
+                 void* datasource) -> size_t {
+                return ((size_t)SDL_ReadIO((SDL_IOStream*)datasource, ptr,
+                                           size * nmemb));
+              },
+              [](void* datasource, ogg_int64_t offset, int whence) -> int {
+                return (SDL_SeekIO((SDL_IOStream*)datasource, offset,
+                                   (SDL_IOWhence)whence));
+              },
+              [](void* datasource) -> int {
+                // No need to close memory file
+                return 0;
+              },
+              [](void* datasource) -> long {
+                return ((long)SDL_TellIO((SDL_IOStream*)datasource));
+              }};
 
-		if (0 == vorbis)
-		{
-			return FILE_LOAD_FAILED;
-		}
+		OggVorbis_File vf;
+    vorbis_info* info;
 
-        stb_vorbis_info info = stb_vorbis_get_info(vorbis);
-		mBaseSamplerate = (float)info.sample_rate;
-        int samples = stb_vorbis_stream_length_in_samples(vorbis);
+		SDL_IOStream* io = SDL_IOFromConstMem(aReader->getMemPtr(), aReader->length());
+    int result = ov_open_callbacks(io, &vf, NULL, 0, callbacks);
+    if (result != 0) 
+        return FILE_LOAD_FAILED;
 
-		if (info.channels > MAX_CHANNELS)
+		info = ov_info(&vf, -1);
+    if (!info)
+      return FILE_LOAD_FAILED;
+
+		/* Try to extract loop info */
+    struct {
+      uint32_t start;
+      uint32_t length;
+      uint32_t end;
+      bool valid;
+    } loop{0};
+
+		for (int i = 0; i < vf.vc->comments; ++i) {
+      char* comment = vf.vc->user_comments[i];
+      char* sep = strstr(comment, "=");
+
+      /* No '=' found */
+      if (!sep)
+        continue;
+
+      /* Empty value */
+      if (!*(sep + 1))
+        continue;
+
+      *sep = '\0';
+
+      if (!strcmp(comment, "LOOPSTART"))
+        loop.start = strtol(sep + 1, 0, 10);
+
+      if (!strcmp(comment, "LOOPLENGTH"))
+        loop.length = strtol(sep + 1, 0, 10);
+
+      *sep = '=';
+    }
+
+    loop.end = loop.start + loop.length;
+    loop.valid = (loop.start && loop.length);
+
+		if (loop.valid)
+      mLoopPoint = (float)loop.start / (float)info->rate;
+
+		mBaseSamplerate = (float)info->rate;
+    ogg_int64_t samples = ov_pcm_total(&vf, -1);
+
+		if (info->channels > MAX_CHANNELS)
 		{
 			mChannels = MAX_CHANNELS;
 		}
 		else
 		{
-			mChannels = info.channels;
+			mChannels = info->channels;
 		}
 		mData = new float[samples * mChannels];
 		memset(mData, 0, samples * mChannels * sizeof(float));
@@ -162,7 +221,7 @@ namespace SoLoud
 		while(1)
 		{
 			float **outputs;
-            int n = stb_vorbis_get_frame_float(vorbis, NULL, &outputs);
+      int n = ov_read_float(&vf, &outputs, mSampleCount, nullptr);
 			if (n == 0)
             {
 				break;
@@ -174,7 +233,7 @@ namespace SoLoud
 
 			samples += n;
 		}
-        stb_vorbis_close(vorbis);
+        ov_clear(&vf);
 
 		return 0;
 	}

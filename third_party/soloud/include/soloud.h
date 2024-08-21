@@ -77,7 +77,7 @@ freely, subject to the following restrictions:
 #define VOICE_COUNT 1024
 
 // 1)mono, 2)stereo 4)quad 6)5.1 8)7.1
-#define MAX_CHANNELS 8
+#define MAX_CHANNELS 32
 
 // Default resampler for both main and bus mixers
 #define SOLOUD_DEFAULT_RESAMPLER SoLoud::Soloud::RESAMPLER_LINEAR
