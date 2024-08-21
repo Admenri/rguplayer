@@ -61,6 +61,8 @@ set(BINDING_MRI_SRC
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
 set(LIBFFI_DIR ${PROJECT_SOURCE_DIR}/third_party/libffi)
+set(STEAMWORKS_DIR ${PROJECT_SOURCE_DIR}/steamworks)
+
 if(EXISTS ${LIBFFI_DIR})
   add_library(external-libffi UNKNOWN IMPORTED)
   set_target_properties(external-libffi PROPERTIES
@@ -84,6 +86,32 @@ if(EXISTS ${LIBFFI_DIR})
     fiddle/pointer.c
   )
 endif()
+
+if(EXISTS ${STEAMWORKS_DIR})
+  add_library(external-steamworks UNKNOWN IMPORTED)
+
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(STEAMWORKS_LIB_PATH "steam_api.lib")  
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+      set(STEAMWORKS_LIB_PATH "win64/steam_api64.lib")
+    endif()
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(STEAMWORKS_LIB_PATH "linux32/libsteam_api.so")  
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+      set(STEAMWORKS_LIB_PATH "linux64/libsteam_api.so")
+    endif()
+  endif()
+  set_target_properties(external-steamworks PROPERTIES
+                        IMPORTED_LOCATION "${STEAMWORKS_DIR}/bin/${STEAMWORKS_LIB_PATH}"
+                        INTERFACE_INCLUDE_DIRECTORIES "${STEAMWORKS_DIR}/public")
+
+  set(BINDING_MRI_SRC
+    ${BINDING_MRI_SRC}
+
+    init_steamworks.cc
+    init_steamworks.h
+  )
+endif()
 endif()
 
 add_library(binding_mri ${BINDING_MRI_SRC})
@@ -94,5 +122,10 @@ if(EXISTS ${LIBFFI_DIR})
   target_compile_definitions(binding_mri PRIVATE HAS_LIBFFI_SUPPORT=1)
   target_link_libraries(binding_mri PRIVATE external-libffi)
   target_include_directories(binding_mri PRIVATE fiddle)
+endif()
+
+if(EXISTS ${STEAMWORKS_DIR})
+  target_compile_definitions(binding_mri PRIVATE HAS_STEAMWORKS_SUPPORT=1)
+  target_link_libraries(binding_mri PRIVATE external-steamworks)
 endif()
 endif()

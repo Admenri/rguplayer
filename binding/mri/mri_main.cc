@@ -28,6 +28,10 @@
 #include "binding/mri/init_viewport.h"
 #include "binding/mri/init_window.h"
 #include "binding/mri/init_window2.h"
+#if HAS_STEAMWORKS_SUPPORT
+#include "binding/mri/init_steamworks.h"
+#endif
+
 #include "content/worker/binding_worker.h"
 
 #include "binding/rpg/module_rpg1.rb.xxd"
@@ -224,6 +228,9 @@ void BindingEngineMri::InitializeBinding(
   LOG(INFO) << "[Binding] Fiddle extension loaded.";
   Init_fiddle();
   rb_eval_string(fiddle_wrapper);
+#endif
+#if HAS_STEAMWORKS_SUPPORT
+  InitSteamworksBinding();
 #endif
 
   if (config->content_version() < content::RGSSVersion::RGSS3) {
