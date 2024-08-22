@@ -15,6 +15,13 @@ namespace content {
 
 namespace {
 
+std::map<std::string, CoreConfigure::ANGLERenderer> kRendererMapping = {
+    {"d3d11", CoreConfigure::ANGLERenderer::D3D11},
+    {"vulkan", CoreConfigure::ANGLERenderer::Vulkan},
+    {"metal", CoreConfigure::ANGLERenderer::Metal},
+    {"software", CoreConfigure::ANGLERenderer::Software},
+};
+
 void ReplaceStringWidth(std::string& str, char before, char after) {
   for (size_t i = 0; i < str.size(); ++i)
     if (str[i] == before)
@@ -46,12 +53,18 @@ void CoreConfigure::LoadCommandLine(int argc, char** argv) {
 
   game_debug_ = false;
   game_battle_test_ = false;
+  angle_renderer_ = ANGLERenderer::DefaultES;
 
   for (int i = 0; i < argc; i++) {
     if (std::string(argv[i]) == "test" || std::string(argv[i]) == "debug")
       game_debug_ = true;
     if (std::string(argv[i]) == "btest")
       game_battle_test_ = true;
+    if (std::string(argv[i]) == "use_angle" && argc != i + 1) {
+      auto it = kRendererMapping.find(argv[i + 1]);
+      if (it != kRendererMapping.end())
+        angle_renderer_ = it->second;
+    }
   }
 
   if (game_debug_)
@@ -110,7 +123,9 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream,
   }
 
   /* Renderer config */
-  angle_renderer_ = (ANGLERenderer)reader.GetInteger("Renderer", "UseANGLE", 0);
+  if (angle_renderer_ == ANGLERenderer::DefaultES)
+    angle_renderer_ =
+        (ANGLERenderer)reader.GetInteger("Renderer", "UseANGLE", 0);
   renderer_debug_output_ = reader.GetBoolean("Renderer", "DebugOutput", false);
   initial_resolution_.x =
       reader.GetInteger("Renderer", "ScreenWidth",
