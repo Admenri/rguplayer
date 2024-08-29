@@ -93,21 +93,19 @@ void RenderRunner::InitGLContextInternal() {
   SDL_GL_SetSwapInterval(0);
 
   renderer::GLES2Context::CreateForCurrentThread();
-
   if (config_->renderer_debug_output())
     renderer::GLES2Context::EnableDebugOutputForCurrentThread();
 
-  // Always enable opengl es mode for ANGLE backend
-  renderer::GSM.InitStates();
-  max_texture_size_ = renderer::GSM.max_texture_size();
-
   if (config_->async_renderer())
-    LOG(INFO) << "[Content] Launching Renderer Thread...";
+    LOG(INFO) << "[Content] Running renderer thread.";
   LOG(INFO) << "[Content] GLRenderer: " << renderer::GL.GetString(GL_RENDERER);
   LOG(INFO) << "[Content] GLVendor: " << renderer::GL.GetString(GL_VENDOR);
   LOG(INFO) << "[Content] GLVersion: " << renderer::GL.GetString(GL_VERSION);
   LOG(INFO) << "[Content] GLSL: "
             << renderer::GL.GetString(GL_SHADING_LANGUAGE_VERSION);
+
+  renderer::GSM.InitStates();
+  max_texture_size_ = renderer::GSM.max_texture_size();
   LOG(INFO) << "[Content] MaxTextureSize: " << max_texture_size_ << "x"
             << max_texture_size_;
 

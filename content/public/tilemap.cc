@@ -159,12 +159,14 @@ class TilemapZLayer : public ViewportChild {
     if (!tilemap_->above_vertices_.size())
       return;
 
-    auto& shader = renderer::GSM.shaders()->base;
+    auto& shader = renderer::GSM.shaders()->tilemap;
     shader.Bind();
     shader.SetProjectionMatrix(renderer::GSM.states.viewport.Current().Size());
     shader.SetTextureSize(tilemap_->atlas_tfb_->size);
     shader.SetTexture(tilemap_->atlas_tfb_->tex);
     shader.SetTransOffset(tilemap_->tilemap_offset_);
+    shader.SetAnimateIndex(tilemap_->frame_index_);
+    shader.SetTileSize(tilemap_->tile_size_);
 
     int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
     int offset = index_ ? tilemap_->above_offsets_[index_] / 4 : 0;
