@@ -376,6 +376,7 @@ void Audio::PlaySlotInternal(SlotInfo* slot,
                         slot->source.get()));
     } catch (const base::Exception& exception) {
       LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
+      return;
     }
 
     slot->source->setLooping(loop);
@@ -408,10 +409,17 @@ void Audio::EmitSoundInternal(const std::string& filename,
                               int pitch) {
   auto cache = se_cache_.find(filename);
   if (cache != se_cache_.end()) {
+    if (se_queue_.size() >= MAX_CHANNELS / 2 - 4) {
+      auto invalid_voice = se_queue_.front();
+      core_.stop(invalid_voice);
+      se_queue_.pop();
+    }
+
     // From cache
     auto handle = core_.play(*cache->second);
     core_.setVolume(handle, volume / 100.0f);
     core_.setRelativePlaySpeed(handle, pitch / 100.0f);
+    se_queue_.push(handle);
   } else {
     // Load from filesystem
     std::unique_ptr<SoLoud::Wav> source(new SoLoud::Wav());
@@ -430,6 +438,7 @@ void Audio::EmitSoundInternal(const std::string& filename,
                         source.get()));
     } catch (const base::Exception& exception) {
       LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
+      return;
     }
 
     if (se_queue_.size() >= MAX_CHANNELS / 2 - 4) {
