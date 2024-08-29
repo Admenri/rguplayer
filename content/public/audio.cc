@@ -432,7 +432,7 @@ void Audio::EmitSoundInternal(const std::string& filename,
       LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
     }
 
-    if (se_queue_.size() >= MAX_CHANNELS - 4) {
+    if (se_queue_.size() >= MAX_CHANNELS / 2 - 4) {
       auto invalid_voice = se_queue_.front();
       core_.stop(invalid_voice);
       se_queue_.pop();
