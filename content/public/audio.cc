@@ -432,11 +432,18 @@ void Audio::EmitSoundInternal(const std::string& filename,
       LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
     }
 
+    if (se_queue_.size() >= MAX_CHANNELS - 4) {
+      auto invalid_voice = se_queue_.front();
+      core_.stop(invalid_voice);
+      se_queue_.pop();
+    }
+
     // Play new stream
     auto handle = core_.play(*source);
     core_.setVolume(handle, volume / 100.0f);
     core_.setRelativePlaySpeed(handle, pitch / 100.0f);
     se_cache_.emplace(filename, std::move(source));
+    se_queue_.push(handle);
   }
 }
 

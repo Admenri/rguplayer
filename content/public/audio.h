@@ -104,6 +104,7 @@ class Audio final : public base::RefCounted<Audio> {
   SlotInfo bgs_;
   SlotInfo me_;
   std::unordered_map<std::string, std::unique_ptr<SoLoud::Wav>> se_cache_;
+  std::queue<SoLoud::handle> se_queue_;
 
   WorkerShareData* share_data_;
   std::unique_ptr<std::thread> me_watcher_;

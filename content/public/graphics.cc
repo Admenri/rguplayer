@@ -35,9 +35,6 @@ void DrawEngineInfoGUI(scoped_refptr<content::CoreConfigure> config) {
 
     if (ImGui::Button("Github"))
       SDL_OpenURL("https://github.com/Admenri/rguplayer");
-    ImGui::SameLine();
-    if (ImGui::Button("AFDian"))
-      SDL_OpenURL("https://afdian.net/a/rguplayer");
   }
 }
 
