@@ -47,6 +47,7 @@ class Gamepad : public base::RefCounted<Gamepad> {
   void SetPlayerIndex(int index);
 
   void Update();
+  bool Connect();
 
   int GetAxisValue(SDL_GamepadAxis axis_id);
   bool IsButtonPressed(SDL_GamepadButton button_id);
@@ -59,6 +60,7 @@ class Gamepad : public base::RefCounted<Gamepad> {
   SDL_JoystickID id_;
   SDL_Gamepad* device_;
   std::array<ButtonState, SDL_GAMEPAD_BUTTON_MAX> button_states_;
+  std::string guid_;
 };
 
 }  // namespace content

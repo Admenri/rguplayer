@@ -54,6 +54,13 @@ MRI_METHOD(gamepad_update) {
   return Qnil;
 }
 
+MRI_METHOD(gamepad_connect) {
+  scoped_refptr<content::Gamepad> obj =
+      MriGetStructData<content::Gamepad>(self);
+
+  return MRI_BOOL_NEW(obj->Connect());
+}
+
 MRI_METHOD(gamepad_id) {
   scoped_refptr<content::Gamepad> obj =
       MriGetStructData<content::Gamepad>(self);
@@ -150,6 +157,7 @@ void InitGamepadBinding() {
   MriDefineMethod(klass, "initialize", gamepad_initialize);
   MriDefineMethod(klass, "update", gamepad_update);
   MriDefineMethod(klass, "device_id", gamepad_id);
+  MriDefineMethod(klass, "connect", gamepad_connect);
   MriDefineMethod(klass, "connect_state", gamepad_connect_state);
 
   MriDefineMethod(klass, "get_axis_value", gamepad_axis);

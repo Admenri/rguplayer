@@ -37,6 +37,11 @@ Gamepad::Gamepad(SDL_JoystickID dev_id)
     throw base::Exception(base::Exception::ContentError,
                           "Failed to create gamepad device: %s",
                           SDL_GetError());
+
+  auto guid = SDL_GetGamepadGUIDForID(id_);
+  char pszGUID[33];
+  SDL_GUIDToString(guid, pszGUID, sizeof(pszGUID));
+  guid_ = pszGUID;
 }
 
 Gamepad::~Gamepad() {
@@ -85,6 +90,32 @@ void Gamepad::Update() {
       button_states_[i].repeat_count = 0;
     }
   }
+}
+
+bool Gamepad::Connect() {
+  if (SDL_GamepadConnected(device_))
+    return true;
+
+  id_ = 0;
+
+  int device_size;
+  auto* available_pads = SDL_GetGamepads(&device_size);
+  for (int i = 0; i < device_size; ++i) {
+    auto guid = SDL_GetGamepadGUIDForID(available_pads[i]);
+    char pszGUID[33];
+    SDL_GUIDToString(guid, pszGUID, sizeof(pszGUID));
+    std::string current_guid(pszGUID);
+
+    if (current_guid == guid_)
+      id_ = available_pads[i];
+  }
+  SDL_free(available_pads);
+
+  if (device_)
+    SDL_CloseGamepad(device_);
+  device_ = SDL_OpenGamepad(id_);
+
+  return !!device_;
 }
 
 int Gamepad::GetAxisValue(SDL_GamepadAxis axis_id) {
