@@ -138,7 +138,8 @@ int main(int argc, char* argv[]) {
   SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
 #endif
 
-  SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO);
+  SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO |
+           SDL_INIT_JOYSTICK);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   TTF_Init();
 

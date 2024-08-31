@@ -23,6 +23,8 @@ set(CORE_CONTENT_SRC
   public/flashable.h
   public/font.cc
   public/font.h
+  public/gamepad.cc
+  public/gamepad.h
   public/geometry.cc
   public/geometry.h
   public/graphics.cc

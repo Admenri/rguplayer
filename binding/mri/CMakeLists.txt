@@ -16,6 +16,8 @@ set(BINDING_MRI_SRC
   init_corefile.h
   init_font.cc
   init_font.h
+  init_gamepad.cc
+  init_gamepad.h
   init_graphics.cc
   init_graphics.h
   init_input.cc
