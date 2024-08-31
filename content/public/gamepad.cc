@@ -45,6 +45,9 @@ Gamepad::~Gamepad() {
 }
 
 SDL_JoystickConnectionState Gamepad::GetConnectState() {
+  if (!SDL_GamepadConnected(device_))
+    return SDL_JOYSTICK_CONNECTION_INVALID;
+
   return SDL_GetGamepadConnectionState(device_);
 }
 
