@@ -33,7 +33,7 @@ void EventRunner::EventMain() {
   loop_runner_->Run();
 }
 
-int EventRunner::EventFilter(void* userdata, SDL_Event* event) {
+SDL_bool EventRunner::EventFilter(void* userdata, SDL_Event* event) {
   EventRunner* self = static_cast<EventRunner*>(userdata);
   WorkerShareData* data = self->share_data_;
 

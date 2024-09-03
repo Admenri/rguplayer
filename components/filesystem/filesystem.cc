@@ -94,7 +94,7 @@ size_t PHYS_RWopsWrite(void* userdata,
   return (result != -1) ? result : 0;
 }
 
-int PHYS_RWopsClose(void* userdata) {
+SDL_bool PHYS_RWopsClose(void* userdata) {
   PHYSFS_File* f = PHYSPtr(userdata);
   if (!f)
     return -1;
