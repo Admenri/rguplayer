@@ -49,6 +49,7 @@ void* EGL_LoadGlobal(void* handle) {
 }
 
 void* g_egl_library = nullptr;
+void* g_glesv2_library = nullptr;
 
 }  // namespace
 
@@ -57,16 +58,36 @@ namespace renderer {
 std::unique_ptr<ANGLEDevice> ANGLEDevice::CreateANGLEDevice(
     SDL_Window* host_window,
     ANGLEBackend type) {
-  g_egl_library = SDL_LoadObject(
+  if (!g_egl_library)
+    g_egl_library = SDL_LoadObject(
 #if defined(OS_WIN)
-      "libEGL.dll"
+        "libEGL.dll"
 #elif defined(OS_LINUX)
-      "libEGL.so.1"
+        "./libEGL.so"
 #endif
-  );
+    );
 
   if (!g_egl_library) {
-    LOG(INFO) << "[Renderer] Failed to load EGL dynamic library (libEGL).";
+    LOG(INFO) << "[Renderer] Failed to load EGL dynamic library (libEGL): "
+              << SDL_GetError();
+    return nullptr;
+  }
+
+  if (!g_glesv2_library)
+    g_glesv2_library = SDL_LoadObject(
+#if defined(OS_WIN)
+        "libGLESv2.dll"
+#elif defined(OS_LINUX)
+        "./libGLESv2.so"
+#else
+#error unsupport platform
+#endif
+    );
+
+  if (!g_glesv2_library) {
+    LOG(INFO)
+        << "[Renderer] Failed to load ANGLE renderer library (libGLESv2): "
+        << SDL_GetError();
     return nullptr;
   }
 
@@ -74,24 +95,11 @@ std::unique_ptr<ANGLEDevice> ANGLEDevice::CreateANGLEDevice(
 
   std::unique_ptr<ANGLEDevice> self(new ANGLEDevice);
   self->host_ = host_window;
-
-  self->gl_lib_ = SDL_LoadObject(
-#if defined(OS_WIN)
-      "libGLESv2.dll"
-#elif defined(OS_LINUX)
-      "libEGLESv2.so.1"
-#endif
-  );
-
-  if (!self->gl_lib_) {
-    LOG(INFO)
-        << "[Renderer] Failed to load ANGLE renderer library (libGLESv2).";
-    return nullptr;
-  }
+  self->gl_lib_ = g_glesv2_library;
 
   SDL_PropertiesID win_prop = SDL_GetWindowProperties(host_window);
-  EGLNativeDisplayType native_display = nullptr;
-  EGLNativeWindowType native_window = nullptr;
+  EGLNativeDisplayType native_display = 0;
+  EGLNativeWindowType native_window = 0;
 
 #if defined(OS_WIN)
   native_window = (HWND)SDL_GetPointerProperty(
@@ -109,8 +117,13 @@ std::unique_ptr<ANGLEDevice> ANGLEDevice::CreateANGLEDevice(
 
   self->GetEGLDisplay(native_display, type);
   if (!self->display_) {
-    LOG(INFO) << "[EGL] Failed to get ANGLE display.";
-    return nullptr;
+    LOG(INFO) << "[EGL] Failed to get ANGLE display, use default EGLDisplay.";
+
+    self->display_ = fn_eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (!self->display_) {
+      LOG(INFO) << "[EGL] Failed to get EGLDisplay.";
+      return nullptr;
+    }
   }
 
   EGLint majorVersion;
@@ -190,6 +203,9 @@ void ANGLEDevice::GetEGLDisplay(void* nativeDisplay, ANGLEBackend type) {
   PFNEGLGETPLATFORMDISPLAYPROC fn_GetPlatformDisplay =
       (PFNEGLGETPLATFORMDISPLAYPROC)fn_eglGetProcAddress(
           "eglGetPlatformDisplay");
+
+  LOG(INFO) << "[EGL] Extensions:\n"
+            << fn_eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
 
   std::vector<EGLAttrib> displayAttributes;
   switch (type) {
