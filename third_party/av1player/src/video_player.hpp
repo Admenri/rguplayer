@@ -11,8 +11,7 @@
 #include <thread>
 #include <vector>
 
-#include "aom/aom_decoder.h"
-#include "aom/aomdx.h"
+#include "dav1d/dav1d.h"
 
 #include "mkvparser/mkvparser.h"
 
@@ -39,11 +38,8 @@ class VideoPlayer {
   typedef mkvparser::Segment seg_t;
 
   struct VpxData {
-    aom_codec_ctx_t codec;
-    aom_codec_iter_t iter;
-    aom_image_t* img;
-    aom_codec_iface_t* iface;
-    aom_codec_flags_t flags;
+    Dav1dContext* codec;
+    Dav1dPicture img;
     bool initialized;
   };
 

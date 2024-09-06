@@ -12,6 +12,7 @@
 #include "base/worker/thread_worker.h"
 #include "content/config/core_config.h"
 #include "content/worker/worker_share.h"
+#include "renderer/context/gl_device.h"
 #include "ui/widget/widget.h"
 
 namespace content {
@@ -25,15 +26,13 @@ class RenderRunner : public base::SequencedTaskRunner {
   RenderRunner(const RenderRunner&) = delete;
   RenderRunner& operator=(const RenderRunner) = delete;
 
-  static void InitANGLERenderer(CoreConfigure::ANGLERenderer renderer);
-
-  void InitRenderer(scoped_refptr<CoreConfigure> config,
+  bool InitRenderer(scoped_refptr<CoreConfigure> config,
                     base::WeakPtr<ui::Widget> host_window);
   void DestroyRenderer();
 
   int max_texture_size() const { return max_texture_size_; }
   base::WeakPtr<ui::Widget> window() const { return host_window_; }
-  SDL_GLContext& context() { return glcontext_; }
+  renderer::OGLDevice* context() { return glcontext_.get(); }
 
   void PostTask(base::OnceClosure task) override;
   void WaitForSync() override;
@@ -45,7 +44,7 @@ class RenderRunner : public base::SequencedTaskRunner {
   std::unique_ptr<base::ThreadWorker> worker_;
   scoped_refptr<CoreConfigure> config_;
   base::WeakPtr<ui::Widget> host_window_;
-  SDL_GLContext glcontext_;
+  std::unique_ptr<renderer::OGLDevice> glcontext_;
   int max_texture_size_;
 
   base::WeakPtrFactory<RenderRunner> weak_ptr_factory_{this};

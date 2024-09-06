@@ -24,12 +24,14 @@ enum class RGSSVersion : int {
 class CoreConfigure : public base::RefCounted<CoreConfigure> {
  public:
   // ANGLE Graphics API backend choose
-  enum class ANGLERenderer : int32_t {
-    DefaultES = 0,
-    D3D11,
-    Vulkan,
-    Metal,
-    Software,
+  enum class ANGLEBackend {
+    kDisable = 0,
+    kOpenGL,
+    kOpenGLES,
+    kD3D11,
+    kD3D11on12,
+    kVulkan,
+    kSoftware,
   };
 
   CoreConfigure() = default;
@@ -57,7 +59,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   inline bool& disable_menu() { return disable_menu_; }
   inline bool& disable_reset() { return disable_reset_; }
 
-  inline ANGLERenderer& angle_renderer() { return angle_renderer_; }
+  inline ANGLEBackend& angle_renderer() { return angle_renderer_; }
   inline bool& renderer_debug_output() { return renderer_debug_output_; }
   inline base::Vec2i& initial_resolution() { return initial_resolution_; }
   inline base::Vec2i& window_size() { return window_size_; }
@@ -90,7 +92,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   bool disable_menu_;
   bool disable_reset_;
 
-  ANGLERenderer angle_renderer_;
+  ANGLEBackend angle_renderer_;
   bool renderer_debug_output_;
   base::Vec2i initial_resolution_;
   base::Vec2i window_size_;

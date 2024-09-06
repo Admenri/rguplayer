@@ -36,7 +36,7 @@ void Widget::Init(InitParams params) {
   auto property_id = SDL_CreateProperties();
 
   SDL_SetBooleanProperty(property_id, SDL_PROP_WINDOW_CREATE_OPENGL_BOOLEAN,
-                         SDL_TRUE);
+                         params.opengl);
   SDL_SetBooleanProperty(property_id, SDL_PROP_WINDOW_CREATE_FULLSCREEN_BOOLEAN,
                          params.fullscreen);
   SDL_SetBooleanProperty(property_id, SDL_PROP_WINDOW_CREATE_FOCUSABLE_BOOLEAN,

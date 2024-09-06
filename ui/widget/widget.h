@@ -102,6 +102,8 @@ class Widget {
 
     bool initial_grab = false;
 
+    bool opengl = false;
+
     WindowPlacement window_state = WindowPlacement::Show;
   };
 

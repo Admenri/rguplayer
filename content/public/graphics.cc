@@ -55,7 +55,8 @@ Graphics::Graphics(WorkerShareData* share_data,
       brightness_(255),
       frame_count_(0),
       frame_rate_(dispatcher->rgss_version() >= RGSSVersion::RGSS2 ? 60 : 40),
-      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)) {
+      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)),
+      vsync_interval_(0) {
   viewport_rect().rect = initial_resolution;
   viewport_rect().scissor = false;
   static_font_manager_ = std::make_unique<ScopedFontData>(
@@ -432,8 +433,6 @@ void Graphics::FreeTexture(renderer::TextureFrameBuffer*& texture_data) {
 }
 
 void Graphics::InitScreenBufferInternal() {
-  SDL_GL_GetSwapInterval(&vsync_interval_);
-
   screen_buffer_ = renderer::TextureFrameBuffer::Gen();
   renderer::TextureFrameBuffer::Alloc(screen_buffer_, resolution_);
   renderer::TextureFrameBuffer::LinkFrameBuffer(screen_buffer_);
@@ -575,7 +574,7 @@ void Graphics::PresentScreenInternal(
     LOG(INFO) << "[Graphics] GLError: " << gl_error;
 
   CheckSyncPoint();
-  SDL_GL_SwapWindow(window->AsSDLWindow());
+  renderer()->context()->SwapBuffers();
 }
 
 void Graphics::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
@@ -701,8 +700,7 @@ void Graphics::UpdateWindowViewportInternal() {
 }
 
 void Graphics::SetSwapIntervalInternal() {
-  if (SDL_GL_SetSwapInterval(vsync_interval_))
-    LOG(WARNING) << "[Graphics] " << SDL_GetError();
+  renderer()->context()->SetInterval(vsync_interval_);
 }
 
 void Graphics::CheckSyncPoint() {
@@ -711,10 +709,10 @@ void Graphics::CheckSyncPoint() {
   if (!data->background_sync.require.load())
     return;
 
-  SDL_GL_MakeCurrent(window()->AsSDLWindow(), nullptr);
+  renderer()->context()->MakeCurrent(true);
   while (!data->background_sync.signal.load())
     SDL_Delay(10);
-  SDL_GL_MakeCurrent(window()->AsSDLWindow(), renderer()->context());
+  renderer()->context()->MakeCurrent(false);
 
   data->background_sync.require.store(false);
   data->background_sync.signal.store(false);
@@ -815,13 +813,12 @@ void Graphics::DrawGraphicsSettingsGUI() {
     ImGui::Separator();
 
     // V-Sync
-    int gl_vsync;
-    SDL_GL_GetSwapInterval(&gl_vsync);
-    bool ui_vsync = gl_vsync;
+    bool ui_vsync = vsync_interval_;
     ImGui::Checkbox(
         config_->GetI18NString(IDS_GRAPHICS_VSYNC, "V-Sync").c_str(),
         &ui_vsync);
-    SDL_GL_SetSwapInterval(ui_vsync ? 1 : 0);
+    vsync_interval_ = ui_vsync;
+    renderer()->context()->SetInterval(vsync_interval_);
 
     // Smooth Scale
     ImGui::Checkbox(

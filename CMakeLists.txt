@@ -121,11 +121,10 @@ include_directories(third_party/physfs/src)
 add_subdirectory(third_party/zlib)
 include_directories(third_party/zlib)
 
-## AOM
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/third_party/aom")
-add_subdirectory(third_party/aom)
-include_directories(third_party/aom)
-include_directories(third_party/aom/third_party/libwebm)
+## DAV1D
+add_subdirectory(third_party/dav1d)
+add_subdirectory(third_party/webm)
+include_directories(third_party/webm)
 
 ## Soloud
 add_subdirectory(third_party/soloud)

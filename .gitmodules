@@ -2,18 +2,14 @@
 	path = third_party/SDL
 	url = https://github.com/Admenri/SDL.git
 	branch = main
-[submodule "third_party/zlib"]
-	path = third_party/zlib
-	url = https://github.com/madler/zlib.git
-	branch = master
 [submodule "third_party/physfs"]
 	path = third_party/physfs
 	url = https://github.com/Admenri/physfs.git
 	branch = main
-[submodule "third_party/aom"]
-	path = third_party/aom
-	url = https://aomedia.googlesource.com/aom.git
-	branch = main
+[submodule "third_party/zlib"]
+	path = third_party/zlib
+	url = https://github.com/madler/zlib.git
+	branch = master
 [submodule "third_party/vorbis"]
 	path = third_party/vorbis
 	url = https://github.com/xiph/vorbis.git

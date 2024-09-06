@@ -58,36 +58,39 @@ void BindingRunner::RaiseRunnerFlags() {
 void BindingRunner::BindingFuncMain() {
   // Attach renderer to binding thread
   renderer_ = new RenderRunner();
-  renderer_->InitRenderer(share_data_->config, share_data_->window);
 
-  // Init Modules
-  graphics_ =
-      new Graphics(share_data_, weak_ptr_factory_.GetWeakPtr(), renderer_,
-                   share_data_->config->initial_resolution());
-  input_ = new Input(share_data_);
-  audio_ = new Audio(share_data_);
-  mouse_ = new Mouse(share_data_);
-  touch_ = new Touch(share_data_);
+  if (renderer_->InitRenderer(share_data_->config, share_data_->window)) {
+    // Init Modules
+    graphics_ =
+        new Graphics(share_data_, weak_ptr_factory_.GetWeakPtr(), renderer_,
+                     share_data_->config->initial_resolution());
+    input_ = new Input(share_data_);
+    audio_ = new Audio(share_data_);
+    mouse_ = new Mouse(share_data_);
+    touch_ = new Touch(share_data_);
 
-  // Before run main initialize
-  binding_engine_->InitializeBinding(this);
+    // Before run main initialize
+    binding_engine_->InitializeBinding(this);
 
-  // Boot binding components
-  binding_engine_->RunBindingMain();
+    // Boot binding components
+    binding_engine_->RunBindingMain();
 
-  // Destroy and release resource for current worker cc
-  binding_engine_->FinalizeBinding();
-  binding_engine_.reset();
+    // Destroy and release resource for current worker cc
+    binding_engine_->FinalizeBinding();
+    binding_engine_.reset();
 
-  // Release content module
-  graphics_.reset();
-  input_.reset();
-  audio_.reset();
-  mouse_.reset();
-  touch_.reset();
+    // Release content module
+    graphics_.reset();
+    input_.reset();
+    audio_.reset();
+    mouse_.reset();
+    touch_.reset();
 
-  // Destroy renderer on binding thread
-  renderer_->DestroyRenderer();
+    // Destroy renderer on binding thread
+    renderer_->DestroyRenderer();
+  } else {
+    LOG(INFO) << "[Content] Failed to load renderer device.";
+  }
 
   // Quit app required
   SDL_Event quit_event;

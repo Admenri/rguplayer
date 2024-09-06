@@ -27,5 +27,5 @@ set(SRC_AOM_PLAYER
   src/video_player.hpp
 )
 
-add_library(aom_player ${SRC_AOM_PLAYER})
-target_link_libraries(aom_player aom core_base aom webm ogg vorbis)
+add_library(av1player ${SRC_AOM_PLAYER})
+target_link_libraries(av1player dav1d core_base libwebm ogg vorbis)

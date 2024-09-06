@@ -143,9 +143,6 @@ int main(int argc, char* argv[]) {
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   TTF_Init();
 
-  // Init ANGLE vendor settings
-  content::RenderRunner::InitANGLERenderer(config->angle_renderer());
-
   std::unique_ptr<ui::Widget> win = std::make_unique<ui::Widget>();
   ui::Widget::InitParams win_params;
 
@@ -153,6 +150,8 @@ int main(int argc, char* argv[]) {
   win_params.size = config->window_size();
   win_params.title = config->game_title();
   win_params.resizable = true;
+  win_params.opengl = (config->angle_renderer() ==
+                       content::CoreConfigure::ANGLEBackend::kDisable);
   win->Init(std::move(win_params));
 
 #if defined(OS_LINUX)

@@ -23,7 +23,7 @@ SDL_EGLAttrib* SDLCALL GetANGLEPlatformCallback() {
 
 }  // namespace
 
-void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
+bool RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
                                 base::WeakPtr<ui::Widget> host_window) {
   config_ = config;
   host_window_ = host_window;
@@ -35,48 +35,17 @@ void RenderRunner::InitRenderer(scoped_refptr<CoreConfigure> config,
   PostTask(base::BindOnce(&RenderRunner::InitGLContextInternal,
                           base::Unretained(this)));
   WaitForSync();
+
+  return !!glcontext_.get();
 }
 
 void RenderRunner::DestroyRenderer() {
+  if (!glcontext_)
+    return;
+
   PostTask(base::BindOnce(&RenderRunner::QuitGLContextInternal,
                           base::Unretained(this)));
   WaitForSync();
-}
-
-void RenderRunner::InitANGLERenderer(CoreConfigure::ANGLERenderer renderer) {
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, SDL_TRUE);
-
-  if (renderer == content::CoreConfigure::ANGLERenderer::DefaultES)
-    return;
-
-  SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
-  SDL_GL_SetAttribute(SDL_GL_EGL_PLATFORM, EGL_PLATFORM_ANGLE_ANGLE);
-  g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
-  switch (renderer) {
-    case content::CoreConfigure::ANGLERenderer::D3D11:
-      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE);
-      break;
-    case content::CoreConfigure::ANGLERenderer::Vulkan:
-      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
-      break;
-    case content::CoreConfigure::ANGLERenderer::Metal:
-      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE);
-      break;
-    case content::CoreConfigure::ANGLERenderer::Software:
-      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE);
-      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE);
-      g_angle_platform.push_back(
-          EGL_PLATFORM_ANGLE_DEVICE_TYPE_SWIFTSHADER_ANGLE);
-      break;
-    default:
-      g_angle_platform.push_back(EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE);
-      break;
-  }
-  g_angle_platform.push_back(EGL_NONE);
-  SDL_EGL_SetAttributeCallbacks(GetANGLEPlatformCallback, nullptr, nullptr);
 }
 
 void RenderRunner::PostTask(base::OnceClosure task) {
@@ -88,11 +57,16 @@ void RenderRunner::WaitForSync() {
 }
 
 void RenderRunner::InitGLContextInternal() {
-  glcontext_ = SDL_GL_CreateContext(host_window_->AsSDLWindow());
-  SDL_GL_MakeCurrent(host_window_->AsSDLWindow(), glcontext_);
-  SDL_GL_SetSwapInterval(0);
+  glcontext_ = renderer::OGLDevice::Create(
+      host_window_->AsSDLWindow(),
+      (renderer::OGLDevice::ANGLEBackend)config_->angle_renderer());
+  if (!glcontext_)
+    return;
 
-  renderer::GLES2Context::CreateForCurrentThread();
+  glcontext_->MakeCurrent(false);
+  glcontext_->SetInterval(0);
+
+  renderer::GLES2Context::CreateForCurrentThread(glcontext_->GetGLLibrary());
   if (config_->renderer_debug_output())
     renderer::GLES2Context::EnableDebugOutputForCurrentThread();
 
@@ -110,14 +84,12 @@ void RenderRunner::InitGLContextInternal() {
             << max_texture_size_;
 
   renderer::GL.Clear(GL_COLOR_BUFFER_BIT);
-  SDL_GL_SwapWindow(host_window_->AsSDLWindow());
+  glcontext_->SwapBuffers();
 }
 
 void RenderRunner::QuitGLContextInternal() {
   renderer::GSM.QuitStates();
-
-  SDL_GL_DestroyContext(glcontext_);
-  glcontext_ = nullptr;
+  glcontext_.reset();
 
   LOG(INFO) << "[Content] Destroy renderer.";
 }

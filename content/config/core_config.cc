@@ -15,11 +15,13 @@ namespace content {
 
 namespace {
 
-std::map<std::string, CoreConfigure::ANGLERenderer> kRendererMapping = {
-    {"d3d11", CoreConfigure::ANGLERenderer::D3D11},
-    {"vulkan", CoreConfigure::ANGLERenderer::Vulkan},
-    {"metal", CoreConfigure::ANGLERenderer::Metal},
-    {"software", CoreConfigure::ANGLERenderer::Software},
+std::map<std::string, CoreConfigure::ANGLEBackend> kRendererMapping = {
+    {"gl", CoreConfigure::ANGLEBackend::kOpenGL},
+    {"gles", CoreConfigure::ANGLEBackend::kOpenGLES},
+    {"d3d11", CoreConfigure::ANGLEBackend::kD3D11},
+    {"d3d11on12", CoreConfigure::ANGLEBackend::kD3D11on12},
+    {"vulkan", CoreConfigure::ANGLEBackend::kVulkan},
+    {"software", CoreConfigure::ANGLEBackend::kSoftware},
 };
 
 void ReplaceStringWidth(std::string& str, char before, char after) {
@@ -53,7 +55,7 @@ void CoreConfigure::LoadCommandLine(int argc, char** argv) {
 
   game_debug_ = false;
   game_battle_test_ = false;
-  angle_renderer_ = ANGLERenderer::DefaultES;
+  angle_renderer_ = ANGLEBackend::kDisable;
 
   for (int i = 0; i < argc; i++) {
     if (std::string(argv[i]) == "test" || std::string(argv[i]) == "debug")
@@ -123,9 +125,9 @@ bool CoreConfigure::LoadConfigure(SDL_IOStream* filestream,
   }
 
   /* Renderer config */
-  if (angle_renderer_ == ANGLERenderer::DefaultES)
+  if (angle_renderer_ == ANGLEBackend::kDisable)
     angle_renderer_ =
-        (ANGLERenderer)reader.GetInteger("Renderer", "UseANGLE", 0);
+        (ANGLEBackend)reader.GetInteger("Renderer", "UseANGLE", 0);
   renderer_debug_output_ = reader.GetBoolean("Renderer", "DebugOutput", false);
   initial_resolution_.x =
       reader.GetInteger("Renderer", "ScreenWidth",

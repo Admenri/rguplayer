@@ -2,8 +2,6 @@
 
 #include "timer.hpp"
 
-#include "aom/aom_image.h"
-
 #include <algorithm>
 #include <cstdarg>
 #include <cstdio>
@@ -131,24 +129,20 @@ Player::LoadResult VideoPlayer::load(SDL_IOStream* io,
       // configure codec
       const char* codecId = pVideoTrack->GetCodecId();
 
+      Dav1dSettings aom_config;
       if (!strcmp(codecId, "V_AV1")) {
-        m_decoderData.iface = aom_codec_av1_dx();
+        dav1d_default_settings(&aom_config);
+        aom_config.max_frame_delay = 1;
+        aom_config.n_threads = m_info.decodeThreadsCount;
       } else {
         debugLog("Unsupported video codec: %s", codecId);
         return Player::LoadResult::UnsupportedVideoCodec;
       }
 
-      aom_codec_dec_cfg_t aom_config;
-      aom_config.w = m_info.width;
-      aom_config.h = m_info.height;
-      aom_config.threads = m_info.decodeThreadsCount;
-      aom_config.allow_lowbitdepth = 1;
-
       // initialize decoder
-      if (aom_codec_dec_init(&m_decoderData.codec, m_decoderData.iface,
-                             &aom_config, m_decoderData.flags)) {
-        debugLog("Failed to initialize decoder (%s)",
-                 aom_codec_error_detail(&m_decoderData.codec));
+      int open_result = dav1d_open(&m_decoderData.codec, &aom_config);
+      if (open_result) {
+        debugLog("Failed to initialize decoder (%d)", open_result);
         return Player::LoadResult::FailedInitializeVideoDecoder;
       }
 
@@ -231,7 +225,7 @@ void VideoPlayer::destroy() {
   SafeDelete<AudioDecoder>(m_audioDecoder);
 
   if (m_decoderData.initialized)
-    aom_codec_destroy(&m_decoderData.codec);
+    dav1d_close(&m_decoderData.codec);
 
   SafeDelete<FrameBuffer>(m_frameBuffer);
 
@@ -288,28 +282,24 @@ bool VideoPlayer::update(float dt) {
  * directly copied into Unity textures.
  */
 void VideoPlayer::updateYUVData(double time) {
-  if (m_decoderData.img == nullptr)
-    return;
-
   Frame* curYUV = m_frameBuffer->lockWrite(time);
 
   int plane;
-  const int bytespp =
-      (m_decoderData.img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) ? 2 : 1;
+  const int bytespp = 1;
 
   for (plane = 0; plane < 3; ++plane) {
-    const unsigned char* buf = m_decoderData.img->planes[plane];
-    const int stride = m_decoderData.img->stride[plane];
-    int w = aom_img_plane_width(m_decoderData.img, plane);
-    const int h = aom_img_plane_height(m_decoderData.img, plane);
+    const unsigned char* buf =
+        (const unsigned char*)m_decoderData.img.data[plane];
+    const int stride = ((plane == 0) ? m_decoderData.img.stride[0]
+                                     : m_decoderData.img.stride[1]);
+    int w = m_decoderData.img.p.w;
+    int h = m_decoderData.img.p.h;
+    if (plane > 0) {
+      w /= 2;
+      h /= 2;
+    }
+
     int y;
-
-    // Assuming that for nv12 we write all chroma data at once
-    if (m_decoderData.img->fmt == AOM_IMG_FMT_NV12 && plane > 1)
-      break;
-    if (m_decoderData.img->fmt == AOM_IMG_FMT_NV12 && plane == 1)
-      w *= 2;
-
     curYUV->setDraw();
     curYUV->resize(plane, stride, h);
     auto* dst = curYUV->plane(plane);
@@ -612,46 +602,45 @@ void VideoPlayer::decodePacket(Packet* p) {
     const mkvparser::Block::Frame& theFrame = pBlock->GetFrame(i);
     const long size = theFrame.len;
     // const long long offset = theFrame.pos;
+    int decode_result;
 
     unsigned char* data = m_decodeBuffer->get(size);
     theFrame.Read(m_reader, data);
 
     switch (p->type()) {
       case Packet::Type::Video: {
-        aom_codec_stream_info_t si;
-        memset(&si, 0, sizeof(si));
-        aom_codec_err_t pErr =
-            aom_codec_peek_stream_info(m_decoderData.iface, data, size, &si);
-        if (pErr) {
-          threadError(UVPX_FAILED_TO_DECODE_FRAME, "Failed to peek frame (%s).",
-                      aom_codec_err_to_string(pErr));
+        Dav1dData frame_data;
+        uint8_t* buffer = dav1d_data_create(&frame_data, size);
+        if (!buffer) {
+          threadError(UVPX_FAILED_TO_DECODE_FRAME, "Failed to load data.");
           return;
         }
 
-        aom_codec_err_t e =
-            aom_codec_decode(&m_decoderData.codec, data, size, nullptr);
-        if (e) {
-          threadError(UVPX_FAILED_TO_DECODE_FRAME,
-                      "Failed to decode frame (%s).",
-                      aom_codec_err_to_string(e));
+        // Copy frame data to buffer
+        memcpy(buffer, data, size);
+
+        decode_result = dav1d_send_data(m_decoderData.codec, &frame_data);
+        if (decode_result < 0) {
+          threadError(UVPX_FAILED_TO_DECODE_FRAME, "Failed to send data (%d).",
+                      decode_result);
           return;
         }
 
-        aom_codec_iter_t iter = NULL;
-        aom_image* img = nullptr;
-
-        while ((img = aom_codec_get_frame(&m_decoderData.codec, &iter))) {
-          if (img && img->fmt != AOM_IMG_FMT_I420) {
+        while (!dav1d_get_picture(m_decoderData.codec, &m_decoderData.img)) {
+          if (m_decoderData.img.p.layout != DAV1D_PIXEL_LAYOUT_I420) {
             threadError(UVPX_UNSUPPORTED_IMAGE_FORMAT,
-                        "Unsupported image format: %d", img->fmt);
+                        "Unsupported image format: %d",
+                        m_decoderData.img.p.layout);
             break;
           }
 
-          m_decoderData.img = img;
-
           updateYUVData(p->time());
           m_framesDecoded++;
+
+          dav1d_picture_unref(&m_decoderData.img);
         }
+
+        dav1d_data_unref(&frame_data);
 
         break;
       }

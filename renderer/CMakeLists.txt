@@ -52,6 +52,8 @@ endforeach()
 set(CORE_RENDERER_SRC
   context/gles2_context.cc
   context/gles2_context.h
+  context/gl_device.cc
+  context/gl_device.h
   draw/drawable.h
   meta/gles2meta.h
   quad/quad_array.h

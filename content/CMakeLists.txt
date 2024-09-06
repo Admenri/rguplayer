@@ -83,4 +83,4 @@ target_link_libraries(core_content PUBLIC
                       sdl_ttf_render
                       soloud
                       base_imgui
-                      aom_player)
+                      av1player)

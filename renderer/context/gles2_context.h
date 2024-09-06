@@ -19,7 +19,7 @@ namespace renderer {
 
 class GLES2Context;
 
-extern thread_local GLES2Context GL;
+extern GLES2Context GL;
 
 class GLES2Context {
  public:
@@ -30,7 +30,7 @@ class GLES2Context {
   GLES2Context& operator=(const GLES2Context&) = delete;
 
   // Create the GLESContext on current thread
-  static void CreateForCurrentThread();
+  static void CreateForCurrentThread(void* gl_library_handle);
 
   // KHR debug output
   static void EnableDebugOutputForCurrentThread();
@@ -40,10 +40,11 @@ class GLES2Context {
 #include "renderer/context/gles2_command_buffer_header_autogen.h"
 
  private:
-  void InitGLESContext();
+  void InitGLESContext(void* gl_library_handle);
   void EnableDebugOutput();
   void* GetGLProc(const std::string& fname);
 
+  void* ogl_library_ = nullptr;
   std::string suffix_;
 };
 
