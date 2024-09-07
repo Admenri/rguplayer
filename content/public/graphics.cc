@@ -188,7 +188,6 @@ void Graphics::Update() {
     renderer_->WaitForSync();
 
   /* Check flags */
-  dispatcher_->CheckRunnerFlags();
   dispatcher_->RaiseRunnerFlags();
 }
 

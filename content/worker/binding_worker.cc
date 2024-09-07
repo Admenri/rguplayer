@@ -12,7 +12,7 @@
 namespace content {
 
 BindingRunner::BindingRunner(WorkerShareData* share_data)
-    : share_data_(share_data) {}
+    : share_data_(share_data), quit_atomic_(false), reset_atomic_(false) {}
 
 void BindingRunner::InitBindingComponents(ContentInitParams& params) {
   binding_engine_ = std::move(params.binding_engine);
@@ -24,23 +24,23 @@ void BindingRunner::BindingMain() {
 }
 
 void BindingRunner::RequestQuit() {
-  quit_atomic_ = true;
+  quit_atomic_.store(true);
   runner_thread_->join();
   runner_thread_.reset();
 }
 
 void BindingRunner::RequestReset() {
-  reset_atomic_ = true;
+  reset_atomic_.store(true);
 }
 
 void BindingRunner::ClearResetFlag() {
-  reset_atomic_ = false;
+  reset_atomic_.store(false);
 }
 
 bool BindingRunner::CheckRunnerFlags() {
   bool quit_required = false;
-  quit_required |= quit_atomic_;
-  quit_required |= reset_atomic_;
+  quit_required |= quit_atomic_.load();
+  quit_required |= reset_atomic_.load();
 
   return quit_required;
 }
@@ -49,9 +49,9 @@ void BindingRunner::RaiseRunnerFlags() {
   if (!binding_engine_)
     return;
 
-  if (quit_atomic_)
+  if (quit_atomic_.load())
     binding_engine_->QuitRequired();
-  if (reset_atomic_)
+  if (reset_atomic_.load())
     binding_engine_->ResetRequired();
 }
 
