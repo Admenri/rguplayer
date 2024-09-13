@@ -6,6 +6,23 @@
 
 #include "renderer/thread/thread_manager.h"
 
+namespace {
+
+void MultiplyMatrices(const GLfloat* matrixA,
+                      const GLfloat* matrixB,
+                      GLfloat* result) {
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      result[i * 4 + j] = 0;
+      for (int k = 0; k < 4; ++k) {
+        result[i * 4 + j] += matrixA[i * 4 + k] * matrixB[k * 4 + j];
+      }
+    }
+  }
+}
+
+}  // namespace
+
 namespace renderer {
 
 namespace shader {
@@ -165,14 +182,26 @@ void GLES2ShaderBase::SetTexture(GLint location, GLuint tex, uint16_t unit) {
 }
 
 void GLES2ShaderBase::SetProjectionMatrix(const base::Vec2i& size) {
-  if (projection_cache_ == size)
+  auto* transform = GSM.states.transform.Current();
+  if (transform_cache_ == transform && projection_cache_ == size)
     return;
+  transform_cache_ = transform;
   projection_cache_ = size;
 
   const float a = 2.f / size.x;
   const float b = 2.f / size.y;
   const float c = -2.f;
   GLfloat mat[16] = {a, 0, 0, 0, 0, b, 0, 0, 0, 0, c, 0, -1, -1, -1, 1};
+
+  if (transform) {
+    const GLfloat* trans_mat = transform->GetMatrixDataUnsafe();
+
+    float ret_transform[16];
+    MultiplyMatrices(trans_mat, mat, ret_transform);
+
+    GL.UniformMatrix4fv(u_projectionMat_, 1, GL_FALSE, ret_transform);
+    return;
+  }
 
   GL.UniformMatrix4fv(u_projectionMat_, 1, GL_FALSE, mat);
 }

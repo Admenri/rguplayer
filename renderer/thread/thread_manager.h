@@ -61,6 +61,7 @@ class GlobalStateManager final {
     GLBlendFunc blend_func;
     GLClearColor clear_color;
     GLVertexAttrib vertex_attrib;
+    GLTransform transform;
   } states;
 
   GLShaderWare* shaders() const { return shaders_.get(); }

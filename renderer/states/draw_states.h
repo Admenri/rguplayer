@@ -6,6 +6,7 @@
 #define RENDERER_STATES_DRAW_STATES_H_
 
 #include "base/math/math.h"
+#include "base/math/transform.h"
 #include "renderer/meta/gles2meta.h"
 
 #include "SDL_opengl.h"
@@ -106,6 +107,12 @@ class GLClearColor : public StateStack<base::Vec4> {
 class GLVertexAttrib : public StateStack<GLID<VertexAttrib>> {
  public:
   void OnSetState(const GLID<VertexAttrib>& value) override;
+};
+
+using TransformPtr = base::TransformMatrix*;
+class GLTransform : public StateStack<TransformPtr> {
+ public:
+  void OnSetState(const TransformPtr& value) override {}
 };
 
 }  // namespace renderer

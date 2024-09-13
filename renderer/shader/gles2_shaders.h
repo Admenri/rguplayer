@@ -65,6 +65,7 @@ class GLES2ShaderBase : public GLES2Shader {
   GLint u_projectionMat_;
 
   base::Vec2i projection_cache_;
+  base::TransformMatrix* transform_cache_ = nullptr;
 };
 
 class BaseShader : public GLES2ShaderBase {

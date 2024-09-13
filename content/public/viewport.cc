@@ -75,6 +75,18 @@ void Viewport::SetRect(scoped_refptr<Rect> rect) {
   OnRectChangedInternal();
 }
 
+void Viewport::SetZoomX(float zx) {
+  CheckIsDisposed();
+
+  transform_.SetScale(base::Vec2(zx, GetZoomY()));
+}
+
+void Viewport::SetZoomY(float zy) {
+  CheckIsDisposed();
+
+  transform_.SetScale(base::Vec2(GetZoomX(), zy));
+}
+
 void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   CheckIsDisposed();
 
@@ -122,6 +134,7 @@ void Viewport::Composite() {
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.PushOnly();
   renderer::GSM.states.scissor_rect.SetIntersect(viewport_rect().rect);
+  renderer::GSM.states.transform.Push(&transform_);
 
   DrawableParent::CompositeChildren();
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
@@ -139,6 +152,7 @@ void Viewport::Composite() {
                         target_color, tone_->AsBase(), shader_program_);
   }
 
+  renderer::GSM.states.transform.Pop();
   renderer::GSM.states.scissor_rect.Pop();
   renderer::GSM.states.scissor.Pop();
 }
@@ -155,12 +169,20 @@ void Viewport::InitViewportInternal(const base::Rect& initial_rect) {
 
   color_ = new Color();
   tone_ = new Tone();
+
+  auto& vrect = viewport_rect().rect;
+  transform_.SetPosition(base::Vec2(vrect.width / 2.0f, vrect.height / 2.0f));
+  transform_.SetOrigin(base::Vec2(vrect.width / 2.0f, vrect.height / 2.0f));
 }
 
 void Viewport::OnRectChangedInternal() {
   viewport_rect().rect = rect_->AsBase();
   viewport_rect().rect.x += parent_offset_.x;
   viewport_rect().rect.y += parent_offset_.y;
+
+  auto& vrect = viewport_rect().rect;
+  transform_.SetPosition(base::Vec2(vrect.width / 2.0f, vrect.height / 2.0f));
+  transform_.SetOrigin(base::Vec2(vrect.width / 2.0f, vrect.height / 2.0f));
 
   NotifyViewportChanged();
 }
@@ -177,6 +199,7 @@ void Viewport::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
 
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);
+  renderer::GSM.states.transform.Push(&transform_);
 
   CompositeChildren();
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
@@ -194,6 +217,7 @@ void Viewport::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
                         tone_->AsBase(), shader_program_);
   }
 
+  renderer::GSM.states.transform.Pop();
   renderer::GSM.states.scissor_rect.Pop();
   renderer::GSM.states.scissor.Pop();
 }

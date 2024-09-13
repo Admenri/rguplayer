@@ -84,11 +84,31 @@ MRI_METHOD(viewport_snap_to_bitmap) {
     int v = 0;                                     \
     MriParseArgsTo(argc, argv, "i", &v);           \
     MRI_GUARD(obj->Set##name(v););                 \
-    return rb_fix_new(v);                          \
+    return self;                                   \
+  }
+
+#define VIEWPORT_DEFINE_FLOAT_ATTR(name)           \
+  MRI_METHOD(viewport_get_##name) {                \
+    scoped_refptr<content::Viewport> obj =         \
+        MriGetStructData<content::Viewport>(self); \
+    float v = 0;                                   \
+    MRI_GUARD(v = obj->Get##name(););              \
+    return rb_float_new(v);                        \
+  }                                                \
+  MRI_METHOD(viewport_set_##name) {                \
+    scoped_refptr<content::Viewport> obj =         \
+        MriGetStructData<content::Viewport>(self); \
+    double v = 0;                                  \
+    MriParseArgsTo(argc, argv, "f", &v);           \
+    MRI_GUARD(obj->Set##name(v););                 \
+    return self;                                   \
   }
 
 VIEWPORT_DEFINE_INT_ATTR(OX);
 VIEWPORT_DEFINE_INT_ATTR(OY);
+VIEWPORT_DEFINE_FLOAT_ATTR(ZoomX);
+VIEWPORT_DEFINE_FLOAT_ATTR(ZoomY);
+VIEWPORT_DEFINE_FLOAT_ATTR(Angle);
 
 #define VIEWPORT_DEFINE_VAL_ATTR(name, ivname)                         \
   MRI_METHOD(viewport_get_##name) {                                    \
@@ -148,6 +168,10 @@ void InitViewportBinding() {
   MriDefineAttr(klass, "rect", viewport, Rect);
   MriDefineAttr(klass, "color", viewport, Color);
   MriDefineAttr(klass, "tone", viewport, Tone);
+
+  MriDefineAttr(klass, "zoom_x", viewport, ZoomX);
+  MriDefineAttr(klass, "zoom_y", viewport, ZoomY);
+  MriDefineAttr(klass, "angle", viewport, Angle);
 
   MriDefineAttr(klass, "shader", viewport, shader);
 }

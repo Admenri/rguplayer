@@ -22,6 +22,7 @@ void GlobalStateManager::InitStates() {
   states.blend_func.Init(GLBlendType::Normal);
   states.clear_color.Init(base::Vec4());
   states.vertex_attrib.Init(0);
+  states.transform.Init(nullptr);
 
   shaders_ = std::make_unique<GLShaderWare>();
   quad_ibo_ = std::make_unique<QuadIndexBuffer>();
