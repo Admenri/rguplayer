@@ -11,12 +11,11 @@
 #include <string>
 #include <vector>
 
-#include "SDL_surface.h"
-#include "SDL_ttf.h"
+#include "SDL3/SDL_surface.h"
+#include "SDL3_ttf/SDL_ttf.h"
 
 #include "base/memory/ref_counted.h"
 #include "components/filesystem/filesystem.h"
-#include "content/config/core_config.h"
 #include "content/public/utility.h"
 
 namespace content {
@@ -25,8 +24,7 @@ class Font;
 
 class ScopedFontData {
  public:
-  ScopedFontData(scoped_refptr<CoreConfigure> config,
-                 filesystem::Filesystem* io);
+  ScopedFontData(filesystem::Filesystem* io, const std::string& filename);
   ~ScopedFontData();
 
   ScopedFontData(const ScopedFontData&) = delete;

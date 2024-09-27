@@ -85,26 +85,28 @@ static float SDLCALL SDL_roundf(float x)
 #include "nanosvgrast.h"
 
 /* See if an image is contained in a data source */
-int IMG_isSVG(SDL_IOStream *src)
+bool IMG_isSVG(SDL_IOStream *src)
 {
     Sint64 start;
-    int is_SVG;
+    bool is_SVG;
     char magic[4096];
     size_t magic_len;
 
-    if (!src)
-        return 0;
+    if (!src) {
+        return false;
+    }
+
     start = SDL_TellIO(src);
-    is_SVG = 0;
+    is_SVG = false;
     magic_len = SDL_ReadIO(src, magic, sizeof(magic) - 1);
     if (magic_len > 0) {
         magic[magic_len] = '\0';
         if (SDL_strstr(magic, "<svg")) {
-            is_SVG = 1;
+            is_SVG = true;
         }
     }
     SDL_SeekIO(src, start, SDL_IO_SEEK_SET);
-    return(is_SVG);
+    return is_SVG;
 }
 
 /* Load a SVG type image from an SDL datasource */
@@ -116,7 +118,7 @@ SDL_Surface *IMG_LoadSizedSVG_IO(SDL_IOStream *src, int width, int height)
     SDL_Surface *surface = NULL;
     float scale = 1.0f;
 
-    data = (char *)SDL_LoadFile_IO(src, NULL, SDL_FALSE);
+    data = (char *)SDL_LoadFile_IO(src, NULL, false);
     if (!data) {
         return NULL;
     }
@@ -125,13 +127,13 @@ SDL_Surface *IMG_LoadSizedSVG_IO(SDL_IOStream *src, int width, int height)
     image = nsvgParse(data, "px", 96.0f);
     SDL_free(data);
     if (!image || image->width <= 0.0f || image->height <= 0.0f) {
-        IMG_SetError("Couldn't parse SVG image");
+        SDL_SetError("Couldn't parse SVG image");
         return NULL;
     }
 
     rasterizer = nsvgCreateRasterizer();
     if (!rasterizer) {
-        IMG_SetError("Couldn't create SVG rasterizer");
+        SDL_SetError("Couldn't create SVG rasterizer");
         nsvgDelete(image);
         return NULL;
     }
@@ -172,15 +174,15 @@ SDL_Surface *IMG_LoadSizedSVG_IO(SDL_IOStream *src, int width, int height)
 #endif
 
 /* See if an image is contained in a data source */
-int IMG_isSVG(SDL_IOStream *src)
+bool IMG_isSVG(SDL_IOStream *src)
 {
-    return(0);
+    return false;
 }
 
 /* Load a SVG type image from an SDL datasource */
 SDL_Surface *IMG_LoadSizedSVG_IO(SDL_IOStream *src, int width, int height)
 {
-    return(NULL);
+    return NULL;
 }
 
 #endif /* LOAD_SVG */

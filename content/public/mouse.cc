@@ -6,13 +6,9 @@
 
 namespace content {
 
-Mouse::Mouse(WorkerShareData* share_data)
-    : share_data_(share_data), window_(share_data->window) {}
+Mouse::Mouse(base::WeakPtr<ui::Widget> window) : window_(window) {}
 
 void Mouse::Update() {
-  if (share_data_->menu_window_focused)
-    return;
-
   auto& mouse_state = window_->GetMouseState();
   for (size_t i = 0; i < states_.size(); ++i) {
     bool press_state = mouse_state.states[i];
@@ -22,26 +18,15 @@ void Mouse::Update() {
 
     states_[i].pressed = press_state;
     states_[i].click_count = mouse_state.clicks[i];
-    mouse_state.clicks[i] = 0;
+
+    if (states_[i].last_x != mouse_state.x ||
+        states_[i].last_y != mouse_state.y)
+      states_[i].moved = true;
+    else
+      states_[i].moved = false;
+    states_[i].last_x = mouse_state.x;
+    states_[i].last_y = mouse_state.y;
   }
-
-  if (entity_state_.last_x != mouse_state.x ||
-      entity_state_.last_y != mouse_state.y)
-    entity_state_.moved = true;
-  else
-    entity_state_.moved = false;
-  entity_state_.last_x = mouse_state.x;
-  entity_state_.last_y = mouse_state.y;
-
-  entity_state_.scroll_x = 0;
-  if (entity_state_.last_scroll_x != mouse_state.scroll_x)
-    entity_state_.scroll_x = mouse_state.scroll_x - entity_state_.last_scroll_x;
-  entity_state_.last_scroll_x = mouse_state.scroll_x;
-
-  entity_state_.scroll_y = 0;
-  if (entity_state_.last_scroll_y != mouse_state.scroll_y)
-    entity_state_.scroll_y = mouse_state.scroll_y - entity_state_.last_scroll_y;
-  entity_state_.last_scroll_y = mouse_state.scroll_y;
 }
 
 int Mouse::GetX() {
@@ -84,16 +69,12 @@ bool Mouse::IsPressed(int button) {
   return states_[button].pressed;
 }
 
-bool Mouse::IsMoved() {
-  return entity_state_.moved;
-}
-
 int Mouse::GetScrollX() {
-  return entity_state_.scroll_x;
+  return window_->GetMouseState().scroll_x;
 }
 
 int Mouse::GetScrollY() {
-  return entity_state_.scroll_y;
+  return window_->GetMouseState().scroll_y;
 }
 
 void Mouse::SetCursor(scoped_refptr<Bitmap> cursor, int hot_x, int hot_y) {

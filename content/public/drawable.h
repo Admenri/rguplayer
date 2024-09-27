@@ -6,9 +6,7 @@
 #define CONTENT_PUBLIC_DRAWABLE_H_
 
 #include "base/containers/linked_list.h"
-#include "base/math/math.h"
-
-#include <list>
+#include "base/math/rectangle.h"
 
 namespace content {
 
@@ -22,31 +20,31 @@ class DrawableParent {
     base::Vec2i origin;
 
     // Did viewport container has scissor area?
-    bool scissor = true;
+    bool has_scissor = true;
 
-    // Calculate display offset
+    // Compute viewport offset
     base::Vec2i GetRealOffset() const { return rect.Position() - origin; }
   };
 
-  DrawableParent();
+  DrawableParent() = default;
   virtual ~DrawableParent();
 
   DrawableParent(const DrawableParent&) = delete;
   DrawableParent& operator=(const DrawableParent&) = delete;
 
   void InsertDrawable(Drawable* drawable);
+  void AddChild(Drawable* drawable);
 
-  /* Running in render thread */
-  void NotifyPrepareComposite();
-  void CompositeChildren();
+  // Composite screen
+  void PrepareComposite();
+  void Composite();
 
-  /* Notify on binding thread */
-  void NotifyViewportChanged();
+  // Viewport rect
+  void NotifyViewportRectChanged();
   inline ViewportInfo& viewport_rect() { return viewport_rect_; }
 
  private:
-  friend class Drawable;
-  bool CalcDrawableOrder(Drawable* self, Drawable* other);
+  bool GetDrawableOrder(Drawable* self, Drawable* other);
 
   ViewportInfo viewport_rect_;
   base::LinkedList<Drawable> drawables_;
@@ -65,26 +63,24 @@ class Drawable {
   Drawable& operator=(const Drawable&) = delete;
 
   void SetParent(DrawableParent* parent);
-
   DrawableParent* GetParent() const {
-    CheckDisposed();
-
+    CheckObjectDisposed();
     return parent_;
   }
 
   virtual void SetZ(int z);
   int GetZ() const {
-    CheckDisposed();
+    CheckObjectDisposed();
     return z_;
   }
 
   virtual void SetVisible(bool visible) {
-    CheckDisposed();
+    CheckObjectDisposed();
     visible_ = visible;
   }
 
   bool GetVisible() const {
-    CheckDisposed();
+    CheckObjectDisposed();
     return visible_;
   }
 
@@ -93,9 +89,9 @@ class Drawable {
   }
 
  protected:
-  virtual void BeforeComposite() {}
-  virtual void Composite() = 0;
-  virtual void CheckDisposed() const = 0;
+  virtual void PrepareDraw() {}
+  virtual void OnDraw() = 0;
+  virtual void CheckObjectDisposed() const = 0;
   virtual void OnParentViewportRectChanged(
       const DrawableParent::ViewportInfo&) {}
 
@@ -105,8 +101,9 @@ class Drawable {
  private:
   friend class DrawableParent;
 
-  base::LinkNode<Drawable> node_;
-  base::LinkNode<Drawable> child_;
+  base::LinkNode<Drawable> draw_node_;
+  base::LinkNode<Drawable> child_node_;
+
   DrawableParent* parent_;
   int z_;
   bool visible_;

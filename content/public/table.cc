@@ -4,7 +4,7 @@
 
 #include "content/public/table.h"
 
-#include "base/exceptions/exception.h"
+#include "base/exception/exception.h"
 
 namespace content {
 
@@ -93,8 +93,8 @@ std::string Table::Serialize() {
   Serializable::WriteInt32(data.data(), sizeof(int32_t) * 3, z_size_);
   Serializable::WriteInt32(data.data(), sizeof(int32_t) * 4, size);
 
-  memcpy(data.data() + sizeof(int32_t) * 5, data_.data(),
-         sizeof(int16_t) * size);
+  std::memcpy(data.data() + sizeof(int32_t) * 5, data_.data(),
+              sizeof(int16_t) * size);
 
   return data;
 }
@@ -119,8 +119,8 @@ scoped_refptr<Table> Table::Deserialize(const std::string& data) {
 
   scoped_refptr<Table> obj = new Table(xsize, ysize, zsize);
   if (size)
-    memcpy(obj->data_.data(), data.data() + sizeof(int32_t) * 5,
-           size * sizeof(int16_t));
+    std::memcpy(obj->data_.data(), data.data() + sizeof(int32_t) * 5,
+                size * sizeof(int16_t));
 
   return obj;
 }

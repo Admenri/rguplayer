@@ -14,8 +14,7 @@ namespace content {
 
 class Serializable {
  public:
-  Serializable();
-  virtual ~Serializable();
+  Serializable() = default;
 
   Serializable(const Serializable&) = delete;
   Serializable& operator=(const Serializable&) = delete;

@@ -4,13 +4,9 @@
 
 #include "content/public/touch.h"
 
-#include "content/worker/worker_share.h"
-
 namespace content {
 
-Touch::Touch(WorkerShareData* share_data) : window_(share_data->window) {}
-
-Touch::~Touch() {}
+Touch::Touch(base::WeakPtr<ui::Widget> window) : window_(window) {}
 
 double Touch::GetHorizontalFinger(int fid) {
   if (fid < 0 || fid >= GetMaxFingersNum())

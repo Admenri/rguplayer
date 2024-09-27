@@ -4,13 +4,10 @@
 
 #include "ui/widget/widget.h"
 
-#include <SDL_events.h>
-#include <SDL_video.h>
+#include "SDL3/SDL_events.h"
+#include "SDL3/SDL_video.h"
 
 #include <mutex>
-
-#include "base/exceptions/exception.h"
-#include "base/worker/run_loop.h"
 
 namespace ui {
 
@@ -23,8 +20,7 @@ Widget* Widget::FromWindowID(SDL_WindowID window_id) {
 }
 
 Widget::Widget() : window_(nullptr), window_id_(SDL_WindowID()) {
-  ui_dispatcher_binding_ = base::RunLoop::BindEventDispatcher(
-      base::BindRepeating(&Widget::UIEventDispatcher, base::Unretained(this)));
+  SDL_AddEventWatch(&Widget::UIEventDispatcher, this);
 }
 
 Widget::~Widget() {
@@ -36,7 +32,7 @@ void Widget::Init(InitParams params) {
   auto property_id = SDL_CreateProperties();
 
   SDL_SetBooleanProperty(property_id, SDL_PROP_WINDOW_CREATE_OPENGL_BOOLEAN,
-                         params.opengl);
+                         true);
   SDL_SetBooleanProperty(property_id, SDL_PROP_WINDOW_CREATE_FULLSCREEN_BOOLEAN,
                          params.fullscreen);
   SDL_SetBooleanProperty(property_id, SDL_PROP_WINDOW_CREATE_FOCUSABLE_BOOLEAN,
@@ -45,13 +41,13 @@ void Widget::Init(InitParams params) {
                          params.resizable);
 
   SDL_SetBooleanProperty(property_id, SDL_PROP_WINDOW_CREATE_HIDDEN_BOOLEAN,
-                         SDL_TRUE);
+                         true);
   if (params.window_state == WindowPlacement::Maximum)
     SDL_SetBooleanProperty(property_id,
-                           SDL_PROP_WINDOW_CREATE_MAXIMIZED_BOOLEAN, SDL_TRUE);
+                           SDL_PROP_WINDOW_CREATE_MAXIMIZED_BOOLEAN, true);
   else if (params.window_state == WindowPlacement::Minimum)
     SDL_SetBooleanProperty(property_id,
-                           SDL_PROP_WINDOW_CREATE_MINIMIZED_BOOLEAN, SDL_TRUE);
+                           SDL_PROP_WINDOW_CREATE_MINIMIZED_BOOLEAN, true);
 
   SDL_SetStringProperty(property_id, SDL_PROP_WINDOW_CREATE_TITLE_STRING,
                         params.title.c_str());
@@ -134,13 +130,13 @@ bool Widget::IsFullscreen() const {
 }
 
 base::Vec2i Widget::GetPosition() {
-  base::Vec2i pos;
+  base::Vec2i pos(0);
   SDL_GetWindowPosition(window_, &pos.x, &pos.y);
   return pos;
 }
 
 base::Vec2i Widget::GetSize() {
-  base::Vec2i size;
+  base::Vec2i size(0);
   SDL_GetWindowSize(window_, &size.x, &size.y);
   return size;
 }
@@ -162,49 +158,55 @@ std::string Widget::FetchInputText() {
   return output;
 }
 
-void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
-  if (sdl_event.type == SDL_EVENT_KEY_DOWN) {
-    if (sdl_event.key.windowID == window_id_) {
-      if (sdl_event.key.scancode == SDL_SCANCODE_RETURN &&
-          (sdl_event.key.mod & SDL_KMOD_ALT)) {
+bool Widget::UIEventDispatcher(void* userdata, SDL_Event* event) {
+  Widget* self = static_cast<Widget*>(userdata);
+
+  if (event->type == SDL_EVENT_KEY_DOWN) {
+    if (event->key.windowID == self->window_id_) {
+      if (event->key.scancode == SDL_SCANCODE_RETURN &&
+          (event->key.mod & SDL_KMOD_ALT)) {
         // Toggle fullscreen
-        SetFullscreen(!IsFullscreen());
-        return;
+        bool fullscreen_state = self->IsFullscreen();
+        self->SetFullscreen(!fullscreen_state);
+
+        return true;
       }
     }
   }
 
-  switch (sdl_event.type) {
+  switch (event->type) {
     case SDL_EVENT_KEY_DOWN:
-      if (sdl_event.key.windowID == window_id_)
-        key_states_[sdl_event.key.scancode] = true;
+      if (event->key.windowID == self->window_id_)
+        self->key_states_[event->key.scancode] = true;
       break;
     case SDL_EVENT_KEY_UP:
-      if (sdl_event.key.windowID == window_id_)
-        key_states_[sdl_event.key.scancode] = false;
+      if (event->key.windowID == self->window_id_)
+        self->key_states_[event->key.scancode] = false;
       break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-      if (sdl_event.button.windowID == window_id_)
-        mouse_state_.states[sdl_event.button.button] = true;
+      if (event->button.windowID == self->window_id_)
+        self->mouse_state_.states[event->button.button] = true;
     } break;
     case SDL_EVENT_MOUSE_BUTTON_UP: {
-      if (sdl_event.button.windowID == window_id_) {
-        mouse_state_.states[sdl_event.button.button] = false;
-        mouse_state_.clicks[sdl_event.button.button] = sdl_event.button.clicks;
+      if (event->button.windowID == self->window_id_) {
+        self->mouse_state_.states[event->button.button] = false;
+        self->mouse_state_.clicks[event->button.button] = event->button.clicks;
       }
     } break;
     case SDL_EVENT_MOUSE_MOTION: {
-      if (sdl_event.motion.windowID == window_id_) {
-        float scale_x = mouse_state_.resolution.x / mouse_state_.screen.x;
-        float scale_y = mouse_state_.resolution.y / mouse_state_.screen.y;
-        float origin_x = sdl_event.motion.x - mouse_state_.screen_offset.x;
-        float origin_y = sdl_event.motion.y - mouse_state_.screen_offset.y;
+      if (event->motion.windowID == self->window_id_) {
+        float scale_x =
+            self->mouse_state_.resolution.x / self->mouse_state_.screen.x;
+        float scale_y =
+            self->mouse_state_.resolution.y / self->mouse_state_.screen.y;
+        float origin_x = event->motion.x - self->mouse_state_.screen_offset.x;
+        float origin_y = event->motion.y - self->mouse_state_.screen_offset.y;
 
-        mouse_state_.x = origin_x * scale_x;
-        mouse_state_.y = origin_y * scale_y;
+        self->mouse_state_.x = origin_x * scale_x;
+        self->mouse_state_.y = origin_y * scale_y;
 
-        if (mouse_state_.in_window && mouse_state_.focused) {
-          if (mouse_state_.visible)
+        if (self->mouse_state_.in_window && self->mouse_state_.focused) {
+          if (self->mouse_state_.visible)
             SDL_ShowCursor();
           else
             SDL_HideCursor();
@@ -212,71 +214,74 @@ void Widget::UIEventDispatcher(const SDL_Event& sdl_event) {
       }
     } break;
     case SDL_EVENT_MOUSE_WHEEL: {
-      if (sdl_event.wheel.windowID == window_id_) {
-        int flip =
-            (sdl_event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1 : 1);
-        mouse_state_.scroll_x += sdl_event.wheel.x * flip;
-        mouse_state_.scroll_y += sdl_event.wheel.y * flip;
+      if (event->wheel.windowID == self->window_id_) {
+        int flip = (event->wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1 : 1);
+        self->mouse_state_.scroll_x += event->wheel.x * flip;
+        self->mouse_state_.scroll_y += event->wheel.y * flip;
       }
     } break;
     case SDL_EVENT_FINGER_DOWN: {
-      if (sdl_event.tfinger.windowID == window_id_) {
-        int i = sdl_event.tfinger.fingerID;
+      if (event->tfinger.windowID == self->window_id_) {
+        int i = event->tfinger.fingerID;
         if (i < MAX_FINGERS)
-          finger_states_[i].down = true;
+          self->finger_states_[i].down = true;
       }
     }  // fallthrough
     case SDL_EVENT_FINGER_MOTION: {
-      if (sdl_event.tfinger.windowID == window_id_) {
+      if (event->tfinger.windowID == self->window_id_) {
         int w, h;
-        SDL_GetWindowSize(window_, &w, &h);
-        int i = sdl_event.tfinger.fingerID;
+        SDL_GetWindowSize(self->window_, &w, &h);
+        int i = event->tfinger.fingerID;
         if (i < MAX_FINGERS) {
-          float scale_x = mouse_state_.resolution.x / mouse_state_.screen.x;
-          float scale_y = mouse_state_.resolution.y / mouse_state_.screen.y;
+          float scale_x =
+              self->mouse_state_.resolution.x / self->mouse_state_.screen.x;
+          float scale_y =
+              self->mouse_state_.resolution.y / self->mouse_state_.screen.y;
           float origin_x =
-              sdl_event.tfinger.x * w - mouse_state_.screen_offset.x;
+              event->tfinger.x * w - self->mouse_state_.screen_offset.x;
           float origin_y =
-              sdl_event.tfinger.y * h - mouse_state_.screen_offset.y;
+              event->tfinger.y * h - self->mouse_state_.screen_offset.y;
 
-          finger_states_[i].x = origin_x * scale_x;
-          finger_states_[i].y = origin_y * scale_y;
+          self->finger_states_[i].x = origin_x * scale_x;
+          self->finger_states_[i].y = origin_y * scale_y;
         }
       }
     } break;
     case SDL_EVENT_FINGER_UP: {
-      if (sdl_event.tfinger.windowID == window_id_) {
-        int i = sdl_event.tfinger.fingerID;
+      if (event->tfinger.windowID == self->window_id_) {
+        int i = event->tfinger.fingerID;
         if (i < MAX_FINGERS)
-          memset(&finger_states_[i], 0, sizeof(finger_states_[0]));
+          memset(&self->finger_states_[i], 0, sizeof(finger_states_[0]));
       }
     } break;
     case SDL_EVENT_WINDOW_MOUSE_ENTER: {
-      if (sdl_event.window.windowID == window_id_)
-        mouse_state_.in_window = true;
+      if (event->window.windowID == self->window_id_)
+        self->mouse_state_.in_window = true;
     } break;
     case SDL_EVENT_WINDOW_MOUSE_LEAVE: {
-      if (sdl_event.window.windowID == window_id_)
-        mouse_state_.in_window = false;
+      if (event->window.windowID == self->window_id_)
+        self->mouse_state_.in_window = false;
     } break;
     case SDL_EVENT_WINDOW_FOCUS_GAINED: {
-      if (sdl_event.window.windowID == window_id_)
-        mouse_state_.focused = true;
+      if (event->window.windowID == self->window_id_)
+        self->mouse_state_.focused = true;
     } break;
     case SDL_EVENT_WINDOW_FOCUS_LOST: {
-      if (sdl_event.window.windowID == window_id_)
-        mouse_state_.focused = false;
+      if (event->window.windowID == self->window_id_)
+        self->mouse_state_.focused = false;
     } break;
     case SDL_EVENT_TEXT_INPUT: {
-      if (sdl_event.text.windowID == window_id_) {
-        text_lock_.lock();
-        text_buffer_ += sdl_event.text.text;
-        text_lock_.unlock();
+      if (event->text.windowID == self->window_id_) {
+        self->text_lock_.lock();
+        self->text_buffer_ += event->text.text;
+        self->text_lock_.unlock();
       }
     } break;
     default:
       break;
   }
+
+  return true;
 }
 
 }  // namespace ui

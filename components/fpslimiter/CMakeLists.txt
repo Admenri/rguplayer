@@ -10,5 +10,5 @@ set(COMPONENTS_FPSLIMITER_SRC
   fpslimiter.h
 )
 
-add_library(components_fpslimiter ${COMPONENTS_FPSLIMITER_SRC})
-target_link_libraries(components_fpslimiter core_base)
+add_library(components_fpslimiter STATIC ${COMPONENTS_FPSLIMITER_SRC})
+target_link_libraries(components_fpslimiter engine_base)

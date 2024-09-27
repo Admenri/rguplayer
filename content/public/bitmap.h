@@ -5,24 +5,23 @@
 #ifndef CONTENT_PUBLIC_BITMAP_H_
 #define CONTENT_PUBLIC_BITMAP_H_
 
-#include "SDL_pixels.h"
-#include "SDL_surface.h"
+#include "SDL3/SDL_pixels.h"
+#include "SDL3/SDL_surface.h"
 
 #include <memory>
 #include <string>
 #include <variant>
 
-#include "base/math/math.h"
+#include "base/math/rectangle.h"
 #include "base/memory/ref_counted.h"
 #include "content/public/disposable.h"
 #include "content/public/graphics.h"
 #include "content/public/utility.h"
-#include "renderer/thread/thread_manager.h"
 
 namespace content {
 
 class Bitmap : public base::RefCounted<Bitmap>,
-               public GraphicElement,
+               public GraphicsElement,
                public Disposable {
  public:
   using TextAlign = enum {
@@ -40,13 +39,10 @@ class Bitmap : public base::RefCounted<Bitmap>,
 
   scoped_refptr<Bitmap> Clone();
 
-  int GetWidth() { return size_.x; }
-  int GetHeight() { return size_.y; }
   base::Vec2i GetSize() const { return size_; }
   scoped_refptr<Rect> GetRect() { return new Rect(size_); }
 
-  void Blt(int x,
-           int y,
+  void Blt(const base::Vec2i& pos,
            scoped_refptr<Bitmap> src_bitmap,
            const base::Rect& src_rect,
            int opacity = 255);
@@ -65,9 +61,8 @@ class Bitmap : public base::RefCounted<Bitmap>,
   void Clear();
   void ClearRect(const base::Rect& rect);
 
-  /* Sync Method */
-  scoped_refptr<Color> GetPixel(int x, int y);
-  void SetPixel(int x, int y, scoped_refptr<Color> color);
+  scoped_refptr<Color> GetPixel(const base::Vec2i& pos);
+  void SetPixel(const base::Vec2i& pos, scoped_refptr<Color> color);
 
   void HueChange(int hue);
   void Blur();
@@ -81,9 +76,6 @@ class Bitmap : public base::RefCounted<Bitmap>,
   scoped_refptr<Font> GetFont() const;
   void SetFont(scoped_refptr<Font> font);
 
-  void SetSamplerInfo(bool nearest, int wrap = GL_CLAMP_TO_EDGE);
-
-  /* Sync Method */
   SDL_Surface* SurfaceRequired();
   void UpdateSurface();
 
@@ -92,47 +84,19 @@ class Bitmap : public base::RefCounted<Bitmap>,
     return observers_.Add(std::move(observer));
   }
 
-  renderer::TextureFrameBuffer* GetRaw() { return texture_; }
+  inline bgfx::FrameBufferHandle GetHandle() { return texture_; }
 
  protected:
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Bitmap"; }
 
  private:
-  static void StretchBltInternal(renderer::TextureFrameBuffer* texture,
-                                 const base::Rect& dest_rect,
-                                 renderer::TextureFrameBuffer* src_bitmap,
-                                 const base::Rect& src_rect,
-                                 float opacity);
-  static void FillRectInternal(renderer::TextureFrameBuffer* texture,
-                               const base::Rect& rect,
-                               const base::Vec4& color);
-  static void GradientFillRectInternal(renderer::TextureFrameBuffer* texture,
-                                       const base::Rect& rect,
-                                       const base::Vec4& color1,
-                                       const base::Vec4& color2,
-                                       bool vertical);
-  static void SetPixelInternal(renderer::TextureFrameBuffer* texture,
-                               int x,
-                               int y,
-                               const base::Vec4& color);
-  static void HueChangeInternal(renderer::TextureFrameBuffer* texture, int hue);
-  static void DrawTextInternal(renderer::TextureFrameBuffer* texture,
-                               SDL_Surface* txt_surf,
-                               uint8_t fopacity,
-                               const base::Rect& rect,
-                               TextAlign align);
-
-  static void GetSurfaceInternal(renderer::TextureFrameBuffer* texture,
-                                 SDL_Surface* output,
-                                 std::atomic_bool* fence);
-  static void UpdateSurfaceInternal(renderer::TextureFrameBuffer* texture,
-                                    std::vector<uint8_t> data);
-
   void NeedUpdateSurface();
 
   base::Vec2i size_;
-  renderer::TextureFrameBuffer* texture_;
+  bgfx::FrameBufferHandle texture_;
+  bgfx::TextureHandle read_buffer_;
+
   scoped_refptr<Font> font_;
   base::RepeatingClosureList observers_;
   SDL_Surface* surface_buffer_;

@@ -4,7 +4,7 @@
 
 #include "content/public/font.h"
 
-#include "base/exceptions/exception.h"
+#include "base/exception/exception.h"
 #include "content/public/utility.h"
 
 #define OutlineSize 1
@@ -14,10 +14,9 @@ namespace content {
 namespace {
 
 void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
-  auto* pixel_detail = SDL_GetPixelFormatDetails(in->format);
-
   SDL_Surface* out = SDL_CreateSurface(in->w + 1, in->h + 1, in->format);
   float fr = color.r / 255.0f, fg = color.g / 255.0f, fb = color.b / 255.0f;
+  auto* detail = SDL_GetPixelFormatDetails(in->format);
 
   for (int y = 0; y < in->h + 1; ++y) {
     for (int x = 0; x < in->w + 1; ++x) {
@@ -28,21 +27,20 @@ void RenderShadowSurface(SDL_Surface*& in, const SDL_Color& color) {
         src = ((uint32_t*)((uint8_t*)in->pixels + y * in->pitch))[x];
       if (y > 0 && x > 0)
         shd = ((uint32_t*)((uint8_t*)in->pixels + (y - 1) * in->pitch))[x - 1] &
-              pixel_detail->Amask;
+              detail->Amask;
 
-      if (x == 0 || y == 0 || src & pixel_detail->Amask) {
+      if (x == 0 || y == 0 || src & detail->Amask) {
         *outP = (x == in->w || y == in->h) ? shd : src;
         continue;
       }
 
-      uint8_t srcA = (src & pixel_detail->Amask) >> pixel_detail->Ashift;
+      uint8_t srcA = (src & detail->Amask) >> detail->Ashift;
       float fSrcA = srcA / 255.0f,
-            fShdA =
-                ((shd & pixel_detail->Amask) >> pixel_detail->Ashift) / 255.0f;
+            fShdA = ((shd & detail->Amask) >> detail->Ashift) / 255.0f;
       float fa = fSrcA + fShdA * (1.0f - fSrcA), co3 = fSrcA / fa;
 
       *outP = SDL_MapRGBA(
-          pixel_detail, nullptr,
+          detail, nullptr,
           static_cast<uint8_t>(std::clamp(fr * co3, 0.0f, 1.0f) * 255),
           static_cast<uint8_t>(std::clamp(fg * co3, 0.0f, 1.0f) * 255),
           static_cast<uint8_t>(std::clamp(fb * co3, 0.0f, 1.0f) * 255),
@@ -70,7 +68,7 @@ TTF_Font* ReadFontFromMemory(
   auto it = mem_fonts.find(path);
   if (it != mem_fonts.end()) {
     SDL_IOStream* io = SDL_IOFromConstMem(it->second.second, it->second.first);
-    return TTF_OpenFontIO(io, SDL_TRUE, size * 0.9f);
+    return TTF_OpenFontIO(io, true, size * 0.9f);
   }
 
   return nullptr;
@@ -78,11 +76,10 @@ TTF_Font* ReadFontFromMemory(
 
 }  // namespace
 
-ScopedFontData::ScopedFontData(scoped_refptr<CoreConfigure> config,
-                               filesystem::Filesystem* io)
+ScopedFontData::ScopedFontData(filesystem::Filesystem* io,
+                               const std::string& filename)
     : default_color_(new Color(255.0, 255.0, 255.0, 255.0)),
       default_out_color_(new Color(0, 0, 0, 255.0)) {
-  std::string filename(config->default_font_path());
   std::string dir("."), file;
 
   size_t last_slash_pos = filename.find_last_of('/');
@@ -94,8 +91,6 @@ ScopedFontData::ScopedFontData(scoped_refptr<CoreConfigure> config,
 
   dir.push_back('/');
   font_default_name_ = file;
-  LOG(INFO) << "[Font] Search Path: " << dir;
-  LOG(INFO) << "[Font] Default Font: " << file;
   default_name_.push_back(file);
 
   auto font_files = io->EnumDir(dir);
@@ -111,10 +106,8 @@ ScopedFontData::ScopedFontData(scoped_refptr<CoreConfigure> config,
     }
 
     // Cached in memory
-    if (font_ops) {
-      LOG(INFO) << "[Font] Loaded Font: " << file_iter;
+    if (font_ops)
       mem_fonts_.emplace(file_iter, ReadFontToMemory(font_ops));
-    }
   }
 }
 

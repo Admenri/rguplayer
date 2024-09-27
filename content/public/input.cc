@@ -4,11 +4,7 @@
 
 #include "content/public/input.h"
 
-#include "base/worker/run_loop.h"
-#include "content/common/command_ids.h"
-#include "third_party/imgui/imgui.h"
-
-#include "SDL_events.h"
+#include "SDL3/SDL_events.h"
 
 #include <fstream>
 
@@ -70,8 +66,9 @@ const std::array<std::string, 12> kButtonItems = {
 
 }  // namespace
 
-Input::Input(WorkerShareData* share_data) : share_data_(share_data) {
-  window_ = share_data_->window;
+Input::Input(base::WeakPtr<ui::Widget> window, scoped_refptr<Profile> profile)
+    : window_(window), profile_(profile) {
+  // Reset states
   memset(key_states_.data(), 0, key_states_.size() * sizeof(KeyState));
   memset(recent_key_states_.data(), 0,
          recent_key_states_.size() * sizeof(KeyState));
@@ -80,19 +77,16 @@ Input::Input(WorkerShareData* share_data) : share_data_(share_data) {
   for (int i = 0; i < kDefaultKeyboardBindingsSize; ++i)
     key_bindings_.push_back(kDefaultKeyboardBindings[i]);
 
-  if (share_data_->config->content_version() == RGSSVersion::RGSS1)
+  if (profile_->content_version() == APIVersion::RGSS1)
     for (int i = 0; i < kKeyboardBindings1Size; ++i)
       key_bindings_.push_back(kKeyboardBindings1[i]);
 
-  if (share_data_->config->content_version() >= RGSSVersion::RGSS2)
+  if (profile_->content_version() >= APIVersion::RGSS2)
     for (int i = 0; i < kKeyboardBindings2Size; ++i)
       key_bindings_.push_back(kKeyboardBindings2[i]);
 
   TryReadBindingsInternal();
-
   setting_bindings_ = key_bindings_;
-  share_data_->create_button_settings_gui = base::BindRepeating(
-      &Input::ShowButtonSettingsGUI, weak_ptr_factory_.GetWeakPtr());
 }
 
 Input::~Input() {
@@ -104,10 +98,7 @@ void Input::ApplyKeySymBinding(const KeySymMap& keysyms) {
 }
 
 void Input::Update() {
-  if (share_data_->menu_window_focused)
-    return;
-
-  for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
+  for (int i = 0; i < SDL_SCANCODE_COUNT; ++i) {
     bool key_pressed = window_->GetKeyState(static_cast<SDL_Scancode>(i));
 
     /* Update key state with elder state */
@@ -195,7 +186,7 @@ bool Input::KeyRepeated(int scancode) {
 
 std::string Input::GetKeyName(int scancode) {
   SDL_Keycode key = SDL_GetKeyFromScancode(static_cast<SDL_Scancode>(scancode),
-                                           SDL_KMOD_NONE, SDL_FALSE);
+                                           SDL_KMOD_NONE, false);
   return std::string(SDL_GetKeyName(key));
 }
 
@@ -266,41 +257,6 @@ int Input::Dir4() {
 
 int Input::Dir8() {
   return dir8_state_.active;
-}
-
-void Input::EmulateKeyState(int scancode, bool pressed) {
-  window_->EmulateKeyState((::SDL_Scancode)scancode, pressed);
-}
-
-void Input::SetTextInput(bool enable) {
-  share_data_->event_runner->PostTask(base::BindOnce(
-      [](SDL_Window* window, bool enable_input) {
-        enable_input ? SDL_StartTextInput(window) : SDL_StopTextInput(window);
-      },
-      window_->AsSDLWindow(), enable));
-  share_data_->event_runner->WaitForSync();
-
-  FetchText();
-}
-
-bool Input::IsTextInput() {
-  return SDL_TextInputActive(window_->AsSDLWindow());
-}
-
-std::string Input::FetchText() {
-  return window_->FetchInputText();
-}
-
-void Input::SetTextInputRect(scoped_refptr<Rect> region) {
-  auto rt = region->AsBase();
-  SDL_Rect sdlrt{rt.x, rt.y, rt.width, rt.height};
-
-  share_data_->event_runner->PostTask(base::BindOnce(
-      [](SDL_Window* window, SDL_Rect* rect) {
-        SDL_SetTextInputArea(window, rect, 0);
-      },
-      window_->AsSDLWindow(), &sdlrt));
-  share_data_->event_runner->WaitForSync();
 }
 
 void Input::UpdateDir4Internal() {
@@ -399,132 +355,10 @@ void Input::UpdateDir8Internal() {
   }
 }
 
-void Input::ShowButtonSettingsGUI() {
-  scoped_refptr<CoreConfigure> config = share_data_->config;
-  static int selected_button = 0, selected_binding = -1;
-  share_data_->disable_gui_key_input = (selected_binding != -1);
-
-  if (ImGui::CollapsingHeader(
-          config->GetI18NString(IDS_SETTINGS_BUTTON, "Button").c_str())) {
-    auto list_height = 6 * ImGui::GetTextLineHeightWithSpacing();
-    // Button name list box
-    if (ImGui::BeginListBox(
-            "##button_list",
-            ImVec2(ImGui::CalcItemWidth() / 2.0f, list_height + 64))) {
-      for (size_t i = 0; i < kButtonItems.size(); ++i) {
-        if (ImGui::Selectable(kButtonItems[i].c_str(),
-                              static_cast<int>(i) == selected_button)) {
-          selected_button = i;
-          selected_binding = -1;
-        }
-      }
-
-      ImGui::EndListBox();
-    }
-
-    ImGui::SameLine();
-    std::string button_name = kButtonItems[selected_button];
-
-    // Binding list box
-    {
-      ImGui::BeginGroup();
-      if (ImGui::BeginListBox("##binding_list",
-                              ImVec2(-FLT_MIN, list_height))) {
-        for (size_t i = 0; i < setting_bindings_.size(); ++i) {
-          auto& it = setting_bindings_[i];
-          if (it.sym == button_name) {
-            const bool is_select = (selected_binding == static_cast<int>(i));
-
-            // Generate button sign
-            std::string display_button_name = SDL_GetScancodeName(it.scancode);
-            if (it.scancode == SDL_SCANCODE_UNKNOWN)
-              display_button_name = "<x>";
-            if (is_select)
-              display_button_name = "<...>";
-            display_button_name += "##";
-            display_button_name.push_back(i);
-
-            // Find conflict bindings
-            int conflict_count = -1;
-            for (auto& item : setting_bindings_)
-              if (item == it)
-                conflict_count++;
-
-            // Draw selectable
-            const bool is_conflict = !!conflict_count;
-            if (is_conflict)
-              ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
-
-            if (ImGui::Selectable(display_button_name.c_str(), is_select)) {
-              selected_binding = (is_select ? -1 : i);
-            }
-
-            if (is_conflict)
-              ImGui::PopStyleColor();
-          }
-        }
-
-        ImGui::EndListBox();
-      }
-
-      // Get any keys state for binding
-      if (share_data_->disable_gui_key_input) {
-        for (int code = 0; code < SDL_NUM_SCANCODES; ++code) {
-          bool key_pressed =
-              window_->GetKeyState(static_cast<SDL_Scancode>(code));
-          if (key_pressed) {
-            setting_bindings_[selected_binding].scancode =
-                static_cast<SDL_Scancode>(code);
-            selected_binding = -1;
-          }
-        }
-      }
-
-      // Add binding
-      if (ImGui::Button(config->GetI18NString(IDS_BUTTON_ADD, "Add").c_str())) {
-        selected_binding = -1;
-        setting_bindings_.push_back(
-            KeyBinding{button_name, SDL_SCANCODE_UNKNOWN});
-      }
-
-      ImGui::SameLine();
-
-      // Remove binding
-      if (selected_binding >= 0 &&
-          ImGui::Button(
-              config->GetI18NString(IDS_BUTTON_REMOVE, "Remove").c_str())) {
-        auto it = setting_bindings_.begin();
-        for (int i = 0; i < selected_binding; ++i)
-          it++;
-
-        setting_bindings_.erase(it);
-        selected_binding = -1;
-      }
-
-      ImGui::EndGroup();
-    }
-
-    if (ImGui::Button(
-            config->GetI18NString(IDS_BUTTON_SAVE_SETTINGS, "Save Settings")
-                .c_str())) {
-      key_bindings_ = setting_bindings_;
-      selected_binding = -1;
-    }
-
-    ImGui::SameLine();
-    if (ImGui::Button(
-            config->GetI18NString(IDS_BUTTON_RESET_SETTINGS, "Reset Settings")
-                .c_str())) {
-      setting_bindings_ = key_bindings_;
-      selected_binding = -1;
-    }
-  }
-}
-
 void Input::TryReadBindingsInternal() {
-  std::string filepath = share_data_->config->executable_file();
+  std::string filepath = profile_->executable_file();
   filepath += ".cg";
-  filepath += std::to_string((int)share_data_->config->content_version());
+  filepath += std::to_string((int)profile_->content_version());
 
   std::ifstream fs(filepath, std::ios::binary);
   if (fs.is_open()) {
@@ -548,9 +382,9 @@ void Input::TryReadBindingsInternal() {
 }
 
 void Input::StorageBindingsInternal() {
-  std::string filepath = share_data_->config->executable_file();
+  std::string filepath = profile_->executable_file();
   filepath += ".cg";
-  filepath += std::to_string((int)share_data_->config->content_version());
+  filepath += std::to_string((int)profile_->content_version());
 
   std::ofstream fs(filepath, std::ios::binary);
   if (fs.is_open()) {

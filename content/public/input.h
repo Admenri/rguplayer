@@ -9,9 +9,8 @@
 #include <vector>
 
 #include "base/memory/ref_counted.h"
-#include "content/config/core_config.h"
+#include "content/profile/engine_profile.h"
 #include "content/public/utility.h"
-#include "content/worker/worker_share.h"
 #include "ui/widget/widget.h"
 
 namespace content {
@@ -35,7 +34,7 @@ class Input final : public base::RefCounted<Input> {
   };
 
   using KeySymMap = std::vector<KeyBinding>;
-  Input(WorkerShareData* share_data);
+  Input(base::WeakPtr<ui::Widget> window, scoped_refptr<Profile> profile);
   ~Input();
 
   Input(const Input&) = delete;
@@ -64,24 +63,17 @@ class Input final : public base::RefCounted<Input> {
   int Dir4();
   int Dir8();
 
-  void EmulateKeyState(int scancode, bool pressed);
-  void SetTextInput(bool enable);
-  bool IsTextInput();
-  std::string FetchText();
-  void SetTextInputRect(scoped_refptr<Rect> region);
-
  private:
   void UpdateDir4Internal();
   void UpdateDir8Internal();
 
-  void ShowButtonSettingsGUI();
   void TryReadBindingsInternal();
   void StorageBindingsInternal();
 
-  WorkerShareData* share_data_;
+  scoped_refptr<Profile> profile_;
   KeySymMap key_bindings_;
-  std::array<KeyState, SDL_NUM_SCANCODES> key_states_;
-  std::array<KeyState, SDL_NUM_SCANCODES> recent_key_states_;
+  std::array<KeyState, SDL_SCANCODE_COUNT> key_states_;
+  std::array<KeyState, SDL_SCANCODE_COUNT> recent_key_states_;
 
   KeySymMap setting_bindings_;
 

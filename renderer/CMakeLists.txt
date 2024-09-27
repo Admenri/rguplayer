@@ -1,73 +1,65 @@
-# GLESRenderer of RGU Core
+# Renderer components
 cmake_minimum_required(VERSION 3.20.1)
 
 #--------------------------------------------------------------------------------
-# GLESContext command autogen
-#--------------------------------------------------------------------------------
-
-### GLES2.0 API ###
-
-# Export header file import
-execute_process(
-  COMMAND "${PYTHON_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/buildtools/build_gles2_command_buffer.py" "--file=${PROJECT_SOURCE_DIR}/renderer/context/gles2_commands.txt" --header "--output=${RGU_AUTOGEN_DIR}/renderer/context/gles2_command_buffer_header_autogen.h"
-  RESULT_VARIABLE PYTHON_SCRIPT_RESULT
-  OUTPUT_QUIET
-)
-
-# Export header file import
-execute_process(
-  COMMAND "${PYTHON_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/buildtools/build_gles2_command_buffer.py" "--file=${PROJECT_SOURCE_DIR}/renderer/context/gles2_commands.txt" --body "--output=${RGU_AUTOGEN_DIR}/renderer/context/gles2_command_buffer_header_autogen.cc"
-  RESULT_VARIABLE PYTHON_SCRIPT_RESULT
-  OUTPUT_QUIET
-)
-
-if(NOT PYTHON_SCRIPT_RESULT EQUAL 0)
-  message(FATAL_ERROR "Failed to generate gles2 header: ${PYTHON_SCRIPT_RESULT}")
-endif()
-
-#--------------------------------------------------------------------------------
-# Auto-gen shader embed binary source
-#--------------------------------------------------------------------------------
-
-file(GLOB RENDERER_SHADER_FILES "${PROJECT_SOURCE_DIR}/renderer/shader/glsl/*")
-foreach(SHADER_FILE ${RENDERER_SHADER_FILES})
-  get_filename_component(FILE_EXTNAME ${SHADER_FILE} EXT)
-  get_filename_component(FILE_NAME ${SHADER_FILE} NAME)
-  if (FILE_EXTNAME STREQUAL ".vert" OR FILE_EXTNAME STREQUAL ".frag")
-    execute_process(
-      COMMAND "${PYTHON_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/buildtools/build_file_binary.py" "${SHADER_FILE}" -o "${RGU_AUTOGEN_DIR}/renderer/shader/glsl/${FILE_NAME}.xxd"
-      RESULT_VARIABLE SHADER_GENERATE_RESULT
-      OUTPUT_QUIET
-    )
-    if(NOT SHADER_GENERATE_RESULT EQUAL 0)
-      message(FATAL_ERROR "Failed to generate shader embed file: ${SHADER_GENERATE_RESULT}")
-    endif()
-  endif()
-endforeach()
-
-#--------------------------------------------------------------------------------
-# GLESRenderer components
+# Renderer source
 #--------------------------------------------------------------------------------
 
 set(CORE_RENDERER_SRC
-  context/gles2_context.cc
-  context/gles2_context.h
-  context/gl_device.cc
-  context/gl_device.h
-  draw/drawable.h
-  meta/gles2meta.h
-  quad/quad_array.h
-  quad/quad_drawable.cc
-  quad/quad_drawable.h
-  shader/gles2_shaders.cc
-  shader/gles2_shaders.h
-  states/draw_states.cc
-  states/draw_states.h
-  thread/thread_manager.cc
-  thread/thread_manager.h
-  vertex/vertex_set.cc
-  vertex/vertex_set.h
+	device/render_device.cc
+	device/render_device.h
+  drawable/input_layout.cc
+  drawable/input_layout.h
+	drawable/quad_array.cc
+	drawable/quad_array.h
+	drawable/quad_drawable.cc
+	drawable/quad_drawable.h
+	pipeline/render_pipeline.cc
+	pipeline/render_pipeline.h
 )
 
-add_library(core_renderer ${CORE_RENDERER_SRC})
-target_link_libraries(core_renderer PUBLIC core_base)
+#--------------------------------------------------------------------------------
+# Shader compile
+#--------------------------------------------------------------------------------
+
+set(SHADER_GEN_OUTPUT ${RGU_AUTOGEN_DIR}/renderer/pipeline/shaders)
+function(renderer_shader_compile shader_name shader_type)
+	set(SHADER_VARYING_DEFINE_FILE ${PROJECT_SOURCE_DIR}/renderer/pipeline/shaders/common/varying.def.sc)
+	bgfx_compile_shaders(
+		TYPE ${shader_type}
+		SHADERS pipeline/shaders/${shader_name}.sc
+		VARYING_DEF ${SHADER_VARYING_DEFINE_FILE}
+		OUTPUT_DIR ${SHADER_GEN_OUTPUT}
+		AS_HEADERS
+	)
+	set(RENDERER_SHADERS_SOURCE
+		${RENDERER_SHADERS_SOURCE}
+		pipeline/shaders/${shader_name}.sc
+	PARENT_SCOPE)
+	set(GEN_SHADERS_SOURCE
+		${GEN_SHADERS_SOURCE}
+		${shader_name}.sc
+	PARENT_SCOPE)
+endfunction()
+
+renderer_shader_compile(base_vert VERTEX)
+renderer_shader_compile(base_frag FRAGMENT)
+renderer_shader_compile(texblt_frag FRAGMENT)
+renderer_shader_compile(basecolor_vert VERTEX)
+renderer_shader_compile(basecolor_frag FRAGMENT)
+renderer_shader_compile(hue_frag FRAGMENT)
+
+string(REPLACE ";" " " SHADER_LIST "${GEN_SHADERS_SOURCE}")
+set(SHADER_OUTPUT_FILE "${RGU_AUTOGEN_DIR}/renderer/pipeline/shaders/shader_set_autogen.h")
+
+add_custom_command(
+  OUTPUT ${SHADER_OUTPUT_FILE}
+  COMMAND ${CMAKE_COMMAND} -E echo "Generating shader include header file..."
+  COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/buildtools/generate_shader_include.py ${SHADER_OUTPUT_FILE} ${SHADER_LIST}
+  DEPENDS ${PROJECT_SOURCE_DIR}/buildtools/generate_shader_include.py
+  COMMENT "Generating C++ include header with shader list: ${GEN_SHADERS_SOURCE}"
+)
+
+add_library(engine_renderer ${CORE_RENDERER_SRC} ${RENDERER_SHADERS_SOURCE} ${SHADER_OUTPUT_FILE})
+target_link_libraries(engine_renderer PUBLIC engine_base engine_ui bx bgfx)
+target_include_directories(engine_renderer PRIVATE ${SHADER_GEN_OUTPUT})

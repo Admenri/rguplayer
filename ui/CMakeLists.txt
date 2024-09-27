@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.20.1)
 
 #--------------------------------------------------------------------------------
-# Define ui source
+# ui widget
 #--------------------------------------------------------------------------------
 
 set(UI_SRC
@@ -10,5 +10,5 @@ set(UI_SRC
   widget/widget.h
 )
 
-add_library(core_ui ${UI_SRC})
-target_link_libraries(core_ui PUBLIC core_base)
+add_library(engine_ui ${UI_SRC})
+target_link_libraries(engine_ui PUBLIC engine_base)

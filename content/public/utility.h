@@ -8,11 +8,11 @@
 #include <algorithm>
 
 #include "base/bind/callback_list.h"
-#include "base/math/math.h"
+#include "base/math/rectangle.h"
 #include "base/memory/ref_counted.h"
 #include "content/public/serializable.h"
 
-#include "SDL_pixels.h"
+#include "SDL3/SDL_pixels.h"
 
 namespace content {
 
@@ -38,7 +38,6 @@ class Rect : public base::RefCounted<Rect>,
  public:
   Rect() = default;
   Rect(const base::Rect& rect) : data_(rect) {}
-
   Rect(const Rect& other) { data_ = other.data_; }
 
   Rect& operator=(const Rect& other) {
@@ -95,23 +94,7 @@ class Rect : public base::RefCounted<Rect>,
     UpdateData();
   }
 
-  base::Rect AsBase(bool normalize = false) {
-    if (normalize) {
-      if (data_.width < 0) {
-        data_.width = -data_.width;
-        data_.x -= data_.width;
-      }
-
-      if (data_.height < 0) {
-        data_.height = -data_.height;
-        data_.y -= data_.height;
-      }
-    }
-
-    return data_;
-  }
-
-  bool IsValid() const { return data_.width != 0 && data_.height != 0; }
+  inline base::Rect AsBase() const { return data_; }
 
   std::string Serialize() override;
   static scoped_refptr<Rect> Deserialize(const std::string& data);

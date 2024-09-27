@@ -9,12 +9,14 @@
 #include "base/memory/ref_counted.h"
 #include "base/memory/weak_ptr.h"
 
-#include "SDL_iostream.h"
+#include "SDL3/SDL_iostream.h"
 
 namespace filesystem {
 
 class Filesystem {
  public:
+  using FileStream = SDL_IOStream;
+
   Filesystem(const std::string& argv0);
   ~Filesystem();
 

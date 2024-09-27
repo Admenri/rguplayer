@@ -6,17 +6,13 @@
 #define CONTENT_PUBLIC_TOUCH_H_
 
 #include "base/memory/ref_counted.h"
-#include "content/config/core_config.h"
 #include "ui/widget/widget.h"
 
 namespace content {
 
-struct WorkerShareData;
-
 class Touch : public base::RefCounted<Touch> {
  public:
-  Touch(WorkerShareData* share_data);
-  ~Touch();
+  Touch(base::WeakPtr<ui::Widget> window);
 
   Touch(const Touch&) = delete;
   Touch& operator=(const Touch&) = delete;

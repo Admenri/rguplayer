@@ -1,8 +1,8 @@
-# Base components
+# base components
 cmake_minimum_required(VERSION 3.20.1)
 
 #--------------------------------------------------------------------------------
-# Define base source
+# base components
 #--------------------------------------------------------------------------------
 
 set(CORE_BASE_SRC
@@ -22,10 +22,11 @@ set(CORE_BASE_SRC
   containers/linked_list.h
   debug/logging.cc
   debug/logging.h
-  exceptions/exception.h
-  math/math.cc
-  math/math.h
+  math/rectangle.cc
+  math/rectangle.h
   math/transform.h
+  math/vector.cc
+  math/vector.h
   memory/atomic_flag.cc
   memory/atomic_flag.h
   memory/atomic_ref_count.h
@@ -41,24 +42,17 @@ set(CORE_BASE_SRC
   memory/weak_ptr.h
   thread/thread_checker.cc
   thread/thread_checker.h
-  worker/run_loop.cc
-  worker/run_loop.h
-  worker/thread_worker.cc
-  worker/thread_worker.h
   template_util.h
 )
 
-add_library(core_base ${CORE_BASE_SRC} ${CORE_BASE_THIRD_PARTY})
+add_library(engine_base STATIC ${CORE_BASE_SRC})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Android")
-  set(LOG_LIBS
-    android
-    log
-  )
+  target_link_libraries(engine_base PUBLIC android log)
 endif()
 
 if(SDL_STATIC)
-target_link_libraries(core_base PUBLIC SDL3::SDL3-static ${LOG_LIBS})
+  target_link_libraries(engine_base PUBLIC SDL3::SDL3-static)
 else()
-target_link_libraries(core_base PUBLIC SDL3-shared ${LOG_LIBS})
+  target_link_libraries(engine_base PUBLIC SDL3::SDL3-shared)
 endif()

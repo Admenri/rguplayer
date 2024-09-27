@@ -70,15 +70,14 @@ extern SDL_DECLSPEC int SDLCALL IMG_Version(void);
 /**
  * Initialization flags
  */
-typedef enum IMG_InitFlags
-{
-    IMG_INIT_JPG    = 0x00000001,
-    IMG_INIT_PNG    = 0x00000002,
-    IMG_INIT_TIF    = 0x00000004,
-    IMG_INIT_WEBP   = 0x00000008,
-    IMG_INIT_JXL    = 0x00000010,
-    IMG_INIT_AVIF   = 0x00000020
-} IMG_InitFlags;
+typedef Uint32 IMG_InitFlags;
+
+#define IMG_INIT_JPG    0x00000001
+#define IMG_INIT_PNG    0x00000002
+#define IMG_INIT_TIF    0x00000004
+#define IMG_INIT_WEBP   0x00000008
+#define IMG_INIT_JXL    0x00000010
+#define IMG_INIT_AVIF   0x00000020
 
 /**
  * Initialize SDL_image.
@@ -142,7 +141,7 @@ typedef enum IMG_InitFlags
  *
  * \sa IMG_Quit
  */
-extern SDL_DECLSPEC int SDLCALL IMG_Init(int flags);
+extern SDL_DECLSPEC IMG_InitFlags SDLCALL IMG_Init(IMG_InitFlags flags);
 
 /**
  * Deinitialize SDL_image.
@@ -190,9 +189,9 @@ extern SDL_DECLSPEC void SDLCALL IMG_Quit(void);
  * by calling: SDL_SetSurfaceColorKey(image, SDL_RLEACCEL,
  * image->format->colorkey);
  *
- * If `closeio` is SDL_TRUE, `src` will be closed before returning, whether
- * this function succeeds or not. SDL_image reads everything it needs from
- * `src` during this call in any case.
+ * If `closeio` is true, `src` will be closed before returning, whether this
+ * function succeeds or not. SDL_image reads everything it needs from `src`
+ * during this call in any case.
  *
  * Even though this function accepts a file type, SDL_image may still try
  * other decoders that are capable of detecting file type from the contents of
@@ -217,8 +216,8 @@ extern SDL_DECLSPEC void SDLCALL IMG_Quit(void);
  * call to SDL_DestroySurface().
  *
  * \param src an SDL_IOStream that data will be read from.
- * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
- *                SDL_FALSE to leave it open.
+ * \param closeio true to close/free the SDL_IOStream before returning, false
+ *                to leave it open.
  * \param type a filename extension that represent this data ("BMP", "GIF",
  *             "PNG", etc).
  * \returns a new SDL surface, or NULL on error.
@@ -229,7 +228,7 @@ extern SDL_DECLSPEC void SDLCALL IMG_Quit(void);
  * \sa IMG_Load_IO
  * \sa SDL_DestroySurface
  */
-extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadTyped_IO(SDL_IOStream *src, SDL_bool closeio, const char *type);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_LoadTyped_IO(SDL_IOStream *src, bool closeio, const char *type);
 
 /**
  * Load an image from a filesystem path into a software surface.
@@ -297,9 +296,9 @@ extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_Load(const char *file);
  * by calling: SDL_SetSurfaceColorKey(image, SDL_RLEACCEL,
  * image->format->colorkey);
  *
- * If `closeio` is SDL_TRUE, `src` will be closed before returning, whether
- * this function succeeds or not. SDL_image reads everything it needs from
- * `src` during this call in any case.
+ * If `closeio` is true, `src` will be closed before returning, whether this
+ * function succeeds or not. SDL_image reads everything it needs from `src`
+ * during this call in any case.
  *
  * There is a separate function to read files from disk without having to deal
  * with SDL_IOStream: `IMG_Load("filename.jpg")` will call this function and
@@ -318,8 +317,8 @@ extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_Load(const char *file);
  * call to SDL_DestroySurface().
  *
  * \param src an SDL_IOStream that data will be read from.
- * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
- *                SDL_FALSE to leave it open.
+ * \param closeio true to close/free the SDL_IOStream before returning, false
+ *                to leave it open.
  * \returns a new SDL surface, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
@@ -328,7 +327,7 @@ extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_Load(const char *file);
  * \sa IMG_LoadTyped_IO
  * \sa SDL_DestroySurface
  */
-extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_Load_IO(SDL_IOStream *src, SDL_bool closeio);
+extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_Load_IO(SDL_IOStream *src, bool closeio);
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 
@@ -381,9 +380,9 @@ extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture(SDL_Renderer *renderer
  * data (but in many cases, this will just end up being 32-bit RGB or 32-bit
  * RGBA).
  *
- * If `closeio` is SDL_TRUE, `src` will be closed before returning, whether
- * this function succeeds or not. SDL_image reads everything it needs from
- * `src` during this call in any case.
+ * If `closeio` is true, `src` will be closed before returning, whether this
+ * function succeeds or not. SDL_image reads everything it needs from `src`
+ * during this call in any case.
  *
  * There is a separate function to read files from disk without having to deal
  * with SDL_IOStream: `IMG_LoadTexture(renderer, "filename.jpg")` will call
@@ -402,8 +401,8 @@ extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture(SDL_Renderer *renderer
  *
  * \param renderer the SDL_Renderer to use to create the GPU texture.
  * \param src an SDL_IOStream that data will be read from.
- * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
- *                SDL_FALSE to leave it open.
+ * \param closeio true to close/free the SDL_IOStream before returning, false
+ *                to leave it open.
  * \returns a new texture, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
@@ -412,7 +411,7 @@ extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture(SDL_Renderer *renderer
  * \sa IMG_LoadTextureTyped_IO
  * \sa SDL_DestroyTexture
  */
-extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture_IO(SDL_Renderer *renderer, SDL_IOStream *src, SDL_bool closeio);
+extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture_IO(SDL_Renderer *renderer, SDL_IOStream *src, bool closeio);
 
 /**
  * Load an image from an SDL data source into a GPU texture.
@@ -428,9 +427,9 @@ extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture_IO(SDL_Renderer *rende
  * data (but in many cases, this will just end up being 32-bit RGB or 32-bit
  * RGBA).
  *
- * If `closeio` is SDL_TRUE, `src` will be closed before returning, whether
- * this function succeeds or not. SDL_image reads everything it needs from
- * `src` during this call in any case.
+ * If `closeio` is true, `src` will be closed before returning, whether this
+ * function succeeds or not. SDL_image reads everything it needs from `src`
+ * during this call in any case.
  *
  * Even though this function accepts a file type, SDL_image may still try
  * other decoders that are capable of detecting file type from the contents of
@@ -455,8 +454,8 @@ extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture_IO(SDL_Renderer *rende
  *
  * \param renderer the SDL_Renderer to use to create the GPU texture.
  * \param src an SDL_IOStream that data will be read from.
- * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
- *                SDL_FALSE to leave it open.
+ * \param closeio true to close/free the SDL_IOStream before returning, false
+ *                to leave it open.
  * \param type a filename extension that represent this data ("BMP", "GIF",
  *             "PNG", etc).
  * \returns a new texture, or NULL on error.
@@ -467,7 +466,7 @@ extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTexture_IO(SDL_Renderer *rende
  * \sa IMG_LoadTexture_IO
  * \sa SDL_DestroyTexture
  */
-extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTextureTyped_IO(SDL_Renderer *renderer, SDL_IOStream *src, SDL_bool closeio, const char *type);
+extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTextureTyped_IO(SDL_Renderer *renderer, SDL_IOStream *src, bool closeio, const char *type);
 #endif /* SDL 2.0 */
 
 /**
@@ -512,7 +511,7 @@ extern SDL_DECLSPEC SDL_Texture * SDLCALL IMG_LoadTextureTyped_IO(SDL_Renderer *
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isAVIF(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isAVIF(SDL_IOStream *src);
 
 /**
  * Detect ICO image data on a readable/seekable SDL_IOStream.
@@ -555,7 +554,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isAVIF(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isICO(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isICO(SDL_IOStream *src);
 
 /**
  * Detect CUR image data on a readable/seekable SDL_IOStream.
@@ -598,7 +597,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isICO(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isCUR(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isCUR(SDL_IOStream *src);
 
 /**
  * Detect BMP image data on a readable/seekable SDL_IOStream.
@@ -641,7 +640,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isCUR(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isBMP(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isBMP(SDL_IOStream *src);
 
 /**
  * Detect GIF image data on a readable/seekable SDL_IOStream.
@@ -684,7 +683,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isBMP(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isGIF(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isGIF(SDL_IOStream *src);
 
 /**
  * Detect JPG image data on a readable/seekable SDL_IOStream.
@@ -727,7 +726,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isGIF(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isJPG(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isJPG(SDL_IOStream *src);
 
 /**
  * Detect JXL image data on a readable/seekable SDL_IOStream.
@@ -770,7 +769,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isJPG(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isJXL(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isJXL(SDL_IOStream *src);
 
 /**
  * Detect LBM image data on a readable/seekable SDL_IOStream.
@@ -813,7 +812,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isJXL(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isLBM(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isLBM(SDL_IOStream *src);
 
 /**
  * Detect PCX image data on a readable/seekable SDL_IOStream.
@@ -856,7 +855,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isLBM(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isPCX(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isPCX(SDL_IOStream *src);
 
 /**
  * Detect PNG image data on a readable/seekable SDL_IOStream.
@@ -899,7 +898,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isPCX(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isPNG(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isPNG(SDL_IOStream *src);
 
 /**
  * Detect PNM image data on a readable/seekable SDL_IOStream.
@@ -942,7 +941,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isPNG(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isPNM(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isPNM(SDL_IOStream *src);
 
 /**
  * Detect SVG image data on a readable/seekable SDL_IOStream.
@@ -985,7 +984,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isPNM(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isSVG(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isSVG(SDL_IOStream *src);
 
 /**
  * Detect QOI image data on a readable/seekable SDL_IOStream.
@@ -1028,7 +1027,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isSVG(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isQOI(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isQOI(SDL_IOStream *src);
 
 /**
  * Detect TIFF image data on a readable/seekable SDL_IOStream.
@@ -1071,7 +1070,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isQOI(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isTIF(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isTIF(SDL_IOStream *src);
 
 /**
  * Detect XCF image data on a readable/seekable SDL_IOStream.
@@ -1114,7 +1113,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isTIF(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isXCF(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isXCF(SDL_IOStream *src);
 
 /**
  * Detect XPM image data on a readable/seekable SDL_IOStream.
@@ -1157,7 +1156,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isXCF(SDL_IOStream *src);
  * \sa IMG_isXV
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isXPM(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isXPM(SDL_IOStream *src);
 
 /**
  * Detect XV image data on a readable/seekable SDL_IOStream.
@@ -1200,7 +1199,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isXPM(SDL_IOStream *src);
  * \sa IMG_isXPM
  * \sa IMG_isWEBP
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isXV(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isXV(SDL_IOStream *src);
 
 /**
  * Detect WEBP image data on a readable/seekable SDL_IOStream.
@@ -1243,7 +1242,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_isXV(SDL_IOStream *src);
  * \sa IMG_isXPM
  * \sa IMG_isXV
  */
-extern SDL_DECLSPEC int SDLCALL IMG_isWEBP(SDL_IOStream *src);
+extern SDL_DECLSPEC bool SDLCALL IMG_isWEBP(SDL_IOStream *src);
 
 /**
  * Load a AVIF image directly.
@@ -1965,20 +1964,20 @@ extern SDL_DECLSPEC SDL_Surface * SDLCALL IMG_ReadXPMFromArrayToRGB888(char **xp
  *
  * \sa IMG_SaveAVIF_IO
  */
-extern SDL_DECLSPEC int SDLCALL IMG_SaveAVIF(SDL_Surface *surface, const char *file, int quality);
+extern SDL_DECLSPEC bool SDLCALL IMG_SaveAVIF(SDL_Surface *surface, const char *file, int quality);
 
 /**
  * Save an SDL_Surface into AVIF image data, via an SDL_IOStream.
  *
  * If you just want to save to a filename, you can use IMG_SaveAVIF() instead.
  *
- * If `closeio` is SDL_TRUE, `dst` will be closed before returning, whether
- * this function succeeds or not.
+ * If `closeio` is true, `dst` will be closed before returning, whether this
+ * function succeeds or not.
  *
  * \param surface the SDL surface to save.
  * \param dst the SDL_IOStream to save the image data to.
- * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
- *                SDL_FALSE to leave it open.
+ * \param closeio true to close/free the SDL_IOStream before returning, false
+ *                to leave it open.
  * \param quality the desired quality, ranging between 0 (lowest) and 100
  *                (highest).
  * \returns 0 if successful, -1 on error.
@@ -1987,7 +1986,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_SaveAVIF(SDL_Surface *surface, const char *f
  *
  * \sa IMG_SaveAVIF
  */
-extern SDL_DECLSPEC int SDLCALL IMG_SaveAVIF_IO(SDL_Surface *surface, SDL_IOStream *dst, int closeio, int quality);
+extern SDL_DECLSPEC bool SDLCALL IMG_SaveAVIF_IO(SDL_Surface *surface, SDL_IOStream *dst, int closeio, int quality);
 
 /**
  * Save an SDL_Surface into a PNG image file.
@@ -2002,27 +2001,27 @@ extern SDL_DECLSPEC int SDLCALL IMG_SaveAVIF_IO(SDL_Surface *surface, SDL_IOStre
  *
  * \sa IMG_SavePNG_IO
  */
-extern SDL_DECLSPEC int SDLCALL IMG_SavePNG(SDL_Surface *surface, const char *file);
+extern SDL_DECLSPEC bool SDLCALL IMG_SavePNG(SDL_Surface *surface, const char *file);
 
 /**
  * Save an SDL_Surface into PNG image data, via an SDL_IOStream.
  *
  * If you just want to save to a filename, you can use IMG_SavePNG() instead.
  *
- * If `closeio` is SDL_TRUE, `dst` will be closed before returning, whether
- * this function succeeds or not.
+ * If `closeio` is true, `dst` will be closed before returning, whether this
+ * function succeeds or not.
  *
  * \param surface the SDL surface to save.
  * \param dst the SDL_IOStream to save the image data to.
- * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
- *                SDL_FALSE to leave it open.
+ * \param closeio true to close/free the SDL_IOStream before returning, false
+ *                to leave it open.
  * \returns 0 if successful, -1 on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
  * \sa IMG_SavePNG
  */
-extern SDL_DECLSPEC int SDLCALL IMG_SavePNG_IO(SDL_Surface *surface, SDL_IOStream *dst, int closeio);
+extern SDL_DECLSPEC bool SDLCALL IMG_SavePNG_IO(SDL_Surface *surface, SDL_IOStream *dst, int closeio);
 
 /**
  * Save an SDL_Surface into a JPEG image file.
@@ -2039,20 +2038,20 @@ extern SDL_DECLSPEC int SDLCALL IMG_SavePNG_IO(SDL_Surface *surface, SDL_IOStrea
  *
  * \sa IMG_SaveJPG_IO
  */
-extern SDL_DECLSPEC int SDLCALL IMG_SaveJPG(SDL_Surface *surface, const char *file, int quality);
+extern SDL_DECLSPEC bool SDLCALL IMG_SaveJPG(SDL_Surface *surface, const char *file, int quality);
 
 /**
  * Save an SDL_Surface into JPEG image data, via an SDL_IOStream.
  *
  * If you just want to save to a filename, you can use IMG_SaveJPG() instead.
  *
- * If `closeio` is SDL_TRUE, `dst` will be closed before returning, whether
- * this function succeeds or not.
+ * If `closeio` is true, `dst` will be closed before returning, whether this
+ * function succeeds or not.
  *
  * \param surface the SDL surface to save.
  * \param dst the SDL_IOStream to save the image data to.
- * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
- *                SDL_FALSE to leave it open.
+ * \param closeio true to close/free the SDL_IOStream before returning, false
+ *                to leave it open.
  * \param quality [0; 33] is Lowest quality, [34; 66] is Middle quality, [67;
  *                100] is Highest quality.
  * \returns 0 if successful, -1 on error.
@@ -2061,7 +2060,7 @@ extern SDL_DECLSPEC int SDLCALL IMG_SaveJPG(SDL_Surface *surface, const char *fi
  *
  * \sa IMG_SaveJPG
  */
-extern SDL_DECLSPEC int SDLCALL IMG_SaveJPG_IO(SDL_Surface *surface, SDL_IOStream *dst, int closeio, int quality);
+extern SDL_DECLSPEC bool SDLCALL IMG_SaveJPG_IO(SDL_Surface *surface, SDL_IOStream *dst, int closeio, int quality);
 
 /**
  * Animated image support Currently only animated GIFs are supported.
@@ -2092,23 +2091,23 @@ extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimation(const char *file);
 /**
  * Load an animation from an SDL_IOStream.
  *
- * If `closeio` is SDL_TRUE, `src` will be closed before returning, whether
- * this function succeeds or not. SDL_image reads everything it needs from
- * `src` during this call in any case.
+ * If `closeio` is true, `src` will be closed before returning, whether this
+ * function succeeds or not. SDL_image reads everything it needs from `src`
+ * during this call in any case.
  *
  * When done with the returned animation, the app should dispose of it with a
  * call to IMG_FreeAnimation().
  *
  * \param src an SDL_IOStream that data will be read from.
- * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
- *                SDL_FALSE to leave it open.
+ * \param closeio true to close/free the SDL_IOStream before returning, false
+ *                to leave it open.
  * \returns a new IMG_Animation, or NULL on error.
  *
  * \since This function is available since SDL_image 3.0.0.
  *
  * \sa IMG_FreeAnimation
  */
-extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimation_IO(SDL_IOStream *src, SDL_bool closeio);
+extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimation_IO(SDL_IOStream *src, bool closeio);
 
 /**
  * Load an animation from an SDL datasource
@@ -2119,16 +2118,16 @@ extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimation_IO(SDL_IOStream *s
  * that it cannot autodetect. If `type` is NULL, SDL_image will rely solely on
  * its ability to guess the format.
  *
- * If `closeio` is SDL_TRUE, `src` will be closed before returning, whether
- * this function succeeds or not. SDL_image reads everything it needs from
- * `src` during this call in any case.
+ * If `closeio` is true, `src` will be closed before returning, whether this
+ * function succeeds or not. SDL_image reads everything it needs from `src`
+ * during this call in any case.
  *
  * When done with the returned animation, the app should dispose of it with a
  * call to IMG_FreeAnimation().
  *
  * \param src an SDL_IOStream that data will be read from.
- * \param closeio SDL_TRUE to close/free the SDL_IOStream before returning,
- *                SDL_FALSE to leave it open.
+ * \param closeio true to close/free the SDL_IOStream before returning, false
+ *                to leave it open.
  * \param type a filename extension that represent this data ("GIF", etc).
  * \returns a new IMG_Animation, or NULL on error.
  *
@@ -2138,7 +2137,7 @@ extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimation_IO(SDL_IOStream *s
  * \sa IMG_LoadAnimation_IO
  * \sa IMG_FreeAnimation
  */
-extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimationTyped_IO(SDL_IOStream *src, SDL_bool closeio, const char *type);
+extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimationTyped_IO(SDL_IOStream *src, bool closeio, const char *type);
 
 /**
  * Dispose of an IMG_Animation and free its resources.
@@ -2194,20 +2193,6 @@ extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadGIFAnimation_IO(SDL_IOStream
  * \sa IMG_FreeAnimation
  */
 extern SDL_DECLSPEC IMG_Animation * SDLCALL IMG_LoadWEBPAnimation_IO(SDL_IOStream *src);
-
-/**
- * Report SDL_image errors
- *
- * \sa IMG_GetError
- */
-#define IMG_SetError    SDL_SetError
-
-/**
- * Get last SDL_image error
- *
- * \sa IMG_SetError
- */
-#define IMG_GetError    SDL_GetError
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

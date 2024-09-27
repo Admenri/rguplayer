@@ -8,9 +8,7 @@
 #include "base/bind/callback_list.h"
 #include "base/buildflags/build.h"
 #include "base/containers/linked_list.h"
-#include "base/exceptions/exception.h"
-
-#include <string>
+#include "base/exception/exception.h"
 
 namespace content {
 
@@ -18,17 +16,22 @@ class Disposable;
 
 class DisposableCollection {
  public:
-  virtual void AddDisposable(Disposable* disp) = 0;
-  virtual void RemoveDisposable(Disposable* disp) = 0;
+  virtual void AddDisposable(Disposable* child) = 0;
+  virtual void RemoveDisposable(Disposable* child) = 0;
 };
 
 class Disposable {
  public:
-  Disposable(DisposableCollection* parent) : parent_(parent), link_(this) {
-    parent_->AddDisposable(this);
+  Disposable(DisposableCollection* collection)
+      : collection_(collection), link_(this), is_disposed_(false) {
+    if (collection_)
+      collection_->AddDisposable(this);
   }
 
-  virtual ~Disposable() { parent_->RemoveDisposable(this); }
+  virtual ~Disposable() {
+    if (collection_)
+      collection_->RemoveDisposable(this);
+  }
 
   Disposable(const Disposable&) = delete;
   Disposable& operator=(const Disposable&) = delete;
@@ -56,17 +59,17 @@ class Disposable {
     }
   }
 
+  inline base::LinkNode<Disposable>* disposable_link() { return &link_; }
+
  protected:
   virtual void OnObjectDisposed() = 0;
   virtual std::string_view DisposedObjectName() const = 0;
 
  private:
-  friend class Graphics;
   base::OnceClosureList observers_;
-  DisposableCollection* parent_;
+  DisposableCollection* collection_;
   base::LinkNode<Disposable> link_;
-
-  bool is_disposed_ = false;
+  bool is_disposed_;
 };
 
 inline static bool IsObjectValid(Disposable* target) {

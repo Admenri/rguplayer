@@ -11,8 +11,7 @@ namespace content {
 
 class Flashable {
  public:
-  Flashable() {}
-  virtual ~Flashable() {}
+  Flashable() = default;
 
   Flashable(const Flashable&) = delete;
   Flashable& operator=(const Flashable&) = delete;

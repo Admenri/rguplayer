@@ -4,8 +4,7 @@
 
 #include "components/fpslimiter/fpslimiter.h"
 
-#include "SDL_timer.h"
-#include "base/debug/logging.h"
+#include "SDL3/SDL_timer.h"
 
 #include <stdint.h>
 #include <algorithm>

@@ -5,8 +5,9 @@
 #ifndef UI_WIDGET_WIDGET_H_
 #define UI_WIDGET_WIDGET_H_
 
-#include "SDL_keyboard.h"
-#include "SDL_touch.h"
+#include "SDL3/SDL_keyboard.h"
+#include "SDL3/SDL_scancode.h"
+#include "SDL3/SDL_touch.h"
 
 #include <array>
 #include <memory>
@@ -15,7 +16,7 @@
 #include <string>
 
 #include "base/bind/callback_list.h"
-#include "base/math/math.h"
+#include "base/math/vector.h"
 #include "base/memory/weak_ptr.h"
 
 union SDL_Event;
@@ -51,6 +52,9 @@ class Widget {
           states{0},
           clicks{0},
           visible(true),
+          screen_offset(0),
+          screen(0),
+          resolution(0),
           in_window(false),
           focused(false) {}
   };
@@ -102,8 +106,6 @@ class Widget {
 
     bool initial_grab = false;
 
-    bool opengl = false;
-
     WindowPlacement window_state = WindowPlacement::Show;
   };
 
@@ -140,13 +142,13 @@ class Widget {
   std::string FetchInputText();
 
  private:
-  void UIEventDispatcher(const SDL_Event& sdl_event);
+  static bool SDLCALL UIEventDispatcher(void* userdata, SDL_Event* event);
 
   SDL_Window* window_;
   SDL_WindowID window_id_;
   base::CallbackListSubscription ui_dispatcher_binding_;
 
-  bool key_states_[SDL_NUM_SCANCODES]{0};
+  bool key_states_[SDL_SCANCODE_COUNT]{0};
   MouseState mouse_state_;
   std::array<FingerState, MAX_FINGERS> finger_states_;
 
