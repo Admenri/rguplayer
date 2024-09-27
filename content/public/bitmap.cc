@@ -73,8 +73,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
 
   size_ = base::Vec2i(width, height);
   bgfx::TextureHandle texture_buffer = bgfx::createTexture2D(
-      size_.x, size_.y, false, 1, bgfx::TextureFormat::RGBA8,
-      BGFX_TEXTURE_RT | BGFX_TEXTURE_BLIT_DST);
+      size_.x, size_.y, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_RT);
   texture_ = bgfx::createFrameBuffer(1, &texture_buffer, true);
 }
 
@@ -117,8 +116,7 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
   size_t img_size =
       static_cast<size_t>(size_.x) * static_cast<size_t>(size_.y) * 4;
   bgfx::TextureHandle texture_buffer = bgfx::createTexture2D(
-      size_.x, size_.y, false, 1, bgfx::TextureFormat::RGBA8,
-      BGFX_TEXTURE_RT | BGFX_TEXTURE_BLIT_DST);
+      size_.x, size_.y, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_RT);
 
   bgfx::updateTexture2D(texture_buffer, 0, 0, 0, 0, surface_buffer_->w,
                         surface_buffer_->h,

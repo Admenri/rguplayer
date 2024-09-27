@@ -1,3 +1,7 @@
+[submodule "third_party/bgfx.cmake"]
+	path = third_party/bgfx.cmake
+	url = https://github.com/bkaradzic/bgfx.cmake.git
+	branch = master
 [submodule "third_party/SDL"]
 	path = third_party/SDL
 	url = https://github.com/Admenri/SDL.git
@@ -21,4 +25,8 @@
 [submodule "third_party/freetype"]
 	path = third_party/freetype
 	url = https://github.com/freetype/freetype.git
+	branch = master
+[submodule "third_party/libevent"]
+	path = third_party/libevent
+	url = https://github.com/libevent/libevent.git
 	branch = master
