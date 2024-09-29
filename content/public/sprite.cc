@@ -182,6 +182,7 @@ void Sprite::OnDraw(CompositeTargetInfo* target_info) {
 
   if (target_info->render_scissor.enable)
     target_info->encoder->setScissor(target_info->render_scissor.cache);
+
   target_info->encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
                                  renderer::MakeColorBlendState(blend_mode_));
   if (wave_.active)

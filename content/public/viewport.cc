@@ -12,16 +12,14 @@ namespace content {
 Viewport::Viewport(scoped_refptr<Graphics> screen)
     : GraphicsElement(screen.get()),
       Disposable(screen.get()),
-      ViewportChild(screen, nullptr),
-      scissor_cache_(-1) {
+      ViewportChild(screen, nullptr) {
   InitViewportInternal(screen->GetSize());
 }
 
 Viewport::Viewport(scoped_refptr<Graphics> screen, const base::Rect& rect)
     : GraphicsElement(screen.get()),
       Disposable(screen.get()),
-      ViewportChild(screen, nullptr),
-      scissor_cache_(-1) {
+      ViewportChild(screen, nullptr) {
   InitViewportInternal(rect);
 }
 
@@ -29,8 +27,7 @@ Viewport::Viewport(scoped_refptr<Graphics> screen,
                    scoped_refptr<Viewport> viewport)
     : GraphicsElement(screen.get()),
       Disposable(screen.get()),
-      ViewportChild(screen, viewport),
-      scissor_cache_(-1) {
+      ViewportChild(screen, viewport) {
   InitViewportInternal(viewport->GetRect()->AsBase());
 }
 
@@ -90,17 +87,14 @@ void Viewport::OnDraw(CompositeTargetInfo* target_info) {
   if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
     return;
 
-  if (scissor_cache_ < 0)
-    scissor_cache_ = target_info->encoder->setScissor(
-        viewport_rect().rect.x, viewport_rect().rect.y,
-        viewport_rect().rect.width, viewport_rect().rect.height);
-  else
-    target_info->encoder->setScissor(scissor_cache_);
+  uint16_t scissor_cache = target_info->encoder->setScissor(
+      viewport_rect().rect.x, viewport_rect().rect.y,
+      viewport_rect().rect.width, viewport_rect().rect.height);
 
   CompositeTargetInfo::ScissorRegion swap_scissor;
   std::swap(target_info->render_scissor, swap_scissor);
 
-  target_info->render_scissor.cache = scissor_cache_;
+  target_info->render_scissor.cache = scissor_cache;
   target_info->render_scissor.enable = true;
   target_info->render_scissor.region = viewport_rect().rect;
 
@@ -144,8 +138,6 @@ void Viewport::OnRectChangedInternal() {
   base::Vec2i offset = parent_rect().GetRealOffset();
   viewport_rect().rect.x += offset.x;
   viewport_rect().rect.y += offset.y;
-
-  scissor_cache_ = -1;
 
   NotifyViewportRectChanged();
 }

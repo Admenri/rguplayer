@@ -48,8 +48,13 @@ int SDL_main(int argc, char** argv) {
       auto* surf = b2->SurfaceRequired();
       IMG_SavePNG(surf, "out.png");
 
-      scoped_refptr<content::Sprite> spr = new content::Sprite(host);
+      scoped_refptr<content::Viewport> vp = new content::Viewport(host);
+      vp->SetRect(new content::Rect({50, 50, 200, 200}));
+
+      scoped_refptr<content::Sprite> spr = new content::Sprite(host, vp);
       spr->SetBitmap(b2);
+      spr->SetOX(320);
+      spr->SetOY(240);
 
       while (true) {
         SDL_Event e;
@@ -58,6 +63,8 @@ int SDL_main(int argc, char** argv) {
           break;
 
         host->Update();
+
+        spr->SetAngle(spr->GetAngle() + 3);
       }
     }
   } catch (base::Exception e) {

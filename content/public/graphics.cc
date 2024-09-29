@@ -20,7 +20,6 @@ Graphics::Graphics(base::WeakPtr<ui::Widget> window,
     : screen_buffer_(BGFX_INVALID_HANDLE),
       frozen_snapshot_(BGFX_INVALID_HANDLE),
       profile_(config),
-      resolution_(initial_resolution),
       frozen_(false),
       brightness_(255),
       frame_count_(0),
@@ -42,10 +41,10 @@ Graphics::Graphics(base::WeakPtr<ui::Widget> window,
   // Create render device
   bgfx::Init init_param;
   init_param.type = bgfx::RendererType::Direct3D12;
-  init_param.resolution.reset = BGFX_RESET_VSYNC;
+  init_param.resolution.reset = BGFX_RESET_NONE;
   init_param.resolution.format = bgfx::TextureFormat::RGBA8;
-  init_param.resolution.width = resolution_.x;
-  init_param.resolution.height = resolution_.y;
+  init_param.resolution.width = initial_resolution.x;
+  init_param.resolution.height = initial_resolution.y;
   device_ = renderer::RenderDevice::CreateContext(init_param, window);
 
   // Create renderer buffer
@@ -53,7 +52,7 @@ Graphics::Graphics(base::WeakPtr<ui::Widget> window,
       std::make_unique<renderer::QuadDrawable>(device_->quad_indices());
 
   // Create virtual screen buffer
-  RebuildScreenBufferInternal();
+  RebuildScreenBufferInternal(initial_resolution);
 }
 
 Graphics::~Graphics() {
@@ -82,7 +81,20 @@ void Graphics::Wait(int duration) {
 }
 
 scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
-  scoped_refptr<Bitmap> snap = new Bitmap(this, resolution_.x, resolution_.y);
+  scoped_refptr<Bitmap> snap =
+      new Bitmap(this, screen_buffer_.size.x, screen_buffer_.size.y);
+
+  // Composite
+  bgfx::ViewId render_view = 1;
+  bgfx::Encoder* encoder = EncodeScreenDrawcallsInternal(render_view);
+
+  // Blit to bitmap
+  encoder->blit(++render_view, bgfx::getTexture(snap->GetHandle()), 0, 0,
+                bgfx::getTexture(screen_buffer_.handle));
+
+  // Submit to GPU
+  bgfx::end(encoder);
+  bgfx::frame();
 
   return snap;
 }
@@ -120,11 +132,8 @@ void Graphics::Update() {
 }
 
 void Graphics::ResizeScreen(const base::Vec2i& resolution) {
-  if (resolution_ == resolution)
-    return;
-
-  resolution_ = resolution;
-  RebuildScreenBufferInternal();
+  if (!(screen_buffer_.size == resolution))
+    RebuildScreenBufferInternal(resolution);
 }
 
 void Graphics::Reset() {
@@ -199,7 +208,7 @@ void Graphics::SetFullscreen(bool fullscreen) {
 
 void Graphics::SetVSync(int interval) {
   vsync_ = interval;
-  bgfx::reset(resolution_.x, resolution_.y,
+  bgfx::reset(screen_buffer_.size.x, screen_buffer_.size.y,
               interval ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
 }
 
@@ -233,23 +242,23 @@ base::Vec2i Graphics::GetDrawableOffset() {
   return viewport_rect().rect.Position();
 }
 
-void Graphics::RebuildScreenBufferInternal() {
+void Graphics::RebuildScreenBufferInternal(const base::Vec2i& resolution) {
   if (bgfx::isValid(screen_buffer_.handle))
     bgfx::destroy(screen_buffer_.handle);
   if (bgfx::isValid(frozen_snapshot_.handle))
     bgfx::destroy(frozen_snapshot_.handle);
 
   bgfx::TextureHandle screen_texture =
-      bgfx::createTexture2D(resolution_.x, resolution_.y, false, 1,
+      bgfx::createTexture2D(resolution.x, resolution.y, false, 1,
                             bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_RT);
   bgfx::TextureHandle snapshot_texture =
-      bgfx::createTexture2D(resolution_.x, resolution_.y, false, 1,
+      bgfx::createTexture2D(resolution.x, resolution.y, false, 1,
                             bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_RT);
 
   screen_buffer_.handle = bgfx::createFrameBuffer(1, &screen_texture, true);
-  screen_buffer_.size = resolution_;
+  screen_buffer_.size = resolution;
   frozen_snapshot_.handle = bgfx::createFrameBuffer(1, &snapshot_texture, true);
-  frozen_snapshot_.size = resolution_;
+  frozen_snapshot_.size = resolution;
 }
 
 void Graphics::FrameProcessInternal() {
@@ -277,7 +286,8 @@ void Graphics::UpdateWindowViewportInternal() {
   auto window_size = device()->window()->GetSize();
 
   float window_ratio = static_cast<float>(window_size.x) / window_size.y;
-  float screen_ratio = static_cast<float>(resolution_.x) / resolution_.y;
+  float screen_ratio =
+      static_cast<float>(screen_buffer_.size.x) / screen_buffer_.size.y;
 
   display_viewport_.width = window_size.x;
   display_viewport_.height = window_size.y;
@@ -317,7 +327,7 @@ void Graphics::PresentScreenBufferInternal(bgfx::Encoder* encoder,
                                            bgfx::ViewId render_view) {
   UpdateWindowViewportInternal();
 
-  device()->window()->GetMouseState().resolution = resolution_;
+  device()->window()->GetMouseState().resolution = screen_buffer_.size;
   device()->window()->GetMouseState().screen_offset =
       display_viewport_.Position();
   device()->window()->GetMouseState().screen = display_viewport_.Size();
@@ -334,7 +344,15 @@ void Graphics::PresentScreenBufferInternal(bgfx::Encoder* encoder,
   encoder->setTexture(0, shader.Texture(),
                       bgfx::getTexture(screen_buffer_.handle));
 
-  screen_quad_->SetPosition(display_viewport_);
+  base::Rect target_rect = display_viewport_;
+  if (bgfx::getCaps()->originBottomLeft) {
+    target_rect.x = display_viewport_.x;
+    target_rect.y = display_viewport_.y + display_viewport_.height;
+    target_rect.width = display_viewport_.width;
+    target_rect.height = -display_viewport_.height;
+  }
+
+  screen_quad_->SetPosition(target_rect);
   screen_quad_->SetTexcoord(base::Vec2(screen_buffer_.size));
 
   encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);

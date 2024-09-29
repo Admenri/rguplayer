@@ -42,7 +42,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   Graphics(const Graphics&) = delete;
   Graphics& operator=(const Graphics&) = delete;
 
-  base::Vec2i GetSize() const { return resolution_; }
+  base::Vec2i GetSize() const { return screen_buffer_.size; }
 
   int GetBrightness() const;
   void SetBrightness(int brightness);
@@ -96,7 +96,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   void RemoveDisposable(Disposable* disp) override;
 
  private:
-  void RebuildScreenBufferInternal();
+  void RebuildScreenBufferInternal(const base::Vec2i& resolution);
   void FrameProcessInternal();
   void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();
@@ -114,7 +114,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   std::unique_ptr<ScopedFontData> static_font_manager_;
 
   scoped_refptr<Profile> profile_;
-  base::Vec2i resolution_;
   base::Rect display_viewport_;
 
   bool frozen_;
