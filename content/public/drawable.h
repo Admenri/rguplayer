@@ -50,7 +50,7 @@ class DrawableParent {
   void AddChild(Drawable* drawable);
 
   // Composite screen
-  void PrepareComposite();
+  void PrepareComposite(bgfx::ViewId* render_view);
   void Composite(CompositeTargetInfo* target_info);
 
   // Viewport rect
@@ -103,7 +103,7 @@ class Drawable {
   }
 
  protected:
-  virtual void PrepareDraw() {}
+  virtual void PrepareDraw(bgfx::ViewId* render_view) {}
   virtual void OnDraw(CompositeTargetInfo* target_info) = 0;
   virtual void AfterDraw(CompositeTargetInfo* target_info) {}
   virtual void CheckObjectDisposed() const = 0;

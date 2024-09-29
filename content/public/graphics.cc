@@ -40,7 +40,7 @@ Graphics::Graphics(base::WeakPtr<ui::Widget> window,
 
   // Create render device
   bgfx::Init init_param;
-  init_param.type = bgfx::RendererType::OpenGL;
+  init_param.type = bgfx::RendererType::Direct3D12;
   init_param.resolution.reset = BGFX_RESET_NONE;
   init_param.resolution.format = bgfx::TextureFormat::RGBA8;
   init_param.resolution.width = initial_resolution.x;
@@ -303,7 +303,7 @@ void Graphics::UpdateWindowViewportInternal() {
 
 bgfx::Encoder* Graphics::EncodeScreenDrawcallsInternal(
     bgfx::ViewId* render_view) {
-  DrawableParent::PrepareComposite();
+  DrawableParent::PrepareComposite(render_view);
 
   device()->BindRenderView(*render_view, screen_buffer_.size,
                            screen_buffer_.handle, 0x000000ff);

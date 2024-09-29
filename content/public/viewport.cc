@@ -79,8 +79,8 @@ void Viewport::OnObjectDisposed() {
   RemoveFromList();
 }
 
-void Viewport::PrepareDraw() {
-  DrawableParent::PrepareComposite();
+void Viewport::PrepareDraw(bgfx::ViewId* render_view) {
+  DrawableParent::PrepareComposite(render_view);
 }
 
 void Viewport::OnDraw(CompositeTargetInfo* target_info) {

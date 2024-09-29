@@ -87,7 +87,7 @@ void Sprite::OnObjectDisposed() {
   drawable_quad_.reset();
 }
 
-void Sprite::PrepareDraw() {
+void Sprite::PrepareDraw(bgfx::ViewId* render_view) {
   UpdateVisibilityInternal();
   if (need_invisible_)
     return;
