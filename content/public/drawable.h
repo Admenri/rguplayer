@@ -8,10 +8,24 @@
 #include "base/containers/linked_list.h"
 #include "base/math/rectangle.h"
 
+#include "renderer/device/render_device.h"
+
 namespace content {
 
 class Drawable;
 class DrawableParent;
+
+struct CompositeTargetInfo {
+  bgfx::Encoder* encoder = nullptr;
+  renderer::Framebuffer* render_target = nullptr;
+  bgfx::ViewId render_view = 0;
+
+  struct ScissorRegion {
+    uint16_t cache = UINT16_MAX;
+    base::Rect region;
+    bool enable = false;
+  } render_scissor;
+};
 
 class DrawableParent {
  public:
@@ -37,7 +51,7 @@ class DrawableParent {
 
   // Composite screen
   void PrepareComposite();
-  void Composite();
+  void Composite(CompositeTargetInfo* target_info);
 
   // Viewport rect
   void NotifyViewportRectChanged();
@@ -90,7 +104,7 @@ class Drawable {
 
  protected:
   virtual void PrepareDraw() {}
-  virtual void OnDraw() = 0;
+  virtual void OnDraw(CompositeTargetInfo* target_info) = 0;
   virtual void CheckObjectDisposed() const = 0;
   virtual void OnParentViewportRectChanged(
       const DrawableParent::ViewportInfo&) {}

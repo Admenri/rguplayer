@@ -64,17 +64,9 @@ struct DeviceHandler : public bgfx::CallbackI {
 
 static DeviceHandler g_device_handler;
 
-RenderDevice::RenderDevice() {  // Init generic texture
-  generic_size_ = base::Vec2i(32, 32);
-  generic_texture_ =
-      bgfx::createTexture2D(generic_size_.x, generic_size_.y, false, 1,
-                            bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_BLIT_DST);
-
-  framebuffer_size_ = base::Vec2i(64, 64);
-  bgfx::TextureHandle framebuffer_target = bgfx::createTexture2D(
-      framebuffer_size_.x, framebuffer_size_.y, false, 1,
-      bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_BLIT_DST | BGFX_TEXTURE_RT);
-  common_framebuffer_ = bgfx::createFrameBuffer(1, &framebuffer_target, true);
+RenderDevice::RenderDevice(base::WeakPtr<ui::Widget> screen) : screen_(screen) {
+  GetGenericTexture(base::Vec2i(64, 64), nullptr);
+  EnsureCommonFramebuffer(base::Vec2i(64, 64), nullptr);
 
   quad_array_indices_ = new QuadArrayIndices();
   generic_quad_ = std::make_unique<QuadDrawable>(quad_array_indices_);
@@ -83,8 +75,8 @@ RenderDevice::RenderDevice() {  // Init generic texture
 }
 
 RenderDevice::~RenderDevice() {
-  if (bgfx::isValid(generic_texture_))
-    bgfx::destroy(generic_texture_);
+  bgfx::destroy(generic_texture_.handle);
+  bgfx::destroy(common_framebuffer_.handle);
 
   generic_quad_.reset();
   quad_array_indices_.reset();
@@ -110,86 +102,96 @@ std::unique_ptr<RenderDevice> RenderDevice::CreateContext(
   if (!bgfx::init(renderer_init))
     return nullptr;
 
-  return std::unique_ptr<RenderDevice>(new RenderDevice);
+  return std::unique_ptr<RenderDevice>(new RenderDevice(target));
 }
 
-bgfx::TextureHandle RenderDevice::GetGenericTexture(const base::Vec2i& size,
-                                                    base::Vec2i* out_size,
-                                                    bool clamp_size) {
+void RenderDevice::GetGenericTexture(const base::Vec2i& size,
+                                     Texture* out,
+                                     bool clamp_size) {
+  auto& tex = generic_texture_;
   if (clamp_size) {
-    if (generic_size_.x == size.x && generic_size_.y == size.y) {
-      if (out_size)
-        *out_size = generic_size_;
-      return generic_texture_;
+    if (tex.size.x == size.x && tex.size.y == size.y) {
+      if (out)
+        *out = tex;
+      return;
     }
   } else {
-    if (generic_size_.x >= size.x && generic_size_.y >= size.y) {
-      if (out_size)
-        *out_size = generic_size_;
-      return generic_texture_;
+    if (tex.size.x >= size.x && tex.size.y >= size.y) {
+      if (out)
+        *out = tex;
+      return;
     }
   }
 
   base::Vec2i new_size = size;
   if (!clamp_size) {
-    new_size.x = std::max(size.x, generic_size_.x);
-    new_size.y = std::max(size.y, generic_size_.y);
+    new_size.x = std::max(size.x, generic_texture_.size.x);
+    new_size.y = std::max(size.y, generic_texture_.size.y);
   }
 
-  if (bgfx::isValid(generic_texture_))
-    bgfx::destroy(generic_texture_);
-
-  generic_texture_ =
+  if (bgfx::isValid(tex.handle))
+    bgfx::destroy(tex.handle);
+  tex.handle =
       bgfx::createTexture2D(new_size.x, new_size.y, false, 1,
                             bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_BLIT_DST);
-  generic_size_ = new_size;
-  if (out_size)
-    *out_size = generic_size_;
-
-  return generic_texture_;
+  tex.size = new_size;
+  if (out)
+    *out = tex;
 }
 
-bgfx::FrameBufferHandle RenderDevice::EnsureCommonFramebuffer(
-    const base::Vec2i& size,
-    base::Vec2i* out_size,
-    bool clamp_size) {
+void RenderDevice::EnsureCommonFramebuffer(const base::Vec2i& size,
+                                           Framebuffer* out,
+                                           bool clamp_size) {
+  auto& fbo = common_framebuffer_;
   if (clamp_size) {
-    if (framebuffer_size_.x == size.x && framebuffer_size_.y == size.y) {
-      if (out_size)
-        *out_size = framebuffer_size_;
-      return common_framebuffer_;
+    if (fbo.size.x == size.x && fbo.size.y == size.y) {
+      if (out)
+        *out = fbo;
+      return;
     }
   } else {
-    if (framebuffer_size_.x >= size.x && framebuffer_size_.y >= size.y) {
-      if (out_size)
-        *out_size = framebuffer_size_;
-      return common_framebuffer_;
+    if (fbo.size.x >= size.x && fbo.size.y >= size.y) {
+      if (out)
+        *out = fbo;
+      return;
     }
   }
 
   base::Vec2i new_size = size;
   if (!clamp_size) {
-    new_size.x = std::max(size.x, framebuffer_size_.x);
-    new_size.y = std::max(size.y, framebuffer_size_.y);
+    new_size.x = std::max(size.x, fbo.size.x);
+    new_size.y = std::max(size.y, fbo.size.y);
   }
 
-  if (bgfx::isValid(common_framebuffer_))
-    bgfx::destroy(common_framebuffer_);
+  if (bgfx::isValid(fbo.handle))
+    bgfx::destroy(fbo.handle);
 
   bgfx::TextureHandle render_target = bgfx::createTexture2D(
       new_size.x, new_size.y, false, 1, bgfx::TextureFormat::RGBA8,
       BGFX_TEXTURE_BLIT_DST | BGFX_TEXTURE_RT);
-  common_framebuffer_ = bgfx::createFrameBuffer(1, &render_target, true);
+  fbo.handle = bgfx::createFrameBuffer(1, &render_target, true);
 
-  framebuffer_size_ = new_size;
-  if (out_size)
-    *out_size = framebuffer_size_;
-
-  return common_framebuffer_;
+  fbo.size = new_size;
+  if (out)
+    *out = fbo;
 }
 
 scoped_refptr<QuadArrayIndices> RenderDevice::quad_indices() {
   return quad_array_indices_;
+}
+
+void RenderDevice::BindRenderView(bgfx::ViewId render_view,
+                                  const base::Rect& viewport,
+                                  bgfx::FrameBufferHandle render_target,
+                                  uint32_t clear) {
+  float proj_mat[16];
+  renderer::MakeProjectionMatrix(proj_mat, viewport.Size());
+  bgfx::setViewRect(render_view, viewport.x, viewport.y, viewport.width,
+                    viewport.height);
+  bgfx::setViewTransform(render_view, nullptr, proj_mat);
+  bgfx::setViewFrameBuffer(render_view, render_target);
+  bgfx::setViewClear(render_view, clear ? BGFX_CLEAR_COLOR : BGFX_CLEAR_NONE,
+                     clear);
 }
 
 }  // namespace renderer

@@ -24,12 +24,16 @@ set(CORE_CONTENT_SRC
   public/mouse.h
   public/serializable.cc
   public/serializable.h
+  public/sprite.cc
+  public/sprite.h
   public/table.cc
   public/table.h
   public/touch.cc
   public/touch.h
   public/utility.cc
   public/utility.h
+  public/viewport.cc
+  public/viewport.h
 )
 
 add_library(engine_content PUBLIC ${CORE_CONTENT_SRC})

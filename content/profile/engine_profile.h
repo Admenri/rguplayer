@@ -57,11 +57,11 @@ class Profile : public base::RefCounted<Profile> {
   bool game_debug_;
   bool game_battle_test_;
 
-  APIVersion api_version_;
+  APIVersion api_version_ = APIVersion::RGSS3;
   std::string default_font_path_;
   base::Vec2i initial_resolution_;
   base::Vec2i window_size_;
-  bool allow_frame_skip_;
+  bool allow_frame_skip_ = false;
 };
 
 }  // namespace content

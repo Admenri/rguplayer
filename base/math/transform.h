@@ -29,7 +29,7 @@
 
 #include <cmath>
 
-#include "base/math/math.h"
+#include "base/math/rectangle.h"
 
 namespace base {
 

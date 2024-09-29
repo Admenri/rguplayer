@@ -25,7 +25,6 @@ class GraphicsHost {
 
   virtual renderer::RenderDevice* device() = 0;
   virtual APIVersion api_version() = 0;
-  virtual bgfx::FrameBufferHandle GetScreenBuffer() = 0;
   virtual filesystem::Filesystem* GetFileIO() = 0;
 };
 
@@ -43,7 +42,8 @@ class Graphics final : public base::RefCounted<Graphics>,
   Graphics(const Graphics&) = delete;
   Graphics& operator=(const Graphics&) = delete;
 
-  base::Vec2i GetSize() { return resolution_; }
+  base::Vec2i GetSize() const { return resolution_; }
+
   int GetBrightness() const;
   void SetBrightness(int brightness);
 
@@ -54,7 +54,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   void FadeIn(int duration);
 
   void Update();
-  void ResizeScreen(const base::Vec2i& resolution);
   void Reset();
 
   void Freeze();
@@ -66,9 +65,9 @@ class Graphics final : public base::RefCounted<Graphics>,
   int GetFrameRate() const;
   void SetFrameCount(int64_t count);
   int GetFrameCount() const;
-  void FrameReset();
+  void ResetFrame();
 
-  uint64_t GetWindowHandle();
+  void ResizeScreen(const base::Vec2i& resolution);
   void ResizeWindow(int width, int height);
 
   bool GetFullscreen();
@@ -86,16 +85,13 @@ class Graphics final : public base::RefCounted<Graphics>,
   void SetDrawableOffset(const base::Vec2i& offset);
   base::Vec2i GetDrawableOffset();
 
-  scoped_refptr<Profile> config() { return config_; }
-  base::WeakPtr<ui::Widget> window() { return window_; }
   ScopedFontData* font_manager() { return static_font_manager_.get(); }
 
- protected:
   renderer::RenderDevice* device() override { return device_.get(); }
-  APIVersion api_version() override { return config_->content_version(); }
-  bgfx::FrameBufferHandle GetScreenBuffer() override { return screen_buffer_; }
+  APIVersion api_version() override { return profile_->content_version(); }
   filesystem::Filesystem* GetFileIO() override { return io_; }
 
+ protected:
   void AddDisposable(Disposable* disp) override;
   void RemoveDisposable(Disposable* disp) override;
 
@@ -104,29 +100,31 @@ class Graphics final : public base::RefCounted<Graphics>,
   void FrameProcessInternal();
   void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();
+  bgfx::Encoder* EncodeScreenDrawcallsInternal(bgfx::ViewId render_view);
+  void PresentScreenBufferInternal(bgfx::Encoder* encoder,
+                                   bgfx::ViewId render_view);
 
-  base::Vec2i resolution_;
   std::unique_ptr<renderer::RenderDevice> device_;
-  bgfx::FrameBufferHandle screen_buffer_;
-  bgfx::FrameBufferHandle frozen_snapshot_;
-  std::unique_ptr<renderer::QuadDrawable> screen_quad_;
 
-  scoped_refptr<Profile> config_;
-  base::WeakPtr<ui::Widget> window_;
+  renderer::Framebuffer screen_buffer_;
+  renderer::Framebuffer frozen_snapshot_;
+  std::unique_ptr<renderer::QuadDrawable> screen_quad_;
 
   base::LinkedList<Disposable> disposable_elements_;
   std::unique_ptr<ScopedFontData> static_font_manager_;
+
+  scoped_refptr<Profile> profile_;
+  base::Vec2i resolution_;
+  base::Rect display_viewport_;
 
   bool frozen_;
   int brightness_;
   uint64_t frame_count_;
   int frame_rate_;
   bool vsync_;
+
   std::unique_ptr<fpslimiter::FPSLimiter> fps_manager_;
   filesystem::Filesystem* io_;
-
-  base::Rect display_viewport_;
-  base::Vec2i window_size_;
 };
 
 class GraphicsElement {

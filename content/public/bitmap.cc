@@ -179,31 +179,27 @@ void Bitmap::StretchBlt(const base::Rect& dest_rect,
   bgfx::Encoder* encoder = bgfx::begin();
   bgfx::ViewId render_view = 0;
   {
-    base::Vec2i dst_size;
-    auto intermediate_texture =
-        screen()->device()->GetGenericTexture(dest_rect.Size(), &dst_size);
+    renderer::Texture intermediate_texture;
+    screen()->device()->GetGenericTexture(dest_rect.Size(),
+                                          &intermediate_texture);
 
     auto src_texture = bgfx::getTexture(texture_);
-    encoder->blit(render_view, intermediate_texture, 0, 0, src_texture,
+    encoder->blit(render_view, intermediate_texture.handle, 0, 0, src_texture,
                   dest_rect.x, dest_rect.y, dest_rect.width, dest_rect.height);
 
-    float proj_mat[16];
-    renderer::MakeProjectionMatrix(proj_mat, size_);
-
-    bgfx::setViewRect(render_view, 0, 0, size_.x, size_.y);
-    bgfx::setViewTransform(render_view, nullptr, proj_mat);
-    bgfx::setViewFrameBuffer(render_view, texture_);
-    bgfx::setViewClear(render_view, BGFX_CLEAR_NONE);
+    screen()->device()->BindRenderView(render_view, size_, texture_);
 
     // (texCoord - src_offset) * src_dst_factor
     base::Vec2i& src_size = src_bitmap->size_;
     base::Vec4 offset_scale;
     offset_scale.x = static_cast<float>(src_rect.x) / src_size.x;
     offset_scale.y = static_cast<float>(src_rect.y) / src_size.y;
-    offset_scale.z = (static_cast<float>(src_size.x) / src_rect.width) *
-                     (static_cast<float>(dest_rect.width) / dst_size.x);
-    offset_scale.w = (static_cast<float>(src_size.y) / src_rect.height) *
-                     (static_cast<float>(dest_rect.height) / dst_size.y);
+    offset_scale.z =
+        (static_cast<float>(src_size.x) / src_rect.width) *
+        (static_cast<float>(dest_rect.width) / intermediate_texture.size.x);
+    offset_scale.w =
+        (static_cast<float>(src_size.y) / src_rect.height) *
+        (static_cast<float>(dest_rect.height) / intermediate_texture.size.y);
 
     auto& shader = screen()->device()->pipelines().texblt;
 
@@ -218,7 +214,7 @@ void Bitmap::StretchBlt(const base::Rect& dest_rect,
 
     auto dst_texture = bgfx::getTexture(src_bitmap->texture_);
     encoder->setTexture(0, shader.Texture(), dst_texture);
-    encoder->setTexture(1, shader.DstTexture(), intermediate_texture);
+    encoder->setTexture(1, shader.DstTexture(), intermediate_texture.handle);
 
     auto* quad = screen()->device()->common_quad();
     quad->SetPosition(dest_rect);
@@ -243,13 +239,7 @@ void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
   bgfx::Encoder* encoder = bgfx::begin();
   bgfx::ViewId render_view = 0;
   {
-    float proj_mat[16];
-    renderer::MakeProjectionMatrix(proj_mat, size_);
-
-    bgfx::setViewRect(render_view, 0, 0, size_.x, size_.y);
-    bgfx::setViewTransform(render_view, nullptr, proj_mat);
-    bgfx::setViewFrameBuffer(render_view, texture_);
-    bgfx::setViewClear(render_view, BGFX_CLEAR_NONE);
+    screen()->device()->BindRenderView(render_view, size_, texture_);
 
     auto& shader = screen()->device()->pipelines().color;
     auto* quad = screen()->device()->common_quad();
@@ -282,13 +272,7 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
   bgfx::Encoder* encoder = bgfx::begin();
   bgfx::ViewId render_view = 0;
   {
-    float proj_mat[16];
-    renderer::MakeProjectionMatrix(proj_mat, size_);
-
-    bgfx::setViewRect(render_view, 0, 0, size_.x, size_.y);
-    bgfx::setViewTransform(render_view, nullptr, proj_mat);
-    bgfx::setViewFrameBuffer(render_view, texture_);
-    bgfx::setViewClear(render_view, BGFX_CLEAR_NONE);
+    screen()->device()->BindRenderView(render_view, size_, texture_);
 
     auto& shader = screen()->device()->pipelines().color;
     auto* quad = screen()->device()->common_quad();
@@ -329,13 +313,7 @@ void Bitmap::ClearRect(const base::Rect& rect) {
   bgfx::Encoder* encoder = bgfx::begin();
   bgfx::ViewId render_view = 0;
   {
-    float proj_mat[16];
-    renderer::MakeProjectionMatrix(proj_mat, size_);
-
-    bgfx::setViewRect(render_view, 0, 0, size_.x, size_.y);
-    bgfx::setViewTransform(render_view, nullptr, proj_mat);
-    bgfx::setViewFrameBuffer(render_view, texture_);
-    bgfx::setViewClear(render_view, BGFX_CLEAR_NONE);
+    screen()->device()->BindRenderView(render_view, size_, texture_);
 
     auto& shader = screen()->device()->pipelines().color;
     auto* quad = screen()->device()->common_quad();
@@ -400,34 +378,27 @@ void Bitmap::HueChange(int hue) {
     hue += 359;
   hue %= 359;
 
-  base::Vec2i intermediate_size;
-  auto& intermediate =
-      screen()->device()->GetGenericTexture(size_, &intermediate_size);
+  renderer::Texture intermediate;
+  screen()->device()->GetGenericTexture(size_, &intermediate);
 
   bgfx::Encoder* encoder = bgfx::begin();
   bgfx::ViewId render_view = 0;
   {
     auto src_texture = bgfx::getTexture(texture_);
-    encoder->blit(render_view, intermediate, 0, 0, src_texture, 0, 0, size_.x,
-                  size_.y);
+    encoder->blit(render_view, intermediate.handle, 0, 0, src_texture, 0, 0,
+                  size_.x, size_.y);
 
-    float proj_mat[16];
-    renderer::MakeProjectionMatrix(proj_mat, size_);
-
-    bgfx::setViewRect(render_view, 0, 0, size_.x, size_.y);
-    bgfx::setViewTransform(render_view, nullptr, proj_mat);
-    bgfx::setViewFrameBuffer(render_view, texture_);
-    bgfx::setViewClear(render_view, BGFX_CLEAR_NONE);
+    screen()->device()->BindRenderView(render_view, size_, texture_);
 
     auto& shader = screen()->device()->pipelines().hue;
     auto* quad = screen()->device()->common_quad();
 
     base::Vec4 offset_size =
-        base::MakeVec4(base::Vec2(), base::MakeInvert(intermediate_size));
+        base::MakeVec4(base::Vec2(), base::MakeInvert(intermediate.size));
     encoder->setUniform(shader.OffsetTexSize(), &offset_size);
     base::Vec4 hue_adjust(static_cast<float>(hue) / 360.0f, 0, 0, 0);
     encoder->setUniform(shader.HueAdjustValue(), &hue_adjust);
-    encoder->setTexture(0, shader.Texture(), intermediate);
+    encoder->setTexture(0, shader.Texture(), intermediate.handle);
 
     quad->SetPosition(base::Vec2(size_));
     quad->SetTexcoord(base::Vec2(size_));
@@ -488,43 +459,36 @@ void Bitmap::DrawText(const base::Rect& rect,
       zoom_x = std::min(zoom_x, 1.0f);
       base::Rect pos(align_x, align_y, txt_surf->w * zoom_x, txt_surf->h);
 
-      base::Vec2i origin_size;
-      auto dst_texture =
-          screen()->device()->GetGenericTexture(pos.Size(), &origin_size);
+      renderer::Texture dst_texture;
+      screen()->device()->GetGenericTexture(pos.Size(), &dst_texture);
 
       auto src_texture = bgfx::getTexture(texture_);
-      encoder->blit(render_view, dst_texture, 0, 0, src_texture, pos.x, pos.y,
-                    pos.width, pos.height);
+      encoder->blit(render_view, dst_texture.handle, 0, 0, src_texture, pos.x,
+                    pos.y, pos.width, pos.height);
 
-      base::Vec2i rendered_text_size;
-      auto generic_tex = screen()->device()->EnsureCommonFramebuffer(
-          base::Vec2i(txt_surf->w, txt_surf->h), &rendered_text_size);
+      renderer::Framebuffer text_texture;
+      screen()->device()->EnsureCommonFramebuffer(
+          base::Vec2i(txt_surf->w, txt_surf->h), &text_texture);
 
-      auto text_tex = bgfx::getTexture(generic_tex);
+      auto text_tex = bgfx::getTexture(text_texture.handle);
       bgfx::updateTexture2D(
           text_tex, 0, 0, 0, 0, txt_surf->w, txt_surf->h,
           bgfx::copy(txt_surf->pixels, txt_surf->pitch * txt_surf->h));
 
       base::Vec4 offset_scale(
           0, 0,
-          static_cast<float>(rendered_text_size.x * zoom_x) / origin_size.x,
-          static_cast<float>(rendered_text_size.y) / origin_size.y);
+          static_cast<float>(text_texture.size.x * zoom_x) / dst_texture.size.x,
+          static_cast<float>(text_texture.size.y) / dst_texture.size.y);
 
       base::Vec2 text_surf_size = base::Vec2i(txt_surf->w, txt_surf->h);
       SDL_DestroySurface(txt_surf);
 
-      float proj_mat[16];
-      renderer::MakeProjectionMatrix(proj_mat, size_);
-
-      bgfx::setViewRect(render_view, 0, 0, size_.x, size_.y);
-      bgfx::setViewTransform(render_view, nullptr, proj_mat);
-      bgfx::setViewFrameBuffer(render_view, texture_);
-      bgfx::setViewClear(render_view, BGFX_CLEAR_NONE);
+      screen()->device()->BindRenderView(render_view, size_, texture_);
 
       auto& shader = screen()->device()->pipelines().texblt;
 
       base::Vec4 offset_size =
-          base::MakeVec4(base::Vec2(), base::MakeInvert(rendered_text_size));
+          base::MakeVec4(base::Vec2(), base::MakeInvert(text_texture.size));
       encoder->setUniform(shader.OffsetTexSize(), &offset_size);
       encoder->setUniform(shader.OffsetScale(), &offset_scale);
 
@@ -532,7 +496,7 @@ void Bitmap::DrawText(const base::Rect& rect,
       vec_opacity.x = fopacity / 255.0f;
       encoder->setUniform(shader.Opacity(), &vec_opacity);
       encoder->setTexture(0, shader.Texture(), text_tex);
-      encoder->setTexture(1, shader.DstTexture(), dst_texture);
+      encoder->setTexture(1, shader.DstTexture(), dst_texture.handle);
 
       auto* quad = screen()->device()->common_quad();
       quad->SetPosition(pos);

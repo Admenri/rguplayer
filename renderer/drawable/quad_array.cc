@@ -8,7 +8,10 @@ namespace renderer {
 
 QuadArray::QuadArray(scoped_refptr<QuadArrayIndices> indices)
     : indices_(indices),
-      buffer_handle_(bgfx::createDynamicVertexBuffer(4, Vertex::GetLayout())) {}
+      buffer_handle_(
+          bgfx::createDynamicVertexBuffer(4,
+                                          Vertex::GetLayout(),
+                                          BGFX_BUFFER_ALLOW_RESIZE)) {}
 
 QuadArray::~QuadArray() {
   if (bgfx::isValid(buffer_handle_))
