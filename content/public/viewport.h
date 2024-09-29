@@ -100,6 +100,7 @@ class Viewport : public base::RefCounted<Viewport>,
 
   void PrepareDraw() override;
   void OnDraw(CompositeTargetInfo* target_info) override;
+  void AfterDraw(CompositeTargetInfo* target_info) override;
   void CheckObjectDisposed() const override { CheckIsDisposed(); }
   void OnParentViewportRectChanged(const ViewportInfo& rect) override;
 

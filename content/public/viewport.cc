@@ -87,9 +87,14 @@ void Viewport::OnDraw(CompositeTargetInfo* target_info) {
   if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
     return;
 
+  auto& screen_size = target_info->render_target->size;
+  const bool flip_scissor = bgfx::getCaps()->originBottomLeft;
+  const int scissor_y = flip_scissor ? (screen_size.y - viewport_rect().rect.y -
+                                        viewport_rect().rect.height)
+                                     : viewport_rect().rect.y;
   uint16_t scissor_cache = target_info->encoder->setScissor(
-      viewport_rect().rect.x, viewport_rect().rect.y,
-      viewport_rect().rect.width, viewport_rect().rect.height);
+      viewport_rect().rect.x, scissor_y, viewport_rect().rect.width,
+      viewport_rect().rect.height);
 
   CompositeTargetInfo::ScissorRegion swap_scissor;
   std::swap(target_info->render_scissor, swap_scissor);
@@ -115,6 +120,31 @@ void Viewport::OnDraw(CompositeTargetInfo* target_info) {
   }
 
   std::swap(target_info->render_scissor, swap_scissor);
+}
+
+void Viewport::AfterDraw(CompositeTargetInfo* target_info) {
+  if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
+    return;
+
+  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
+    base::Vec4 composite_color = color_->AsBase();
+    base::Vec4 flash_color = Flashable::GetFlashColor();
+    base::Vec4 target_color;
+    if (Flashable::IsFlashing())
+      target_color =
+          (flash_color.w > composite_color.w ? flash_color : composite_color);
+    else
+      target_color = composite_color;
+
+    // Next render pass
+    screen()->device()->BindRenderView(++target_info->render_view,
+                                       target_info->render_target->size,
+                                       target_info->render_target->handle);
+
+    // Composite viewport effect
+    ApplyViewportEffect(target_info, viewport_rect().rect, target_color,
+                        tone_->AsBase());
+  }
 }
 
 void Viewport::OnParentViewportRectChanged(const ViewportInfo& rect) {
@@ -175,11 +205,12 @@ void Viewport::ApplyViewportEffect(CompositeTargetInfo* target_info,
   encoder->setUniform(shader.Color(), &color);
   encoder->setUniform(shader.Tone(), &tone);
 
+  if (target_info->render_scissor.enable)
+    encoder->setScissor(target_info->render_scissor.cache);
+  encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+
   quad->SetPosition(blend_area);
   quad->SetTexcoord(base::Rect(blend_area.Size()));
-
-  encoder->setScissor(target_info->render_scissor.cache);
-  encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
   quad->Draw(encoder, shader.GetProgram(), render_view);
 }
 

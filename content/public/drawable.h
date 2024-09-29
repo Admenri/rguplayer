@@ -105,6 +105,7 @@ class Drawable {
  protected:
   virtual void PrepareDraw() {}
   virtual void OnDraw(CompositeTargetInfo* target_info) = 0;
+  virtual void AfterDraw(CompositeTargetInfo* target_info) {}
   virtual void CheckObjectDisposed() const = 0;
   virtual void OnParentViewportRectChanged(
       const DrawableParent::ViewportInfo&) {}

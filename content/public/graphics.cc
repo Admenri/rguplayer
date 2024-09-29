@@ -40,7 +40,7 @@ Graphics::Graphics(base::WeakPtr<ui::Widget> window,
 
   // Create render device
   bgfx::Init init_param;
-  init_param.type = bgfx::RendererType::Direct3D12;
+  init_param.type = bgfx::RendererType::OpenGL;
   init_param.resolution.reset = BGFX_RESET_NONE;
   init_param.resolution.format = bgfx::TextureFormat::RGBA8;
   init_param.resolution.width = initial_resolution.x;
@@ -86,7 +86,7 @@ scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
 
   // Composite
   bgfx::ViewId render_view = 1;
-  bgfx::Encoder* encoder = EncodeScreenDrawcallsInternal(render_view);
+  bgfx::Encoder* encoder = EncodeScreenDrawcallsInternal(&render_view);
 
   // Blit to bitmap
   encoder->blit(++render_view, bgfx::getTexture(snap->GetHandle()), 0, 0,
@@ -117,7 +117,7 @@ void Graphics::Update() {
 
     // Composite
     bgfx::ViewId render_view = 1;
-    bgfx::Encoder* encoder = EncodeScreenDrawcallsInternal(render_view);
+    bgfx::Encoder* encoder = EncodeScreenDrawcallsInternal(&render_view);
 
     // Present
     PresentScreenBufferInternal(encoder, ++render_view);
@@ -302,10 +302,10 @@ void Graphics::UpdateWindowViewportInternal() {
 }
 
 bgfx::Encoder* Graphics::EncodeScreenDrawcallsInternal(
-    bgfx::ViewId render_view) {
+    bgfx::ViewId* render_view) {
   DrawableParent::PrepareComposite();
 
-  device()->BindRenderView(render_view, screen_buffer_.size,
+  device()->BindRenderView(*render_view, screen_buffer_.size,
                            screen_buffer_.handle, 0x000000ff);
 
   bgfx::Encoder* encoder = bgfx::begin();
@@ -313,13 +313,14 @@ bgfx::Encoder* Graphics::EncodeScreenDrawcallsInternal(
   CompositeTargetInfo target_info;
   target_info.encoder = encoder;
   target_info.render_target = &screen_buffer_;
-  target_info.render_view = render_view;
+  target_info.render_view = *render_view;
   target_info.render_scissor.enable = false;
   target_info.render_scissor.region = screen_buffer_.size;
   target_info.render_scissor.cache = UINT16_MAX;
 
   DrawableParent::Composite(&target_info);
 
+  *render_view = target_info.render_view;
   return encoder;
 }
 

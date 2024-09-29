@@ -50,6 +50,7 @@ int SDL_main(int argc, char** argv) {
 
       scoped_refptr<content::Viewport> vp = new content::Viewport(host);
       vp->SetRect(new content::Rect({50, 50, 200, 200}));
+      vp->SetTone(new content::Tone(-68, -68, 0, 68));
 
       scoped_refptr<content::Sprite> spr = new content::Sprite(host, vp);
       spr->SetBitmap(b2);
