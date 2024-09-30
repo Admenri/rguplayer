@@ -12,6 +12,9 @@
 
 namespace renderer {
 
+extern const char kGLSLDesktopHeader[];
+extern const char kGLSLESHeader[];
+
 class GLES2Shader {
  public:
   enum AttribLocation : GLuint {

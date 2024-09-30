@@ -1,5 +1,3 @@
-#version 300 es
-precision mediump float;
 
 uniform float u_alpha;
 

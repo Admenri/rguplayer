@@ -15,6 +15,7 @@
 #include "binding/mri/init_gamepad.h"
 #include "binding/mri/init_geometry.h"
 #include "binding/mri/init_graphics.h"
+#include "binding/mri/init_http.h"
 #include "binding/mri/init_input.h"
 #include "binding/mri/init_mouse.h"
 #include "binding/mri/init_plane.h"
@@ -222,6 +223,7 @@ void BindingEngineMri::InitializeBinding(
   InitRGUBinding();
   InitAOMDecodeBinding();
   InitGamepadBinding();
+  InitHTTPBinding();
   Init_zlib();
 
 #if HAS_STEAMWORKS_SUPPORT

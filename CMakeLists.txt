@@ -147,6 +147,9 @@ add_subdirectory(third_party/boost_asio)
 ## WebSocketpp
 include_directories(third_party/websocketpp)
 
+## URL Parser
+add_subdirectory(third_party/LUrlParser)
+
 #--------------------------------------------------------------------------------
 # Components of Core
 #--------------------------------------------------------------------------------

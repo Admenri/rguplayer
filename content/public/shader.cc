@@ -9,6 +9,23 @@
 
 namespace content {
 
+namespace {
+
+void MultiplyMatrices(const GLfloat* matrixA,
+                      const GLfloat* matrixB,
+                      GLfloat* result) {
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      result[i + j * 4] = 0;
+      for (int k = 0; k < 4; ++k) {
+        result[i + j * 4] += matrixA[i + k * 4] * matrixB[k + j * 4];
+      }
+    }
+  }
+}
+
+}  // namespace
+
 Shader::Shader(scoped_refptr<Graphics> screen)
     : GraphicElement(screen),
       Disposable(screen.get()),
@@ -121,6 +138,15 @@ void Shader::CompileInternal(const std::string& vertex_shader,
   auto compile_shader = [&](GLuint glshader, const std::string& shader_source) {
     std::vector<const GLchar*> shader_srcs;
     std::vector<GLint> shader_sizes;
+
+    // Setup GLSL header
+    if (renderer::GSM.glsl_es()) {
+      shader_srcs.push_back(renderer::kGLSLESHeader);
+      shader_sizes.push_back(strlen(renderer::kGLSLESHeader));
+    } else {
+      shader_srcs.push_back(renderer::kGLSLDesktopHeader);
+      shader_sizes.push_back(strlen(renderer::kGLSLDesktopHeader));
+    }
 
     // Setup shader source
     shader_srcs.push_back(

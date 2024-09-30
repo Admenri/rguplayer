@@ -16,10 +16,7 @@ namespace content {
 namespace {
 
 std::map<std::string, CoreConfigure::ANGLEBackend> kRendererMapping = {
-    {"gl", CoreConfigure::ANGLEBackend::kOpenGL},
-    {"gles", CoreConfigure::ANGLEBackend::kOpenGLES},
     {"d3d11", CoreConfigure::ANGLEBackend::kD3D11},
-    {"d3d11on12", CoreConfigure::ANGLEBackend::kD3D11on12},
     {"vulkan", CoreConfigure::ANGLEBackend::kVulkan},
     {"software", CoreConfigure::ANGLEBackend::kSoftware},
 };

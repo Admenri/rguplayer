@@ -100,6 +100,13 @@ void MriProcessException(const base::Exception& exception);
 void MriCheckArgc(int actual, int expected);
 VALUE MriGetException(MriException exception);
 
+#if RAPI_MAJOR >= 2
+void* drop_gvl_guard(void* (*func)(void*),
+                     void* args,
+                     rb_unblock_function_t* ubf,
+                     void* data2);
+#endif
+
 #define MRI_GUARD_BEGIN try {
 #define MRI_GUARD_END                        \
   }                                          \

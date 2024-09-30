@@ -51,6 +51,8 @@ set(BINDING_MRI_SRC
   init_geometry.h
   init_shader.cc
   init_shader.h
+  init_http.cc
+  init_http.h
 
   mri_template.h
   mri_main.cc
@@ -59,6 +61,9 @@ set(BINDING_MRI_SRC
   mri_util.h
 
   zlib.c
+
+  net/net_http.cc
+  net/net_http.h
 )
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
@@ -91,7 +96,7 @@ endif()
 endif()
 
 add_library(binding_mri ${BINDING_MRI_SRC})
-target_link_libraries(binding_mri PUBLIC core_base core_renderer core_content core_ui mri_ruby zlibstatic)
+target_link_libraries(binding_mri PUBLIC core_base core_renderer core_content core_ui mri_ruby zlibstatic lurl_parser)
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
 if(EXISTS ${STEAMWORKS_DIR})

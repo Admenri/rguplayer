@@ -22,7 +22,9 @@ void GlobalStateManager::InitStates() {
   states.blend_func.Init(GLBlendType::Normal);
   states.clear_color.Init(base::Vec4());
   states.vertex_attrib.Init(0);
-  states.transform.Init(nullptr);
+
+  std::string gl_version((const char*)GL.GetString(GL_VERSION));
+  glsl_es_ = (gl_version.find("OpenGL ES") != std::string::npos);
 
   shaders_ = std::make_unique<GLShaderWare>();
   quad_ibo_ = std::make_unique<QuadIndexBuffer>();

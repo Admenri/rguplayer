@@ -75,18 +75,6 @@ void Viewport::SetRect(scoped_refptr<Rect> rect) {
   OnRectChangedInternal();
 }
 
-void Viewport::SetZoomX(float zx) {
-  CheckIsDisposed();
-
-  transform_.SetScale(base::Vec2(zx, GetZoomY()));
-}
-
-void Viewport::SetZoomY(float zy) {
-  CheckIsDisposed();
-
-  transform_.SetScale(base::Vec2(GetZoomX(), zy));
-}
-
 void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   CheckIsDisposed();
 
@@ -134,9 +122,12 @@ void Viewport::Composite() {
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.PushOnly();
   renderer::GSM.states.scissor_rect.SetIntersect(viewport_rect().rect);
-  renderer::GSM.states.transform.Push(&transform_);
 
   DrawableParent::CompositeChildren();
+
+  renderer::GSM.states.scissor_rect.Pop();
+  renderer::GSM.states.scissor.Pop();
+
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
       IsObjectValid(shader_program_.get())) {
     base::Vec4 composite_color = color_->AsBase();
@@ -151,10 +142,6 @@ void Viewport::Composite() {
     ApplyViewportEffect(viewport_rect().rect, *screen()->GetScreenBuffer(),
                         target_color, tone_->AsBase(), shader_program_);
   }
-
-  renderer::GSM.states.transform.Pop();
-  renderer::GSM.states.scissor_rect.Pop();
-  renderer::GSM.states.scissor.Pop();
 }
 
 void Viewport::OnParentViewportRectChanged(const ViewportInfo& rect) {
@@ -169,20 +156,12 @@ void Viewport::InitViewportInternal(const base::Rect& initial_rect) {
 
   color_ = new Color();
   tone_ = new Tone();
-
-  auto& vrect = viewport_rect().rect;
-  transform_.SetPosition(base::Vec2(vrect.width / 2.0f, vrect.height / 2.0f));
-  transform_.SetOrigin(base::Vec2(vrect.width / 2.0f, vrect.height / 2.0f));
 }
 
 void Viewport::OnRectChangedInternal() {
   viewport_rect().rect = rect_->AsBase();
   viewport_rect().rect.x += parent_offset_.x;
   viewport_rect().rect.y += parent_offset_.y;
-
-  auto& vrect = viewport_rect().rect;
-  transform_.SetPosition(base::Vec2(vrect.width / 2.0f, vrect.height / 2.0f));
-  transform_.SetOrigin(base::Vec2(vrect.width / 2.0f, vrect.height / 2.0f));
 
   NotifyViewportChanged();
 }
@@ -199,9 +178,12 @@ void Viewport::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
 
   renderer::GSM.states.scissor.Push(true);
   renderer::GSM.states.scissor_rect.Push(viewport_rect().rect);
-  renderer::GSM.states.transform.Push(&transform_);
 
   CompositeChildren();
+
+  renderer::GSM.states.scissor_rect.Pop();
+  renderer::GSM.states.scissor.Pop();
+
   if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid() ||
       IsObjectValid(shader_program_.get())) {
     base::Vec4 composite_color = color_->AsBase();
@@ -216,10 +198,6 @@ void Viewport::SnapToBitmapInternal(renderer::TextureFrameBuffer* target) {
     ApplyViewportEffect(viewport_rect().rect, *target, target_color,
                         tone_->AsBase(), shader_program_);
   }
-
-  renderer::GSM.states.transform.Pop();
-  renderer::GSM.states.scissor_rect.Pop();
-  renderer::GSM.states.scissor.Pop();
 }
 
 void Viewport::ApplyViewportEffect(const base::Rect& blend_area,
@@ -238,6 +216,8 @@ void Viewport::ApplyViewportEffect(const base::Rect& blend_area,
     return;
 
   renderer::GSM.states.scissor.Push(false);
+  renderer::GSM.states.blend.Push(false);
+
   renderer::Blt::BeginDraw(temp_fbo);
   renderer::Blt::TexSource(effect_target);
   renderer::Blt::BltDraw(blend_area, blend_area.Size());
@@ -248,11 +228,11 @@ void Viewport::ApplyViewportEffect(const base::Rect& blend_area,
     program->SetInternalUniform();
 
     GLint texture_location = program->GetUniformLocation("u_texture");
-    renderer::GLES2ShaderBase::SetTexture(texture_location, temp_fbo.tex.gl, 0);
+    renderer::GLES2ShaderBase::SetTexture(texture_location, temp_fbo.tex.gl, 1);
 
     GLint texture_size_location = program->GetUniformLocation("u_texSize");
-    renderer::GL.Uniform2f(texture_size_location, 1.0f / blend_area.width,
-                           1.0f / blend_area.height);
+    renderer::GL.Uniform2f(texture_size_location, 1.0f / temp_fbo.size.x,
+                           1.0f / temp_fbo.size.y);
 
     GLint color_location = program->GetUniformLocation("u_color");
     renderer::GL.Uniform4f(color_location, color.x, color.y, color.z, color.w);
@@ -269,11 +249,11 @@ void Viewport::ApplyViewportEffect(const base::Rect& blend_area,
     shader.SetTextureSize(temp_fbo.size);
   }
 
-  renderer::GSM.states.blend.Push(false);
   auto* quad = renderer::GSM.common_quad();
   quad->SetPositionRect(blend_area);
   quad->SetTexCoordRect(base::Rect(blend_area.Size()));
   quad->Draw();
+
   renderer::GSM.states.blend.Pop();
   renderer::GSM.states.scissor.Pop();
 }

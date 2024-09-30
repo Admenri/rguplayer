@@ -69,35 +69,6 @@ class Viewport : public base::RefCounted<Viewport>,
     return rect_;
   }
 
-  void SetScale(const base::Vec2& scale) {
-    CheckIsDisposed();
-    transform_.SetScale(scale);
-  }
-
-  void SetZoomX(float zx);
-  float GetZoomX() {
-    CheckIsDisposed();
-
-    return transform_.GetScale().x;
-  }
-
-  void SetZoomY(float zy);
-  float GetZoomY() {
-    CheckIsDisposed();
-
-    return transform_.GetScale().y;
-  }
-
-  void SetAngle(float angle) {
-    CheckIsDisposed();
-    transform_.SetRotation(angle);
-  }
-
-  float GetAngle() {
-    CheckIsDisposed();
-    return transform_.GetRotation();
-  }
-
   void SnapToBitmap(scoped_refptr<Bitmap> target);
 
   void SetViewport(scoped_refptr<Viewport> viewport);
@@ -130,8 +101,6 @@ class Viewport : public base::RefCounted<Viewport>,
                            scoped_refptr<Shader> program);
 
   scoped_refptr<Viewport> parent_;
-
-  base::TransformMatrix transform_;
 
   base::Vec2i parent_offset_;
   scoped_refptr<Rect> rect_;

@@ -179,4 +179,42 @@ VALUE MriGetException(MriException exception) {
   return g_exception_list[exception];
 }
 
+#if RAPI_MAJOR >= 2
+#include <ruby/thread.h>
+
+typedef struct gvl_guard_args {
+  base::Exception* exc;
+  void* (*func)(void*);
+  void* args;
+} gvl_guard_args;
+
+static void* gvl_guard(void* args) {
+  gvl_guard_args* gvl_args = (gvl_guard_args*)args;
+  try {
+    return gvl_args->func(gvl_args->args);
+  } catch (const base::Exception& e) {
+    gvl_args->exc = new base::Exception(e);
+  }
+  return 0;
+}
+
+void* drop_gvl_guard(void* (*func)(void*),
+                     void* args,
+                     rb_unblock_function_t* ubf,
+                     void* data2) {
+  gvl_guard_args gvl_args = {0, func, args};
+
+  void* ret = rb_thread_call_without_gvl(&gvl_guard, &gvl_args, ubf, data2);
+
+  base::Exception*& exc = gvl_args.exc;
+  if (exc) {
+    base::Exception e(*exc);
+    delete exc;
+    throw e;
+  }
+  return ret;
+}
+
+#endif
+
 }  // namespace binding

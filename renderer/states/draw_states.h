@@ -109,12 +109,6 @@ class GLVertexAttrib : public StateStack<GLID<VertexAttrib>> {
   void OnSetState(const GLID<VertexAttrib>& value) override;
 };
 
-using TransformPtr = base::TransformMatrix*;
-class GLTransform : public StateStack<TransformPtr> {
- public:
-  void OnSetState(const TransformPtr& value) override {}
-};
-
 }  // namespace renderer
 
 #endif  // !RENDERER_STATES_DRAW_STATES_H_

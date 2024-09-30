@@ -106,9 +106,6 @@ MRI_METHOD(viewport_snap_to_bitmap) {
 
 VIEWPORT_DEFINE_INT_ATTR(OX);
 VIEWPORT_DEFINE_INT_ATTR(OY);
-VIEWPORT_DEFINE_FLOAT_ATTR(ZoomX);
-VIEWPORT_DEFINE_FLOAT_ATTR(ZoomY);
-VIEWPORT_DEFINE_FLOAT_ATTR(Angle);
 
 #define VIEWPORT_DEFINE_VAL_ATTR(name, ivname)                         \
   MRI_METHOD(viewport_get_##name) {                                    \
@@ -168,10 +165,6 @@ void InitViewportBinding() {
   MriDefineAttr(klass, "rect", viewport, Rect);
   MriDefineAttr(klass, "color", viewport, Color);
   MriDefineAttr(klass, "tone", viewport, Tone);
-
-  MriDefineAttr(klass, "zoom_x", viewport, ZoomX);
-  MriDefineAttr(klass, "zoom_y", viewport, ZoomY);
-  MriDefineAttr(klass, "angle", viewport, Angle);
 
   MriDefineAttr(klass, "shader", viewport, shader);
 }

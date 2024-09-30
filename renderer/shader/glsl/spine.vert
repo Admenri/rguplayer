@@ -1,5 +1,3 @@
-#version 300 es
-precision mediump float;
 
 uniform mat4 u_projectionMat;
 uniform vec2 u_transOffset;

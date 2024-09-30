@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include "binding/mri/init_audio.h"
-#include "init_audio.h"
 
 namespace binding {
 

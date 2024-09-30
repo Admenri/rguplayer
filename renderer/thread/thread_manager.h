@@ -61,13 +61,13 @@ class GlobalStateManager final {
     GLBlendFunc blend_func;
     GLClearColor clear_color;
     GLVertexAttrib vertex_attrib;
-    GLTransform transform;
   } states;
 
   GLShaderWare* shaders() const { return shaders_.get(); }
   QuadDrawable* common_quad() const { return common_quad_.get(); }
   QuadIndexBuffer* quad_ibo() const { return quad_ibo_.get(); }
   int& max_texture_size() { return max_texture_size_; }
+  bool glsl_es() { return glsl_es_; }
 
  private:
   std::unique_ptr<GLShaderWare> shaders_;
@@ -80,6 +80,7 @@ class GlobalStateManager final {
   GLID<Texture> generic_tex_;
   base::Vec2i generic_tex_size_;
 
+  bool glsl_es_;
   int max_texture_size_;
 };
 

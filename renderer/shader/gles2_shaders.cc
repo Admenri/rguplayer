@@ -13,9 +13,9 @@ void MultiplyMatrices(const GLfloat* matrixA,
                       GLfloat* result) {
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 4; ++j) {
-      result[i * 4 + j] = 0;
+      result[i + j * 4] = 0;
       for (int k = 0; k < 4; ++k) {
-        result[i * 4 + j] += matrixA[i * 4 + k] * matrixB[k * 4 + j];
+        result[i + j * 4] += matrixA[i + k * 4] * matrixB[k + j * 4];
       }
     }
   }
@@ -25,8 +25,10 @@ void MultiplyMatrices(const GLfloat* matrixA,
 
 namespace renderer {
 
-namespace shader {
+const char kGLSLDesktopHeader[] = "#version 330 core\n";
+const char kGLSLESHeader[] = "#version 300 es\nprecision mediump float;\n";
 
+namespace shader {
 #include "renderer/shader/glsl/alphasprite.frag.xxd"
 #include "renderer/shader/glsl/alphatrans.frag.xxd"
 #include "renderer/shader/glsl/base.frag.xxd"
@@ -132,6 +134,15 @@ bool GLES2Shader::CompileShader(GLuint glshader,
   std::vector<const GLchar*> shader_srcs;
   std::vector<GLint> shader_sizes;
 
+  // Setup GLSL header
+  if (GSM.glsl_es()) {
+    shader_srcs.push_back(kGLSLESHeader);
+    shader_sizes.push_back(sizeof(kGLSLESHeader) - 1);
+  } else {
+    shader_srcs.push_back(kGLSLDesktopHeader);
+    shader_sizes.push_back(sizeof(kGLSLDesktopHeader) - 1);
+  }
+
   // Setup shader source
   shader_srcs.push_back(reinterpret_cast<const GLchar*>(shader_source.c_str()));
   shader_sizes.push_back(static_cast<GLint>(shader_source.size()));
@@ -182,26 +193,14 @@ void GLES2ShaderBase::SetTexture(GLint location, GLuint tex, uint16_t unit) {
 }
 
 void GLES2ShaderBase::SetProjectionMatrix(const base::Vec2i& size) {
-  auto* transform = GSM.states.transform.Current();
-  if (transform_cache_ == transform && projection_cache_ == size)
+  if (projection_cache_ == size)
     return;
-  transform_cache_ = transform;
   projection_cache_ = size;
 
   const float a = 2.f / size.x;
   const float b = 2.f / size.y;
   const float c = -2.f;
   GLfloat mat[16] = {a, 0, 0, 0, 0, b, 0, 0, 0, 0, c, 0, -1, -1, -1, 1};
-
-  if (transform) {
-    const GLfloat* trans_mat = transform->GetMatrixDataUnsafe();
-
-    float ret_transform[16];
-    MultiplyMatrices(trans_mat, mat, ret_transform);
-
-    GL.UniformMatrix4fv(u_projectionMat_, 1, GL_FALSE, ret_transform);
-    return;
-  }
 
   GL.UniformMatrix4fv(u_projectionMat_, 1, GL_FALSE, mat);
 }
