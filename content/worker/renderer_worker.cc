@@ -78,7 +78,8 @@ void RenderRunner::InitGLContextInternal() {
   LOG(INFO) << "[Content] GLSL: "
             << renderer::GL.GetString(GL_SHADING_LANGUAGE_VERSION);
 
-  renderer::GSM.InitStates();
+  renderer::GSM.InitStates(config_->angle_renderer() !=
+                           CoreConfigure::ANGLEBackend::kDisable);
   max_texture_size_ = renderer::GSM.max_texture_size();
   LOG(INFO) << "[Content] MaxTextureSize: " << max_texture_size_ << "x"
             << max_texture_size_;

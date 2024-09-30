@@ -26,10 +26,7 @@ class CoreConfigure : public base::RefCounted<CoreConfigure> {
   // ANGLE Graphics API backend choose
   enum class ANGLEBackend {
     kDisable = 0,
-    kOpenGL,
-    kOpenGLES,
     kD3D11,
-    kD3D11on12,
     kVulkan,
     kSoftware,
   };

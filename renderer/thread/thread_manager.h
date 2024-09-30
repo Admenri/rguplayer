@@ -45,7 +45,7 @@ class GlobalStateManager final {
   GlobalStateManager(const GlobalStateManager&) = delete;
   GlobalStateManager& operator=(const GlobalStateManager&) = delete;
 
-  void InitStates();
+  void InitStates(bool force_glsles);
   void QuitStates();
 
   TextureFrameBuffer& EnsureCommonTFB(int width, int height);

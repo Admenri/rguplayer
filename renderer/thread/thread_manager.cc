@@ -9,7 +9,7 @@ namespace renderer {
 
 thread_local GlobalStateManager GSM;
 
-void GlobalStateManager::InitStates() {
+void GlobalStateManager::InitStates(bool force_glsles) {
   GL.Disable(GL_DEPTH_TEST);
   GL.GetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size_);
   GL.ActiveTexture(GL_TEXTURE0);
@@ -25,6 +25,7 @@ void GlobalStateManager::InitStates() {
 
   std::string gl_version((const char*)GL.GetString(GL_VERSION));
   glsl_es_ = (gl_version.find("OpenGL ES") != std::string::npos);
+  glsl_es_ |= force_glsles;
 
   shaders_ = std::make_unique<GLShaderWare>();
   quad_ibo_ = std::make_unique<QuadIndexBuffer>();

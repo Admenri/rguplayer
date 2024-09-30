@@ -210,17 +210,6 @@ void ANGLEDevice::GetEGLDisplay(void* nativeDisplay, ANGLEBackend type) {
   std::vector<EGLAttrib> displayAttributes;
   switch (type) {
     default:
-    case renderer::OGLDevice::ANGLEBackend::kOpenGL:
-      displayAttributes.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
-      displayAttributes.push_back(EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE);
-      break;
-    case renderer::OGLDevice::ANGLEBackend::kOpenGLES:
-      displayAttributes.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
-      displayAttributes.push_back(EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE);
-      break;
-    case renderer::OGLDevice::ANGLEBackend::kD3D11on12:
-      displayAttributes.push_back(EGL_PLATFORM_ANGLE_D3D11ON12_ANGLE);
-      displayAttributes.push_back(EGL_TRUE);
     case renderer::OGLDevice::ANGLEBackend::kD3D11:
       displayAttributes.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
       displayAttributes.push_back(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE);
