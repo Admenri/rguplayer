@@ -265,6 +265,8 @@ class Sprite : public base::RefCounted<Sprite>,
   void PrepareDraw(bgfx::ViewId* render_view) override;
   void OnDraw(CompositeTargetInfo* target_info) override;
   void CheckObjectDisposed() const override { CheckIsDisposed(); }
+  void OnParentViewportRectChanged(
+      const DrawableParent::ViewportInfo& viewport_rect) override;
   void OnSrcRectChangedInternal();
   void UpdateWaveQuadsInternal();
   void UpdateVisibilityInternal();

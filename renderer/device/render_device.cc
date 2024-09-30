@@ -183,15 +183,16 @@ scoped_refptr<QuadArrayIndices> RenderDevice::quad_indices() {
 void RenderDevice::BindRenderView(bgfx::ViewId render_view,
                                   const base::Rect& viewport,
                                   bgfx::FrameBufferHandle render_target,
-                                  uint32_t clear) {
+                                  std::optional<uint32_t> clear) {
   float proj_mat[16];
   renderer::MakeProjectionMatrix(proj_mat, viewport.Size());
   bgfx::setViewRect(render_view, viewport.x, viewport.y, viewport.width,
                     viewport.height);
   bgfx::setViewTransform(render_view, nullptr, proj_mat);
   bgfx::setViewFrameBuffer(render_view, render_target);
-  bgfx::setViewClear(render_view, clear ? BGFX_CLEAR_COLOR : BGFX_CLEAR_NONE,
-                     clear);
+  bgfx::setViewClear(render_view,
+                     clear.has_value() ? BGFX_CLEAR_COLOR : BGFX_CLEAR_NONE,
+                     clear.has_value() ? *clear : 0);
 }
 
 }  // namespace renderer

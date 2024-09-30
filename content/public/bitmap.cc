@@ -187,7 +187,8 @@ void Bitmap::StretchBlt(const base::Rect& dest_rect,
     encoder->blit(render_view, intermediate_texture.handle, 0, 0, src_texture,
                   dest_rect.x, dest_rect.y, dest_rect.width, dest_rect.height);
 
-    screen()->device()->BindRenderView(render_view, size_, texture_);
+    screen()->device()->BindRenderView(render_view, size_, texture_,
+                                       std::nullopt);
 
     // (texCoord - src_offset) * src_dst_factor
     base::Vec2i& src_size = src_bitmap->size_;
@@ -239,7 +240,8 @@ void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
   bgfx::Encoder* encoder = bgfx::begin();
   bgfx::ViewId render_view = 0;
   {
-    screen()->device()->BindRenderView(render_view, size_, texture_);
+    screen()->device()->BindRenderView(render_view, size_, texture_,
+                                       std::nullopt);
 
     auto& shader = screen()->device()->pipelines().color;
     auto* quad = screen()->device()->common_quad();
@@ -272,7 +274,8 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
   bgfx::Encoder* encoder = bgfx::begin();
   bgfx::ViewId render_view = 0;
   {
-    screen()->device()->BindRenderView(render_view, size_, texture_);
+    screen()->device()->BindRenderView(render_view, size_, texture_,
+                                       std::nullopt);
 
     auto& shader = screen()->device()->pipelines().color;
     auto* quad = screen()->device()->common_quad();
@@ -313,7 +316,8 @@ void Bitmap::ClearRect(const base::Rect& rect) {
   bgfx::Encoder* encoder = bgfx::begin();
   bgfx::ViewId render_view = 0;
   {
-    screen()->device()->BindRenderView(render_view, size_, texture_);
+    screen()->device()->BindRenderView(render_view, size_, texture_,
+                                       std::nullopt);
 
     auto& shader = screen()->device()->pipelines().color;
     auto* quad = screen()->device()->common_quad();
@@ -388,7 +392,8 @@ void Bitmap::HueChange(int hue) {
     encoder->blit(render_view, intermediate.handle, 0, 0, src_texture, 0, 0,
                   size_.x, size_.y);
 
-    screen()->device()->BindRenderView(render_view, size_, texture_);
+    screen()->device()->BindRenderView(render_view, size_, texture_,
+                                       std::nullopt);
 
     auto& shader = screen()->device()->pipelines().hue;
     auto* quad = screen()->device()->common_quad();
@@ -483,7 +488,8 @@ void Bitmap::DrawText(const base::Rect& rect,
       base::Vec2 text_surf_size = base::Vec2i(txt_surf->w, txt_surf->h);
       SDL_DestroySurface(txt_surf);
 
-      screen()->device()->BindRenderView(render_view, size_, texture_);
+      screen()->device()->BindRenderView(render_view, size_, texture_,
+                                         std::nullopt);
 
       auto& shader = screen()->device()->pipelines().texblt;
 

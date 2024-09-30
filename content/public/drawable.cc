@@ -44,6 +44,9 @@ void DrawableParent::Composite(CompositeTargetInfo* target_info) {
     if (it->value()->visible_)
       it->value()->OnDraw(target_info);
 
+  // Isolate view environment
+  target_info->render_view++;
+
   for (auto it = drawables_.tail(); it != drawables_.end(); it = it->previous())
     if (it->value()->visible_)
       it->value()->AfterDraw(target_info);

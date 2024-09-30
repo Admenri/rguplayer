@@ -112,6 +112,8 @@ class Viewport : public base::RefCounted<Viewport>,
                            const base::Vec4& color,
                            const base::Vec4& tone);
 
+  base::Rect effect_region_;
+
   scoped_refptr<Rect> rect_;
   scoped_refptr<Color> color_;
   scoped_refptr<Tone> tone_;

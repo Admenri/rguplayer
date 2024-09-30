@@ -34,38 +34,66 @@ int SDL_main(int argc, char** argv) {
         win->AsWeakPtr(), fps.get(), profile, win_params.size);
 
     {
-      scoped_refptr<content::Bitmap> b = new content::Bitmap(host, "test.png");
-      scoped_refptr<content::Bitmap> b2 = new content::Bitmap(host, "bg.png");
+      // scoped_refptr<content::Bitmap> b = new content::Bitmap(host,
+      // "test.png"); scoped_refptr<content::Bitmap> b2 = new
+      // content::Bitmap(host, "bg.png");
 
-      b2->Blt({50, 50}, b, {50, 50, 300, 300}, 125);
-      b2->SetPixel({10, 10}, new content::Color(0, 0, 0, 255));
-      b2->GradientFillRect({0, 0, 100, 100}, new content::Color(0, 0, 0, 255),
-                           new content::Color(255, 255, 255, 255), true);
-      // b2->DrawText({0, 0, 200, 200}, "test text draw");
+      // b2->Blt({50, 50}, b, {50, 50, 300, 300}, 125);
+      // b2->SetPixel({10, 10}, new content::Color(0, 0, 0, 255));
+      // b2->GradientFillRect({0, 0, 100, 100}, new content::Color(0, 0, 0,
+      // 255),
+      //                     new content::Color(255, 255, 255, 255), true);
+      //// b2->DrawText({0, 0, 200, 200}, "test text draw");
 
-      b2->HueChange(125);
+      // b2->HueChange(125);
 
-      auto* surf = b2->SurfaceRequired();
-      IMG_SavePNG(surf, "out.png");
+      // auto* surf = b2->SurfaceRequired();
+      // IMG_SavePNG(surf, "out.png");
 
-      scoped_refptr<content::Viewport> vp = new content::Viewport(host);
-      vp->SetRect(new content::Rect({50, 50, 200, 200}));
+      scoped_refptr<content::Viewport> vp0 =
+          new content::Viewport(host, base::Rect(50, 50, 300, 300));
+
+      scoped_refptr<content::Sprite> bg_spr = new content::Sprite(host, vp0);
+      bg_spr->SetBitmap(new content::Bitmap(host, "bg.png"));
+
+      scoped_refptr<content::Viewport> vp = new content::Viewport(host, vp0);
+      vp->SetRect(new content::Rect(base::Rect(50, 50, 200, 200)));
       vp->SetTone(new content::Tone(-68, -68, 0, 68));
 
-      scoped_refptr<content::Sprite> spr = new content::Sprite(host, vp);
-      spr->SetBitmap(b2);
-      spr->SetOX(320);
-      spr->SetOY(240);
+      std::vector<scoped_refptr<content::Sprite>> sprs;
+      scoped_refptr<content::Bitmap> item =
+          new content::Bitmap(host, "item.png");
 
+      srand(time(nullptr));
+      for (int i = 0; i < 1000; ++i) {
+        scoped_refptr<content::Sprite> spr = new content::Sprite(host, vp);
+        spr->SetBitmap(item);
+
+        spr->SetX(rand() % 640);
+        spr->SetY(rand() % 480);
+
+        sprs.push_back(spr);
+      }
+
+      scoped_refptr<content::Bitmap> snap = new content::Bitmap(host, 640, 480);
+      vp->SnapToBitmap(snap);
+
+      auto* surf = snap->SurfaceRequired();
+      IMG_SavePNG(surf, "out111.png");
+
+      int c = 0;
       while (true) {
         SDL_Event e;
         SDL_PollEvent(&e);
         if (e.type == SDL_EVENT_QUIT)
           break;
 
-        host->Update();
+        for (auto& it : sprs) {
+          it->SetAngle(c);
+        }
 
-        spr->SetAngle(spr->GetAngle() + 3);
+        c += 3;
+        host->Update();
       }
     }
   } catch (base::Exception e) {

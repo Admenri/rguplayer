@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <memory>
+#include <optional>
 
 namespace renderer {
 
@@ -119,7 +120,7 @@ class RenderDevice final {
   void BindRenderView(bgfx::ViewId render_view,
                       const base::Rect& viewport,
                       bgfx::FrameBufferHandle render_target,
-                      uint32_t clear = 0);
+                      std::optional<uint32_t> clear);
 
  private:
   RenderDevice(base::WeakPtr<ui::Widget> screen);

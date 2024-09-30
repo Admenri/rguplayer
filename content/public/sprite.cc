@@ -135,8 +135,8 @@ void Sprite::OnDraw(CompositeTargetInfo* target_info) {
   auto bitmap_texture = bgfx::getTexture(bitmap_->GetHandle());
   auto bitmap_size = bitmap_->GetSize();
   bgfx::ProgramHandle pipeline_handle = BGFX_INVALID_HANDLE;
-  base::Vec4 offset_texsize = base::MakeVec4(parent_rect().GetRealOffset(),
-                                             base::MakeInvert(bitmap_size));
+  base::Vec4 offset_texsize =
+      base::MakeVec4(base::Vec2(), base::MakeInvert(bitmap_size));
 
   if (render_effect) {
     auto& shader = screen()->device()->pipelines().sprite;
@@ -191,6 +191,11 @@ void Sprite::OnDraw(CompositeTargetInfo* target_info) {
   else
     drawable_quad_->Draw(target_info->encoder, pipeline_handle,
                          target_info->render_view);
+}
+
+void Sprite::OnParentViewportRectChanged(
+    const DrawableParent::ViewportInfo& viewport_rect) {
+  transform_.SetGlobalOffset(viewport_rect.GetRealOffset());
 }
 
 void Sprite::OnSrcRectChangedInternal() {

@@ -28,7 +28,7 @@ Viewport::Viewport(scoped_refptr<Graphics> screen,
     : GraphicsElement(screen.get()),
       Disposable(screen.get()),
       ViewportChild(screen, viewport) {
-  InitViewportInternal(viewport->GetRect()->AsBase());
+  InitViewportInternal(viewport->GetRect()->AsBase().Size());
 }
 
 Viewport::~Viewport() {
@@ -67,6 +67,45 @@ void Viewport::SetRect(scoped_refptr<Rect> rect) {
 
 void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   CheckIsDisposed();
+
+  renderer::Framebuffer render_target;
+  render_target.handle = target->GetHandle();
+  render_target.size = target->GetSize();
+
+  bgfx::ViewId render_view = 1;
+  DrawableParent::PrepareComposite(&render_view);
+
+  CompositeTargetInfo target_info;
+  target_info.encoder = bgfx::begin();
+  target_info.render_target = &render_target;
+  target_info.render_view = render_view;
+  target_info.render_scissor.enable = false;
+  target_info.render_scissor.region = render_target.size;
+  target_info.render_scissor.cache = UINT16_MAX;
+
+  screen()->device()->BindRenderView(render_view, render_target.size,
+                                     render_target.handle, 0);
+
+  DrawableParent::Composite(&target_info);
+
+  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
+    base::Vec4 composite_color = color_->AsBase();
+    base::Vec4 flash_color = Flashable::GetFlashColor();
+    base::Vec4 target_color;
+    if (Flashable::IsFlashing())
+      target_color =
+          (flash_color.w > composite_color.w ? flash_color : composite_color);
+    else
+      target_color = composite_color;
+
+    ApplyViewportEffect(&target_info, viewport_rect().rect, target_color,
+                        tone_->AsBase());
+  }
+
+  AfterDraw(&target_info);
+
+  bgfx::end(target_info.encoder);
+  bgfx::frame();
 }
 
 void Viewport::SetViewport(scoped_refptr<Viewport> viewport) {
@@ -99,25 +138,16 @@ void Viewport::OnDraw(CompositeTargetInfo* target_info) {
   CompositeTargetInfo::ScissorRegion swap_scissor;
   std::swap(target_info->render_scissor, swap_scissor);
 
+  effect_region_ = viewport_rect().rect;
+  if (swap_scissor.enable)
+    effect_region_ =
+        base::MakeIntersect(viewport_rect().rect, swap_scissor.region);
+
   target_info->render_scissor.cache = scissor_cache;
   target_info->render_scissor.enable = true;
-  target_info->render_scissor.region = viewport_rect().rect;
+  target_info->render_scissor.region = effect_region_;
 
   DrawableParent::Composite(target_info);
-
-  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
-    base::Vec4 composite_color = color_->AsBase();
-    base::Vec4 flash_color = Flashable::GetFlashColor();
-    base::Vec4 target_color;
-    if (Flashable::IsFlashing())
-      target_color =
-          (flash_color.w > composite_color.w ? flash_color : composite_color);
-    else
-      target_color = composite_color;
-
-    ApplyViewportEffect(target_info, viewport_rect().rect, target_color,
-                        tone_->AsBase());
-  }
 
   std::swap(target_info->render_scissor, swap_scissor);
 }
@@ -136,14 +166,17 @@ void Viewport::AfterDraw(CompositeTargetInfo* target_info) {
     else
       target_color = composite_color;
 
-    // Next render pass
-    screen()->device()->BindRenderView(++target_info->render_view,
-                                       target_info->render_target->size,
-                                       target_info->render_target->handle);
+    // Bind effect view
+    screen()->device()->BindRenderView(
+        target_info->render_view, target_info->render_target->size,
+        target_info->render_target->handle, std::nullopt);
 
     // Composite viewport effect
-    ApplyViewportEffect(target_info, viewport_rect().rect, target_color,
+    ApplyViewportEffect(target_info, effect_region_, target_color,
                         tone_->AsBase());
+
+    // Next render pass
+    ++target_info->render_view;
   }
 }
 
