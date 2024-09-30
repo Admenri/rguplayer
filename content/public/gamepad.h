@@ -59,7 +59,7 @@ class Gamepad : public base::RefCounted<Gamepad> {
  private:
   SDL_JoystickID id_;
   SDL_Gamepad* device_;
-  std::array<ButtonState, SDL_GAMEPAD_BUTTON_MAX> button_states_;
+  std::array<ButtonState, UINT16_MAX> button_states_;
   std::string guid_;
 };
 

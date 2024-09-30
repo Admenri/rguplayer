@@ -107,7 +107,7 @@ void Input::Update() {
   if (share_data_->menu_window_focused)
     return;
 
-  for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
+  for (int i = 0; i < SDL_SCANCODE_COUNT; ++i) {
     bool key_pressed = window_->GetKeyState(static_cast<SDL_Scancode>(i));
 
     /* Update key state with elder state */
@@ -195,7 +195,7 @@ bool Input::KeyRepeated(int scancode) {
 
 std::string Input::GetKeyName(int scancode) {
   SDL_Keycode key = SDL_GetKeyFromScancode(static_cast<SDL_Scancode>(scancode),
-                                           SDL_KMOD_NONE, SDL_FALSE);
+                                           SDL_KMOD_NONE, false);
   return std::string(SDL_GetKeyName(key));
 }
 
@@ -469,7 +469,7 @@ void Input::ShowButtonSettingsGUI() {
 
       // Get any keys state for binding
       if (share_data_->disable_gui_key_input) {
-        for (int code = 0; code < SDL_NUM_SCANCODES; ++code) {
+        for (int code = 0; code < SDL_SCANCODE_COUNT; ++code) {
           bool key_pressed =
               window_->GetKeyState(static_cast<SDL_Scancode>(code));
           if (key_pressed) {

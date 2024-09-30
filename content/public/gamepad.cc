@@ -65,7 +65,7 @@ void Gamepad::SetPlayerIndex(int index) {
 }
 
 void Gamepad::Update() {
-  for (int i = 0; i < SDL_GAMEPAD_BUTTON_MAX; ++i) {
+  for (int i = 0; i < button_states_.size(); ++i) {
     bool button_pressed =
         SDL_GetGamepadButton(device_, static_cast<SDL_GamepadButton>(i));
 
@@ -136,7 +136,7 @@ bool Gamepad::IsButtonRepeated(SDL_GamepadButton button_id) {
 
 void Gamepad::GetPressedButtons(std::vector<SDL_GamepadButton>& out) {
   out.clear();
-  for (int i = 0; i < SDL_GAMEPAD_BUTTON_MAX; ++i)
+  for (int i = 0; i < button_states_.size(); ++i)
     if (button_states_[i].pressed)
       out.push_back(static_cast<SDL_GamepadButton>(i));
 }

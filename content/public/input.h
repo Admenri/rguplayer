@@ -80,8 +80,8 @@ class Input final : public base::RefCounted<Input> {
 
   WorkerShareData* share_data_;
   KeySymMap key_bindings_;
-  std::array<KeyState, SDL_NUM_SCANCODES> key_states_;
-  std::array<KeyState, SDL_NUM_SCANCODES> recent_key_states_;
+  std::array<KeyState, SDL_SCANCODE_COUNT> key_states_;
+  std::array<KeyState, SDL_SCANCODE_COUNT> recent_key_states_;
 
   KeySymMap setting_bindings_;
 

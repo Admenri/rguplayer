@@ -19,7 +19,7 @@ void* read_mem_file(SDL_IOStream* src, size_t* datasize, bool freesrc) {
   Sint64 size, size_total;
   size_t size_read;
   char *data = NULL, *newdata;
-  SDL_bool loading_chunks = SDL_FALSE;
+  bool loading_chunks = false;
 
   if (!src) {
     SDL_InvalidParamError("src");
@@ -29,7 +29,7 @@ void* read_mem_file(SDL_IOStream* src, size_t* datasize, bool freesrc) {
   size = SDL_GetIOSize(src);
   if (size < 0) {
     size = FILE_CHUNK_SIZE;
-    loading_chunks = SDL_TRUE;
+    loading_chunks = true;
   }
 
   if (static_cast<uint64_t>(size) >= SDL_SIZE_MAX) {
@@ -364,16 +364,16 @@ void Audio::PlaySlotInternal(SlotInfo* slot,
 
     try {
       share_data_->filesystem->OpenRead(
-          filename, base::BindRepeating(
-                        [](SoLoud::Wav* loader, SDL_IOStream* ops,
-                           const std::string& ext) {
-                          size_t out_size = 0;
-                          uint8_t* mem = static_cast<uint8_t*>(
-                              read_mem_file(ops, &out_size, SDL_TRUE));
-                          return loader->loadMem(mem, out_size) ==
-                                 SoLoud::SO_NO_ERROR;
-                        },
-                        slot->source.get()));
+          filename,
+          base::BindRepeating(
+              [](SoLoud::Wav* loader, SDL_IOStream* ops,
+                 const std::string& ext) {
+                size_t out_size = 0;
+                uint8_t* mem =
+                    static_cast<uint8_t*>(read_mem_file(ops, &out_size, true));
+                return loader->loadMem(mem, out_size) == SoLoud::SO_NO_ERROR;
+              },
+              slot->source.get()));
     } catch (const base::Exception& exception) {
       LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
       return;
@@ -426,16 +426,16 @@ void Audio::EmitSoundInternal(const std::string& filename,
 
     try {
       share_data_->filesystem->OpenRead(
-          filename, base::BindRepeating(
-                        [](SoLoud::Wav* loader, SDL_IOStream* ops,
-                           const std::string& ext) {
-                          size_t out_size = 0;
-                          uint8_t* mem = static_cast<uint8_t*>(
-                              read_mem_file(ops, &out_size, SDL_TRUE));
-                          return loader->loadMem(mem, out_size) ==
-                                 SoLoud::SO_NO_ERROR;
-                        },
-                        source.get()));
+          filename,
+          base::BindRepeating(
+              [](SoLoud::Wav* loader, SDL_IOStream* ops,
+                 const std::string& ext) {
+                size_t out_size = 0;
+                uint8_t* mem =
+                    static_cast<uint8_t*>(read_mem_file(ops, &out_size, true));
+                return loader->loadMem(mem, out_size) == SoLoud::SO_NO_ERROR;
+              },
+              source.get()));
     } catch (const base::Exception& exception) {
       LOG(INFO) << "[Content] [Audio] Error: " << exception.GetErrorMessage();
       return;

@@ -146,7 +146,7 @@ class Widget {
   SDL_WindowID window_id_;
   base::CallbackListSubscription ui_dispatcher_binding_;
 
-  bool key_states_[SDL_NUM_SCANCODES]{0};
+  bool key_states_[SDL_SCANCODE_COUNT]{0};
   MouseState mouse_state_;
   std::array<FingerState, MAX_FINGERS> finger_states_;
 

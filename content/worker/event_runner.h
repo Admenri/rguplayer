@@ -41,7 +41,7 @@ class EventRunner : public base::RefCounted<EventRunner> {
   }
 
  private:
-  static SDL_bool EventFilter(void* userdata, SDL_Event* event);
+  static bool EventFilter(void* userdata, SDL_Event* event);
   void EventDispatch(const SDL_Event& event);
 
   WorkerShareData* share_data_;

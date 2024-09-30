@@ -45,13 +45,13 @@ void Widget::Init(InitParams params) {
                          params.resizable);
 
   SDL_SetBooleanProperty(property_id, SDL_PROP_WINDOW_CREATE_HIDDEN_BOOLEAN,
-                         SDL_TRUE);
+                         true);
   if (params.window_state == WindowPlacement::Maximum)
     SDL_SetBooleanProperty(property_id,
-                           SDL_PROP_WINDOW_CREATE_MAXIMIZED_BOOLEAN, SDL_TRUE);
+                           SDL_PROP_WINDOW_CREATE_MAXIMIZED_BOOLEAN, true);
   else if (params.window_state == WindowPlacement::Minimum)
     SDL_SetBooleanProperty(property_id,
-                           SDL_PROP_WINDOW_CREATE_MINIMIZED_BOOLEAN, SDL_TRUE);
+                           SDL_PROP_WINDOW_CREATE_MINIMIZED_BOOLEAN, true);
 
   SDL_SetStringProperty(property_id, SDL_PROP_WINDOW_CREATE_TITLE_STRING,
                         params.title.c_str());

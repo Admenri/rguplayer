@@ -51,23 +51,25 @@
 #ifdef LOAD_XPM
 
 /* See if an image is contained in a data source */
-int IMG_isXPM(SDL_IOStream *src)
+bool IMG_isXPM(SDL_IOStream *src)
 {
     Sint64 start;
-    int is_XPM;
+    bool is_XPM;
     char magic[9];
 
-    if ( !src )
-        return 0;
+    if (!src) {
+        return false;
+    }
+
     start = SDL_TellIO(src);
-    is_XPM = 0;
+    is_XPM = false;
     if (SDL_ReadIO(src, magic, sizeof(magic)) == sizeof(magic) ) {
         if ( SDL_memcmp(magic, "/* XPM */", sizeof(magic)) == 0 ) {
-            is_XPM = 1;
+            is_XPM = true;
         }
     }
     SDL_SeekIO(src, start, SDL_IO_SEEK_SET);
-    return(is_XPM);
+    return is_XPM;
 }
 
 /* Hash table to look up colors from pixel strings */
@@ -118,7 +120,7 @@ static struct color_hash *create_colorhash(int maxnum)
     bytes = hash->size * sizeof(struct hash_entry **);
     /* Check for overflow */
     if ((bytes / sizeof(struct hash_entry **)) != (Uint32)hash->size) {
-        IMG_SetError("memory allocation overflow");
+        SDL_SetError("memory allocation overflow");
         SDL_free(hash);
         return NULL;
     }
@@ -131,7 +133,7 @@ static struct color_hash *create_colorhash(int maxnum)
     bytes = maxnum * sizeof(struct hash_entry);
     /* Check for overflow */
     if ((bytes / sizeof(struct hash_entry)) != (Uint32)maxnum) {
-        IMG_SetError("memory allocation overflow");
+        SDL_SetError("memory allocation overflow");
         SDL_free(hash->table);
         SDL_free(hash);
         return NULL;
@@ -995,7 +997,7 @@ do {                            \
 } while (0)
 
 /* read XPM from either array or IOStream */
-static SDL_Surface *load_xpm(char **xpm, SDL_IOStream *src, SDL_bool force_32bit)
+static SDL_Surface *load_xpm(char **xpm, SDL_IOStream *src, bool force_32bit)
 {
     Sint64 start = 0;
     SDL_Surface *image = NULL;
@@ -1121,7 +1123,7 @@ static SDL_Surface *load_xpm(char **xpm, SDL_IOStream *src, SDL_bool force_32bit
                 c->b = (Uint8)(argb);
                 pixel = index;
                 if (argb == 0x00000000) {
-                    SDL_SetSurfaceColorKey(image, SDL_TRUE, pixel);
+                    SDL_SetSurfaceColorKey(image, true, pixel);
                 }
             } else {
                 pixel = argb;
@@ -1168,14 +1170,14 @@ done:
             SDL_DestroySurface(image);
             image = NULL;
         }
-        IMG_SetError("%s", error);
+        SDL_SetError("%s", error);
     }
     if (keystrings)
         SDL_free(keystrings);
     free_colorhash(colors);
     if (linebuf)
         SDL_free(linebuf);
-    return(image);
+    return image;
 }
 
 /* Load a XPM type image from an IOStream datasource */
@@ -1191,19 +1193,19 @@ SDL_Surface *IMG_LoadXPM_IO(SDL_IOStream *src)
 SDL_Surface *IMG_ReadXPMFromArray(char **xpm)
 {
     if (!xpm) {
-        IMG_SetError("array is NULL");
+        SDL_SetError("array is NULL");
         return NULL;
     }
-    return load_xpm(xpm, NULL, SDL_FALSE);
+    return load_xpm(xpm, NULL, false);
 }
 
 SDL_Surface *IMG_ReadXPMFromArrayToRGB888(char **xpm)
 {
     if (!xpm) {
-        IMG_SetError("array is NULL");
+        SDL_SetError("array is NULL");
         return NULL;
     }
-    return load_xpm(xpm, NULL, SDL_TRUE /* force_32bit */);
+    return load_xpm(xpm, NULL, true);
 }
 
 #else  /* not LOAD_XPM */
@@ -1212,16 +1214,16 @@ SDL_Surface *IMG_ReadXPMFromArrayToRGB888(char **xpm)
 #endif
 
 /* See if an image is contained in a data source */
-int IMG_isXPM(SDL_IOStream *src)
+bool IMG_isXPM(SDL_IOStream *src)
 {
-    return(0);
+    return false;
 }
 
 
 /* Load a XPM type image from an SDL datasource */
 SDL_Surface *IMG_LoadXPM_IO(SDL_IOStream *src)
 {
-    return(NULL);
+    return NULL;
 }
 
 SDL_Surface *IMG_ReadXPMFromArray(char **xpm)

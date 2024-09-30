@@ -251,7 +251,7 @@ std::unique_ptr<SDLDevice> SDLDevice::CreateSDLDevice(SDL_Window* host_window) {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, SDL_TRUE);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
 
   device->context_ = SDL_GL_CreateContext(host_window);
   device->host_ = host_window;

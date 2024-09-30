@@ -70,7 +70,7 @@ TTF_Font* ReadFontFromMemory(
   auto it = mem_fonts.find(path);
   if (it != mem_fonts.end()) {
     SDL_IOStream* io = SDL_IOFromConstMem(it->second.second, it->second.first);
-    return TTF_OpenFontIO(io, SDL_TRUE, size * 0.9f);
+    return TTF_OpenFontIO(io, true, size * 0.9f);
   }
 
   return nullptr;
