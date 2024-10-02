@@ -142,15 +142,16 @@ struct TextureFrameBuffer {
   GLID<FrameBuffer> fbo;
   base::Vec2i size;
 
-  inline static TextureFrameBuffer Gen() {
+  inline static TextureFrameBuffer Gen(GLint filter = GL_LINEAR,
+                                       GLint wrap = GL_CLAMP_TO_EDGE) {
     TextureFrameBuffer tfb;
 
     tfb.tex = Texture::Gen();
     tfb.fbo = FrameBuffer::Gen();
 
     Texture::Bind(tfb.tex);
-    Texture::SetFilter();
-    Texture::SetWrap();
+    Texture::SetFilter(filter);
+    Texture::SetWrap(wrap);
 
     return tfb;
   }

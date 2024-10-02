@@ -1288,8 +1288,8 @@ void Tilemap2::InitDrawableData() {
       },
       renderer_data_, flash_layer_.get(), tile_size_));
 
-  atlas_tfb_ =
-      screen()->AllocTexture(base::Vec2i(tile_size_, tile_size_), false);
+  atlas_tfb_ = screen()->AllocTexture(base::Vec2i(tile_size_, tile_size_),
+                                      false, GL_RGBA, nullptr, 0, GL_NEAREST);
 }
 
 }  // namespace content

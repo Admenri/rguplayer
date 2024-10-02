@@ -394,7 +394,9 @@ renderer::TextureFrameBuffer* Graphics::AllocTexture(const base::Vec2i& size,
                                                      bool clean,
                                                      GLenum format,
                                                      void* buffer,
-                                                     size_t buffer_size) {
+                                                     size_t buffer_size,
+                                                     GLint filter,
+                                                     GLint wrap) {
   renderer::TextureFrameBuffer* mem = new renderer::TextureFrameBuffer;
   std::vector<uint8_t> texture_data;
   if (buffer_size && buffer) {
@@ -404,8 +406,9 @@ renderer::TextureFrameBuffer* Graphics::AllocTexture(const base::Vec2i& size,
 
   renderer()->PostTask(base::BindOnce(
       [](renderer::TextureFrameBuffer* ptr, const base::Vec2i& tex_size,
-         bool need_clean, GLenum tex_format, std::vector<uint8_t> data) {
-        *ptr = renderer::TextureFrameBuffer::Gen();
+         bool need_clean, GLenum tex_format, std::vector<uint8_t> data,
+         GLint filter, GLint wrap) {
+        *ptr = renderer::TextureFrameBuffer::Gen(filter, wrap);
 
         renderer::TextureFrameBuffer::Alloc(*ptr, tex_size, tex_format);
         if (!data.empty())
@@ -416,7 +419,7 @@ renderer::TextureFrameBuffer* Graphics::AllocTexture(const base::Vec2i& size,
         if (need_clean)
           renderer::FrameBuffer::Clear();
       },
-      mem, size, clean, format, std::move(texture_data)));
+      mem, size, clean, format, std::move(texture_data), filter, wrap));
 
   return mem;
 }

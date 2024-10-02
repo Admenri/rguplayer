@@ -366,8 +366,8 @@ void Tilemap::InitTilemapData() {
       },
       renderer_data_, flash_layer_.get(), tile_size_));
 
-  atlas_tfb_ =
-      screen()->AllocTexture(base::Vec2i(tile_size_, tile_size_), false);
+  atlas_tfb_ = screen()->AllocTexture(base::Vec2i(tile_size_, tile_size_),
+                                      false, GL_RGBA, nullptr, 0, GL_NEAREST);
 
   ground_layer_.reset(new TilemapGroundLayer(screen(), this));
   SetupDrawLayersInternal();

@@ -106,7 +106,9 @@ class Graphics final : public base::RefCounted<Graphics>,
                                              bool clean = false,
                                              GLenum format = GL_RGBA,
                                              void* buffer = nullptr,
-                                             size_t buffer_size = 0);
+                                             size_t buffer_size = 0,
+                                             GLint filter = GL_LINEAR,
+                                             GLint wrap = GL_CLAMP_TO_EDGE);
   void FreeTexture(renderer::TextureFrameBuffer*& texture_data);
 
   inline renderer::TextureFrameBuffer* GetScreenBuffer() {

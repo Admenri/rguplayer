@@ -6,7 +6,7 @@
 
 #include "base/exceptions/exception.h"
 
-#include "SDL_system.h"
+#include "SDL3/SDL_system.h"
 #include "physfs.h"
 
 #ifdef __ANDROID__
@@ -97,14 +97,16 @@ size_t PHYS_RWopsWrite(void* userdata,
 bool PHYS_RWopsClose(void* userdata) {
   PHYSFS_File* f = PHYSPtr(userdata);
   if (!f)
-    return -1;
+    return false;
 
   int result = PHYSFS_close(f);
-  return (result != 0) ? 0 : -1;
+  return result != 0;
 }
 
 SDL_IOStream* WrapperRWops(PHYSFS_File* handle) {
-  SDL_IOStreamInterface iface{0};
+  SDL_IOStreamInterface iface;
+  SDL_INIT_INTERFACE(&iface);
+
   iface.size = PHYS_RWopsSize;
   iface.seek = PHYS_RWopsSeek;
   iface.read = PHYS_RWopsRead;
