@@ -325,7 +325,22 @@ void Graphics::EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
   // Execute composite
   DrawableParent::Composite(&target_info);
 
-  *render_view = target_info.render_view;
+  // Apply screen brightness
+  bgfx::ViewId screen_effect_view = ++target_info.render_view;
+
+  device()->BindRenderView(screen_effect_view, screen_buffer_.size,
+                           screen_buffer_.handle, std::nullopt);
+
+  auto& shader = device()->pipelines().color;
+  screen_quad_->SetPosition(base::Vec2(screen_buffer_.size));
+  screen_quad_->SetColor(base::Vec4(0, 0, 0, brightness_ / 255.0f));
+
+  encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+                    renderer::MakeColorBlendState(renderer::BlendType::Normal));
+  screen_quad_->Draw(encoder, shader.GetProgram(), screen_effect_view);
+
+  // Next render pass
+  *render_view = ++screen_effect_view;
 }
 
 void Graphics::PresentScreenBufferInternal(bgfx::Encoder* encoder,

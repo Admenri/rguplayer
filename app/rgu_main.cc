@@ -69,6 +69,8 @@ int SDL_main(int argc, char** argv) {
       scoped_refptr<content::Bitmap> item =
           new content::Bitmap(host, "item.png");
 
+      host->SetBrightness(125);
+
       srand(time(nullptr));
       for (int i = 0; i < 1000; ++i) {
         scoped_refptr<content::Sprite> spr = new content::Sprite(host, vp);

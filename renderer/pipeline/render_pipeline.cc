@@ -70,13 +70,6 @@ TexbltShader::~TexbltShader() {
 BaseColorShader::BaseColorShader() {
   RenderShaderBase::CompileProgram(&k_basecolor_vert, "basecolor_vert",
                                    &k_basecolor_frag, "basecolor_frag");
-
-  u_offsetTexSize_ =
-      bgfx::createUniform("u_offsetTexSize", bgfx::UniformType::Vec4);
-}
-
-BaseColorShader::~BaseColorShader() {
-  bgfx::destroy(u_offsetTexSize_);
 }
 
 HueShader::HueShader() {

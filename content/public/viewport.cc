@@ -89,20 +89,8 @@ void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
 
   DrawableParent::Composite(&target_info);
 
-  if (Flashable::IsFlashing() || color_->IsValid() || tone_->IsValid()) {
-    base::Vec4 composite_color = color_->AsBase();
-    base::Vec4 flash_color = Flashable::GetFlashColor();
-    base::Vec4 target_color;
-    if (Flashable::IsFlashing())
-      target_color =
-          (flash_color.w > composite_color.w ? flash_color : composite_color);
-    else
-      target_color = composite_color;
-
-    ApplyViewportEffect(&target_info, viewport_rect().rect, target_color,
-                        tone_->AsBase());
-  }
-
+  // Effect apply
+  effect_region_ = viewport_rect().rect;
   AfterDraw(&target_info);
 
   bgfx::end(target_info.encoder);

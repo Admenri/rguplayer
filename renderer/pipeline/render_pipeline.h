@@ -68,12 +68,6 @@ class TexbltShader : public RenderShaderBase {
 class BaseColorShader : public RenderShaderBase {
  public:
   BaseColorShader();
-  ~BaseColorShader() override;
-
-  bgfx::UniformHandle OffsetTexSize() { return u_offsetTexSize_; }
-
- private:
-  bgfx::UniformHandle u_offsetTexSize_;
 };
 
 class HueShader : public RenderShaderBase {

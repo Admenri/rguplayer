@@ -249,9 +249,6 @@ void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
     auto& shader = screen()->device()->pipelines().color;
     auto* quad = screen()->device()->common_quad();
 
-    base::Vec4 offset_size;
-    encoder->setUniform(shader.OffsetTexSize(), &offset_size);
-
     quad->SetPosition(rect);
     quad->SetColor(color->AsBase());
 
@@ -282,9 +279,6 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
 
     auto& shader = screen()->device()->pipelines().color;
     auto* quad = screen()->device()->common_quad();
-
-    base::Vec4 offset_size;
-    encoder->setUniform(shader.OffsetTexSize(), &offset_size);
 
     quad->SetPosition(rect);
     if (vertical) {
@@ -324,9 +318,6 @@ void Bitmap::ClearRect(const base::Rect& rect) {
 
     auto& shader = screen()->device()->pipelines().color;
     auto* quad = screen()->device()->common_quad();
-
-    base::Vec4 offset_size;
-    encoder->setUniform(shader.OffsetTexSize(), &offset_size);
 
     quad->SetPosition(rect);
     quad->SetColor(base::Vec4());
