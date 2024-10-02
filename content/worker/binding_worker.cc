@@ -89,7 +89,10 @@ void BindingRunner::BindingFuncMain() {
     // Destroy renderer on binding thread
     renderer_->DestroyRenderer();
   } else {
-    LOG(INFO) << "[Content] Failed to load renderer device.";
+    // Error when loading renderer
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "RGU Kernel",
+                             "Failed to load renderer device.",
+                             share_data_->window->AsSDLWindow());
   }
 
   // Quit app required

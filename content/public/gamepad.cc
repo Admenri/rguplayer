@@ -13,22 +13,29 @@ void Gamepad::GetAvailableDevices(std::vector<GamepadDevice>& out) {
 
   int device_size;
   auto* available_pads = SDL_GetGamepads(&device_size);
-  for (int i = 0; i < device_size; ++i) {
-    GamepadDevice item;
-    item.id = available_pads[i];
-    item.device_name = SDL_GetGamepadNameForID(available_pads[i]);
-    item.device_path = SDL_GetGamepadPathForID(available_pads[i]);
-    item.player_index = SDL_GetGamepadPlayerIndexForID(available_pads[i]);
 
-    auto guid = SDL_GetGamepadGUIDForID(available_pads[i]);
-    char pszGUID[33];
-    SDL_GUIDToString(guid, pszGUID, sizeof(pszGUID));
-    item.guid = pszGUID;
+  if (available_pads) {
+    for (int i = 0; i < device_size; ++i) {
+      GamepadDevice item;
+      item.id = available_pads[i];
 
-    out.push_back(item);
+      if (auto* name = SDL_GetGamepadNameForID(available_pads[i]))
+        item.device_name = name;
+      if (auto* path = SDL_GetGamepadPathForID(available_pads[i]))
+        item.device_path = path;
+      item.player_index = SDL_GetGamepadPlayerIndexForID(available_pads[i]);
+
+      auto guid = SDL_GetGamepadGUIDForID(available_pads[i]);
+      char pszGUID[128];
+      memset(pszGUID, 0, sizeof(pszGUID));
+      SDL_GUIDToString(guid, pszGUID, sizeof(pszGUID));
+      item.guid = pszGUID;
+
+      out.push_back(item);
+    }
+
+    SDL_free(available_pads);
   }
-
-  SDL_free(available_pads);
 }
 
 Gamepad::Gamepad(SDL_JoystickID dev_id)
