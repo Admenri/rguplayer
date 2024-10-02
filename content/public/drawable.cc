@@ -25,14 +25,15 @@ void DrawableParent::AddChild(Drawable* drawable) {
   children_.Append(&drawable->child_node_);
 }
 
-void DrawableParent::PrepareComposite(bgfx::ViewId* render_view) {
+void DrawableParent::PrepareComposite(bgfx::Encoder* encoder,
+                                      bgfx::ViewId* render_view) {
   if (children_.empty())
     return;
 
   for (auto it = children_.tail(); it != children_.end(); it = it->previous()) {
     auto* child = it->value();
     if (child->visible_)
-      child->PrepareDraw(render_view);
+      child->PrepareDraw(encoder, render_view);
   }
 }
 

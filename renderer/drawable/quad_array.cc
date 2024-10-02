@@ -43,7 +43,7 @@ void QuadArray::Draw(bgfx::Encoder* encoder,
                      size_t count,
                      bgfx::ViewId view) {
   encoder->setVertexBuffer(0, buffer_handle_);
-  encoder->setIndexBuffer(indices_->GetBufferHandle(), offset, count);
+  encoder->setIndexBuffer(indices_->GetBufferHandle(), offset * 6, count * 6);
   encoder->submit(view, shader);
 }
 

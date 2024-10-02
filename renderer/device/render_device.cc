@@ -195,4 +195,15 @@ void RenderDevice::BindRenderView(bgfx::ViewId render_view,
                      clear.has_value() ? *clear : 0);
 }
 
+Texture Texture::Create(const base::Vec2i& size,
+                        uint64_t flags,
+                        const bgfx::Memory* data) {
+  Texture obj;
+  obj.handle = bgfx::createTexture2D(size.x, size.y, false, 1,
+                                     bgfx::TextureFormat::RGBA8, flags, data);
+  obj.size = size;
+
+  return obj;
+}
+
 }  // namespace renderer

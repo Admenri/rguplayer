@@ -262,7 +262,7 @@ class Sprite : public base::RefCounted<Sprite>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Sprite"; }
 
-  void PrepareDraw(bgfx::ViewId* render_view) override;
+  void PrepareDraw(bgfx::Encoder* encoder, bgfx::ViewId* render_view) override;
   void OnDraw(CompositeTargetInfo* target_info) override;
   void CheckObjectDisposed() const override { CheckIsDisposed(); }
   void OnParentViewportRectChanged(

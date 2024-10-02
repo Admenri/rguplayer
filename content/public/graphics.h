@@ -100,7 +100,8 @@ class Graphics final : public base::RefCounted<Graphics>,
   void FrameProcessInternal();
   void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();
-  bgfx::Encoder* EncodeScreenDrawcallsInternal(bgfx::ViewId* render_view);
+  void EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
+                                     bgfx::ViewId* render_view);
   void PresentScreenBufferInternal(bgfx::Encoder* encoder,
                                    bgfx::ViewId render_view);
 

@@ -122,6 +122,9 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
                         surface_buffer_->h,
                         bgfx::copy(surface_buffer_->pixels, img_size));
   texture_ = bgfx::createFrameBuffer(1, &texture_buffer, true);
+
+  SDL_DestroySurface(surface_buffer_);
+  surface_buffer_ = nullptr;
 }
 
 Bitmap::~Bitmap() {

@@ -29,6 +29,10 @@ enum class BlendType {
 struct Texture {
   bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
   base::Vec2i size;
+
+  static Texture Create(const base::Vec2i& size,
+                        uint64_t flags,
+                        const bgfx::Memory* data = nullptr);
 };
 
 struct Framebuffer {
@@ -94,6 +98,7 @@ class RenderDevice final {
     SpriteShader sprite;
     AlphaSpriteShader alphasprite;
     BaseSpriteShader basesprite;
+    PlaneShader plane;
   };
 
   ~RenderDevice();

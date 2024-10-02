@@ -98,7 +98,7 @@ class Viewport : public base::RefCounted<Viewport>,
   void OnObjectDisposed() override;
   std::string_view DisposedObjectName() const override { return "Viewport"; }
 
-  void PrepareDraw(bgfx::ViewId* render_view) override;
+  void PrepareDraw(bgfx::Encoder* encoder, bgfx::ViewId* render_view) override;
   void OnDraw(CompositeTargetInfo* target_info) override;
   void AfterDraw(CompositeTargetInfo* target_info) override;
   void CheckObjectDisposed() const override { CheckIsDisposed(); }

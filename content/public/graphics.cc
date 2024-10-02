@@ -84,9 +84,11 @@ scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
   scoped_refptr<Bitmap> snap =
       new Bitmap(this, screen_buffer_.size.x, screen_buffer_.size.y);
 
-  // Composite
   bgfx::ViewId render_view = 1;
-  bgfx::Encoder* encoder = EncodeScreenDrawcallsInternal(&render_view);
+  bgfx::Encoder* encoder = bgfx::begin();
+
+  // Composite
+  EncodeScreenDrawcallsInternal(encoder, &render_view);
 
   // Blit to bitmap
   encoder->blit(render_view, bgfx::getTexture(snap->GetHandle()), 0, 0,
@@ -115,9 +117,11 @@ void Graphics::Update() {
       }
     }
 
-    // Composite
     bgfx::ViewId render_view = 1;
-    bgfx::Encoder* encoder = EncodeScreenDrawcallsInternal(&render_view);
+    bgfx::Encoder* encoder = bgfx::begin();
+
+    // Composite
+    EncodeScreenDrawcallsInternal(encoder, &render_view);
 
     // Present
     PresentScreenBufferInternal(encoder, render_view);
@@ -301,16 +305,14 @@ void Graphics::UpdateWindowViewportInternal() {
   display_viewport_.y = (window_size.y - display_viewport_.height) / 2.0f;
 }
 
-bgfx::Encoder* Graphics::EncodeScreenDrawcallsInternal(
-    bgfx::ViewId* render_view) {
+void Graphics::EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
+                                             bgfx::ViewId* render_view) {
   // Execute prepare stage
-  DrawableParent::PrepareComposite(render_view);
+  DrawableParent::PrepareComposite(encoder, render_view);
 
   // Composite stage
   device()->BindRenderView(*render_view, screen_buffer_.size,
                            screen_buffer_.handle, 0x000000ff);
-
-  bgfx::Encoder* encoder = bgfx::begin();
 
   CompositeTargetInfo target_info;
   target_info.encoder = encoder;
@@ -324,7 +326,6 @@ bgfx::Encoder* Graphics::EncodeScreenDrawcallsInternal(
   DrawableParent::Composite(&target_info);
 
   *render_view = target_info.render_view;
-  return encoder;
 }
 
 void Graphics::PresentScreenBufferInternal(bgfx::Encoder* encoder,

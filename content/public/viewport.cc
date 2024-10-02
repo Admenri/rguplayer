@@ -73,10 +73,11 @@ void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   render_target.size = target->GetSize();
 
   bgfx::ViewId render_view = 1;
-  DrawableParent::PrepareComposite(&render_view);
+  bgfx::Encoder* encoder = bgfx::begin();
+  DrawableParent::PrepareComposite(encoder, &render_view);
 
   CompositeTargetInfo target_info;
-  target_info.encoder = bgfx::begin();
+  target_info.encoder = encoder;
   target_info.render_target = &render_target;
   target_info.render_view = render_view;
   target_info.render_scissor.enable = false;
@@ -118,8 +119,8 @@ void Viewport::OnObjectDisposed() {
   RemoveFromList();
 }
 
-void Viewport::PrepareDraw(bgfx::ViewId* render_view) {
-  DrawableParent::PrepareComposite(render_view);
+void Viewport::PrepareDraw(bgfx::Encoder* encoder, bgfx::ViewId* render_view) {
+  DrawableParent::PrepareComposite(encoder, render_view);
 }
 
 void Viewport::OnDraw(CompositeTargetInfo* target_info) {

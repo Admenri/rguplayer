@@ -3,6 +3,7 @@
 
 #include "content/public/bitmap.h"
 #include "content/public/graphics.h"
+#include "content/public/plane.h"
 #include "content/public/sprite.h"
 
 #include "components/filesystem/filesystem.h"
@@ -25,7 +26,7 @@ int SDL_main(int argc, char** argv) {
   try {
     std::unique_ptr<ui::Widget> win(new ui::Widget());
     ui::Widget::InitParams win_params;
-    win_params.size = base::Vec2i(640, 480);
+    win_params.size = base::Vec2i(800, 600);
     win->Init(std::move(win_params));
 
     scoped_refptr<content::Profile> profile = new content::Profile();
@@ -51,10 +52,14 @@ int SDL_main(int argc, char** argv) {
       // IMG_SavePNG(surf, "out.png");
 
       scoped_refptr<content::Viewport> vp0 =
-          new content::Viewport(host, base::Rect(50, 50, 300, 300));
+          new content::Viewport(host, base::Rect(50, 50, 600, 600));
 
-      scoped_refptr<content::Sprite> bg_spr = new content::Sprite(host, vp0);
-      bg_spr->SetBitmap(new content::Bitmap(host, "bg.png"));
+      // scoped_refptr<content::Sprite> bg_spr = new content::Sprite(host, vp0);
+      // bg_spr->SetBitmap(new content::Bitmap(host, "bg.png"));
+      // bg_spr->SetWaveAmp(10);
+
+      scoped_refptr<content::Plane> bg_ple = new content::Plane(host, vp0);
+      bg_ple->SetBitmap(new content::Bitmap(host, "tile.png"));
 
       scoped_refptr<content::Viewport> vp = new content::Viewport(host, vp0);
       vp->SetRect(new content::Rect(base::Rect(50, 50, 200, 200)));
@@ -69,13 +74,13 @@ int SDL_main(int argc, char** argv) {
         scoped_refptr<content::Sprite> spr = new content::Sprite(host, vp);
         spr->SetBitmap(item);
 
-        spr->SetX(rand() % 640);
-        spr->SetY(rand() % 480);
+        spr->SetX(rand() % 800);
+        spr->SetY(rand() % 600);
 
         sprs.push_back(spr);
       }
 
-      scoped_refptr<content::Bitmap> snap = new content::Bitmap(host, 640, 480);
+      scoped_refptr<content::Bitmap> snap = new content::Bitmap(host, 800, 600);
       vp->SnapToBitmap(snap);
 
       auto* surf = snap->SurfaceRequired();
@@ -91,6 +96,11 @@ int SDL_main(int argc, char** argv) {
         for (auto& it : sprs) {
           it->SetAngle(c);
         }
+
+        // bg_spr->Update();
+
+        bg_ple->SetOX(bg_ple->GetOX() + 5);
+        bg_ple->SetOY(bg_ple->GetOY() + 5);
 
         c += 3;
         host->Update();

@@ -52,6 +52,7 @@ renderer_shader_compile(viewport_frag FRAGMENT)
 renderer_shader_compile(transform_vert VERTEX)
 renderer_shader_compile(alphasprite_frag FRAGMENT)
 renderer_shader_compile(sprite_frag FRAGMENT)
+renderer_shader_compile(plane_frag FRAGMENT)
 
 string(REPLACE ";" " " SHADER_LIST "${GEN_SHADERS_SOURCE}")
 set(SHADER_OUTPUT_FILE "${RGU_AUTOGEN_DIR}/renderer/pipeline/shaders/shader_set_autogen.h")

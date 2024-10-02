@@ -116,8 +116,7 @@ ViewportShader::~ViewportShader() {
 
 SpriteShader::SpriteShader() {
   RenderShaderBase::CompileProgram(&k_transform_vert, "transform_vert",
-                                   &k_sprite_frag,
-                                   "sprite_frag");
+                                   &k_sprite_frag, "sprite_frag");
 
   u_transformMat_ =
       bgfx::createUniform("u_transformMat", bgfx::UniformType::Mat4);
@@ -158,8 +157,8 @@ AlphaSpriteShader::~AlphaSpriteShader() {
 }
 
 BaseSpriteShader::BaseSpriteShader() {
-  RenderShaderBase::CompileProgram(&k_transform_vert, "transform_vert", &k_base_frag,
-                                   "base_frag");
+  RenderShaderBase::CompileProgram(&k_transform_vert, "transform_vert",
+                                   &k_base_frag, "base_frag");
 
   u_transformMat_ =
       bgfx::createUniform("u_transformMat", bgfx::UniformType::Mat4);
@@ -172,6 +171,26 @@ BaseSpriteShader::~BaseSpriteShader() {
   bgfx::destroy(u_transformMat_);
   bgfx::destroy(u_offsetTexSize_);
   bgfx::destroy(u_texture_);
+}
+
+PlaneShader::PlaneShader() {
+  RenderShaderBase::CompileProgram(&k_base_vert, "base_vert", &k_plane_frag,
+                                   "plane_frag");
+
+  u_offsetTexSize_ =
+      bgfx::createUniform("u_offsetTexSize", bgfx::UniformType::Vec4);
+  u_texture_ = bgfx::createUniform("u_texture", bgfx::UniformType::Sampler);
+  u_color_ = bgfx::createUniform("u_color", bgfx::UniformType::Vec4);
+  u_tone_ = bgfx::createUniform("u_tone", bgfx::UniformType::Vec4);
+  u_opacity_ = bgfx::createUniform("u_opacity", bgfx::UniformType::Vec4);
+}
+
+PlaneShader::~PlaneShader() {
+  bgfx::destroy(u_offsetTexSize_);
+  bgfx::destroy(u_texture_);
+  bgfx::destroy(u_color_);
+  bgfx::destroy(u_tone_);
+  bgfx::destroy(u_opacity_);
 }
 
 }  // namespace renderer
