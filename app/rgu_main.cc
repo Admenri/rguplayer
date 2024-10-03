@@ -5,6 +5,7 @@
 #include "content/public/graphics.h"
 #include "content/public/plane.h"
 #include "content/public/sprite.h"
+#include "content/public/window2.h"
 
 #include "components/filesystem/filesystem.h"
 
@@ -54,12 +55,17 @@ int SDL_main(int argc, char** argv) {
       scoped_refptr<content::Viewport> vp0 =
           new content::Viewport(host, base::Rect(50, 50, 600, 600));
 
-      // scoped_refptr<content::Sprite> bg_spr = new content::Sprite(host, vp0);
-      // bg_spr->SetBitmap(new content::Bitmap(host, "bg.png"));
-      // bg_spr->SetWaveAmp(10);
+      scoped_refptr<content::Sprite> bg_spr = new content::Sprite(host, vp0);
+      bg_spr->SetBitmap(new content::Bitmap(host, "bg.png"));
+      bg_spr->SetWaveAmp(10);
 
       scoped_refptr<content::Plane> bg_ple = new content::Plane(host, vp0);
       bg_ple->SetBitmap(new content::Bitmap(host, "tile.png"));
+
+      scoped_refptr<content::Sprite> bg_spr1 = new content::Sprite(host, vp0);
+      bg_spr1->SetBitmap(new content::Bitmap(host, "bg1.png"));
+      bg_spr1->SetX(100);
+      bg_spr1->SetY(100);
 
       scoped_refptr<content::Viewport> vp = new content::Viewport(host, vp0);
       vp->SetRect(new content::Rect(base::Rect(50, 50, 200, 200)));
@@ -69,7 +75,15 @@ int SDL_main(int argc, char** argv) {
       scoped_refptr<content::Bitmap> item =
           new content::Bitmap(host, "item.png");
 
-      host->SetBrightness(125);
+      // host->SetBrightness(155);
+
+      scoped_refptr<content::Window2> win =
+          new content::Window2(host, base::Rect(200, 200, 300, 300));
+      win->SetWindowskin(new content::Bitmap(host, "Window.png"));
+      win->SetTone(new content::Tone(-34, 0, 68, 0));
+      win->SetContents(bg_spr->GetBitmap());
+      win->SetOX(200);
+      win->SetOY(200);
 
       srand(time(nullptr));
       for (int i = 0; i < 1000; ++i) {
@@ -82,8 +96,9 @@ int SDL_main(int argc, char** argv) {
         sprs.push_back(spr);
       }
 
-      scoped_refptr<content::Bitmap> snap = new content::Bitmap(host, 800, 600);
-      vp->SnapToBitmap(snap);
+      scoped_refptr<content::Bitmap> snap =
+          new content::Bitmap(host, base::Vec2i(800, 600));
+      vp0->SnapToBitmap(snap);
 
       auto* surf = snap->SurfaceRequired();
       IMG_SavePNG(surf, "out111.png");
@@ -99,7 +114,7 @@ int SDL_main(int argc, char** argv) {
           it->SetAngle(c);
         }
 
-        // bg_spr->Update();
+        bg_spr->Update();
 
         bg_ple->SetOX(bg_ple->GetOX() + 5);
         bg_ple->SetOY(bg_ple->GetOY() + 5);

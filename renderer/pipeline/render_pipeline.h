@@ -174,6 +174,30 @@ class PlaneShader : public RenderShaderBase {
   bgfx::UniformHandle u_opacity_;
 };
 
+class AlphaFlatShader : public RenderShaderBase {
+ public:
+  AlphaFlatShader();
+  ~AlphaFlatShader() override;
+
+  bgfx::UniformHandle Alpha() { return u_alpha_; }
+
+ private:
+  bgfx::UniformHandle u_alpha_;
+};
+
+class BaseAlphaShader : public RenderShaderBase {
+ public:
+  BaseAlphaShader();
+  ~BaseAlphaShader() override;
+
+  bgfx::UniformHandle OffsetTexSize() { return u_offsetTexSize_; }
+  bgfx::UniformHandle Texture() { return u_texture_; }
+
+ private:
+  bgfx::UniformHandle u_offsetTexSize_;
+  bgfx::UniformHandle u_texture_;
+};
+
 }  // namespace renderer
 
 #endif  //! RENDERER_PIPELINE_RENDER_PIPELINE_H_

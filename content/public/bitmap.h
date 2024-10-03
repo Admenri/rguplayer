@@ -30,7 +30,7 @@ class Bitmap : public base::RefCounted<Bitmap>,
     Right,
   };
 
-  Bitmap(scoped_refptr<Graphics> host, int width, int height);
+  Bitmap(scoped_refptr<Graphics> host, const base::Vec2i& size);
   Bitmap(scoped_refptr<Graphics> host, const std::string& filename);
   ~Bitmap() override;
 

@@ -17,6 +17,14 @@ bgfx::VertexLayout GeometryVertexLayout::GetLayout() {
   return vert_define;
 }
 
+int GeometryVertexLayout::SetTexPos(Data* data,
+                                    const base::RectF& tex,
+                                    const base::RectF& pos) {
+  SetTexcoord(data, tex);
+  SetPosition(data, pos);
+  return 1;
+}
+
 void GeometryVertexLayout::SetPosition(Data* data, const base::RectF& pos) {
   data[0].position = base::Vec4(pos.x, pos.y, 0.0f, 1.0f);
   data[1].position = base::Vec4(pos.x + pos.width, pos.y, 0.0f, 1.0f);

@@ -21,6 +21,9 @@ class GeometryVertexLayout {
 
   static bgfx::VertexLayout GetLayout();
 
+  static int SetTexPos(Data* data,
+                       const base::RectF& tex,
+                       const base::RectF& pos);
   static void SetPosition(Data* data, const base::RectF& pos);
   static void SetTexcoord(Data* data, const base::RectF& tex);
   static void SetColor(Data* data, const base::Vec4& color, int index = -1);

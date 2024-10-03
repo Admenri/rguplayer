@@ -43,23 +43,27 @@ struct Framebuffer {
 inline uint64_t MakeColorBlendState(BlendType type) {
   switch (type) {
     case BlendType::KeepDestAlpha:
-      return BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD) |
+      return BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+             BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD) |
              BGFX_STATE_BLEND_FUNC_SEPARATE(
                  BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA,
                  BGFX_STATE_BLEND_ZERO, BGFX_STATE_BLEND_ONE);
     default:
     case BlendType::Normal:
-      return BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD) |
+      return BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+             BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD) |
              BGFX_STATE_BLEND_FUNC_SEPARATE(
                  BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA,
                  BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA);
     case BlendType::Addition:
-      return BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD) |
+      return BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+             BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD) |
              BGFX_STATE_BLEND_FUNC_SEPARATE(
                  BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE,
                  BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE);
     case BlendType::Substraction:
-      return BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_REVSUB) |
+      return BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+             BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_REVSUB) |
              BGFX_STATE_BLEND_FUNC_SEPARATE(
                  BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE,
                  BGFX_STATE_BLEND_ZERO, BGFX_STATE_BLEND_ONE);
@@ -99,6 +103,8 @@ class RenderDevice final {
     AlphaSpriteShader alphasprite;
     BaseSpriteShader basesprite;
     PlaneShader plane;
+    AlphaFlatShader alphaflat;
+    BaseAlphaShader basealpha;
   };
 
   ~RenderDevice();

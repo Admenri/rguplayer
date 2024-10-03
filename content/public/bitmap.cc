@@ -53,25 +53,26 @@ uint16_t utf8_to_ucs2(const char* _input, const char** end_ptr) {
 
 }  // namespace
 
-Bitmap::Bitmap(scoped_refptr<Graphics> host, int width, int height)
+Bitmap::Bitmap(scoped_refptr<Graphics> host, const base::Vec2i& size)
     : GraphicsElement(host.get()),
       Disposable(host.get()),
+      size_(size),
       read_buffer_(BGFX_INVALID_HANDLE),
       font_(new Font(host->font_manager())),
       surface_buffer_(nullptr) {
-  if (width <= 0 || height <= 0) {
+  if (size.x <= 0 || size.y <= 0) {
     throw base::Exception(base::Exception::ContentError,
-                          "Invalid bitmap create size: (%dx%d)", width, height);
+                          "Invalid bitmap create size: (%dx%d)", size.x,
+                          size.y);
   }
 
   uint32_t size_limit = bgfx::getCaps()->limits.maxTextureSize;
-  if (width > size_limit || height > size_limit) {
+  if (size.x > size_limit || size.y > size_limit) {
     throw base::Exception(base::Exception::RendererError,
-                          "Unable to create large bitmap: (%dx%d)", width,
-                          height);
+                          "Unable to create large bitmap: (%dx%d)", size.x,
+                          size.y);
   }
 
-  size_ = base::Vec2i(width, height);
   bgfx::TextureHandle texture_buffer = bgfx::createTexture2D(
       size_.x, size_.y, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_RT);
   texture_ = bgfx::createFrameBuffer(1, &texture_buffer, true);
@@ -135,7 +136,7 @@ scoped_refptr<Bitmap> Bitmap::Clone() {
   CheckIsDisposed();
 
   scoped_refptr<Bitmap> new_bitmap =
-      new Bitmap(static_cast<Graphics*>(screen()), size_.x, size_.y);
+      new Bitmap(static_cast<Graphics*>(screen()), size_);
   new_bitmap->Blt(base::Vec2i(), this, size_);
   *new_bitmap->font_ = *font_;
 

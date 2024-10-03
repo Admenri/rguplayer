@@ -21,10 +21,18 @@ struct CompositeTargetInfo {
   bgfx::ViewId render_view = 0;
 
   struct ScissorRegion {
-    uint16_t cache = UINT16_MAX;
     base::Rect region;
     bool enable = false;
   } render_scissor;
+
+  void SetScissorRegion(const base::Rect& region) {
+    auto& screen_size = render_target->size;
+    const bool flip_scissor = bgfx::getCaps()->originBottomLeft;
+    const int scissor_y =
+        flip_scissor ? (screen_size.y - region.y - region.height) : region.y;
+
+    encoder->setScissor(region.x, scissor_y, region.width, region.height);
+  }
 };
 
 class DrawableParent {
@@ -52,6 +60,9 @@ class DrawableParent {
   // Composite screen
   void PrepareComposite(bgfx::Encoder* encoder, bgfx::ViewId* render_view);
   void Composite(CompositeTargetInfo* target_info);
+  void AfterComposite(bgfx::Encoder* encoder,
+                      bgfx::ViewId* render_view,
+                      renderer::Framebuffer* screen_buffer);
 
   // Viewport rect
   void NotifyViewportRectChanged();
@@ -105,7 +116,9 @@ class Drawable {
  protected:
   virtual void PrepareDraw(bgfx::Encoder* encoder, bgfx::ViewId* render_view) {}
   virtual void OnDraw(CompositeTargetInfo* target_info) = 0;
-  virtual void AfterDraw(CompositeTargetInfo* target_info) {}
+  virtual void AfterDraw(bgfx::Encoder* encoder,
+                         bgfx::ViewId* render_view,
+                         renderer::Framebuffer* screen_buffer) {}
   virtual void CheckObjectDisposed() const = 0;
   virtual void OnParentViewportRectChanged(
       const DrawableParent::ViewportInfo&) {}

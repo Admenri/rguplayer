@@ -81,8 +81,7 @@ void Graphics::Wait(int duration) {
 }
 
 scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
-  scoped_refptr<Bitmap> snap =
-      new Bitmap(this, screen_buffer_.size.x, screen_buffer_.size.y);
+  scoped_refptr<Bitmap> snap = new Bitmap(this, screen_buffer_.size);
 
   bgfx::ViewId render_view = 1;
   bgfx::Encoder* encoder = bgfx::begin();
@@ -320,24 +319,29 @@ void Graphics::EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
   target_info.render_view = *render_view;
   target_info.render_scissor.enable = false;
   target_info.render_scissor.region = screen_buffer_.size;
-  target_info.render_scissor.cache = UINT16_MAX;
 
   // Execute composite
   DrawableParent::Composite(&target_info);
 
+  // After effect
+  (*render_view)++;
+  DrawableParent::AfterComposite(encoder, render_view, &screen_buffer_);
+
   // Apply screen brightness
-  bgfx::ViewId screen_effect_view = ++target_info.render_view;
+  bgfx::ViewId screen_effect_view = target_info.render_view;
+  if (brightness_ < 255) {
+    screen_effect_view++;
+    device()->BindRenderView(screen_effect_view, screen_buffer_.size,
+                             screen_buffer_.handle, std::nullopt);
 
-  device()->BindRenderView(screen_effect_view, screen_buffer_.size,
-                           screen_buffer_.handle, std::nullopt);
+    auto& shader = device()->pipelines().color;
+    screen_quad_->SetPosition(base::Vec2(screen_buffer_.size));
+    screen_quad_->SetColor(base::Vec4(0, 0, 0, brightness_ / 255.0f));
 
-  auto& shader = device()->pipelines().color;
-  screen_quad_->SetPosition(base::Vec2(screen_buffer_.size));
-  screen_quad_->SetColor(base::Vec4(0, 0, 0, brightness_ / 255.0f));
-
-  encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-                    renderer::MakeColorBlendState(renderer::BlendType::Normal));
-  screen_quad_->Draw(encoder, shader.GetProgram(), screen_effect_view);
+    encoder->setState(
+        renderer::MakeColorBlendState(renderer::BlendType::Normal));
+    screen_quad_->Draw(encoder, shader.GetProgram(), screen_effect_view);
+  }
 
   // Next render pass
   *render_view = ++screen_effect_view;

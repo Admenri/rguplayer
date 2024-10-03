@@ -100,14 +100,18 @@ class Viewport : public base::RefCounted<Viewport>,
 
   void PrepareDraw(bgfx::Encoder* encoder, bgfx::ViewId* render_view) override;
   void OnDraw(CompositeTargetInfo* target_info) override;
-  void AfterDraw(CompositeTargetInfo* target_info) override;
+  void AfterDraw(bgfx::Encoder* encoder,
+                 bgfx::ViewId* render_view,
+                 renderer::Framebuffer* screen_buffer) override;
   void CheckObjectDisposed() const override { CheckIsDisposed(); }
   void OnParentViewportRectChanged(const ViewportInfo& rect) override;
 
   void InitViewportInternal(const base::Rect& initial_rect);
   void OnRectChangedInternal();
 
-  void ApplyViewportEffect(CompositeTargetInfo* target_info,
+  void ApplyViewportEffect(bgfx::Encoder* encoder,
+                           bgfx::ViewId* render_view,
+                           renderer::Framebuffer* screen_buffer,
                            const base::Rect& blend_area,
                            const base::Vec4& color,
                            const base::Vec4& tone);

@@ -186,4 +186,29 @@ PlaneShader::~PlaneShader() {
   bgfx::destroy(u_opacity_);
 }
 
+AlphaFlatShader::AlphaFlatShader() {
+  RenderShaderBase::CompileProgram(&k_basecolor_vert, "basecolor_vert",
+                                   &k_flatflash_frag, "flatflash_frag");
+
+  u_alpha_ = bgfx::createUniform("u_alpha", bgfx::UniformType::Vec4);
+}
+
+AlphaFlatShader::~AlphaFlatShader() {
+  bgfx::destroy(u_alpha_);
+}
+
+BaseAlphaShader::BaseAlphaShader() {
+  RenderShaderBase::CompileProgram(&k_basealpha_vert, "basealpha_vert",
+                                   &k_basealpha_frag, "basealpha_frag");
+
+  u_offsetTexSize_ =
+      bgfx::createUniform("u_offsetTexSize", bgfx::UniformType::Vec4);
+  u_texture_ = bgfx::createUniform("u_texture", bgfx::UniformType::Sampler);
+}
+
+BaseAlphaShader::~BaseAlphaShader() {
+  bgfx::destroy(u_offsetTexSize_);
+  bgfx::destroy(u_texture_);
+}
+
 }  // namespace renderer

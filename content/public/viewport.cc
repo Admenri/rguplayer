@@ -82,7 +82,6 @@ void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   target_info.render_view = render_view;
   target_info.render_scissor.enable = false;
   target_info.render_scissor.region = render_target.size;
-  target_info.render_scissor.cache = UINT16_MAX;
 
   screen()->device()->BindRenderView(render_view, render_target.size,
                                      render_target.handle, 0);
@@ -90,8 +89,9 @@ void Viewport::SnapToBitmap(scoped_refptr<Bitmap> target) {
   DrawableParent::Composite(&target_info);
 
   // Effect apply
+  render_view++;
   effect_region_ = viewport_rect().rect;
-  AfterDraw(&target_info);
+  AfterDraw(encoder, &render_view, &render_target);
 
   bgfx::end(target_info.encoder);
   bgfx::frame();
@@ -115,33 +115,27 @@ void Viewport::OnDraw(CompositeTargetInfo* target_info) {
   if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
     return;
 
-  auto& screen_size = target_info->render_target->size;
-  const bool flip_scissor = bgfx::getCaps()->originBottomLeft;
-  const int scissor_y = flip_scissor ? (screen_size.y - viewport_rect().rect.y -
-                                        viewport_rect().rect.height)
-                                     : viewport_rect().rect.y;
-  uint16_t scissor_cache = target_info->encoder->setScissor(
-      viewport_rect().rect.x, scissor_y, viewport_rect().rect.width,
-      viewport_rect().rect.height);
-
-  CompositeTargetInfo::ScissorRegion swap_scissor;
-  std::swap(target_info->render_scissor, swap_scissor);
+  CompositeTargetInfo::ScissorRegion scissor_state_cache;
+  std::swap(target_info->render_scissor, scissor_state_cache);
 
   effect_region_ = viewport_rect().rect;
-  if (swap_scissor.enable)
+  if (scissor_state_cache.enable)
     effect_region_ =
-        base::MakeIntersect(viewport_rect().rect, swap_scissor.region);
+        base::MakeIntersect(viewport_rect().rect, scissor_state_cache.region);
 
-  target_info->render_scissor.cache = scissor_cache;
   target_info->render_scissor.enable = true;
   target_info->render_scissor.region = effect_region_;
 
   DrawableParent::Composite(target_info);
 
-  std::swap(target_info->render_scissor, swap_scissor);
+  std::swap(target_info->render_scissor, scissor_state_cache);
 }
 
-void Viewport::AfterDraw(CompositeTargetInfo* target_info) {
+void Viewport::AfterDraw(bgfx::Encoder* encoder,
+                         bgfx::ViewId* render_view,
+                         renderer::Framebuffer* screen_buffer) {
+  DrawableParent::AfterComposite(encoder, render_view, screen_buffer);
+
   if (Flashable::IsFlashing() && Flashable::EmptyFlashing())
     return;
 
@@ -155,17 +149,12 @@ void Viewport::AfterDraw(CompositeTargetInfo* target_info) {
     else
       target_color = composite_color;
 
-    // Bind effect view
-    screen()->device()->BindRenderView(
-        target_info->render_view, target_info->render_target->size,
-        target_info->render_target->handle, std::nullopt);
-
     // Composite viewport effect
-    ApplyViewportEffect(target_info, effect_region_, target_color,
-                        tone_->AsBase());
+    ApplyViewportEffect(encoder, render_view, screen_buffer, effect_region_,
+                        target_color, tone_->AsBase());
 
     // Next render pass
-    ++target_info->render_view;
+    (*render_view)++;
   }
 }
 
@@ -194,7 +183,9 @@ void Viewport::OnRectChangedInternal() {
   NotifyViewportRectChanged();
 }
 
-void Viewport::ApplyViewportEffect(CompositeTargetInfo* target_info,
+void Viewport::ApplyViewportEffect(bgfx::Encoder* encoder,
+                                   bgfx::ViewId* render_view,
+                                   renderer::Framebuffer* screen_buffer,
                                    const base::Rect& blend_area,
                                    const base::Vec4& color,
                                    const base::Vec4& tone) {
@@ -209,16 +200,15 @@ void Viewport::ApplyViewportEffect(CompositeTargetInfo* target_info,
   if (!has_tone_effect && !has_color_effect)
     return;
 
-  bgfx::Encoder* encoder = target_info->encoder;
-  bgfx::ViewId render_view = target_info->render_view;
-
-  encoder->blit(render_view, intermediate_texture.handle, 0, 0,
-                bgfx::getTexture(target_info->render_target->handle),
-                blend_area.x, blend_area.y, blend_area.width,
-                blend_area.height);
+  encoder->blit(*render_view, intermediate_texture.handle, 0, 0,
+                bgfx::getTexture(screen_buffer->handle), blend_area.x,
+                blend_area.y, blend_area.width, blend_area.height);
 
   auto& shader = screen()->device()->pipelines().viewport;
   auto* quad = screen()->device()->common_quad();
+
+  screen()->device()->BindRenderView(*render_view, screen_buffer->size,
+                                     screen_buffer->handle, std::nullopt);
 
   base::Vec4 offset_size =
       base::MakeVec4(base::Vec2(), base::MakeInvert(intermediate_texture.size));
@@ -227,13 +217,11 @@ void Viewport::ApplyViewportEffect(CompositeTargetInfo* target_info,
   encoder->setUniform(shader.Color(), &color);
   encoder->setUniform(shader.Tone(), &tone);
 
-  if (target_info->render_scissor.enable)
-    encoder->setScissor(target_info->render_scissor.cache);
   encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
 
   quad->SetPosition(blend_area);
   quad->SetTexcoord(base::Rect(blend_area.Size()));
-  quad->Draw(encoder, shader.GetProgram(), render_view);
+  quad->Draw(encoder, shader.GetProgram(), *render_view);
 }
 
 ViewportChild::ViewportChild(scoped_refptr<Graphics> screen,

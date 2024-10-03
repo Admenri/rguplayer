@@ -44,13 +44,17 @@ void DrawableParent::Composite(CompositeTargetInfo* target_info) {
   for (auto it = drawables_.tail(); it != drawables_.end(); it = it->previous())
     if (it->value()->visible_)
       it->value()->OnDraw(target_info);
+}
 
-  // Isolate view environment
-  target_info->render_view++;
+void DrawableParent::AfterComposite(bgfx::Encoder* encoder,
+                                    bgfx::ViewId* render_view,
+                                    renderer::Framebuffer* screen_buffer) {
+  if (drawables_.empty())
+    return;
 
   for (auto it = drawables_.tail(); it != drawables_.end(); it = it->previous())
     if (it->value()->visible_)
-      it->value()->AfterDraw(target_info);
+      it->value()->AfterDraw(encoder, render_view, screen_buffer);
 }
 
 void DrawableParent::NotifyViewportRectChanged() {

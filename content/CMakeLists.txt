@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 3.20.1)
 #--------------------------------------------------------------------------------
 
 set(CORE_CONTENT_SRC
+  common/tilequad.h
+  common/tileutils.cc
+  common/tileutils.h
   profile/engine_profile.cc
   profile/engine_profile.h
   public/bitmap.cc
@@ -36,6 +39,8 @@ set(CORE_CONTENT_SRC
   public/utility.h
   public/viewport.cc
   public/viewport.h
+  public/window2.cc
+  public/window2.h
 )
 
 add_library(engine_content PUBLIC ${CORE_CONTENT_SRC})

@@ -135,10 +135,9 @@ void Plane::OnDraw(CompositeTargetInfo* target_info) {
   }
 
   if (target_info->render_scissor.enable)
-    target_info->encoder->setScissor(target_info->render_scissor.cache);
+    target_info->SetScissorRegion(target_info->render_scissor.region);
+  target_info->encoder->setState(renderer::MakeColorBlendState(blend_type_));
 
-  target_info->encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-                                 renderer::MakeColorBlendState(blend_type_));
   quad_array_->Draw(target_info->encoder, program_handle,
                     target_info->render_view);
 }
