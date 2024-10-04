@@ -25,13 +25,8 @@ struct CompositeTargetInfo {
     bool enable = false;
   } render_scissor;
 
-  void SetScissorRegion(const base::Rect& region) {
-    auto& screen_size = render_target->size;
-    const bool flip_scissor = bgfx::getCaps()->originBottomLeft;
-    const int scissor_y =
-        flip_scissor ? (screen_size.y - region.y - region.height) : region.y;
-
-    encoder->setScissor(region.x, scissor_y, region.width, region.height);
+  inline void SetScissorRegion(const base::Rect& region) {
+    encoder->setScissor(region.x, region.y, region.width, region.height);
   }
 };
 
