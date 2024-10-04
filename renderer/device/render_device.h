@@ -105,6 +105,8 @@ class RenderDevice final {
     PlaneShader plane;
     AlphaFlatShader alphaflat;
     BaseAlphaShader basealpha;
+    TilemapShader tilemap;
+    Tilemap2Shader tilemap2;
   };
 
   ~RenderDevice();

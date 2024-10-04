@@ -37,6 +37,7 @@ void TilemapFlashLayer::Composite(GraphicsHost* host,
   target_info->encoder->setState(
       BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
       renderer::MakeColorBlendState(renderer::BlendType::Addition));
+
   quads_->Draw(target_info->encoder, shader.GetProgram(),
                target_info->render_view);
 }

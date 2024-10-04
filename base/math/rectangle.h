@@ -42,6 +42,11 @@ class Rect {
            other.height == height;
   }
 
+  inline Rect operator*(const Rect& value) const {
+    return Rect(x * value.x, y * value.y, width * value.width,
+                height * value.height);
+  }
+
   inline SDL_Rect ToSDLRect() const { return SDL_Rect{x, y, width, height}; }
   RectF ToFloatRect() const;
 
@@ -90,6 +95,11 @@ class RectF {
   inline bool operator==(const RectF& other) const {
     return other.x == x && other.y == y && other.width == width &&
            other.height == height;
+  }
+
+  inline RectF operator*(const RectF& value) const {
+    return RectF(x * value.x, y * value.y, width * value.width,
+                 height * value.height);
   }
 
   inline base::Vec2 Position() const { return base::Vec2(x, y); }

@@ -211,4 +211,40 @@ BaseAlphaShader::~BaseAlphaShader() {
   bgfx::destroy(u_texture_);
 }
 
+TilemapShader::TilemapShader() {
+  RenderShaderBase::CompileProgram(&k_tilemap_vert, "tilemap_vert",
+                                   &k_base_frag, "base_frag");
+
+  u_offsetTexSize_ =
+      bgfx::createUniform("u_offsetTexSize", bgfx::UniformType::Vec4);
+  u_texture_ = bgfx::createUniform("u_texture", bgfx::UniformType::Sampler);
+  u_tileSize_AnimateIndex_ =
+      bgfx::createUniform("u_tileSize_AnimateIndex", bgfx::UniformType::Vec4);
+}
+
+TilemapShader::~TilemapShader() {
+  bgfx::destroy(u_offsetTexSize_);
+  bgfx::destroy(u_texture_);
+  bgfx::destroy(u_tileSize_AnimateIndex_);
+}
+
+Tilemap2Shader::Tilemap2Shader() {
+  RenderShaderBase::CompileProgram(&k_tilemap2_vert, "tilemap2_vert",
+                                   &k_base_frag, "base_frag");
+
+  u_offsetTexSize_ =
+      bgfx::createUniform("u_offsetTexSize", bgfx::UniformType::Vec4);
+  u_texture_ = bgfx::createUniform("u_texture", bgfx::UniformType::Sampler);
+  u_tileSize_ = bgfx::createUniform("u_tileSize", bgfx::UniformType::Vec4);
+  u_autotileAnimationOffset_ =
+      bgfx::createUniform("u_autotileAnimationOffset", bgfx::UniformType::Vec4);
+}
+
+Tilemap2Shader::~Tilemap2Shader() {
+  bgfx::destroy(u_offsetTexSize_);
+  bgfx::destroy(u_texture_);
+  bgfx::destroy(u_tileSize_);
+  bgfx::destroy(u_autotileAnimationOffset_);
+}
+
 }  // namespace renderer

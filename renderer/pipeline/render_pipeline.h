@@ -198,6 +198,38 @@ class BaseAlphaShader : public RenderShaderBase {
   bgfx::UniformHandle u_texture_;
 };
 
+class TilemapShader : public RenderShaderBase {
+ public:
+  TilemapShader();
+  ~TilemapShader() override;
+
+  bgfx::UniformHandle OffsetTexSize() { return u_offsetTexSize_; }
+  bgfx::UniformHandle Texture() { return u_texture_; }
+  bgfx::UniformHandle TileSize_AnimID() { return u_tileSize_AnimateIndex_; }
+
+ private:
+  bgfx::UniformHandle u_offsetTexSize_;
+  bgfx::UniformHandle u_texture_;
+  bgfx::UniformHandle u_tileSize_AnimateIndex_;
+};
+
+class Tilemap2Shader : public RenderShaderBase {
+ public:
+  Tilemap2Shader();
+  ~Tilemap2Shader() override;
+
+  bgfx::UniformHandle OffsetTexSize() { return u_offsetTexSize_; }
+  bgfx::UniformHandle Texture() { return u_texture_; }
+  bgfx::UniformHandle TileSize() { return u_tileSize_; }
+  bgfx::UniformHandle AnimOffset() { return u_autotileAnimationOffset_; }
+
+ private:
+  bgfx::UniformHandle u_offsetTexSize_;
+  bgfx::UniformHandle u_texture_;
+  bgfx::UniformHandle u_tileSize_;
+  bgfx::UniformHandle u_autotileAnimationOffset_;
+};
+
 }  // namespace renderer
 
 #endif  //! RENDERER_PIPELINE_RENDER_PIPELINE_H_

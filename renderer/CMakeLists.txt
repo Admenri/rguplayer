@@ -56,6 +56,8 @@ renderer_shader_compile(plane_frag FRAGMENT)
 renderer_shader_compile(flatflash_frag FRAGMENT)
 renderer_shader_compile(basealpha_vert VERTEX)
 renderer_shader_compile(basealpha_frag FRAGMENT)
+renderer_shader_compile(tilemap_vert VERTEX)
+renderer_shader_compile(tilemap2_vert VERTEX)
 
 string(REPLACE ";" " " SHADER_LIST "${GEN_SHADERS_SOURCE}")
 set(SHADER_OUTPUT_FILE "${RGU_AUTOGEN_DIR}/renderer/pipeline/shaders/shader_set_autogen.h")
