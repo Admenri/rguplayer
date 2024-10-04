@@ -200,15 +200,15 @@ void Viewport::ApplyViewportEffect(bgfx::Encoder* encoder,
   if (!has_tone_effect && !has_color_effect)
     return;
 
+  screen()->device()->BindRenderView(*render_view, screen_buffer->size,
+                                     screen_buffer->handle, std::nullopt);
+
   encoder->blit(*render_view, intermediate_texture.handle, 0, 0,
                 bgfx::getTexture(screen_buffer->handle), blend_area.x,
                 blend_area.y, blend_area.width, blend_area.height);
 
   auto& shader = screen()->device()->pipelines().viewport;
   auto* quad = screen()->device()->common_quad();
-
-  screen()->device()->BindRenderView(*render_view, screen_buffer->size,
-                                     screen_buffer->handle, std::nullopt);
 
   base::Vec4 offset_size =
       base::MakeVec4(base::Vec2(), base::MakeInvert(intermediate_texture.size));

@@ -36,22 +36,22 @@ int SDL_main(int argc, char** argv) {
         win->AsWeakPtr(), fps.get(), profile, win_params.size);
 
     {
-      // scoped_refptr<content::Bitmap> b = new content::Bitmap(host,
-      // "test.png"); scoped_refptr<content::Bitmap> b2 = new
-      // content::Bitmap(host, "bg.png");
+      scoped_refptr<content::Bitmap> b = new content::Bitmap(host, "test.png");
+      scoped_refptr<content::Bitmap> b2 = new content::Bitmap(host, "bg.png");
 
-      // b2->Blt({50, 50}, b, {50, 50, 300, 300}, 125);
-      // b2->SetPixel({10, 10}, new content::Color(0, 0, 0, 255));
-      // b2->GradientFillRect({0, 0, 100, 100}, new content::Color(0, 0, 0,
-      // 255),
-      //                     new content::Color(255, 255, 255, 255), true);
-      //// b2->DrawText({0, 0, 200, 200}, "test text draw");
+      b2->Blt({50, 50}, b, {50, 50, 300, 300}, 125);
+      b2->SetPixel({10, 10}, new content::Color(0, 0, 0, 255));
+      b2->GradientFillRect({0, 0, 100, 100}, new content::Color(0, 0, 0, 255),
+                           new content::Color(255, 255, 255, 255), true);
+      // b2->DrawText({0, 0, 200, 200}, "test text draw");
 
-      // b2->HueChange(125);
+      b2->HueChange(125);
 
-      // auto* surf = b2->SurfaceRequired();
-      // IMG_SavePNG(surf, "out.png");
+      auto* surf = b2->SurfaceRequired();
+      IMG_SavePNG(surf, "out.png");
+    }
 
+    {
       scoped_refptr<content::Viewport> vp0 =
           new content::Viewport(host, base::Rect(50, 50, 600, 600));
 
