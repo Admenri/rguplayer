@@ -1,0 +1,31 @@
+diff --git a/src/renderer_gl.cpp b/src/renderer_gl.cpp
+index c5b3648fb..240e520b4 100644
+--- a/src/renderer_gl.cpp
++++ b/src/renderer_gl.cpp
+@@ -4549,7 +4549,7 @@ namespace bgfx { namespace gl
+ 				if (0 != flags)
+ 				{
+ 					GL_CHECK(glEnable(GL_SCISSOR_TEST) );
+-					GL_CHECK(glScissor(_rect.m_x, _height-_rect.m_height-_rect.m_y, _rect.m_width, _rect.m_height) );
++					GL_CHECK(glScissor(_rect.m_x, _rect.m_y, _rect.m_width, _rect.m_height) );
+ 					GL_CHECK(glClear(flags) );
+ 					GL_CHECK(glDisable(GL_SCISSOR_TEST) );
+ 				}
+@@ -7833,7 +7833,7 @@ namespace bgfx { namespace gl
+ 						{
+ 							GL_CHECK(glEnable(GL_SCISSOR_TEST) );
+ 							GL_CHECK(glScissor(viewScissorRect.m_x
+-								, resolutionHeight-viewScissorRect.m_height-viewScissorRect.m_y
++								, viewScissorRect.m_y
+ 								, viewScissorRect.m_width
+ 								, viewScissorRect.m_height
+ 								) );
+@@ -7850,7 +7850,7 @@ namespace bgfx { namespace gl
+ 
+ 						GL_CHECK(glEnable(GL_SCISSOR_TEST) );
+ 						GL_CHECK(glScissor(scissorRect.m_x
+-							, resolutionHeight-scissorRect.m_height-scissorRect.m_y
++							, scissorRect.m_y
+ 							, scissorRect.m_width
+ 							, scissorRect.m_height
+ 							) );

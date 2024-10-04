@@ -1,14 +1,6 @@
-[submodule "third_party/bgfx.cmake/bgfx"]
-	path = third_party/bgfx.cmake/bgfx
-	url = https://github.com/Admenri/bgfx.git
-	branch = master
-[submodule "third_party/bgfx.cmake/bimg"]
-	path = third_party/bgfx.cmake/bimg
-	url = https://github.com/bkaradzic/bimg.git
-	branch = master
-[submodule "third_party/bgfx.cmake/bx"]
-	path = third_party/bgfx.cmake/bx
-	url = https://github.com/bkaradzic/bx.git
+[submodule "third_party/bgfx.cmake"]
+	path = third_party/bgfx.cmake
+	url = https://github.com/bkaradzic/bgfx.cmake.git
 	branch = master
 [submodule "third_party/SDL"]
 	path = third_party/SDL
