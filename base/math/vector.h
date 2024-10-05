@@ -302,10 +302,7 @@ inline Vec4i MakeVec4i(Vec2i xy, Vec2i zw) {
 }
 
 inline base::Vec2 MakeInvert(const base::Vec2& value) {
-  base::Vec2 result;
-  result.x = 1.0f / value.x;
-  result.y = 1.0f / value.y;
-  return result;
+  return base::Vec2(1.0f / value.x, 1.0f / value.y);
 }
 
 }  // namespace base

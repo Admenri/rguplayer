@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "content/public/bitmap.h"
+#include "content/public/geometry.h"
 #include "content/public/graphics.h"
 #include "content/public/plane.h"
 #include "content/public/sprite.h"
@@ -51,7 +52,7 @@ int SDL_main(int argc, char** argv) {
       IMG_SavePNG(surf, "out.png");
     }
 
-    // host->Freeze();
+     host->Freeze();
 
     {
       scoped_refptr<content::Viewport> vp0 =
@@ -105,7 +106,18 @@ int SDL_main(int argc, char** argv) {
       auto* surf = snap->SurfaceRequired();
       IMG_SavePNG(surf, "out111.png");
 
-      // host->Transition(120);
+      host->Transition(120);
+
+      scoped_refptr<content::Geometry> geo = new content::Geometry(host);
+      geo->SetBitmap(new content::Bitmap(host, "geo.png"));
+
+      geo->SetPosition(0, base::Vec4(10, 10, 0, 1));
+      geo->SetPosition(1, base::Vec4(500, 10, 0, 1));
+      geo->SetPosition(2, base::Vec4(10, 500, 0, 1));
+
+      geo->SetTexcoord(0, base::Vec2(10, 10));
+      geo->SetTexcoord(1, base::Vec2(500, 10));
+      geo->SetTexcoord(2, base::Vec2(10, 500));
 
       int c = 0;
       while (true) {

@@ -266,6 +266,19 @@ class VagueTransShader : public RenderShaderBase {
   bgfx::UniformHandle u_progressVague_;
 };
 
+class GeometryShader : public RenderShaderBase {
+ public:
+  GeometryShader();
+  ~GeometryShader() override;
+
+  bgfx::UniformHandle OffsetTexSize() { return u_offsetTexSize_; }
+  bgfx::UniformHandle Texture() { return u_texture_; }
+
+ private:
+  bgfx::UniformHandle u_offsetTexSize_;
+  bgfx::UniformHandle u_texture_;
+};
+
 }  // namespace renderer
 
 #endif  //! RENDERER_PIPELINE_RENDER_PIPELINE_H_

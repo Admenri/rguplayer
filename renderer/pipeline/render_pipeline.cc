@@ -291,4 +291,18 @@ VagueTransShader::~VagueTransShader() {
   bgfx::destroy(u_progressVague_);
 }
 
+GeometryShader::GeometryShader() {
+  RenderShaderBase::CompileProgram(&k_geometry_vert, "geometry_vert",
+                                   &k_geometry_frag, "geometry_frag");
+
+  u_offsetTexSize_ =
+      bgfx::createUniform("u_offsetTexSize", bgfx::UniformType::Vec4);
+  u_texture_ = bgfx::createUniform("u_texture", bgfx::UniformType::Sampler);
+}
+
+GeometryShader::~GeometryShader() {
+  bgfx::destroy(u_offsetTexSize_);
+  bgfx::destroy(u_texture_);
+}
+
 }  // namespace renderer

@@ -19,6 +19,8 @@ set(CORE_CONTENT_SRC
   public/flashable.h
   public/font.cc
   public/font.h
+  public/geometry.cc
+  public/geometry.h
   public/graphics.cc
   public/graphics.h
   public/input.cc

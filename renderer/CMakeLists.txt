@@ -60,6 +60,8 @@ renderer_shader_compile(tilemap_vert VERTEX)
 renderer_shader_compile(tilemap2_vert VERTEX)
 renderer_shader_compile(alphatrans_frag FRAGMENT)
 renderer_shader_compile(vaguetrans_frag FRAGMENT)
+renderer_shader_compile(geometry_vert VERTEX)
+renderer_shader_compile(geometry_frag FRAGMENT)
 
 string(REPLACE ";" " " SHADER_LIST "${GEN_SHADERS_SOURCE}")
 set(SHADER_OUTPUT_FILE "${RGU_AUTOGEN_DIR}/renderer/pipeline/shaders/shader_set_autogen.h")

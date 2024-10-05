@@ -165,13 +165,11 @@ void RenderDevice::EnsureCommonFramebuffer(const base::Vec2i& size,
 
   if (bgfx::isValid(fbo.handle))
     bgfx::destroy(fbo.handle);
-
-  bgfx::TextureHandle render_target = bgfx::createTexture2D(
-      new_size.x, new_size.y, false, 1, bgfx::TextureFormat::RGBA8,
-      BGFX_TEXTURE_BLIT_DST | BGFX_TEXTURE_RT);
-  fbo.handle = bgfx::createFrameBuffer(1, &render_target, true);
-
   fbo.size = new_size;
+  fbo.handle = bgfx::createFrameBuffer(fbo.size.x, fbo.size.y,
+                                       bgfx::TextureFormat::RGBA8,
+                                       BGFX_TEXTURE_BLIT_DST | BGFX_TEXTURE_RT);
+
   if (out)
     *out = fbo;
 }

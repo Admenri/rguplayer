@@ -40,7 +40,7 @@ Graphics::Graphics(base::WeakPtr<ui::Widget> window,
 
   // Create render device
   bgfx::Init init_param;
-  init_param.type = bgfx::RendererType::Direct3D12;
+  init_param.type = bgfx::RendererType::OpenGL;
   init_param.resolution.reset = BGFX_RESET_NONE;
   init_param.resolution.format = bgfx::TextureFormat::RGBA8;
   init_param.resolution.width = initial_resolution.x;
@@ -233,11 +233,13 @@ void Graphics::Transition(int duration,
   vague = std::clamp<int>(vague, 1, 256);
 
   // Capture current frame
-  bgfx::ViewId render_view = 1;
-  bgfx::Encoder* encoder = bgfx::begin();
-  EncodeScreenDrawcallsInternal(encoder, &render_view);
-  bgfx::end(encoder);
-  bgfx::frame();
+  {
+    bgfx::ViewId render_view = 1;
+    bgfx::Encoder* encoder = bgfx::begin();
+    EncodeScreenDrawcallsInternal(encoder, &render_view);
+    bgfx::end(encoder);
+    bgfx::frame();
+  }
 
   const bool is_transmap_valid = IsObjectValid(trans_bitmap.get());
   renderer::Framebuffer tmp_framebuffer;
@@ -250,9 +252,11 @@ void Graphics::Transition(int duration,
     bgfx::Encoder* encoder = bgfx::begin();
     device()->BindRenderView(render_view, tmp_framebuffer.size,
                              tmp_framebuffer.handle, 0);
+
     {
       float progress = i * (1.0f / duration);
       bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
+
       if (is_transmap_valid) {
         auto& shader = device()->pipelines().vaguetrans;
 
@@ -294,13 +298,16 @@ void Graphics::Transition(int duration,
 
       encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
 
-      screen_quad_->SetPosition(base::Vec2(tmp_framebuffer.size));
-      screen_quad_->SetTexcoord(base::Vec2(tmp_framebuffer.size));
-      screen_quad_->Draw(encoder, program, render_view);
+      auto* quad = device()->common_quad();
+      quad->SetPosition(base::Vec2(screen_buffer_.size));
+      quad->SetTexcoord(base::Vec2(screen_buffer_.size));
+      quad->Draw(encoder, program, render_view);
 
       // Present to screen
       PresentScreenBufferInternal(&tmp_framebuffer, encoder, ++render_view);
     }
+
+    // Submit to GPU
     bgfx::end(encoder);
     bgfx::frame();
 
@@ -489,12 +496,12 @@ void Graphics::EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
   *render_view = screen_effect_view;
 }
 
-void Graphics::PresentScreenBufferInternal(renderer::Framebuffer* buffer,
+void Graphics::PresentScreenBufferInternal(renderer::Framebuffer* target_buffer,
                                            bgfx::Encoder* encoder,
                                            bgfx::ViewId render_view) {
   UpdateWindowViewportInternal();
 
-  device()->window()->GetMouseState().resolution = buffer->size;
+  device()->window()->GetMouseState().resolution = screen_buffer_.size;
   device()->window()->GetMouseState().screen_offset =
       display_viewport_.Position();
   device()->window()->GetMouseState().screen = display_viewport_.Size();
@@ -506,20 +513,19 @@ void Graphics::PresentScreenBufferInternal(renderer::Framebuffer* buffer,
   auto& shader = device()->pipelines().base;
 
   base::Vec4 offset_size =
-      base::MakeVec4(base::Vec2(), base::MakeInvert(buffer->size));
+      base::MakeVec4(base::Vec2(), base::MakeInvert(target_buffer->size));
   encoder->setUniform(shader.OffsetTexSize(), &offset_size);
-  encoder->setTexture(0, shader.Texture(), bgfx::getTexture(buffer->handle));
+  encoder->setTexture(0, shader.Texture(),
+                      bgfx::getTexture(target_buffer->handle));
 
   base::Rect target_rect = display_viewport_;
   if (bgfx::getCaps()->originBottomLeft) {
-    target_rect.x = display_viewport_.x;
     target_rect.y = display_viewport_.y + display_viewport_.height;
-    target_rect.width = display_viewport_.width;
     target_rect.height = -display_viewport_.height;
   }
 
   screen_quad_->SetPosition(target_rect);
-  screen_quad_->SetTexcoord(base::Vec2(buffer->size));
+  screen_quad_->SetTexcoord(base::Vec2(screen_buffer_.size));
 
   encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
   screen_quad_->Draw(encoder, shader.GetProgram(), render_view);
