@@ -20,6 +20,7 @@ Graphics::Graphics(base::WeakPtr<ui::Widget> window,
     : screen_buffer_(BGFX_INVALID_HANDLE),
       frozen_snapshot_(BGFX_INVALID_HANDLE),
       profile_(config),
+      window_size_(window->GetSize()),
       frozen_(false),
       brightness_(255),
       frame_count_(0),
@@ -40,7 +41,7 @@ Graphics::Graphics(base::WeakPtr<ui::Widget> window,
 
   // Create render device
   bgfx::Init init_param;
-  init_param.type = bgfx::RendererType::OpenGL;
+  init_param.type = bgfx::RendererType::Direct3D12;
   init_param.resolution.reset = BGFX_RESET_NONE;
   init_param.resolution.format = bgfx::TextureFormat::RGBA8;
   init_param.resolution.width = initial_resolution.x;
@@ -435,6 +436,13 @@ void Graphics::UpdateAverageFPSInternal() {}
 void Graphics::UpdateWindowViewportInternal() {
   auto window_size = device()->window()->GetSize();
 
+  if (!(window_size == window_size_)) {
+    window_size_ = window_size;
+    bgfx::reset(window_size.x, window_size.y,
+                vsync_ ? BGFX_RESET_VSYNC : BGFX_RESET_NONE,
+                bgfx::TextureFormat::RGBA8);
+  }
+
   float window_ratio = static_cast<float>(window_size.x) / window_size.y;
   float screen_ratio =
       static_cast<float>(screen_buffer_.size.x) / screen_buffer_.size.y;
@@ -506,7 +514,7 @@ void Graphics::PresentScreenBufferInternal(renderer::Framebuffer* target_buffer,
       display_viewport_.Position();
   device()->window()->GetMouseState().screen = display_viewport_.Size();
 
-  base::Vec2i window_size(bgfx::getStats()->width, bgfx::getStats()->height);
+  auto window_size = device()->window()->GetSize();
   device()->BindRenderView(render_view, window_size, BGFX_INVALID_HANDLE,
                            0x000000ff);
 

@@ -117,6 +117,7 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   scoped_refptr<Profile> profile_;
   base::Rect display_viewport_;
+  base::Vec2i window_size_;
 
   bool frozen_;
   int brightness_;

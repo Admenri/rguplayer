@@ -29,6 +29,7 @@ int SDL_main(int argc, char** argv) {
     std::unique_ptr<ui::Widget> win(new ui::Widget());
     ui::Widget::InitParams win_params;
     win_params.size = base::Vec2i(800, 600);
+    win_params.resizable = true;
     win->Init(std::move(win_params));
 
     scoped_refptr<content::Profile> profile = new content::Profile();
@@ -52,7 +53,7 @@ int SDL_main(int argc, char** argv) {
       IMG_SavePNG(surf, "out.png");
     }
 
-     host->Freeze();
+    host->Freeze();
 
     {
       scoped_refptr<content::Viewport> vp0 =
