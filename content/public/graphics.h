@@ -102,7 +102,8 @@ class Graphics final : public base::RefCounted<Graphics>,
   void UpdateWindowViewportInternal();
   void EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
                                      bgfx::ViewId* render_view);
-  void PresentScreenBufferInternal(bgfx::Encoder* encoder,
+  void PresentScreenBufferInternal(renderer::Framebuffer* buffer,
+                                   bgfx::Encoder* encoder,
                                    bgfx::ViewId render_view);
 
   std::unique_ptr<renderer::RenderDevice> device_;

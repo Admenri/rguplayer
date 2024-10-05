@@ -230,6 +230,42 @@ class Tilemap2Shader : public RenderShaderBase {
   bgfx::UniformHandle u_autotileAnimationOffset_;
 };
 
+class AlphaTransShader : public RenderShaderBase {
+ public:
+  AlphaTransShader();
+  ~AlphaTransShader() override;
+
+  bgfx::UniformHandle OffsetTexSize() { return u_offsetTexSize_; }
+  bgfx::UniformHandle FrozenTexture() { return u_frozenTexture_; }
+  bgfx::UniformHandle CurrentTexture() { return u_currentTexture_; }
+  bgfx::UniformHandle Progress() { return u_progress_; }
+
+ private:
+  bgfx::UniformHandle u_offsetTexSize_;
+  bgfx::UniformHandle u_frozenTexture_;
+  bgfx::UniformHandle u_currentTexture_;
+  bgfx::UniformHandle u_progress_;
+};
+
+class VagueTransShader : public RenderShaderBase {
+ public:
+  VagueTransShader();
+  ~VagueTransShader() override;
+
+  bgfx::UniformHandle OffsetTexSize() { return u_offsetTexSize_; }
+  bgfx::UniformHandle FrozenTexture() { return u_frozenTexture_; }
+  bgfx::UniformHandle CurrentTexture() { return u_currentTexture_; }
+  bgfx::UniformHandle TransTexture() { return u_transTexture_; }
+  bgfx::UniformHandle ProgressVague() { return u_progressVague_; }
+
+ private:
+  bgfx::UniformHandle u_offsetTexSize_;
+  bgfx::UniformHandle u_frozenTexture_;
+  bgfx::UniformHandle u_currentTexture_;
+  bgfx::UniformHandle u_transTexture_;
+  bgfx::UniformHandle u_progressVague_;
+};
+
 }  // namespace renderer
 
 #endif  //! RENDERER_PIPELINE_RENDER_PIPELINE_H_

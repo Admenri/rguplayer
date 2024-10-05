@@ -247,4 +247,48 @@ Tilemap2Shader::~Tilemap2Shader() {
   bgfx::destroy(u_autotileAnimationOffset_);
 }
 
+AlphaTransShader::AlphaTransShader() {
+  RenderShaderBase::CompileProgram(&k_base_vert, "base_vert",
+                                   &k_alphatrans_frag, "alphatrans_frag");
+
+  u_offsetTexSize_ =
+      bgfx::createUniform("u_offsetTexSize", bgfx::UniformType::Vec4);
+  u_frozenTexture_ =
+      bgfx::createUniform("u_frozenTexture", bgfx::UniformType::Sampler);
+  u_currentTexture_ =
+      bgfx::createUniform("u_currentTexture", bgfx::UniformType::Sampler);
+  u_progress_ = bgfx::createUniform("u_progress", bgfx::UniformType::Vec4);
+}
+
+AlphaTransShader::~AlphaTransShader() {
+  bgfx::destroy(u_offsetTexSize_);
+  bgfx::destroy(u_frozenTexture_);
+  bgfx::destroy(u_currentTexture_);
+  bgfx::destroy(u_progress_);
+}
+
+VagueTransShader::VagueTransShader() {
+  RenderShaderBase::CompileProgram(&k_base_vert, "base_vert",
+                                   &k_vaguetrans_frag, "vaguetrans_frag");
+
+  u_offsetTexSize_ =
+      bgfx::createUniform("u_offsetTexSize", bgfx::UniformType::Vec4);
+  u_frozenTexture_ =
+      bgfx::createUniform("u_frozenTexture", bgfx::UniformType::Sampler);
+  u_currentTexture_ =
+      bgfx::createUniform("u_currentTexture", bgfx::UniformType::Sampler);
+  u_transTexture_ =
+      bgfx::createUniform("u_transTexture", bgfx::UniformType::Sampler);
+  u_progressVague_ =
+      bgfx::createUniform("u_progressVague", bgfx::UniformType::Vec4);
+}
+
+VagueTransShader::~VagueTransShader() {
+  bgfx::destroy(u_offsetTexSize_);
+  bgfx::destroy(u_frozenTexture_);
+  bgfx::destroy(u_currentTexture_);
+  bgfx::destroy(u_transTexture_);
+  bgfx::destroy(u_progressVague_);
+}
+
 }  // namespace renderer

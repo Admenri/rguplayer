@@ -107,6 +107,8 @@ class RenderDevice final {
     BaseAlphaShader basealpha;
     TilemapShader tilemap;
     Tilemap2Shader tilemap2;
+    AlphaTransShader alphatrans;
+    VagueTransShader vaguetrans;
   };
 
   ~RenderDevice();

@@ -100,9 +100,55 @@ scoped_refptr<Bitmap> Graphics::SnapToBitmap() {
   return snap;
 }
 
-void Graphics::FadeOut(int duration) {}
+void Graphics::FadeOut(int duration) {
+  duration = std::max(duration, 1);
 
-void Graphics::FadeIn(int duration) {}
+  float current_brightness = static_cast<float>(brightness_);
+  for (int i = 0; i < duration; ++i) {
+    SetBrightness(current_brightness -
+                  current_brightness * (i / static_cast<float>(duration)));
+    if (frozen_) {
+      bgfx::Encoder* encoder = bgfx::begin();
+      bgfx::ViewId render_view = 1;
+      PresentScreenBufferInternal(&frozen_snapshot_, encoder, render_view);
+      bgfx::end(encoder);
+      bgfx::frame();
+
+      FrameProcessInternal();
+    } else {
+      Update();
+    }
+  }
+
+  /* Set final brightness */
+  SetBrightness(0);
+}
+
+void Graphics::FadeIn(int duration) {
+  duration = std::max(duration, 1);
+
+  float current_brightness = static_cast<float>(brightness_);
+  float diff = 255.0f - current_brightness;
+  for (int i = 0; i < duration; ++i) {
+    SetBrightness(current_brightness +
+                  diff * (i / static_cast<float>(duration)));
+
+    if (frozen_) {
+      bgfx::Encoder* encoder = bgfx::begin();
+      bgfx::ViewId render_view = 1;
+      PresentScreenBufferInternal(&frozen_snapshot_, encoder, render_view);
+      bgfx::end(encoder);
+      bgfx::frame();
+
+      FrameProcessInternal();
+    } else {
+      Update();
+    }
+  }
+
+  /* Set final brightness */
+  SetBrightness(255);
+}
 
 void Graphics::Update() {
   if (!frozen_) {
@@ -123,7 +169,7 @@ void Graphics::Update() {
     EncodeScreenDrawcallsInternal(encoder, &render_view);
 
     // Present
-    PresentScreenBufferInternal(encoder, render_view);
+    PresentScreenBufferInternal(&screen_buffer_, encoder, render_view);
 
     // Submit to GPU
     bgfx::end(encoder);
@@ -159,6 +205,21 @@ void Graphics::Freeze() {
   if (frozen_)
     return;
 
+  // Capture current frame
+  bgfx::ViewId render_view = 1;
+  bgfx::Encoder* encoder = bgfx::begin();
+
+  // Composite
+  EncodeScreenDrawcallsInternal(encoder, &render_view);
+
+  // Blit to bitmap
+  encoder->blit(render_view, bgfx::getTexture(frozen_snapshot_.handle), 0, 0,
+                bgfx::getTexture(screen_buffer_.handle));
+
+  // Submit to GPU
+  bgfx::end(encoder);
+  bgfx::frame();
+
   frozen_ = true;
 }
 
@@ -170,6 +231,85 @@ void Graphics::Transition(int duration,
 
   SetBrightness(255);
   vague = std::clamp<int>(vague, 1, 256);
+
+  // Capture current frame
+  bgfx::ViewId render_view = 1;
+  bgfx::Encoder* encoder = bgfx::begin();
+  EncodeScreenDrawcallsInternal(encoder, &render_view);
+  bgfx::end(encoder);
+  bgfx::frame();
+
+  const bool is_transmap_valid = IsObjectValid(trans_bitmap.get());
+  renderer::Framebuffer tmp_framebuffer;
+  device()->EnsureCommonFramebuffer(screen_buffer_.size, &tmp_framebuffer,
+                                    true);
+
+  for (int i = 0; i < duration; ++i) {
+    // Encode a transition frame
+    bgfx::ViewId render_view = 1;
+    bgfx::Encoder* encoder = bgfx::begin();
+    device()->BindRenderView(render_view, tmp_framebuffer.size,
+                             tmp_framebuffer.handle, 0);
+    {
+      float progress = i * (1.0f / duration);
+      bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
+      if (is_transmap_valid) {
+        auto& shader = device()->pipelines().vaguetrans;
+
+        encoder->setTexture(0, shader.FrozenTexture(),
+                            bgfx::getTexture(frozen_snapshot_.handle));
+        encoder->setTexture(1, shader.CurrentTexture(),
+                            bgfx::getTexture(screen_buffer_.handle));
+        encoder->setTexture(2, shader.TransTexture(),
+                            bgfx::getTexture(trans_bitmap->GetHandle()));
+
+        base::Vec4 offset_size =
+            base::MakeVec4(base::Vec2(), base::MakeInvert(screen_buffer_.size));
+        encoder->setUniform(shader.OffsetTexSize(), &offset_size);
+
+        base::Vec4 progress_vague;
+        progress_vague.x = progress;
+        progress_vague.y = vague / 256.0f;
+        encoder->setUniform(shader.ProgressVague(), &progress_vague);
+
+        program = shader.GetProgram();
+      } else {
+        auto& shader = device()->pipelines().alphatrans;
+
+        encoder->setTexture(0, shader.FrozenTexture(),
+                            bgfx::getTexture(frozen_snapshot_.handle));
+        encoder->setTexture(1, shader.CurrentTexture(),
+                            bgfx::getTexture(screen_buffer_.handle));
+
+        base::Vec4 offset_size =
+            base::MakeVec4(base::Vec2(), base::MakeInvert(screen_buffer_.size));
+        encoder->setUniform(shader.OffsetTexSize(), &offset_size);
+
+        base::Vec4 uprogress;
+        uprogress.x = progress;
+        encoder->setUniform(shader.Progress(), &uprogress);
+
+        program = shader.GetProgram();
+      }
+
+      encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+
+      screen_quad_->SetPosition(base::Vec2(tmp_framebuffer.size));
+      screen_quad_->SetTexcoord(base::Vec2(tmp_framebuffer.size));
+      screen_quad_->Draw(encoder, program, render_view);
+
+      // Present to screen
+      PresentScreenBufferInternal(&tmp_framebuffer, encoder, ++render_view);
+    }
+    bgfx::end(encoder);
+    bgfx::frame();
+
+    // Step into next frame
+    FrameProcessInternal();
+  }
+
+  // Transition process complete
+  frozen_ = false;
 }
 
 void Graphics::SetFrameRate(int rate) {
@@ -349,11 +489,12 @@ void Graphics::EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
   *render_view = screen_effect_view;
 }
 
-void Graphics::PresentScreenBufferInternal(bgfx::Encoder* encoder,
+void Graphics::PresentScreenBufferInternal(renderer::Framebuffer* buffer,
+                                           bgfx::Encoder* encoder,
                                            bgfx::ViewId render_view) {
   UpdateWindowViewportInternal();
 
-  device()->window()->GetMouseState().resolution = screen_buffer_.size;
+  device()->window()->GetMouseState().resolution = buffer->size;
   device()->window()->GetMouseState().screen_offset =
       display_viewport_.Position();
   device()->window()->GetMouseState().screen = display_viewport_.Size();
@@ -365,10 +506,9 @@ void Graphics::PresentScreenBufferInternal(bgfx::Encoder* encoder,
   auto& shader = device()->pipelines().base;
 
   base::Vec4 offset_size =
-      base::MakeVec4(base::Vec2(), base::MakeInvert(screen_buffer_.size));
+      base::MakeVec4(base::Vec2(), base::MakeInvert(buffer->size));
   encoder->setUniform(shader.OffsetTexSize(), &offset_size);
-  encoder->setTexture(0, shader.Texture(),
-                      bgfx::getTexture(screen_buffer_.handle));
+  encoder->setTexture(0, shader.Texture(), bgfx::getTexture(buffer->handle));
 
   base::Rect target_rect = display_viewport_;
   if (bgfx::getCaps()->originBottomLeft) {
@@ -379,7 +519,7 @@ void Graphics::PresentScreenBufferInternal(bgfx::Encoder* encoder,
   }
 
   screen_quad_->SetPosition(target_rect);
-  screen_quad_->SetTexcoord(base::Vec2(screen_buffer_.size));
+  screen_quad_->SetTexcoord(base::Vec2(buffer->size));
 
   encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
   screen_quad_->Draw(encoder, shader.GetProgram(), render_view);

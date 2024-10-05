@@ -51,6 +51,8 @@ int SDL_main(int argc, char** argv) {
       IMG_SavePNG(surf, "out.png");
     }
 
+    // host->Freeze();
+
     {
       scoped_refptr<content::Viewport> vp0 =
           new content::Viewport(host, base::Rect(50, 50, 600, 600));
@@ -102,6 +104,8 @@ int SDL_main(int argc, char** argv) {
 
       auto* surf = snap->SurfaceRequired();
       IMG_SavePNG(surf, "out111.png");
+
+      // host->Transition(120);
 
       int c = 0;
       while (true) {
