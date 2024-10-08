@@ -31,6 +31,7 @@ class Filesystem {
       base::RepeatingCallback<bool(SDL_IOStream*, const std::string&)>;
   void OpenRead(const std::string& file_path, OpenCallback callback);
   SDL_IOStream* OpenReadRaw(const std::string& filename);
+  SDL_IOStream* OpenWriteRaw(const std::string& filename);
 };
 
 }  // namespace filesystem

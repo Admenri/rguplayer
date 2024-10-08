@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.20.1)
 
 project(URGE)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 include_directories("${PROJECT_SOURCE_DIR}")
 
@@ -56,9 +56,6 @@ set(BGFX_CONFIG_MAX_FRAME_BUFFERS 16384)
 set(BGFX_CONFIG_MAX_DYNAMIC_VERTEX_BUFFERS 32768)
 set(BGFX_CONFIG_MAX_DYNAMIC_INDEX_BUFFERS 16384)
 add_subdirectory(third_party/bgfx.cmake)
-
-## Event library
-add_subdirectory(third_party/libevent)
 
 ## Physfs I/O
 set(PHYSFS_BUILD_STATIC TRUE)

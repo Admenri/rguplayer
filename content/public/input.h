@@ -9,7 +9,8 @@
 #include <vector>
 
 #include "base/memory/ref_counted.h"
-#include "content/profile/engine_profile.h"
+#include "components/filesystem/filesystem.h"
+#include "content/common/content_utils.h"
 #include "content/public/utility.h"
 #include "ui/widget/widget.h"
 
@@ -34,8 +35,8 @@ class Input final : public base::RefCounted<Input> {
   };
 
   using KeySymMap = std::vector<KeyBinding>;
-  Input(base::WeakPtr<ui::Widget> window, scoped_refptr<Profile> profile);
-  ~Input();
+  Input(base::WeakPtr<ui::Widget> window, content::APIVersion api_diff);
+  ~Input() = default;
 
   Input(const Input&) = delete;
   Input& operator=(const Input&) = delete;
@@ -67,10 +68,7 @@ class Input final : public base::RefCounted<Input> {
   void UpdateDir4Internal();
   void UpdateDir8Internal();
 
-  void TryReadBindingsInternal();
-  void StorageBindingsInternal();
-
-  scoped_refptr<Profile> profile_;
+  content::APIVersion api_version_;
   KeySymMap key_bindings_;
   std::array<KeyState, SDL_SCANCODE_COUNT> key_states_;
   std::array<KeyState, SDL_SCANCODE_COUNT> recent_key_states_;
@@ -87,7 +85,6 @@ class Input final : public base::RefCounted<Input> {
   } dir8_state_;
 
   base::WeakPtr<ui::Widget> window_;
-  base::WeakPtrFactory<Input> weak_ptr_factory_{this};
 };
 
 }  // namespace content

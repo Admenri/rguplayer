@@ -650,9 +650,11 @@ void Window2::UpdateBaseTextureInternal(bgfx::Encoder* encoder,
         base::MakeVec4(base::Vec2(), base::MakeInvert(windowskin_->GetSize()));
     encoder->setUniform(shader.OffsetTexSize(), &offset_size);
 
-    base::Vec4 color;
-    encoder->setUniform(shader.Color(), &color);
-    encoder->setUniform(shader.Tone(), &tone_->AsBase());
+    base::Vec4 norm;
+    encoder->setUniform(shader.Color(), &norm);
+
+    norm = tone_->AsBase();
+    encoder->setUniform(shader.Tone(), &norm);
 
     base::Vec4 uopacity;
     uopacity.x = back_opacity_ / 255.0f;
@@ -663,8 +665,10 @@ void Window2::UpdateBaseTextureInternal(bgfx::Encoder* encoder,
 
     /* Draw stretch layer */
     encoder->setUniform(shader.OffsetTexSize(), &offset_size);
-    encoder->setUniform(shader.Color(), &color);
-    encoder->setUniform(shader.Tone(), &tone_->AsBase());
+    encoder->setUniform(shader.Color(), &norm);
+
+    norm = tone_->AsBase();
+    encoder->setUniform(shader.Tone(), &norm);
     encoder->setUniform(shader.Opacity(), &uopacity);
     encoder->setTexture(0, shader.Texture(),
                         bgfx::getTexture(windowskin_->GetHandle()));

@@ -45,7 +45,6 @@
 ### Reference
 - bgfx - https://github.com/bkaradzic/bgfx  
 - SDL - https://github.com/libsdl-org/SDL  
-- libevent - https://github.com/libevent/libevent  
 - Physfs - https://github.com/icculus/physfs  
 - freetype - https://github.com/freetype/freetype  
 - vorbis - https://github.com/xiph/vorbis  

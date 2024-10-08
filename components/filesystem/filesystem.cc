@@ -275,4 +275,14 @@ SDL_IOStream* Filesystem::OpenReadRaw(const std::string& filename) {
   return WrapperRWops(file);
 }
 
+SDL_IOStream* Filesystem::OpenWriteRaw(const std::string& filename) {
+  PHYSFS_File* file = PHYSFS_openWrite(filename.c_str());
+  if (!file)
+    throw base::Exception(base::Exception::FilesystemError,
+                          "Failed to open file for writing: %s",
+                          filename.c_str());
+
+  return WrapperRWops(file);
+}
+
 }  // namespace filesystem

@@ -66,8 +66,8 @@ const std::array<std::string, 12> kButtonItems = {
 
 }  // namespace
 
-Input::Input(base::WeakPtr<ui::Widget> window, scoped_refptr<Profile> profile)
-    : window_(window), profile_(profile) {
+Input::Input(base::WeakPtr<ui::Widget> window, content::APIVersion api_diff)
+    : window_(window), api_version_(api_diff) {
   // Reset states
   memset(key_states_.data(), 0, key_states_.size() * sizeof(KeyState));
   memset(recent_key_states_.data(), 0,
@@ -77,20 +77,15 @@ Input::Input(base::WeakPtr<ui::Widget> window, scoped_refptr<Profile> profile)
   for (int i = 0; i < kDefaultKeyboardBindingsSize; ++i)
     key_bindings_.push_back(kDefaultKeyboardBindings[i]);
 
-  if (profile_->content_version() == APIVersion::RGSS1)
+  if (api_diff == APIVersion::RGSS1)
     for (int i = 0; i < kKeyboardBindings1Size; ++i)
       key_bindings_.push_back(kKeyboardBindings1[i]);
 
-  if (profile_->content_version() >= APIVersion::RGSS2)
+  if (api_diff >= APIVersion::RGSS2)
     for (int i = 0; i < kKeyboardBindings2Size; ++i)
       key_bindings_.push_back(kKeyboardBindings2[i]);
 
-  TryReadBindingsInternal();
   setting_bindings_ = key_bindings_;
-}
-
-Input::~Input() {
-  StorageBindingsInternal();
 }
 
 void Input::ApplyKeySymBinding(const KeySymMap& keysyms) {
@@ -352,54 +347,6 @@ void Input::UpdateDir8Internal() {
 
     dir8_state_.active = (i + 1) * 2;
     return;
-  }
-}
-
-void Input::TryReadBindingsInternal() {
-  std::string filepath = profile_->executable_file();
-  filepath += ".cg";
-  filepath += std::to_string((int)profile_->content_version());
-
-  std::ifstream fs(filepath, std::ios::binary);
-  if (fs.is_open()) {
-    key_bindings_.clear();
-
-    uint32_t item_size;
-    fs.read(reinterpret_cast<char*>(&item_size), sizeof(item_size));
-    for (uint32_t i = 0; i < item_size; ++i) {
-      uint32_t token_size;
-      fs.read(reinterpret_cast<char*>(&token_size), sizeof(token_size));
-      std::string token(token_size, 0);
-      fs.read(token.data(), token_size);
-      SDL_Scancode scancode;
-      fs.read(reinterpret_cast<char*>(&scancode), sizeof(scancode));
-
-      key_bindings_.push_back({token, scancode});
-    }
-
-    fs.close();
-  }
-}
-
-void Input::StorageBindingsInternal() {
-  std::string filepath = profile_->executable_file();
-  filepath += ".cg";
-  filepath += std::to_string((int)profile_->content_version());
-
-  std::ofstream fs(filepath, std::ios::binary);
-  if (fs.is_open()) {
-    uint32_t item_size = key_bindings_.size();
-    fs.write(reinterpret_cast<const char*>(&item_size), sizeof(item_size));
-    for (const auto& it : key_bindings_) {
-      uint32_t token_size = it.sym.size();
-      fs.write(reinterpret_cast<const char*>(&token_size), sizeof(token_size));
-      fs.write(it.sym.data(), token_size);
-
-      SDL_Scancode scancode = it.scancode;
-      fs.write(reinterpret_cast<const char*>(&scancode), sizeof(scancode));
-    }
-
-    fs.close();
   }
 }
 

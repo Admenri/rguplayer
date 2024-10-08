@@ -8,7 +8,6 @@
 
 #include "base/exception/exception.h"
 #include "components/filesystem/filesystem.h"
-#include "content/profile/engine_profile.h"
 #include "content/public/font.h"
 
 #include "SDL3_image/SDL_image.h"
@@ -78,7 +77,9 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const base::Vec2i& size)
   texture_ = bgfx::createFrameBuffer(1, &texture_buffer, true);
 }
 
-Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
+Bitmap::Bitmap(scoped_refptr<Graphics> host,
+               filesystem::Filesystem* io,
+               const std::string& filename)
     : GraphicsElement(host.get()),
       Disposable(host.get()),
       read_buffer_(BGFX_INVALID_HANDLE),
@@ -91,7 +92,8 @@ Bitmap::Bitmap(scoped_refptr<Graphics> host, const std::string& filename)
         return !!*surf;
       },
       &surface_buffer_);
-  screen()->GetFileIO()->OpenRead(filename, file_handler);
+
+  io->OpenRead(filename, file_handler);
 
   if (!surface_buffer_) {
     throw base::Exception(base::Exception::ContentError,

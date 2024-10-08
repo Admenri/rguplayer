@@ -7,7 +7,7 @@
 
 #include "components/filesystem/filesystem.h"
 #include "components/fpslimiter/fpslimiter.h"
-#include "content/profile/engine_profile.h"
+#include "content/common/content_utils.h"
 #include "content/public/disposable.h"
 #include "content/public/drawable.h"
 #include "content/public/font.h"
@@ -25,7 +25,6 @@ class GraphicsHost {
 
   virtual renderer::RenderDevice* device() = 0;
   virtual APIVersion api_version() = 0;
-  virtual filesystem::Filesystem* GetFileIO() = 0;
 };
 
 class Graphics final : public base::RefCounted<Graphics>,
@@ -34,9 +33,9 @@ class Graphics final : public base::RefCounted<Graphics>,
                        public DisposableCollection {
  public:
   Graphics(base::WeakPtr<ui::Widget> window,
-           filesystem::Filesystem* io,
-           scoped_refptr<Profile> config,
-           const base::Vec2i& initial_resolution);
+           std::unique_ptr<ScopedFontData> default_font,
+           const base::Vec2i& initial_resolution,
+           APIVersion api_diff);
   ~Graphics() override;
 
   Graphics(const Graphics&) = delete;
@@ -88,8 +87,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   ScopedFontData* font_manager() { return static_font_manager_.get(); }
 
   renderer::RenderDevice* device() override { return device_.get(); }
-  APIVersion api_version() override { return profile_->content_version(); }
-  filesystem::Filesystem* GetFileIO() override { return io_; }
+  APIVersion api_version() override { return api_version_; }
 
  protected:
   void AddDisposable(Disposable* disp) override;
@@ -107,6 +105,7 @@ class Graphics final : public base::RefCounted<Graphics>,
                                    bgfx::ViewId render_view);
 
   std::unique_ptr<renderer::RenderDevice> device_;
+  APIVersion api_version_;
 
   renderer::Framebuffer screen_buffer_;
   renderer::Framebuffer frozen_snapshot_;
@@ -115,7 +114,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   base::LinkedList<Disposable> disposable_elements_;
   std::unique_ptr<ScopedFontData> static_font_manager_;
 
-  scoped_refptr<Profile> profile_;
   base::Rect display_viewport_;
   base::Vec2i window_size_;
 
@@ -125,8 +123,9 @@ class Graphics final : public base::RefCounted<Graphics>,
   int frame_rate_;
   bool vsync_;
 
+  bool allow_skip_frame_;
+
   std::unique_ptr<fpslimiter::FPSLimiter> fps_manager_;
-  filesystem::Filesystem* io_;
 };
 
 class GraphicsElement {

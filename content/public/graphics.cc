@@ -14,27 +14,24 @@
 namespace content {
 
 Graphics::Graphics(base::WeakPtr<ui::Widget> window,
-                   filesystem::Filesystem* io,
-                   scoped_refptr<Profile> config,
-                   const base::Vec2i& initial_resolution)
-    : screen_buffer_(BGFX_INVALID_HANDLE),
+                   std::unique_ptr<ScopedFontData> default_font,
+                   const base::Vec2i& initial_resolution,
+                   APIVersion api_diff)
+    : api_version_(api_diff),
+      screen_buffer_(BGFX_INVALID_HANDLE),
       frozen_snapshot_(BGFX_INVALID_HANDLE),
-      profile_(config),
       window_size_(window->GetSize()),
+      static_font_manager_(std::move(default_font)),
       frozen_(false),
       brightness_(255),
       frame_count_(0),
       vsync_(0),
-      frame_rate_(profile_->content_version() >= APIVersion::RGSS2 ? 60 : 40),
-      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)),
-      io_(io) {
+      frame_rate_(api_diff >= APIVersion::RGSS2 ? 60 : 40),
+      allow_skip_frame_(false),
+      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)) {
   // Initialize root viewport
   viewport_rect().rect = initial_resolution;
   viewport_rect().has_scissor = false;
-
-  // Create root font manager
-  static_font_manager_ =
-      std::make_unique<ScopedFontData>(io_, profile_->default_font_path());
 
   // Reset fps manager
   fps_manager_->Reset();
@@ -154,7 +151,7 @@ void Graphics::FadeIn(int duration) {
 void Graphics::Update() {
   if (!frozen_) {
     if (fps_manager_->RequireFrameSkip()) {
-      if (profile_->allow_frame_skip()) {
+      if (allow_skip_frame_) {
         // Skip render frame
         return FrameProcessInternal();
       } else {
@@ -321,7 +318,7 @@ void Graphics::Transition(int duration,
 }
 
 void Graphics::SetFrameRate(int rate) {
-  rate = std::max(rate, 10);
+  rate = std::max(rate, 1);
   fps_manager_->SetFrameRate(rate);
   frame_rate_ = rate;
 }
@@ -359,7 +356,8 @@ void Graphics::SetFullscreen(bool fullscreen) {
 
 void Graphics::SetVSync(int interval) {
   vsync_ = interval;
-  bgfx::reset(screen_buffer_.size.x, screen_buffer_.size.y,
+  auto window_size = device()->window()->GetSize();
+  bgfx::reset(window_size.x, window_size.y,
               interval ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
 }
 
@@ -368,11 +366,11 @@ int Graphics::GetVSync() {
 }
 
 bool Graphics::GetFrameSkip() {
-  return profile_->allow_frame_skip();
+  return allow_skip_frame_;
 }
 
 void Graphics::SetFrameSkip(bool skip) {
-  profile_->allow_frame_skip() = skip;
+  allow_skip_frame_ = skip;
 }
 
 int Graphics::GetDisplayWidth() {

@@ -1,4 +1,5 @@
 
+#include <coroutine>
 #include <iostream>
 
 #include "content/public/bitmap.h"
@@ -16,7 +17,38 @@
 #include "SDL3_image/SDL_image.h"
 #include "SDL3_ttf/SDL_ttf.h"
 
+struct Task {
+  struct promise_type {
+    Task get_return_object() { return Task(handle_type::from_promise(*this)); }
+    std::suspend_never initial_suspend() { return {}; }
+    std::suspend_never final_suspend() noexcept { return {}; }
+    void unhandled_exception() { std::terminate(); }
+    void return_void() {}
+  };
+
+  using handle_type = std::coroutine_handle<promise_type>;
+  handle_type hdl_;
+
+  Task(handle_type hdl) : hdl_(hdl) {}
+  ~Task() { std::cout << "Task destroyed" << std::endl; }
+
+  void await_suspend(std::coroutine_handle<promise_type>) {}
+  void resume() { hdl_.resume(); }
+};
+
+Task async() {
+  std::cout << "Async start" << std::endl;
+  co_await std::suspend_always{};
+  std::cout << "Async end" << std::endl;
+}
+
 int SDL_main(int argc, char** argv) {
+  {
+    auto task = async();
+    std::cout << "Main" << std::endl;
+    task.resume();
+  }
+
   SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   TTF_Init();
@@ -32,14 +64,17 @@ int SDL_main(int argc, char** argv) {
     win_params.resizable = true;
     win->Init(std::move(win_params));
 
-    scoped_refptr<content::Profile> profile = new content::Profile();
-
-    scoped_refptr<content::Graphics> host = new content::Graphics(
-        win->AsWeakPtr(), fps.get(), profile, win_params.size);
+    scoped_refptr<content::Graphics> host =
+        new content::Graphics(win->AsWeakPtr(),
+                              std::make_unique<content::ScopedFontData>(
+                                  fps.get(), "Fonts/Default.ttf"),
+                              win_params.size, content::APIVersion::RGSS3);
 
     {
-      scoped_refptr<content::Bitmap> b = new content::Bitmap(host, "test.png");
-      scoped_refptr<content::Bitmap> b2 = new content::Bitmap(host, "bg.png");
+      scoped_refptr<content::Bitmap> b =
+          new content::Bitmap(host, fps.get(), "test.png");
+      scoped_refptr<content::Bitmap> b2 =
+          new content::Bitmap(host, fps.get(), "bg.png");
 
       b2->Blt({50, 50}, b, {50, 50, 300, 300}, 125);
       b2->SetPixel({10, 10}, new content::Color(0, 0, 0, 255));
@@ -60,14 +95,14 @@ int SDL_main(int argc, char** argv) {
           new content::Viewport(host, base::Rect(50, 50, 600, 600));
 
       scoped_refptr<content::Sprite> bg_spr = new content::Sprite(host, vp0);
-      bg_spr->SetBitmap(new content::Bitmap(host, "bg.png"));
+      bg_spr->SetBitmap(new content::Bitmap(host, fps.get(), "bg.png"));
       bg_spr->SetWaveAmp(10);
 
       scoped_refptr<content::Plane> bg_ple = new content::Plane(host, vp0);
-      bg_ple->SetBitmap(new content::Bitmap(host, "tile.png"));
+      bg_ple->SetBitmap(new content::Bitmap(host, fps.get(), "tile.png"));
 
       scoped_refptr<content::Sprite> bg_spr1 = new content::Sprite(host, vp0);
-      bg_spr1->SetBitmap(new content::Bitmap(host, "bg1.png"));
+      bg_spr1->SetBitmap(new content::Bitmap(host, fps.get(), "bg1.png"));
       bg_spr1->SetX(100);
       bg_spr1->SetY(100);
 
@@ -77,13 +112,13 @@ int SDL_main(int argc, char** argv) {
 
       std::vector<scoped_refptr<content::Sprite>> sprs;
       scoped_refptr<content::Bitmap> item =
-          new content::Bitmap(host, "item.png");
+          new content::Bitmap(host, fps.get(), "item.png");
 
       // host->SetBrightness(155);
 
       scoped_refptr<content::Window2> win =
           new content::Window2(host, base::Rect(200, 200, 300, 300));
-      win->SetWindowskin(new content::Bitmap(host, "Window.png"));
+      win->SetWindowskin(new content::Bitmap(host, fps.get(), "Window.png"));
       win->SetTone(new content::Tone(-34, 0, 68, 0));
       win->SetContents(bg_spr->GetBitmap());
       win->SetOX(200);
@@ -110,7 +145,7 @@ int SDL_main(int argc, char** argv) {
       host->Transition(120);
 
       scoped_refptr<content::Geometry> geo = new content::Geometry(host);
-      geo->SetBitmap(new content::Bitmap(host, "geo.png"));
+      geo->SetBitmap(new content::Bitmap(host, fps.get(), "geo.png"));
 
       geo->SetPosition(0, base::Vec4(10, 10, 0, 1));
       geo->SetPosition(1, base::Vec4(500, 10, 0, 1));

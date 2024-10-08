@@ -26,7 +26,3 @@
 	path = third_party/freetype
 	url = https://github.com/freetype/freetype.git
 	branch = master
-[submodule "third_party/libevent"]
-	path = third_party/libevent
-	url = https://github.com/libevent/libevent.git
-	branch = master

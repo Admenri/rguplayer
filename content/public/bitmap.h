@@ -31,7 +31,9 @@ class Bitmap : public base::RefCounted<Bitmap>,
   };
 
   Bitmap(scoped_refptr<Graphics> host, const base::Vec2i& size);
-  Bitmap(scoped_refptr<Graphics> host, const std::string& filename);
+  Bitmap(scoped_refptr<Graphics> host,
+         filesystem::Filesystem* io,
+         const std::string& filename);
   ~Bitmap() override;
 
   Bitmap(const Bitmap&) = delete;

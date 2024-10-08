@@ -151,8 +151,10 @@ void Sprite::OnDraw(CompositeTargetInfo* target_info) {
                                      transform_.GetMatrixDataUnsafe());
     target_info->encoder->setUniform(shader.OffsetTexSize(), &offset_texsize);
     target_info->encoder->setUniform(shader.DrawInfo(), &draw_info);
-    target_info->encoder->setUniform(shader.Color(), &color_->AsBase());
-    target_info->encoder->setUniform(shader.Tone(), &tone_->AsBase());
+
+    base::Vec4 ncolor = color_->AsBase(), ntone = tone_->AsBase();
+    target_info->encoder->setUniform(shader.Color(), &ncolor);
+    target_info->encoder->setUniform(shader.Tone(), &ntone);
     target_info->encoder->setTexture(0, shader.Texture(), bitmap_texture);
 
     pipeline_handle = shader.GetProgram();
