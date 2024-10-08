@@ -175,6 +175,7 @@ void Viewport::InitViewportInternal(const base::Rect& initial_rect) {
 
 void Viewport::OnRectChangedInternal() {
   viewport_rect().rect = rect_->AsBase();
+  viewport_rect().has_scissor = true;
 
   base::Vec2i offset = parent_rect().GetRealOffset();
   viewport_rect().rect.x += offset.x;

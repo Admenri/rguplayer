@@ -8,12 +8,14 @@
 #include "content/public/bitmap.h"
 #include "content/public/disposable.h"
 #include "content/public/input.h"
+#include "fiber/fiber.h"
 
 #include "SDL3/SDL_timer.h"
 
 namespace content {
 
-Graphics::Graphics(base::WeakPtr<ui::Widget> window,
+Graphics::Graphics(CoroutineContext* cc,
+                   base::WeakPtr<ui::Widget> window,
                    std::unique_ptr<ScopedFontData> default_font,
                    const base::Vec2i& initial_resolution,
                    APIVersion api_diff)
@@ -25,16 +27,16 @@ Graphics::Graphics(base::WeakPtr<ui::Widget> window,
       frozen_(false),
       brightness_(255),
       frame_count_(0),
+      frame_rate_(api_diff >= APIVersion ::RGSS2 ? 60 : 40),
       vsync_(0),
-      frame_rate_(api_diff >= APIVersion::RGSS2 ? 60 : 40),
-      allow_skip_frame_(false),
-      fps_manager_(std::make_unique<fpslimiter::FPSLimiter>(frame_rate_)) {
+      elapsed_time_(0),
+      smooth_delta_time_(1),
+      last_count_time_(SDL_GetPerformanceCounter()),
+      desired_delta_time_(SDL_GetPerformanceFrequency() / frame_rate_),
+      cc_(cc) {
   // Initialize root viewport
   viewport_rect().rect = initial_resolution;
   viewport_rect().has_scissor = false;
-
-  // Reset fps manager
-  fps_manager_->Reset();
 
   // Create render device
   bgfx::Init init_param;
@@ -62,6 +64,21 @@ Graphics::~Graphics() {
     bgfx::destroy(frozen_snapshot_.handle);
 
   device_.reset();
+}
+
+void Graphics::ResumeMainLoop() {
+  // Determine update repeat time
+  const uint64_t now_time = SDL_GetPerformanceCounter();
+  const uint64_t delta_time = now_time - last_count_time_;
+  last_count_time_ = now_time;
+
+  const double delta_rate =
+      delta_time / static_cast<double>(desired_delta_time_);
+  const int repeat_time = DetermineRepeatNumberInternal(delta_rate);
+
+  // Execute resume suspended conroutine
+  for (int i = 0; i < repeat_time; ++i)
+    fiber_switch(cc_->main_loop_fiber);
 }
 
 int Graphics::GetBrightness() const {
@@ -150,16 +167,7 @@ void Graphics::FadeIn(int duration) {
 
 void Graphics::Update() {
   if (!frozen_) {
-    if (fps_manager_->RequireFrameSkip()) {
-      if (allow_skip_frame_) {
-        // Skip render frame
-        return FrameProcessInternal();
-      } else {
-        // Reset frame interval diff
-        fps_manager_->Reset();
-      }
-    }
-
+    // Setup render frame
     bgfx::ViewId render_view = 1;
     bgfx::Encoder* encoder = bgfx::begin();
 
@@ -319,7 +327,6 @@ void Graphics::Transition(int duration,
 
 void Graphics::SetFrameRate(int rate) {
   rate = std::max(rate, 1);
-  fps_manager_->SetFrameRate(rate);
   frame_rate_ = rate;
 }
 
@@ -336,7 +343,7 @@ int Graphics::GetFrameCount() const {
 }
 
 void Graphics::ResetFrame() {
-  fps_manager_->Reset();
+  frame_count_ = 0;
 }
 
 void Graphics::ResizeWindow(int width, int height) {
@@ -363,14 +370,6 @@ void Graphics::SetVSync(int interval) {
 
 int Graphics::GetVSync() {
   return vsync_;
-}
-
-bool Graphics::GetFrameSkip() {
-  return allow_skip_frame_;
-}
-
-void Graphics::SetFrameSkip(bool skip) {
-  allow_skip_frame_ = skip;
 }
 
 int Graphics::GetDisplayWidth() {
@@ -411,15 +410,33 @@ void Graphics::RebuildScreenBufferInternal(const base::Vec2i& resolution) {
 }
 
 void Graphics::FrameProcessInternal() {
-  /* Control frame delay */
-  fps_manager_->Delay();
-
   /* Increase frame render count */
   ++frame_count_;
 
   /* Update average fps */
   UpdateAverageFPSInternal();
+
+  /* Switch to primary fiber */
+  fiber_switch(cc_->primary_fiber);
 }
+
+int Graphics::DetermineRepeatNumberInternal(double delta_rate) {
+  smooth_delta_time_ *= 0.8;
+  smooth_delta_time_ += std::fmin(delta_rate, 2) * 0.2;
+
+  if (smooth_delta_time_ >= 0.9) {
+    elapsed_time_ = 0;
+    return std::round(elapsed_time_);
+  } else {
+    elapsed_time_ += delta_rate;
+    if (elapsed_time_ >= 1) {
+      elapsed_time_ -= 1;
+      return 1;
+    }
+  }
+
+  return 0;
+};
 
 void Graphics::AddDisposable(Disposable* disp) {
   disposable_elements_.Append(disp->disposable_link());

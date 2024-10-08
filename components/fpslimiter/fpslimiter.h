@@ -18,17 +18,12 @@ class FPSLimiter {
 
   void SetFrameRate(int frame_rate);
   void Delay();
-  bool RequireFrameSkip();
-  void Reset();
 
  private:
   uint64_t last_tick_count_;
   int64_t ticks_per_frame_;
   const uint64_t tick_freq_;
   const double tick_freq_ns_;
-  uint64_t skip_last_;
-  int64_t skip_ideal_diff_;
-  bool skip_reset_flag_;
 };
 
 }  // namespace fpslimiter

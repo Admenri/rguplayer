@@ -38,6 +38,7 @@
 - SDL_image - https://github.com/libsdl-org/SDL_image  
 - SDL_ttf - https://github.com/libsdl-org/SDL_ttf  
 - soloud - https://github.com/jarikomppa/soloud  
+- fiber - https://github.com/paladin-t/fiber  
 - dav1d - https://github.com/videolan/dav1d  
 - rapidxml - https://rapidxml.sourceforge.net/  
 - json - https://github.com/nlohmann/json  

@@ -32,7 +32,8 @@ class Graphics final : public base::RefCounted<Graphics>,
                        public GraphicsHost,
                        public DisposableCollection {
  public:
-  Graphics(base::WeakPtr<ui::Widget> window,
+  Graphics(CoroutineContext* cc,
+           base::WeakPtr<ui::Widget> window,
            std::unique_ptr<ScopedFontData> default_font,
            const base::Vec2i& initial_resolution,
            APIVersion api_diff);
@@ -40,6 +41,8 @@ class Graphics final : public base::RefCounted<Graphics>,
 
   Graphics(const Graphics&) = delete;
   Graphics& operator=(const Graphics&) = delete;
+
+  void ResumeMainLoop();
 
   base::Vec2i GetSize() const { return screen_buffer_.size; }
 
@@ -75,9 +78,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   void SetVSync(int interval);
   int GetVSync();
 
-  bool GetFrameSkip();
-  void SetFrameSkip(bool skip);
-
   int GetDisplayWidth();
   int GetDisplayHeight();
 
@@ -96,6 +96,7 @@ class Graphics final : public base::RefCounted<Graphics>,
  private:
   void RebuildScreenBufferInternal(const base::Vec2i& resolution);
   void FrameProcessInternal();
+  int DetermineRepeatNumberInternal(double delta_rate);
   void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();
   void EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
@@ -123,9 +124,12 @@ class Graphics final : public base::RefCounted<Graphics>,
   int frame_rate_;
   bool vsync_;
 
-  bool allow_skip_frame_;
+  double elapsed_time_;
+  double smooth_delta_time_;
+  uint64_t last_count_time_;
+  uint64_t desired_delta_time_;
 
-  std::unique_ptr<fpslimiter::FPSLimiter> fps_manager_;
+  CoroutineContext* cc_;
 };
 
 class GraphicsElement {

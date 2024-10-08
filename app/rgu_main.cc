@@ -1,5 +1,4 @@
 
-#include <coroutine>
 #include <iostream>
 
 #include "content/public/bitmap.h"
@@ -17,44 +16,11 @@
 #include "SDL3_image/SDL_image.h"
 #include "SDL3_ttf/SDL_ttf.h"
 
-struct Task {
-  struct promise_type {
-    Task get_return_object() { return Task(handle_type::from_promise(*this)); }
-    std::suspend_never initial_suspend() { return {}; }
-    std::suspend_never final_suspend() noexcept { return {}; }
-    void unhandled_exception() { std::terminate(); }
-    void return_void() {}
-  };
+void MainLoop(fiber_t* fiber) {
+  content::CoroutineContext* cc =
+      static_cast<content::CoroutineContext*>(fiber->userdata);
 
-  using handle_type = std::coroutine_handle<promise_type>;
-  handle_type hdl_;
-
-  Task(handle_type hdl) : hdl_(hdl) {}
-  ~Task() { std::cout << "Task destroyed" << std::endl; }
-
-  void await_suspend(std::coroutine_handle<promise_type>) {}
-  void resume() { hdl_.resume(); }
-};
-
-Task async() {
-  std::cout << "Async start" << std::endl;
-  co_await std::suspend_always{};
-  std::cout << "Async end" << std::endl;
-}
-
-int SDL_main(int argc, char** argv) {
-  {
-    auto task = async();
-    std::cout << "Main" << std::endl;
-    task.resume();
-  }
-
-  SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO);
-  IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
-  TTF_Init();
-
-  std::unique_ptr<filesystem::Filesystem> fps(
-      new filesystem::Filesystem(argv[0]));
+  std::unique_ptr<filesystem::Filesystem> fps(new filesystem::Filesystem(""));
   fps->AddLoadPath(".");
 
   try {
@@ -65,10 +31,12 @@ int SDL_main(int argc, char** argv) {
     win->Init(std::move(win_params));
 
     scoped_refptr<content::Graphics> host =
-        new content::Graphics(win->AsWeakPtr(),
+        new content::Graphics(cc, win->AsWeakPtr(),
                               std::make_unique<content::ScopedFontData>(
                                   fps.get(), "Fonts/Default.ttf"),
                               win_params.size, content::APIVersion::RGSS3);
+
+    fiber->userdata = host.get();
 
     {
       scoped_refptr<content::Bitmap> b =
@@ -157,11 +125,6 @@ int SDL_main(int argc, char** argv) {
 
       int c = 0;
       while (true) {
-        SDL_Event e;
-        SDL_PollEvent(&e);
-        if (e.type == SDL_EVENT_QUIT)
-          break;
-
         for (auto& it : sprs) {
           it->SetAngle(c);
         }
@@ -175,8 +138,40 @@ int SDL_main(int argc, char** argv) {
         host->Update();
       }
     }
+
   } catch (base::Exception e) {
     printf(e.GetErrorMessage().c_str());
+  }
+
+  cc->main_loop_fiber->userdata = nullptr;
+  fiber_switch(cc->primary_fiber);
+}
+
+int SDL_main(int argc, char** argv) {
+  SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO);
+  IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+  TTF_Init();
+
+  content::CoroutineContext cc;
+  cc.primary_fiber = fiber_create(nullptr, 0, nullptr, nullptr);
+  cc.main_loop_fiber = fiber_create(cc.primary_fiber, 0, &MainLoop, &cc);
+
+  fpslimiter::FPSLimiter lmt(165);
+  fiber_switch(cc.main_loop_fiber);
+
+  while (true) {
+    lmt.Delay();
+
+    if (cc.main_loop_fiber->userdata)
+      static_cast<content::Graphics*>(cc.main_loop_fiber->userdata)
+          ->ResumeMainLoop();
+    else
+      break;
+
+    SDL_Event e;
+    SDL_PollEvent(&e);
+    if (e.type == SDL_EVENT_QUIT)
+      break;
   }
 
   TTF_Quit();

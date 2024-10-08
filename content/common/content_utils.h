@@ -5,6 +5,8 @@
 #ifndef CONTENT_COMMON_CONTENT_UTILS_H_
 #define CONTENT_COMMON_CONTENT_UTILS_H_
 
+#include "fiber/fiber.h"
+
 namespace content {
 
 // Set engine RGSS kernel adapt version
@@ -13,6 +15,11 @@ enum class APIVersion : int {
   RGSS1 = 1,
   RGSS2 = 2,
   RGSS3 = 3,
+};
+
+struct CoroutineContext {
+  fiber_t* primary_fiber;
+  fiber_t* main_loop_fiber;
 };
 
 }  // namespace content
