@@ -91,6 +91,9 @@ include_directories(third_party/text_render/include/SDL3_ttf)
 add_subdirectory(third_party/zlib)
 include_directories(third_party/zlib)
 
+## IMGUI
+add_subdirectory(third_party/imgui)
+
 #--------------------------------------------------------------------------------
 # Apply patch
 #--------------------------------------------------------------------------------

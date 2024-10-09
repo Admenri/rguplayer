@@ -142,9 +142,6 @@ void MainLoop(fiber_t* fiber) {
   } catch (base::Exception e) {
     printf(e.GetErrorMessage().c_str());
   }
-
-  cc->main_loop_fiber->userdata = nullptr;
-  fiber_switch(cc->primary_fiber);
 }
 
 int SDL_main(int argc, char** argv) {
@@ -162,15 +159,8 @@ int SDL_main(int argc, char** argv) {
   while (true) {
     lmt.Delay();
 
-    if (cc.main_loop_fiber->userdata)
-      static_cast<content::Graphics*>(cc.main_loop_fiber->userdata)
-          ->ResumeMainLoop();
-    else
-      break;
-
-    SDL_Event e;
-    SDL_PollEvent(&e);
-    if (e.type == SDL_EVENT_QUIT)
+    if (!static_cast<content::Graphics*>(cc.main_loop_fiber->userdata)
+             ->ExecuteEventMainLoop())
       break;
   }
 

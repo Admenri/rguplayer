@@ -9,6 +9,9 @@
 #include "content/public/disposable.h"
 #include "content/public/input.h"
 #include "fiber/fiber.h"
+#include "third_party/imgui/imgui.h"
+#include "third_party/imgui/imgui_impl_bgfx.h"
+#include "third_party/imgui/imgui_impl_sdl3.h"
 
 #include "SDL3/SDL_timer.h"
 
@@ -53,11 +56,19 @@ Graphics::Graphics(CoroutineContext* cc,
 
   // Create virtual screen buffer
   RebuildScreenBufferInternal(initial_resolution);
+
+  // Initialize GUI
+  ImGui::CreateContext();
+  ImGui_Implbgfx_Init(BGFX_CONFIG_MAX_VIEWS - 1);
+  ImGui_ImplSDL3_InitForOther(window->AsSDLWindow());
 }
 
 Graphics::~Graphics() {
-  screen_quad_.reset();
+  ImGui_ImplSDL3_Shutdown();
+  ImGui_Implbgfx_Shutdown();
+  ImGui::DestroyContext();
 
+  screen_quad_.reset();
   if (bgfx::isValid(screen_buffer_.handle))
     bgfx::destroy(screen_buffer_.handle);
   if (bgfx::isValid(frozen_snapshot_.handle))
@@ -66,19 +77,48 @@ Graphics::~Graphics() {
   device_.reset();
 }
 
-void Graphics::ResumeMainLoop() {
+bool Graphics::ExecuteEventMainLoop() {
+  // Poll event queue
+  SDL_Event queued_event;
+  while (SDL_PollEvent(&queued_event)) {
+    ImGui_ImplSDL3_ProcessEvent(&queued_event);
+
+    if (queued_event.type == SDL_EVENT_QUIT)
+      return false;
+  }
+
   // Determine update repeat time
   const uint64_t now_time = SDL_GetPerformanceCounter();
   const uint64_t delta_time = now_time - last_count_time_;
   last_count_time_ = now_time;
 
+  // Calculate smooth frame rate
   const double delta_rate =
       delta_time / static_cast<double>(desired_delta_time_);
   const int repeat_time = DetermineRepeatNumberInternal(delta_rate);
 
-  // Execute resume suspended conroutine
-  for (int i = 0; i < repeat_time; ++i)
+  // Render and present
+  auto present_render_frame = []() {
+    ImGui_Implbgfx_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow();
+    ImGui::Render();
+    ImGui_Implbgfx_RenderDrawLists(ImGui::GetDrawData());
+
+    bgfx::frame();
+  };
+
+  for (int i = 0; i < repeat_time; ++i) {
     fiber_switch(cc_->main_loop_fiber);
+
+    present_render_frame();
+  }
+
+  if (!repeat_time)
+    present_render_frame();
+
+  return true;
 }
 
 int Graphics::GetBrightness() const {
@@ -127,8 +167,6 @@ void Graphics::FadeOut(int duration) {
       bgfx::ViewId render_view = 1;
       PresentScreenBufferInternal(&frozen_snapshot_, encoder, render_view);
       bgfx::end(encoder);
-      bgfx::frame();
-
       FrameProcessInternal();
     } else {
       Update();
@@ -153,8 +191,6 @@ void Graphics::FadeIn(int duration) {
       bgfx::ViewId render_view = 1;
       PresentScreenBufferInternal(&frozen_snapshot_, encoder, render_view);
       bgfx::end(encoder);
-      bgfx::frame();
-
       FrameProcessInternal();
     } else {
       Update();
@@ -179,7 +215,6 @@ void Graphics::Update() {
 
     // Submit to GPU
     bgfx::end(encoder);
-    bgfx::frame();
   }
 
   // Process frame delay
@@ -315,7 +350,6 @@ void Graphics::Transition(int duration,
 
     // Submit to GPU
     bgfx::end(encoder);
-    bgfx::frame();
 
     // Step into next frame
     FrameProcessInternal();

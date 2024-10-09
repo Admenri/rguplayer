@@ -42,7 +42,7 @@ class Graphics final : public base::RefCounted<Graphics>,
   Graphics(const Graphics&) = delete;
   Graphics& operator=(const Graphics&) = delete;
 
-  void ResumeMainLoop();
+  bool ExecuteEventMainLoop();
 
   base::Vec2i GetSize() const { return screen_buffer_.size; }
 

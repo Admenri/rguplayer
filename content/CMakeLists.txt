@@ -60,4 +60,6 @@ target_link_libraries(engine_content PUBLIC
                       components_filesystem
                       components_fpslimiter
                       sdl_image_loader
-                      sdl_ttf_render)
+                      sdl_ttf_render
+                      bgfx_imgui
+                      )
