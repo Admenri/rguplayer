@@ -547,7 +547,31 @@ class TilemapGroundLayer2 : public ViewportChild {
     tilemap_->BeforeTilemapComposite(encoder, render_view);
   }
 
-  void OnDraw(CompositeTargetInfo* target_info) override {}
+  void OnDraw(CompositeTargetInfo* target_info) override {
+    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
+    if (!ground_quad_size)
+      return;
+
+    auto& shader = tilemap_->screen()->device()->pipelines().tilemap2;
+
+    base::Vec4 offset_size =
+        base::MakeVec4(tilemap_->tilemap_offset_,
+                       base::MakeInvert(tilemap_->atlas_texture_.size));
+    target_info->encoder->setUniform(shader.OffsetTexSize(), &offset_size);
+
+    target_info->encoder->setTexture(
+        0, shader.Texture(), bgfx::getTexture(tilemap_->atlas_texture_.handle));
+
+    offset_size.x = tilemap_->tile_size_;
+    target_info->encoder->setUniform(shader.TileSize(), &offset_size);
+
+    offset_size = base::MakeVec4(tilemap_->animation_offset_, base::Vec2());
+    target_info->encoder->setUniform(shader.AnimOffset(), &offset_size);
+
+    tilemap_->tilemap_quads_->Draw(target_info->encoder, shader.GetProgram(), 0,
+                                   ground_quad_size, target_info->render_view);
+    tilemap_->DrawFlashLayerInternal(target_info);
+  }
 
   void CheckObjectDisposed() const override { tilemap_->CheckIsDisposed(); }
   void OnParentViewportRectChanged(
@@ -572,7 +596,27 @@ class TilemapAboveLayer2 : public ViewportChild {
     tilemap_->BeforeTilemapComposite(encoder, render_view);
   }
 
-  void OnDraw(CompositeTargetInfo* target_info) override {}
+  void OnDraw(CompositeTargetInfo* target_info) override {
+    int ground_quad_size = tilemap_->ground_vertices_.size() / 4;
+    int above_quad_size = tilemap_->above_vertices_.size() / 4;
+
+    if (!above_quad_size)
+      return;
+
+    auto& shader = tilemap_->screen()->device()->pipelines().base;
+
+    base::Vec4 offset_size =
+        base::MakeVec4(tilemap_->tilemap_offset_,
+                       base::MakeInvert(tilemap_->atlas_texture_.size));
+    target_info->encoder->setUniform(shader.OffsetTexSize(), &offset_size);
+
+    target_info->encoder->setTexture(
+        0, shader.Texture(), bgfx::getTexture(tilemap_->atlas_texture_.handle));
+
+    tilemap_->tilemap_quads_->Draw(target_info->encoder, shader.GetProgram(),
+                                   ground_quad_size, above_quad_size,
+                                   target_info->render_view);
+  }
 
   void CheckObjectDisposed() const override { tilemap_->CheckIsDisposed(); }
   void OnParentViewportRectChanged(

@@ -436,6 +436,9 @@ void Bitmap::DrawText(const base::Rect& rect,
                       TextAlign align) {
   CheckIsDisposed();
 
+  // TODO: renderer crash
+  return;
+
   font_->EnsureLoadFont();
   uint8_t fopacity;
   auto* txt_surf = font_->RenderText(str, &fopacity);

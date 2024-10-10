@@ -11,7 +11,7 @@ namespace base {
 class Exception {
  public:
   enum Type {
-    ContentError,
+    ContentError = 0,
     RendererError,
     SDLError,
     FilesystemError,

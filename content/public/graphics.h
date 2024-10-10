@@ -97,7 +97,6 @@ class Graphics final : public base::RefCounted<Graphics>,
   void RebuildScreenBufferInternal(const base::Vec2i& resolution);
   void FrameProcessInternal();
   int DetermineRepeatNumberInternal(double delta_rate);
-  void UpdateAverageFPSInternal();
   void UpdateWindowViewportInternal();
   void EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
                                      bgfx::ViewId* render_view);

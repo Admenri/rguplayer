@@ -7,6 +7,7 @@
 #include "base/debug/logging.h"
 
 #include "SDL3/SDL_video.h"
+#include "bgfx/platform.h"
 
 namespace renderer {
 
@@ -88,6 +89,8 @@ RenderDevice::~RenderDevice() {
 std::unique_ptr<RenderDevice> RenderDevice::CreateContext(
     const bgfx::Init& init_param,
     base::WeakPtr<ui::Widget> target) {
+  bgfx::renderFrame();
+
   SDL_PropertiesID window_prop = SDL_GetWindowProperties(target->AsSDLWindow());
 
   bgfx::Init renderer_init(init_param);

@@ -43,7 +43,7 @@ Graphics::Graphics(CoroutineContext* cc,
 
   // Create render device
   bgfx::Init init_param;
-  init_param.type = bgfx::RendererType::Direct3D12;
+  init_param.type = bgfx::RendererType::Direct3D11;
   init_param.resolution.reset = BGFX_RESET_NONE;
   init_param.resolution.format = bgfx::TextureFormat::RGBA8;
   init_param.resolution.width = initial_resolution.x;
@@ -97,8 +97,9 @@ bool Graphics::ExecuteEventMainLoop() {
       delta_time / static_cast<double>(desired_delta_time_);
   const int repeat_time = DetermineRepeatNumberInternal(delta_rate);
 
-  // Render and present
-  auto present_render_frame = []() {
+  for (int i = 0; i < repeat_time; ++i) {
+    fiber_switch(cc_->main_loop_fiber);
+
     ImGui_Implbgfx_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
@@ -107,16 +108,7 @@ bool Graphics::ExecuteEventMainLoop() {
     ImGui_Implbgfx_RenderDrawLists(ImGui::GetDrawData());
 
     bgfx::frame();
-  };
-
-  for (int i = 0; i < repeat_time; ++i) {
-    fiber_switch(cc_->main_loop_fiber);
-
-    present_render_frame();
   }
-
-  if (!repeat_time)
-    present_render_frame();
 
   return true;
 }
@@ -447,9 +439,6 @@ void Graphics::FrameProcessInternal() {
   /* Increase frame render count */
   ++frame_count_;
 
-  /* Update average fps */
-  UpdateAverageFPSInternal();
-
   /* Switch to primary fiber */
   fiber_switch(cc_->primary_fiber);
 }
@@ -479,8 +468,6 @@ void Graphics::AddDisposable(Disposable* disp) {
 void Graphics::RemoveDisposable(Disposable* disp) {
   disp->disposable_link()->RemoveFromList();
 }
-
-void Graphics::UpdateAverageFPSInternal() {}
 
 void Graphics::UpdateWindowViewportInternal() {
   auto window_size = device()->window()->GetSize();
@@ -532,25 +519,21 @@ void Graphics::EncodeScreenDrawcallsInternal(bgfx::Encoder* encoder,
   DrawableParent::AfterComposite(encoder, render_view, &screen_buffer_);
 
   // Apply screen brightness (Cost: 1 view)
-  bgfx::ViewId screen_effect_view = *render_view;
   if (brightness_ < 255) {
-    screen_effect_view++;
-    device()->BindRenderView(screen_effect_view, screen_buffer_.size,
+    device()->BindRenderView(*render_view, screen_buffer_.size,
                              screen_buffer_.handle, std::nullopt);
 
     auto& shader = device()->pipelines().color;
     screen_quad_->SetPosition(base::Vec2(screen_buffer_.size));
-    screen_quad_->SetColor(base::Vec4(0, 0, 0, brightness_ / 255.0f));
+    screen_quad_->SetColor(base::Vec4(0, 0, 0, 1.0 - brightness_ / 255.0f));
 
     encoder->setState(
         renderer::MakeColorBlendState(renderer::BlendType::Normal));
-    screen_quad_->Draw(encoder, shader.GetProgram(), screen_effect_view);
+    screen_quad_->Draw(encoder, shader.GetProgram(), *render_view);
 
-    render_view++;
+    // Next render pass
+    (*render_view)++;
   }
-
-  // Next render pass
-  *render_view = screen_effect_view;
 }
 
 void Graphics::PresentScreenBufferInternal(renderer::Framebuffer* target_buffer,

@@ -5,7 +5,24 @@
 #ifndef CONTENT_WORKER_WORKER_SCHEDULER_H_
 #define CONTENT_WORKER_WORKER_SCHEDULER_H_
 
+#include "content/worker/engine_worker.h"
+#include "fiber/fiber.h"
+
 namespace content {
+
+struct ContentParams {
+  // Engine global configure
+  scoped_refptr<CoreConfigure> config;
+
+  // Renderer target host
+  std::unique_ptr<ui::Widget> window;
+
+  // Global filesystem
+  filesystem::Filesystem* file_io;
+
+  // Binding entry
+  std::unique_ptr<BindingEngine> binding;
+};
 
 class WorkerScheduler {
  public:
@@ -15,7 +32,11 @@ class WorkerScheduler {
   WorkerScheduler(const WorkerScheduler&) = delete;
   WorkerScheduler& operator=(const WorkerScheduler&) = delete;
 
+  void Init(ContentParams init_params);
+  void Run();
+
  private:
+  scoped_refptr<EngineWorker> engine_worker_;
 };
 
 }  // namespace content

@@ -6,10 +6,14 @@ cmake_minimum_required(VERSION 3.20.1)
 #--------------------------------------------------------------------------------
 
 set(CORE_CONTENT_SRC
+  binding/binding_engine.cc
+  binding/binding_engine.h
   common/content_utils.h  
   common/tilequad.h
   common/tileutils.cc
   common/tileutils.h
+  config/engine_config.cc
+  config/engine_config.h
   public/bitmap.cc
   public/bitmap.h
   public/disposable.h
@@ -48,6 +52,8 @@ set(CORE_CONTENT_SRC
   public/window.h
   public/window2.cc
   public/window2.h
+  worker/engine_worker.cc
+  worker/engine_worker.h
   worker/worker_scheduler.cc
   worker/worker_scheduler.h
 )
