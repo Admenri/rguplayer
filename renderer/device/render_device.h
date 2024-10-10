@@ -130,7 +130,6 @@ class RenderDevice final {
 
   Pipeline& pipelines() { return *pipelines_; }
   scoped_refptr<QuadArrayIndices> quad_indices();
-  QuadDrawable* common_quad() { return generic_quad_.get(); }
   base::WeakPtr<ui::Widget> window() { return screen_; }
 
   void BindRenderView(bgfx::ViewId render_view,
@@ -148,8 +147,6 @@ class RenderDevice final {
 
   Texture generic_texture_;
   Framebuffer common_framebuffer_;
-
-  std::unique_ptr<QuadDrawable> generic_quad_;
 };
 
 }  // namespace renderer

@@ -223,12 +223,19 @@ void Bitmap::StretchBlt(const base::Rect& dest_rect,
     encoder->setTexture(0, shader.Texture(), dst_texture);
     encoder->setTexture(1, shader.DstTexture(), intermediate_texture.handle);
 
-    auto* quad = screen()->device()->common_quad();
-    quad->SetPosition(dest_rect);
-    quad->SetTexcoord(src_rect);
+    bgfx::TransientVertexBuffer tmp_buffer;
+    bgfx::allocTransientVertexBuffer(
+        &tmp_buffer, 4, renderer::GeometryVertexLayout::GetLayout());
+    renderer::GeometryVertexLayout::SetPosition(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, dest_rect);
+    renderer::GeometryVertexLayout::SetTexcoord(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, src_rect);
+    encoder->setVertexBuffer(0, &tmp_buffer);
+    encoder->setIndexBuffer(
+        screen()->device()->quad_indices()->GetBufferHandle(), 0, 6);
 
     encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
-    quad->Draw(encoder, shader.GetProgram(), render_view);
+    encoder->submit(render_view, shader.GetProgram());
 
     bgfx::end(encoder);
   }
@@ -250,13 +257,21 @@ void Bitmap::FillRect(const base::Rect& rect, scoped_refptr<Color> color) {
                                        std::nullopt);
 
     auto& shader = screen()->device()->pipelines().color;
-    auto* quad = screen()->device()->common_quad();
 
-    quad->SetPosition(rect);
-    quad->SetColor(color->AsBase());
+    bgfx::TransientVertexBuffer tmp_buffer;
+    bgfx::allocTransientVertexBuffer(
+        &tmp_buffer, 4, renderer::GeometryVertexLayout::GetLayout());
+    renderer::GeometryVertexLayout::SetPosition(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, rect);
+    renderer::GeometryVertexLayout::SetColor(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+        color->AsBase());
+    encoder->setVertexBuffer(0, &tmp_buffer);
+    encoder->setIndexBuffer(
+        screen()->device()->quad_indices()->GetBufferHandle(), 0, 6);
 
     encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
-    quad->Draw(encoder, shader.GetProgram(), render_view);
+    encoder->submit(render_view, shader.GetProgram());
 
     bgfx::end(encoder);
   }
@@ -281,23 +296,48 @@ void Bitmap::GradientFillRect(const base::Rect& rect,
                                        std::nullopt);
 
     auto& shader = screen()->device()->pipelines().color;
-    auto* quad = screen()->device()->common_quad();
 
-    quad->SetPosition(rect);
+    bgfx::TransientVertexBuffer tmp_buffer;
+    bgfx::allocTransientVertexBuffer(
+        &tmp_buffer, 4, renderer::GeometryVertexLayout::GetLayout());
+
+    renderer::GeometryVertexLayout::SetPosition(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, rect);
+
     if (vertical) {
-      quad->SetColor(color1->AsBase(), 0);
-      quad->SetColor(color1->AsBase(), 1);
-      quad->SetColor(color2->AsBase(), 2);
-      quad->SetColor(color2->AsBase(), 3);
+      renderer::GeometryVertexLayout::SetColor(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          color1->AsBase(), 0);
+      renderer::GeometryVertexLayout::SetColor(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          color1->AsBase(), 1);
+      renderer::GeometryVertexLayout::SetColor(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          color2->AsBase(), 2);
+      renderer::GeometryVertexLayout::SetColor(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          color2->AsBase(), 3);
     } else {
-      quad->SetColor(color1->AsBase(), 0);
-      quad->SetColor(color2->AsBase(), 1);
-      quad->SetColor(color2->AsBase(), 2);
-      quad->SetColor(color1->AsBase(), 3);
+      renderer::GeometryVertexLayout::SetColor(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          color1->AsBase(), 0);
+      renderer::GeometryVertexLayout::SetColor(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          color2->AsBase(), 1);
+      renderer::GeometryVertexLayout::SetColor(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          color2->AsBase(), 2);
+      renderer::GeometryVertexLayout::SetColor(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          color1->AsBase(), 3);
     }
 
+    encoder->setVertexBuffer(0, &tmp_buffer);
+    encoder->setIndexBuffer(
+        screen()->device()->quad_indices()->GetBufferHandle(), 0, 6);
+
     encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
-    quad->Draw(encoder, shader.GetProgram(), render_view);
+    encoder->submit(render_view, shader.GetProgram());
 
     bgfx::end(encoder);
   }
@@ -320,13 +360,20 @@ void Bitmap::ClearRect(const base::Rect& rect) {
                                        std::nullopt);
 
     auto& shader = screen()->device()->pipelines().color;
-    auto* quad = screen()->device()->common_quad();
 
-    quad->SetPosition(rect);
-    quad->SetColor(base::Vec4());
+    bgfx::TransientVertexBuffer tmp_buffer;
+    bgfx::allocTransientVertexBuffer(
+        &tmp_buffer, 4, renderer::GeometryVertexLayout::GetLayout());
+    renderer::GeometryVertexLayout::SetPosition(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, rect);
+    renderer::GeometryVertexLayout::SetColor(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, base::Vec4());
+    encoder->setVertexBuffer(0, &tmp_buffer);
+    encoder->setIndexBuffer(
+        screen()->device()->quad_indices()->GetBufferHandle(), 0, 6);
 
     encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
-    quad->Draw(encoder, shader.GetProgram(), render_view);
+    encoder->submit(render_view, shader.GetProgram());
 
     bgfx::end(encoder);
   }
@@ -393,7 +440,6 @@ void Bitmap::HueChange(int hue) {
                                        std::nullopt);
 
     auto& shader = screen()->device()->pipelines().hue;
-    auto* quad = screen()->device()->common_quad();
 
     base::Vec4 offset_size =
         base::MakeVec4(base::Vec2(), base::MakeInvert(intermediate.size));
@@ -402,11 +448,21 @@ void Bitmap::HueChange(int hue) {
     encoder->setUniform(shader.HueAdjustValue(), &hue_adjust);
     encoder->setTexture(0, shader.Texture(), intermediate.handle);
 
-    quad->SetPosition(base::Vec2(size_));
-    quad->SetTexcoord(base::Vec2(size_));
+    bgfx::TransientVertexBuffer tmp_buffer;
+    bgfx::allocTransientVertexBuffer(
+        &tmp_buffer, 4, renderer::GeometryVertexLayout::GetLayout());
+    renderer::GeometryVertexLayout::SetPosition(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+        base::Vec2(size_));
+    renderer::GeometryVertexLayout::SetTexcoord(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+        base::Vec2(size_));
+    encoder->setVertexBuffer(0, &tmp_buffer);
+    encoder->setIndexBuffer(
+        screen()->device()->quad_indices()->GetBufferHandle(), 0, 6);
 
     encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
-    quad->Draw(encoder, shader.GetProgram(), render_view);
+    encoder->submit(render_view, shader.GetProgram());
 
     bgfx::end(encoder);
   }
@@ -504,12 +560,20 @@ void Bitmap::DrawText(const base::Rect& rect,
       encoder->setTexture(0, shader.Texture(), text_tex);
       encoder->setTexture(1, shader.DstTexture(), dst_texture.handle);
 
-      auto* quad = screen()->device()->common_quad();
-      quad->SetPosition(pos);
-      quad->SetTexcoord(text_surf_size);
+      bgfx::TransientVertexBuffer tmp_buffer;
+      bgfx::allocTransientVertexBuffer(
+          &tmp_buffer, 4, renderer::GeometryVertexLayout::GetLayout());
+      renderer::GeometryVertexLayout::SetPosition(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, pos);
+      renderer::GeometryVertexLayout::SetTexcoord(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          text_surf_size);
+      encoder->setVertexBuffer(0, &tmp_buffer);
+      encoder->setIndexBuffer(
+          screen()->device()->quad_indices()->GetBufferHandle(), 0, 6);
 
       encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
-      quad->Draw(encoder, shader.GetProgram(), render_view);
+      encoder->submit(render_view, shader.GetProgram());
 
       bgfx::end(encoder);
     }

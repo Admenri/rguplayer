@@ -209,8 +209,6 @@ void Viewport::ApplyViewportEffect(bgfx::Encoder* encoder,
                 blend_area.y, blend_area.width, blend_area.height);
 
   auto& shader = screen()->device()->pipelines().viewport;
-  auto* quad = screen()->device()->common_quad();
-
   base::Vec4 offset_size =
       base::MakeVec4(base::Vec2(), base::MakeInvert(intermediate_texture.size));
   encoder->setUniform(shader.OffsetTexSize(), &offset_size);
@@ -218,11 +216,20 @@ void Viewport::ApplyViewportEffect(bgfx::Encoder* encoder,
   encoder->setUniform(shader.Color(), &color);
   encoder->setUniform(shader.Tone(), &tone);
 
-  encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+  bgfx::TransientVertexBuffer tmp_buffer;
+  bgfx::allocTransientVertexBuffer(&tmp_buffer, 4,
+                                   renderer::GeometryVertexLayout::GetLayout());
+  renderer::GeometryVertexLayout::SetPosition(
+      (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, blend_area);
+  renderer::GeometryVertexLayout::SetTexcoord(
+      (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+      base::Rect(blend_area.Size()));
+  encoder->setVertexBuffer(0, &tmp_buffer);
+  encoder->setIndexBuffer(screen()->device()->quad_indices()->GetBufferHandle(),
+                          0, 6);
 
-  quad->SetPosition(blend_area);
-  quad->SetTexcoord(base::Rect(blend_area.Size()));
-  quad->Draw(encoder, shader.GetProgram(), *render_view);
+  encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+  encoder->submit(*render_view, shader.GetProgram());
 }
 
 ViewportChild::ViewportChild(scoped_refptr<Graphics> screen,

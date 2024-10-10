@@ -43,7 +43,7 @@ Graphics::Graphics(CoroutineContext* cc,
 
   // Create render device
   bgfx::Init init_param;
-  init_param.type = bgfx::RendererType::Direct3D11;
+  init_param.type = bgfx::RendererType::Direct3D12;
   init_param.resolution.reset = BGFX_RESET_NONE;
   init_param.resolution.format = bgfx::TextureFormat::RGBA8;
   init_param.resolution.width = initial_resolution.x;
@@ -329,12 +329,21 @@ void Graphics::Transition(int duration,
         program = shader.GetProgram();
       }
 
-      encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+      bgfx::TransientVertexBuffer tmp_buffer;
+      bgfx::allocTransientVertexBuffer(
+          &tmp_buffer, 4, renderer::GeometryVertexLayout::GetLayout());
+      renderer::GeometryVertexLayout::SetPosition(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          base::Vec2(screen_buffer_.size));
+      renderer::GeometryVertexLayout::SetTexcoord(
+          (renderer::GeometryVertexLayout::Data*)tmp_buffer.data,
+          base::Vec2(screen_buffer_.size));
+      encoder->setVertexBuffer(0, &tmp_buffer);
+      encoder->setIndexBuffer(device()->quad_indices()->GetBufferHandle(), 0,
+                              6);
 
-      auto* quad = device()->common_quad();
-      quad->SetPosition(base::Vec2(screen_buffer_.size));
-      quad->SetTexcoord(base::Vec2(screen_buffer_.size));
-      quad->Draw(encoder, program, render_view);
+      encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+      encoder->submit(render_view, program);
 
       // Present to screen
       PresentScreenBufferInternal(&tmp_framebuffer, encoder, ++render_view);

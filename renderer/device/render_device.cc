@@ -70,8 +70,6 @@ RenderDevice::RenderDevice(base::WeakPtr<ui::Widget> screen) : screen_(screen) {
   EnsureCommonFramebuffer(base::Vec2i(64, 64), nullptr);
 
   quad_array_indices_ = new QuadArrayIndices();
-  generic_quad_ = std::make_unique<QuadDrawable>(quad_array_indices_);
-
   pipelines_ = std::make_unique<Pipeline>();
 }
 
@@ -79,7 +77,6 @@ RenderDevice::~RenderDevice() {
   bgfx::destroy(generic_texture_.handle);
   bgfx::destroy(common_framebuffer_.handle);
 
-  generic_quad_.reset();
   quad_array_indices_.reset();
   pipelines_.reset();
 
@@ -89,8 +86,6 @@ RenderDevice::~RenderDevice() {
 std::unique_ptr<RenderDevice> RenderDevice::CreateContext(
     const bgfx::Init& init_param,
     base::WeakPtr<ui::Widget> target) {
-  bgfx::renderFrame();
-
   SDL_PropertiesID window_prop = SDL_GetWindowProperties(target->AsSDLWindow());
 
   bgfx::Init renderer_init(init_param);

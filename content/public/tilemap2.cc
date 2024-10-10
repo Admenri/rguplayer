@@ -568,6 +568,11 @@ class TilemapGroundLayer2 : public ViewportChild {
     offset_size = base::MakeVec4(tilemap_->animation_offset_, base::Vec2());
     target_info->encoder->setUniform(shader.AnimOffset(), &offset_size);
 
+    if (target_info->render_scissor.enable)
+      target_info->SetScissorRegion(target_info->render_scissor.region);
+
+    target_info->encoder->setState(
+        renderer::MakeColorBlendState(renderer::BlendType::Normal));
     tilemap_->tilemap_quads_->Draw(target_info->encoder, shader.GetProgram(), 0,
                                    ground_quad_size, target_info->render_view);
     tilemap_->DrawFlashLayerInternal(target_info);
@@ -613,6 +618,11 @@ class TilemapAboveLayer2 : public ViewportChild {
     target_info->encoder->setTexture(
         0, shader.Texture(), bgfx::getTexture(tilemap_->atlas_texture_.handle));
 
+    if (target_info->render_scissor.enable)
+      target_info->SetScissorRegion(target_info->render_scissor.region);
+
+    target_info->encoder->setState(
+        renderer::MakeColorBlendState(renderer::BlendType::Normal));
     tilemap_->tilemap_quads_->Draw(target_info->encoder, shader.GetProgram(),
                                    ground_quad_size, above_quad_size,
                                    target_info->render_view);
@@ -838,14 +848,36 @@ void Tilemap2::CreateTileAtlasInternal(bgfx::Encoder* encoder,
     base::Rect src_rect(
         atlas_info.src.pos.x * tile_size_, atlas_info.src.pos.y * tile_size_,
         atlas_info.src.size.x * tile_size_, atlas_info.src.size.y * tile_size_);
-    base::Vec2i dst_rect(atlas_info.dst.x * tile_size_,
-                         atlas_info.dst.y * tile_size_);
+    base::Rect dst_rect(
+        atlas_info.dst.x * tile_size_, atlas_info.dst.y * tile_size_,
+        atlas_info.src.size.x * tile_size_, atlas_info.src.size.y * tile_size_);
 
-    encoder->blit(*render_view, bgfx::getTexture(atlas_texture_.handle),
-                  dst_rect.x, dst_rect.y,
-                  bgfx::getTexture(atlas_bitmap->GetHandle()), src_rect.x,
-                  src_rect.y, src_rect.width, src_rect.height);
+    auto& shader = screen()->device()->pipelines().base;
+
+    base::Vec4 offset_size =
+        base::MakeVec4(base::Vec2(), base::MakeInvert(atlas_bitmap->GetSize()));
+    encoder->setUniform(shader.OffsetTexSize(), &offset_size);
+
+    encoder->setTexture(0, shader.Texture(),
+                        bgfx::getTexture(atlas_bitmap->GetHandle()));
+
+    bgfx::TransientVertexBuffer tmp_buffer;
+    bgfx::allocTransientVertexBuffer(
+        &tmp_buffer, 4, renderer::GeometryVertexLayout::GetLayout());
+    renderer::GeometryVertexLayout::SetPosition(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, dst_rect);
+    renderer::GeometryVertexLayout::SetTexcoord(
+        (renderer::GeometryVertexLayout::Data*)tmp_buffer.data, src_rect);
+    encoder->setVertexBuffer(0, &tmp_buffer);
+    encoder->setIndexBuffer(
+        screen()->device()->quad_indices()->GetBufferHandle(), 0, 6);
+
+    encoder->setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+    encoder->submit(*render_view, shader.GetProgram());
   }
+
+  // Next renderpass
+  (*render_view)++;
 
   /* shadow set atlas */
   if (screen()->api_version() >= APIVersion::RGSS3) {
