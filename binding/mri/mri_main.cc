@@ -47,6 +47,7 @@ extern "C" {
 void rb_call_builtin_inits();
 #endif
 
+void Init_ruby_prof();
 void Init_zlib(void);
 }
 
@@ -225,6 +226,7 @@ void BindingEngineMri::InitializeBinding(
   InitGamepadBinding();
   InitHTTPBinding();
   Init_zlib();
+  Init_ruby_prof();
 
 #if HAS_STEAMWORKS_SUPPORT
   InitSteamworksBinding();

@@ -64,6 +64,20 @@ set(BINDING_MRI_SRC
 
   net/net_http.cc
   net/net_http.h
+
+  ruby_prof/rp_allocation.c
+  ruby_prof/rp_call_tree.c
+  ruby_prof/rp_call_trees.c
+  ruby_prof/rp_measure_allocations.c
+  ruby_prof/rp_measure_memory.c
+  ruby_prof/rp_measure_process_time.c
+  ruby_prof/rp_measure_wall_time.c
+  ruby_prof/rp_measurement.c
+  ruby_prof/rp_method.c
+  ruby_prof/rp_profile.c
+  ruby_prof/rp_stack.c
+  ruby_prof/rp_thread.c
+  ruby_prof/ruby_prof.c
 )
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
