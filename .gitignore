@@ -365,3 +365,4 @@ FodyWeavers.xsd
 
 # Steamworks
 /steamworks/
+/third_party/libffi
