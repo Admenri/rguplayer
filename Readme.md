@@ -1,5 +1,10 @@
-﻿# ![Logo](app/resources/rgu_favicon_64.png) RGU Player Core
+﻿# ![Logo](app/resources/rgu_favicon_64.png) RGU Player Core (已废弃 / Deprecated)
 
+## 已废弃
+
+ - 此项目因为某些原因已废弃，如有需要请移步新项目：URGE，本仓库计划在URGE完成后彻底废弃并删除  
+ - 为什么要开新项目？ 答：写的太烂+有争议，索性放弃并开发新架构
+ 
 ## 概述
 
  - RGU 是一款兼容RGSS 1/2/3，使用 SDL3 作为底层，OpenGL ES 3.0 图像标准编写渲染部分的异步多线程2D游戏引擎。  

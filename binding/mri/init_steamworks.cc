@@ -53,10 +53,20 @@ MRI_METHOD(steam_install_path) {
 }
 
 MRI_METHOD(userstats_request_current) {
+  if (!SteamUserStats()) {
+    LOG(INFO) << "[Steam] Failed to load steamsdk.";
+    return Qnil;
+  }
+
   return MRI_BOOL_NEW(SteamUserStats()->RequestCurrentStats());
 }
 
 MRI_METHOD(userstats_get_stat_i) {
+  if (!SteamUserStats()) {
+    LOG(INFO) << "[Steam] Failed to load steamsdk.";
+    return Qnil;
+  }
+
   std::string chname;
   MriParseArgsTo(argc, argv, "s", &chname);
 
@@ -67,6 +77,11 @@ MRI_METHOD(userstats_get_stat_i) {
 }
 
 MRI_METHOD(userstats_get_stat_f) {
+  if (!SteamUserStats()) {
+    LOG(INFO) << "[Steam] Failed to load steamsdk.";
+    return Qnil;
+  }
+
   std::string chname;
   MriParseArgsTo(argc, argv, "s", &chname);
 
@@ -77,6 +92,11 @@ MRI_METHOD(userstats_get_stat_f) {
 }
 
 MRI_METHOD(userstats_put_stat_i) {
+  if (!SteamUserStats()) {
+    LOG(INFO) << "[Steam] Failed to load steamsdk.";
+    return Qnil;
+  }
+
   std::string chname;
   int data;
   MriParseArgsTo(argc, argv, "si", &chname, &data);
@@ -85,6 +105,11 @@ MRI_METHOD(userstats_put_stat_i) {
 }
 
 MRI_METHOD(userstats_put_stat_f) {
+  if (!SteamUserStats()) {
+    LOG(INFO) << "[Steam] Failed to load steamsdk.";
+    return Qnil;
+  }
+
   std::string chname;
   double data;
   MriParseArgsTo(argc, argv, "sf", &chname, &data);
@@ -93,6 +118,11 @@ MRI_METHOD(userstats_put_stat_f) {
 }
 
 MRI_METHOD(userstats_get_achievement) {
+  if (!SteamUserStats()) {
+    LOG(INFO) << "[Steam] Failed to load steamsdk.";
+    return Qnil;
+  }
+
   std::string chname;
   MriParseArgsTo(argc, argv, "s", &chname);
 
@@ -103,6 +133,11 @@ MRI_METHOD(userstats_get_achievement) {
 }
 
 MRI_METHOD(userstats_set_achievement) {
+  if (!SteamUserStats()) {
+    LOG(INFO) << "[Steam] Failed to load steamsdk.";
+    return Qnil;
+  }
+
   std::string chname;
   MriParseArgsTo(argc, argv, "s", &chname);
 
@@ -110,6 +145,11 @@ MRI_METHOD(userstats_set_achievement) {
 }
 
 MRI_METHOD(userstats_clear_achievement) {
+  if (!SteamUserStats()) {
+    LOG(INFO) << "[Steam] Failed to load steamsdk.";
+    return Qnil;
+  }
+
   std::string chname;
   MriParseArgsTo(argc, argv, "s", &chname);
 
